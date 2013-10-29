@@ -1,4 +1,4 @@
-#Embedded file name: /Volumes/Jenkins2045_2/versonator2/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Tools/sre_parse.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Tools/sre_parse.py
 """Internal support module for sre"""
 import sys
 from sre_constants import *

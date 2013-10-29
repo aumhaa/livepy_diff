@@ -1,4 +1,4 @@
-#Embedded file name: /Volumes/Jenkins2045_2/versonator2/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Serato/SpecialMixerComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Serato/SpecialMixerComponent.py
 import Live
 from _Framework.MixerComponent import MixerComponent
 from SpecialChanStripComponent import SpecialChanStripComponent

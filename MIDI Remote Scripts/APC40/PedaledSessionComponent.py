@@ -1,4 +1,4 @@
-#Embedded file name: /Volumes/Jenkins2045_2/versonator2/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/APC40/PedaledSessionComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/APC40/PedaledSessionComponent.py
 import Live
 from APCSessionComponent import APCSessionComponent
 from _Framework.ButtonElement import ButtonElement

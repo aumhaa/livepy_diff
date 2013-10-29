@@ -1,4 +1,4 @@
-#Embedded file name: /Volumes/Jenkins2045_2/versonator2/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/SessionComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/SessionComponent.py
 import Live
 from CompoundComponent import CompoundComponent
 from SceneComponent import SceneComponent
@@ -275,7 +275,9 @@ class SessionComponent(CompoundComponent):
         return self.set_offsets(max(self.track_offset() - self._track_banking_increment, 0), self.scene_offset())
 
     def _update_stop_all_clips_button(self):
-        pass
+        button = self._stop_all_button
+        if button:
+            button.set_light(button.is_pressed())
 
     def _update_select_buttons(self):
         selected_scene = self.song().view.selected_scene
@@ -342,6 +344,7 @@ class SessionComponent(CompoundComponent):
         if self.is_enabled():
             if value is not 0 or not self._stop_all_button.is_momentary():
                 self.song().stop_all_clips()
+            self._update_stop_all_clips_button()
 
     @subject_slot('value')
     def _on_next_scene_value(self, value):

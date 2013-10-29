@@ -1,4 +1,4 @@
-#Embedded file name: /Volumes/Jenkins2045_2/versonator2/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Axiom_AIR_Mini32/MixerOrDeviceModeSelector.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Axiom_AIR_Mini32/MixerOrDeviceModeSelector.py
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 
 class MixerOrDeviceModeSelector(ModeSelectorComponent):

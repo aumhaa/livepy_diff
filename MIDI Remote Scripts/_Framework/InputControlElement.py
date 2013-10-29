@@ -1,4 +1,4 @@
-#Embedded file name: /Volumes/Jenkins2045_2/versonator2/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/InputControlElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/InputControlElement.py
 from __future__ import with_statement
 import contextlib
 from Dependency import depends
@@ -118,6 +118,10 @@ class InputControlElement(NotifyingControlElement):
     """
     Base class for all classes representing control elements on a controller
     """
+
+    class ProxiedInterface(NotifyingControlElement.ProxiedInterface):
+        send_value = nop
+
     __subject_events__ = (SubjectEvent(name='value', signal=InputSignal, override=True),)
     _input_signal_listener_count = 0
     num_delayed_messages = 1
@@ -320,10 +324,10 @@ class InputControlElement(NotifyingControlElement):
 
         self._delayed_messages[:] = []
 
-    def send_value(self, value, force_send = False, channel = None):
+    def send_value(self, value, force = False, channel = None):
         value = int(value)
         self._verify_value(value)
-        if force_send or self._force_next_send:
+        if force or self._force_next_send:
             self._do_send_value(value, channel)
         elif self.send_depends_on_forwarding and not self._is_being_forwarded or self._send_delayed_messages_task.is_running:
             first = 1 - self.num_delayed_messages
@@ -355,6 +359,7 @@ class InputControlElement(NotifyingControlElement):
         self.send_value(0)
 
     def receive_value(self, value):
+        value = getattr(value, 'midi_value', value)
         self._verify_value(value)
         self._last_sent_message = None
         self.notify_value(value)

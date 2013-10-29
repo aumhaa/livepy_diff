@@ -1,4 +1,4 @@
-#Embedded file name: /Volumes/Jenkins2045_2/versonator2/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ClipSlotComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ClipSlotComponent.py
 import Live
 from ControlSurfaceComponent import ControlSurfaceComponent
 from Util import in_range
@@ -58,9 +58,8 @@ class ClipSlotComponent(ControlSurfaceComponent):
         self.update()
 
     def set_launch_button(self, button):
-        if button != self._launch_button_value_slot.subject:
-            self._launch_button_value_slot.subject = button
-            self.update()
+        self._launch_button_value_slot.subject = button
+        self.update()
 
     def set_delete_button(self, button):
         self._delete_button = button

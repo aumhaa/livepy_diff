@@ -1,4 +1,4 @@
-#Embedded file name: /Volumes/Jenkins2045_2/versonator2/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SpecialSessionComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SpecialSessionComponent.py
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.SessionComponent import SessionComponent
 from _Framework.ClipSlotComponent import ClipSlotComponent
@@ -7,7 +7,7 @@ from _Framework.SessionZoomingComponent import SessionZoomingComponent
 from _Framework.SubjectSlot import subject_slot
 from _Framework.ScrollComponent import ScrollComponent
 from _Framework.Util import forward_property
-from _Framework.ModesComponent import ModesComponent
+from _Framework.ModesComponent import EnablingModesComponent
 from MessageBoxComponent import Messenger
 import consts
 from consts import MessageBoxText
@@ -119,23 +119,20 @@ class SpecialSessionComponent(SessionComponent):
         super(SpecialSessionComponent, self).__init__(*a, **k)
         self._slot_launch_button = None
         self._duplicate_button = None
-        self._duplicate, self._duplicate_modes, self._paginator = self.register_components(DuplicateSceneComponent(self), ModesComponent(), ScrollComponent())
+        self._duplicate, self._paginator = self.register_components(DuplicateSceneComponent(self), ScrollComponent())
+        self._duplicate_enabler = self.register_component(EnablingModesComponent(component=self._duplicate))
+        self._duplicate_enabler.momentary_toggle = True
         self._paginator.can_scroll_up = self._can_scroll_page_up
         self._paginator.can_scroll_down = self._can_scroll_page_down
         self._paginator.scroll_up = self._scroll_page_up
         self._paginator.scroll_down = self._scroll_page_down
-        self._duplicate.set_enabled(False)
-        self._duplicate_modes.add_mode('disabled', None)
-        self._duplicate_modes.add_mode('enabled', self._duplicate)
-        self._duplicate_modes.selected_mode = 'disabled'
-        self._duplicate_modes.momentary_toggle = True
         self._track_playing_slots = self.register_slot_manager()
         self._end_initialisation()
 
     duplicate_layer = forward_property('_duplicate')('layer')
 
     def set_duplicate_button(self, button):
-        self._duplicate_modes.set_toggle_button(button)
+        self._duplicate_enabler.set_toggle_button(button)
 
     def set_page_up_button(self, page_up_button):
         self._paginator.set_scroll_up_button(page_up_button)

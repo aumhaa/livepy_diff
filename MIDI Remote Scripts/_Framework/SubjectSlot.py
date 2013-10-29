@@ -1,4 +1,4 @@
-#Embedded file name: /Volumes/Jenkins2045_2/versonator2/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/SubjectSlot.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/SubjectSlot.py
 """
 Family of classes for maintaining connections with optional subjects.
 """
@@ -218,9 +218,12 @@ class CallableSlotMixin(object):
     subjectslot.
     """
 
+    def __init__(self, function = None, *a, **k):
+        super(CallableSlotMixin, self).__init__(*a, **k)
+        self.function = function
+
     def __call__(self, *a, **k):
-        raise self.listener or AssertionError
-        return self.listener(*a, **k)
+        return self.function(*a, **k)
 
 
 class CallableSubjectSlot(SubjectSlot, CallableSlotMixin):
@@ -277,7 +280,8 @@ def subject_slot(event, *a, **k):
     @instance_decorator
     def decorator(self, method):
         raise isinstance(self, SlotManager) or AssertionError
-        slot = wraps(method)(CallableSubjectSlot(event=event, extra_kws=k, extra_args=a, listener=partial(method, self)))
+        function = partial(method, self)
+        slot = wraps(method)(CallableSubjectSlot(event=event, extra_kws=k, extra_args=a, listener=function, function=function))
         self.register_slot(slot)
         return slot
 
@@ -289,7 +293,8 @@ def subject_slot_group(event, *a, **k):
     @instance_decorator
     def decorator(self, method):
         raise isinstance(self, SlotManager) or AssertionError
-        slot = wraps(method)(CallableSubjectSlotGroup(event=event, extra_kws=k, extra_args=a, listener=partial(method, self)))
+        function = partial(method, self)
+        slot = wraps(method)(CallableSubjectSlotGroup(event=event, extra_kws=k, extra_args=a, listener=function, function=function))
         self.register_slot_manager(slot)
         return slot
 

@@ -1,4 +1,4 @@
-#Embedded file name: /Volumes/Jenkins2045_2/versonator2/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/AxiomPro/PageableDeviceComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/AxiomPro/PageableDeviceComponent.py
 import Live
 from _Generic.Devices import *
 from _Framework.DeviceComponent import DeviceComponent
