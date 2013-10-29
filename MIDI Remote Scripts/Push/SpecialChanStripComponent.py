@@ -179,7 +179,7 @@ class SpecialChanStripComponent(ChannelStripComponent, Messenger):
 
     def _select_value_without_modifier(self, value):
         if value and self.song().view.selected_track == self._track:
-            self._do_toggle_arm(exclusive=True)
+            self._do_toggle_arm(exclusive=self.song().exclusive_arm)
         else:
             super(SpecialChanStripComponent, self)._select_value(value)
         if value and self._track.is_foldable and self._select_button.is_momentary():

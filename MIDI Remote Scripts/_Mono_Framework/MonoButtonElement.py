@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9.05 Suite.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/MonoButtonElement.py
+#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/MonoButtonElement.py
 import Live
 from _Framework.ButtonElement import ButtonElement
 from _Framework.InputControlElement import InputControlElement
@@ -93,10 +93,10 @@ class MonoButtonElement(ButtonElement):
         raise isinstance(value, int) or AssertionError
         if not value in range(128):
             raise AssertionError
-            if force_send or self._force_next_send or value != self._last_sent_message and self._is_being_forwarded:
+            if force_send or self._force_next_send or value != self._last_sent_value and self._is_being_forwarded:
                 data_byte1 = self._original_identifier
                 if value in range(1, 127):
-                    data_byte2 = self._color_map[(value - 1) % (self._num_colors - 1)]
+                    data_byte2 = self._color_map[(value - 1) % self._num_colors]
                 elif value == 127:
                     data_byte2 = self._color_map[self._num_colors - 1]
                 else:

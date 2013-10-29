@@ -1,11 +1,11 @@
 #Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/DeviceParameterComponent.py
-from itertools import chain, ifilter
+from itertools import chain, repeat
 import Live
 AutomationState = Live.DeviceParameter.AutomationState
+from _Framework.Util import first, second
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.DisplayDataSource import DisplayDataSource
-from _Framework.SubjectSlot import subject_slot_group
-from _Framework.Util import find_if
+from _Framework.SubjectSlot import subject_slot_group, subject_slot, Subject
 import consts
 
 def graphic_bar_for_parameter(parameter):
@@ -28,24 +28,65 @@ def convert_parameter_value_to_graphic(param, param_to_value = lambda p: p.value
     return graphic_display_string
 
 
-class DeviceParameterComponent(ControlSurfaceComponent):
+DISCRETE_PARAMETERS_DICT = {'GlueCompressor': ('Ratio', 'Attack', 'Release', 'Peak Clip In')}
 
-    def __init__(self, *a, **k):
-        super(DeviceParameterComponent, self).__init__(*a, **k)
-        self._parameter_name_data_sources = [ DisplayDataSource(' ') for _ in xrange(8) ]
-        self._parameter_value_data_sources = [ DisplayDataSource(' ') for _ in xrange(8) ]
-        self._parameter_graphic_data_sources = [ DisplayDataSource(' ') for _ in xrange(8) ]
+def is_parameter_quantized(parameter, parent_device):
+    is_quantized = False
+    if parameter != None:
+        device_class = getattr(parent_device, 'class_name', None)
+        is_quantized = parameter.is_quantized or device_class in DISCRETE_PARAMETERS_DICT and parameter.name in DISCRETE_PARAMETERS_DICT[device_class]
+    return is_quantized
+
+
+def parameter_mapping_sensitivity(parameter):
+    is_quantized = is_parameter_quantized(parameter, parameter and parameter.canonical_parent)
+    return consts.QUANTIZED_MAPPING_SENSITIVITY if is_quantized else consts.CONTINUOUS_MAPPING_SENSITIVITY
+
+
+class ParameterProvider(Subject):
+    __subject_events__ = ('parameters',)
 
     @property
     def parameters(self):
-        raise NotImplementedError
+        return []
 
-    def get_parameter_name(self, parameter, index):
-        return parameter.name if parameter else None
 
-    def clear_display(self):
-        for source in chain(self._parameter_name_data_sources, self._parameter_value_data_sources, self._parameter_graphic_data_sources):
-            source.set_display_string(' ')
+class DeviceParameterComponent(ControlSurfaceComponent):
+    """
+    Maps the display and encoders to the parameters provided by a
+    ParameterProvider.
+    """
+
+    def __init__(self, parameter_provider = None, *a, **k):
+        super(DeviceParameterComponent, self).__init__(*a, **k)
+        self._parameter_controls = []
+        self._parameter_name_data_sources = map(DisplayDataSource, ('', '', '', '', '', '', '', ''))
+        self._parameter_value_data_sources = map(DisplayDataSource, ('', '', '', '', '', '', '', ''))
+        self._parameter_graphic_data_sources = map(DisplayDataSource, ('', '', '', '', '', '', '', ''))
+        self.parameter_provider = parameter_provider
+
+    @property
+    def parameters(self):
+        return map(second, self._parameter_provider.parameters)
+
+    @property
+    def parameter_names(self):
+        return map(first, self._parameter_provider.parameters)
+
+    def _get_parameter_provider(self):
+        return self._parameter_provider
+
+    def _set_parameter_provider(self, provider):
+        self._parameter_provider = provider or ParameterProvider()
+        self._on_parameters_changed.subject = self._parameter_provider
+        self._update_parameters()
+
+    parameter_provider = property(_get_parameter_provider, _set_parameter_provider)
+
+    def set_parameter_controls(self, encoders):
+        self._release_parameters()
+        self._parameter_controls = encoders or []
+        self._connect_parameters()
 
     def set_name_display_line(self, line):
         self._set_display_line(line, self._parameter_name_data_sources)
@@ -62,11 +103,32 @@ class DeviceParameterComponent(ControlSurfaceComponent):
             for segment in xrange(len(sources)):
                 line.segment(segment).set_data_source(sources[segment])
 
+    def clear_display(self):
+        for source in chain(self._parameter_name_data_sources, self._parameter_value_data_sources, self._parameter_graphic_data_sources):
+            source.set_display_string('')
+
+    def _release_parameters(self):
+        for encoder in self._parameter_controls or []:
+            encoder.release_parameter()
+
+    def _connect_parameters(self):
+        for parameter, encoder in zip(self.parameters, self._parameter_controls):
+            if encoder:
+                encoder.connect_to(parameter)
+                encoder.mapping_sensitivity = parameter_mapping_sensitivity(parameter)
+
     def _update_parameters(self):
-        self._on_parameter_value_changed.replace_subjects(self.parameters)
-        self._on_parameter_automation_state_changed.replace_subjects(self.parameters)
-        self._update_parameter_names()
-        self._update_parameter_values()
+        if self.is_enabled():
+            parameters = self.parameters
+            self._on_parameter_value_changed.replace_subjects(parameters)
+            self._on_parameter_automation_state_changed.replace_subjects(parameters)
+            self._update_parameter_names()
+            self._update_parameter_values()
+            self._connect_parameters()
+
+    @subject_slot('parameters')
+    def _on_parameters_changed(self):
+        self._update_parameters()
 
     @subject_slot_group('value')
     def _on_parameter_value_changed(self, parameter):
@@ -79,15 +141,11 @@ class DeviceParameterComponent(ControlSurfaceComponent):
 
     def _update_parameter_names(self):
         if self.is_enabled():
-            for i, (parameter, name_data_source) in enumerate(map(None, self.parameters, self._parameter_name_data_sources)):
-
-                def inidicate_automation(parameter):
-                    param_name = self.get_parameter_name(parameter, i)
-                    if parameter.automation_state != AutomationState.none:
-                        param_name = consts.CHAR_FULL_BLOCK + param_name
-                    return param_name
-
-                name_data_source.set_display_string(inidicate_automation(parameter) if parameter else ' ')
+            params = zip(chain(self.parameter_provider.parameters, repeat(('', None))), self._parameter_name_data_sources)
+            for (name, parameter), name_data_source in params:
+                if parameter and parameter.automation_state != AutomationState.none:
+                    name = consts.CHAR_FULL_BLOCK + name
+                name_data_source.set_display_string(name or '')
 
     def _update_parameter_values(self):
         if self.is_enabled():
@@ -95,14 +153,20 @@ class DeviceParameterComponent(ControlSurfaceComponent):
                 value_string = self.parameter_to_string(parameter)
                 if parameter and parameter.automation_state == AutomationState.overridden:
                     value_string = '[%s]' % value_string
-                data_source.set_display_string(value_string)
+                if data_source:
+                    data_source.set_display_string(value_string)
 
             for param, data_source in map(None, self.parameters, self._parameter_graphic_data_sources):
                 graph = convert_parameter_value_to_graphic(param, self.parameter_to_value)
-                data_source.set_display_string(graph)
+                if data_source:
+                    data_source.set_display_string(graph)
 
     def parameter_to_string(self, parameter):
-        return ' ' if parameter == None else unicode(parameter)
+        return '' if parameter == None else unicode(parameter)
 
     def parameter_to_value(self, parameter):
         return parameter.value
+
+    def update(self):
+        if self.is_enabled():
+            self._update_parameters()

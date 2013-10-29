@@ -33,10 +33,10 @@ from GridResolution import GridResolution
 from LoopSelectorComponent import LoopSelectorComponent
 from ViewControlComponent import ViewControlComponent
 from ClipControlComponent import ClipControlComponent
-from DisplayingDeviceComponent import DisplayingDeviceComponent
+from ProviderDeviceComponent import ProviderDeviceComponent
 from DeviceNavigationComponent import DeviceNavigationComponent
 from SessionRecordingComponent import SessionRecordingComponent
-from SingleTrackMixerComponent import SelectedTrackMixerComponent
+from SelectedTrackParameterProvider import SelectedTrackParameterProvider
 from NoteRepeatComponent import NoteRepeatComponent
 from ClipCreator import ClipCreator
 from MatrixMaps import PAD_TRANSLATIONS, FEEDBACK_CHANNELS
@@ -57,6 +57,7 @@ from WithPriority import WithPriority, Resetting
 from Settings import make_pad_parameters, SETTING_WORKFLOW, SETTING_THRESHOLD, SETTING_CURVE
 from PadSensitivity import PadUpdateComponent, pad_parameter_sender
 from PlayheadElement import PlayheadElement, NullPlayhead
+from DeviceParameterComponent import DeviceParameterComponent
 import Skin
 import consts
 import Colors
@@ -81,7 +82,7 @@ class Push(ControlSurface):
         super(Push, self).__init__(c_instance)
         self._optimized_ownership_handler = OptimizedOwnershipHandler()
         self._double_press_context = DoublePressContext()
-        injecting = inject(double_press_context=const(self._double_press_context), element_ownership_handler=const(self._optimized_ownership_handler), expect_dialog=const(self.expect_dialog), show_notification=const(self.show_notification), selection=lambda : L9CSelection(application=self.application(), device_component=self._device, navigation_component=self._device_navigation))
+        injecting = inject(double_press_context=const(self._double_press_context), element_ownership_handler=const(self._optimized_ownership_handler), expect_dialog=const(self.expect_dialog), show_notification=const(self.show_notification), selection=lambda : L9CSelection(application=self.application(), device_component=self._device_parameter_provider, navigation_component=self._device_navigation))
         self._push_injector = injecting.everywhere()
         with self.component_guard():
             self._suppress_sysex = False
@@ -505,8 +506,8 @@ class Push(ControlSurface):
                 note_editor_setting.component.parameter_provider = parameter_provider
                 note_editor_setting.component.automation_layer = getattr(note_editor_setting, mode + '_automation_layer')
 
-        track_note_editor_mode = partial(configure_note_editor_settings, self._track_mixer, 'track')
-        device_note_editor_mode = partial(configure_note_editor_settings, self._device, 'device')
+        track_note_editor_mode = partial(configure_note_editor_settings, self._track_parameter_provider, 'track')
+        device_note_editor_mode = partial(configure_note_editor_settings, self._device_parameter_provider, 'device')
         enable_stop_mute_solo_as_modifiers = AddLayerMode(self._mod_background, Layer(stop=self._global_track_stop_button, mute=self._global_mute_button, solo=self._global_solo_button))
         self._main_modes = ModesComponent()
         self._main_modes.add_mode('volumes', [self._track_modes, (self._mixer, self._mixer_volume_layer), track_note_editor_mode])
@@ -521,7 +522,7 @@ class Push(ControlSurface):
          self._clip_control])
         self._main_modes.add_mode('device', [enable_stop_mute_solo_as_modifiers,
          partial(self._view_control.show_view, 'Detail/DeviceChain'),
-         self._device,
+         self._device_parameter_component,
          self._device_navigation,
          device_note_editor_mode], behaviour=ReenterBehaviour(self._device_navigation.back_to_top))
         self._main_modes.add_mode('browse', [enable_stop_mute_solo_as_modifiers,
@@ -573,19 +574,15 @@ class Push(ControlSurface):
         self._mixer.set_enabled(True)
 
     def _init_track_mixer(self):
-        self._track_mixer = SelectedTrackMixerComponent(layer=Layer(encoders=self._global_param_controls, name_display_line=self._display_line1, graphic_display_line=self._display_line2, value_display_line=ComboElement(self._display_line3, [self._any_touch_button])))
+        self._track_parameter_provider = self.register_disconnectable(SelectedTrackParameterProvider())
+        self._track_mixer = DeviceParameterComponent(parameter_provider=self._track_parameter_provider, is_enabled=False, layer=Layer(parameter_controls=self._global_param_controls, name_display_line=self._display_line1, graphic_display_line=self._display_line2, value_display_line=ComboElement(self._display_line3, [self._any_touch_button])))
 
     def _init_device(self):
         self._device_bank_registry = DeviceBankRegistry()
-        self._device = DisplayingDeviceComponent(device_bank_registry=self._device_bank_registry, name='DeviceComponent')
-        self._device.set_enabled(False)
-        self.set_device_component(self._device)
-        self._device.layer = Layer(parameter_controls=self._global_param_controls, name_display_line=self._display_line1, value_display_line=self._display_line2, graphic_display_line=ComboElement(self._display_line3, [self._any_touch_button]))
-        self._device_navigation = DeviceNavigationComponent(self._device_bank_registry)
-        self._device_navigation.set_enabled(False)
-        self._device_navigation.layer = Layer(enter_button=self._in_button, delete_button=self._delete_button, exit_button=self._out_button, select_buttons=self._select_buttons, state_buttons=self._track_state_buttons, display_line=self._display_line4, _notification=self._notification.use_single_line(2))
-        self._device_navigation.info_layer = Layer(display_line1=self._display_line1, display_line2=self._display_line2, display_line3=self._display_line3, display_line4=self._display_line4, _notification=self._notification.use_full_display(2))
-        self._device_navigation.info_layer.priority = consts.MODAL_DIALOG_PRIORITY
+        self._device_parameter_provider = ProviderDeviceComponent(device_bank_registry=self._device_bank_registry, name='DeviceComponent', is_enabled=True)
+        self.set_device_component(self._device_parameter_provider)
+        self._device_parameter_component = DeviceParameterComponent(parameter_provider=self._device_parameter_provider, is_enabled=False, layer=Layer(parameter_controls=self._global_param_controls, name_display_line=self._display_line1, value_display_line=self._display_line2, graphic_display_line=ComboElement(self._display_line3, [self._any_touch_button])))
+        self._device_navigation = DeviceNavigationComponent(device_bank_registry=self._device_bank_registry, is_enabled=False, layer=Layer(enter_button=self._in_button, delete_button=self._delete_button, exit_button=self._out_button, select_buttons=self._select_buttons, state_buttons=self._track_state_buttons, display_line=self._display_line4, _notification=self._notification.use_single_line(2)), info_layer=Layer(priority=consts.MODAL_DIALOG_PRIORITY, display_line1=self._display_line1, display_line2=self._display_line2, display_line3=self._display_line3, display_line4=self._display_line4, _notification=self._notification.use_full_display(2)))
 
     def _init_transport_and_recording(self):
         self._view_control = ViewControlComponent(name='View_Control')

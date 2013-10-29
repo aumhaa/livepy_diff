@@ -8,10 +8,3 @@ class SpecialSessionComponent(SessionComponent):
             scene = self.selected_scene()
             slot = scene.clip_slot(i)
             slot.set_launch_button(button)
-
-    def _update_select_buttons(self):
-        selected_scene = self.song().view.selected_scene
-        if self._next_scene_button != None:
-            self._next_scene_button.set_light(selected_scene != self.song().scenes[-1])
-        if self._prev_scene_button != None:
-            self._prev_scene_button.set_light(selected_scene != self.song().scenes[0])

@@ -304,7 +304,7 @@ class NoteEditorSettingsComponent(ModesComponent):
         self._on_encoder_touch.replace_subjects(encoders or [])
         self._on_encoder_value.replace_subjects(encoders or [])
         self.settings.set_encoder_controls(encoders)
-        self._automation.set_encoders(encoders)
+        self._automation.set_parameter_controls(encoders)
 
     def _get_parameter_provider(self):
         self._automation.parameter_provider
@@ -318,7 +318,7 @@ class NoteEditorSettingsComponent(ModesComponent):
 
     def _update_available_modes(self):
         available_modes = ['Notes']
-        if self._automation.parameter_provider:
+        if self._automation.can_automate_parameters:
             available_modes.append('Automat')
         self._mode_selector.option_names = available_modes
 

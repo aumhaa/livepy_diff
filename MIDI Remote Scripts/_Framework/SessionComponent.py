@@ -284,7 +284,7 @@ class SessionComponent(CompoundComponent):
         if self._next_scene_button != None:
             self._next_scene_button.set_light(selected_scene != self.song().scenes[-1])
         if self._prev_scene_button != None:
-            self._next_scene_button.set_light(selected_scene != self.song().scenes[0])
+            self._prev_scene_button.set_light(selected_scene != self.song().scenes[0])
 
     def _update_scene_offset(self):
         offset_corrected = False

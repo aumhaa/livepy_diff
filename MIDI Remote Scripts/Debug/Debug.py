@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9.05 Suite.app/Contents/App-Resources/MIDI Remote Scripts/Debug/Debug.py
+#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/Debug/Debug.py
 import Live
 import os, __builtin__, __main__, _ast, _codecs, _functools, _md5, _random, _sha, _sha256, _sha512, _socket, _sre, _ssl, _struct, _symtable, _types, _weakref, binascii, cStringIO, collections, datetime, errno, exceptions, fcntl, gc, imp, itertools, marshal, math, operator, posix, pwd, select, signal, sys, thread, time, unicodedata, xxsubtype, zipimport, zlib
 modules = [__builtin__,
@@ -91,7 +91,7 @@ class Debug(ControlSurface):
 
     def __init__(self, *a, **k):
         super(Debug, self).__init__(*a, **k)
-        self.log_message('_^_^_^_^_^_^_^_^_^_^_^_^_^_^_^_^_ DEBUG ON 3_^_^_^_^_^_^_^_^_^_^_^_^_^_^_^_^_')
+        self.log_message('_^_^_^_^_^_^_^_^_^_^_^_^_^_^_^_^_ DEBUG ON _^_^_^_^_^_^_^_^_^_^_^_^_^_^_^_^_')
         self._scripts = []
 
     def _log_dirs(self):
@@ -134,9 +134,6 @@ class Debug(ControlSurface):
                         for key in sys.modules.keys():
                             if name == key[:len(name)]:
                                 del sys.modules[key]
-                                self.log_message('deleting key---' + str(key))
-
-        self._log_sys_modules()
 
     def _log_builtins(self):
         for module in dir(module):

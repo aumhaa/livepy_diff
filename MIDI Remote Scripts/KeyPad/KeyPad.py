@@ -10,7 +10,7 @@ from _Framework.ButtonElement import ButtonElement
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
 from _Framework.MixerComponent import MixerComponent
 from _Framework.TransportComponent import TransportComponent
-from SpecialSessionComponent import SpecialSessionComponent
+from _Framework.SessionComponent import SessionComponent
 from CuePointControlComponent import CuePointControlComponent
 from CombinedButtonsElement import CombinedButtonsElement
 from functools import partial
@@ -85,6 +85,11 @@ class KeyPad(ControlSurface):
     def handle_sysex(self, midi_bytes):
         if midi_bytes != self._preset_message(2):
             super(KeyPad, self).handle_sysex(midi_bytes)
+        else:
+            map(lambda x: x.set_enabled(True), (self._mixer,
+             self._session,
+             self._transport,
+             self._cue_control))
 
     def _create_controls(self):
 
@@ -119,17 +124,22 @@ class KeyPad(ControlSurface):
 
     def _setup_mixer(self):
         self._mixer = MixerComponent(NUM_CHANNEL_STRIPS)
+        self._mixer.name = 'Mixer'
+        self._mixer.set_enabled(False)
         for index in xrange(NUM_CHANNEL_STRIPS):
             strip = self._mixer.channel_strip(index)
+            strip.set_invert_mute_feedback(True)
             sends = ButtonMatrixElement(name='%d_Send_Controls' % (index + 1), rows=[(self._rotaries_a[index], self._rotaries_b[index])])
             strip.layer = Layer(volume_control=self._faders[index], pan_control=self._encoders[index], send_controls=sends, mute_button=self._mute_buttons[index], solo_button=self._solo_buttons[index], arm_button=self._arm_buttons[index], select_button=self._encoder_pushes[index])
 
     def _setup_transport(self):
         self._transport = TransportComponent(name='Transport')
+        self._transport.set_enabled(False)
         self._transport.layer = Layer(play_button=self._play_button, stop_button=self._stop_button, record_button=self._record_button, overdub_button=self._shifted_record_button, loop_button=self._shifted_arm_buttons[3], tap_tempo_button=self._shifted_arm_buttons[4], metronome_button=self._shifted_arm_buttons[5], nudge_down_button=self._shifted_arm_buttons[6], nudge_up_button=self._shifted_arm_buttons[7])
 
     def _setup_session(self):
-        self._session = SpecialSessionComponent(NUM_CHANNEL_STRIPS, name='Session_Control')
+        self._session = SessionComponent(NUM_CHANNEL_STRIPS, name='Session_Control')
+        self._session.set_enabled(False)
         stop_buttons = ButtonMatrixElement(name='Track_Stop_Buttons', rows=[self._shifted_solo_buttons])
         self._session.layer = Layer(stop_all_clips_button=self._shifted_stop_button, stop_track_clip_buttons=stop_buttons, select_prev_button=self._shifted_octave_down_button, select_next_button=self._shifted_octave_up_button)
         self._session.selected_scene().name = 'Selected_Scene_Control'
@@ -140,4 +150,5 @@ class KeyPad(ControlSurface):
 
     def _setup_cue_control(self):
         self._cue_control = CuePointControlComponent(name='Cue_Point_Control')
+        self._cue_control.set_enabled(False)
         self._cue_control.layer = Layer(toggle_cue_button=self._shifted_arm_buttons[0], prev_cue_button=self._shifted_arm_buttons[1], next_cue_button=self._shifted_arm_buttons[2])

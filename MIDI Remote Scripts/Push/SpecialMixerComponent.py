@@ -28,7 +28,7 @@ class SpecialMixerComponent(MixerComponent):
         self._selected_track_data_sources[0].set_display_string('Track Selection:')
         self._selected_track_name_data_source = self._selected_track_data_sources[1]
         self._on_selected_track_changed.subject = self.song().view
-        self._update_selected_track()
+        self._update_selected_track_name()
 
     def tracks_to_use(self):
         return tracks_to_use_from_song(self.song())
@@ -198,10 +198,10 @@ class SpecialMixerComponent(MixerComponent):
             else:
                 self._channel_strips[index - num_visible_returns].set_track(None)
 
-    @subject_slot('selected_track')
+    @subject_slot('selected_track.name')
     def _on_selected_track_changed(self):
-        self._update_selected_track()
+        self._update_selected_track_name()
 
-    def _update_selected_track(self):
+    def _update_selected_track_name(self):
         selected = self.song().view.selected_track
         self._selected_track_name_data_source.set_display_string(selected.name)

@@ -72,7 +72,7 @@ class LoopSelectorComponent(ControlSurfaceComponent):
         self._loop_start = 0
         self._loop_end = 0
         self._loop_length = 0
-        self._is_following = True
+        self._is_following = False
         self._follow_button = None
         self._select_button = None
         self._short_loop_selector_matrix = None
@@ -125,14 +125,20 @@ class LoopSelectorComponent(ControlSurfaceComponent):
         self.set_detail_clip(self.song().view.detail_clip)
 
     def set_detail_clip(self, clip):
-        self.is_following = True
-        self._paginator.select_page_in_point(clip.loop_start if clip != None else 0.0)
-        self._on_playing_position_changed.subject = clip
-        self._on_playing_status_changed.subject = clip
-        self._on_loop_start_changed.subject = clip
-        self._on_loop_end_changed.subject = clip
-        self._sequencer_clip = clip
-        self._on_loop_changed()
+        if clip != self._sequencer_clip:
+            if clip != None:
+                self._is_following = self._is_following or clip_is_new_recording(clip)
+                self._on_playing_position_changed.subject = clip
+                self._on_playing_status_changed.subject = clip
+                self._on_loop_start_changed.subject = clip
+                self._on_loop_end_changed.subject = clip
+                self._on_is_recording_changed.subject = clip
+                self._sequencer_clip = clip
+                page_start = self._paginator.page_index * self._paginator.page_length
+                clip and (page_start < clip.loop_start or page_start > clip.loop_end) and self._paginator.select_page_in_point(clip.loop_start)
+            elif not clip:
+                self._paginator.select_page_in_point(0)
+            self._on_loop_changed()
 
     def _update_follow_button(self):
         if self.is_enabled() and self._follow_button:
@@ -177,7 +183,7 @@ class LoopSelectorComponent(ControlSurfaceComponent):
 
     @subject_slot('is_recording')
     def _on_is_recording_changed(self):
-        self._update_page_colors()
+        self.is_following = self._is_following or clip_is_new_recording(self._sequencer_clip)
 
     @subject_slot('playing_position')
     def _on_playing_position_changed(self):
@@ -355,14 +361,14 @@ class LoopSelectorComponent(ControlSurfaceComponent):
 
     def _try_set_loop(self):
         did_set_loop = False
-        if self._sequencer_clip.is_recording:
-            infinite_recording = not self._sequencer_clip.is_overdubbing
-            if not infinite_recording:
+        if self._sequencer_clip:
+            if not clip_is_new_recording(self._sequencer_clip):
                 lowest_page = min(self._pressed_pages) + self.page_offset
                 if self._try_select_page(lowest_page) == True:
                     self._set_loop_in_live()
                     did_set_loop = True
-            self.is_following = did_set_loop and True
+            if did_set_loop:
+                self.is_following = True
         return did_set_loop
 
     def _set_loop_in_live(self):

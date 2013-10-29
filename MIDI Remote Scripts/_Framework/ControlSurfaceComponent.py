@@ -17,13 +17,13 @@ class ControlSurfaceComponent(SlotManager, Subject):
     _layer = None
 
     @depends(register_component=None, song=None)
-    def __init__(self, name = '', register_component = None, song = None, layer = None, is_enabled = None, *a, **k):
+    def __init__(self, name = '', register_component = None, song = None, layer = None, is_enabled = True, *a, **k):
         if not callable(register_component):
             raise AssertionError
             super(ControlSurfaceComponent, self).__init__(*a, **k)
             self.name = name
             raise layer is None or not is_enabled or AssertionError
-            self._explicit_is_enabled = is_enabled or layer is None and is_enabled is None
+            self._explicit_is_enabled = is_enabled
             self._recursive_is_enabled = True
             self._is_enabled = self._explicit_is_enabled
             self._allow_updates = True

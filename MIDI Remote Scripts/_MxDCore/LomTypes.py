@@ -10,7 +10,8 @@ HIDDEN_PROPERTIES = ('begin_undo_step', 'end_undo_step', 'begin_gesture', 'end_g
 ENUM_TYPES = (Live.Song.Quantization,
  Live.Song.RecordingQuantization,
  Live.Song.CaptureMode,
- Live.Clip.GridQuantization)
+ Live.Clip.GridQuantization,
+ Live.DeviceParameter.AutomationState)
 TUPLE_TYPES = {'tracks': Live.Track.Track,
  'visible_tracks': Live.Track.Track,
  'return_tracks': Live.Track.Track,

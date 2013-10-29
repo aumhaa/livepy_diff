@@ -277,10 +277,12 @@ class InputControlElement(NotifyingControlElement):
 
     def connect_to(self, parameter):
         """ parameter is a Live.Device.DeviceParameter """
-        if not parameter != None:
-            raise AssertionError
-            self._parameter_to_map_to = self._parameter_to_map_to != parameter and parameter
-            self._request_rebuild()
+        if self._parameter_to_map_to != parameter:
+            if parameter == None:
+                self.release_parameter()
+            else:
+                self._parameter_to_map_to = parameter
+                self._request_rebuild()
 
     def release_parameter(self):
         if self._parameter_to_map_to != None:
@@ -348,8 +350,6 @@ class InputControlElement(NotifyingControlElement):
             if self._report_output:
                 is_input = True
                 self._report_value(value, not is_input)
-        self._delayed_value_to_send = None
-        self._delayed_channel = None
 
     def clear_send_cache(self):
         self._last_sent_message = None
