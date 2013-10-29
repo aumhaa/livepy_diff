@@ -1,4 +1,4 @@
-#Embedded file name: /Volumes/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/TransportComponent.py
+#Embedded file name: /Volumes/Jenkins2045_2/versonator2/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/TransportComponent.py
 import Live
 from functools import partial
 from CompoundComponent import CompoundComponent

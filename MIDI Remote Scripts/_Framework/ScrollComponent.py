@@ -1,4 +1,4 @@
-#Embedded file name: /Volumes/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ScrollComponent.py
+#Embedded file name: /Volumes/Jenkins2045_2/versonator2/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ScrollComponent.py
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.SubjectSlot import subject_slot
 from _Framework import Task

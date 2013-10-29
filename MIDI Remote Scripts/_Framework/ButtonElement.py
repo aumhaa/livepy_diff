@@ -1,4 +1,4 @@
-#Embedded file name: /Volumes/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ButtonElement.py
+#Embedded file name: /Volumes/Jenkins2045_2/versonator2/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ButtonElement.py
 import Live
 from InputControlElement import InputControlElement, MIDI_CC_TYPE
 ON_VALUE = int(127)

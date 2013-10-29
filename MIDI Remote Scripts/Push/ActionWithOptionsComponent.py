@@ -1,4 +1,4 @@
-#Embedded file name: /Volumes/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ActionWithOptionsComponent.py
+#Embedded file name: /Volumes/Jenkins2045_2/versonator2/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ActionWithOptionsComponent.py
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.DisplayDataSource import DisplayDataSource

@@ -1,4 +1,4 @@
-#Embedded file name: /Volumes/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ChannelStripComponent.py
+#Embedded file name: /Volumes/Jenkins2045_2/versonator2/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ChannelStripComponent.py
 import Live
 from itertools import chain
 from ControlSurfaceComponent import ControlSurfaceComponent

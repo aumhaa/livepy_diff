@@ -1,4 +1,4 @@
-#Embedded file name: /Volumes/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/DisplayingDeviceComponent.py
+#Embedded file name: /Volumes/Jenkins2045_2/versonator2/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/DisplayingDeviceComponent.py
 from itertools import chain
 from _Framework.SubjectSlot import subject_slot, subject_slot_group
 from _Framework.DeviceComponent import DeviceComponent

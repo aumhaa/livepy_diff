@@ -1,4 +1,4 @@
-#Embedded file name: /Volumes/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/CompoundElement.py
+#Embedded file name: /Volumes/Jenkins2045_2/versonator2/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/CompoundElement.py
 from __future__ import with_statement
 from SubjectSlot import subject_slot_group, SlotManager
 from NotifyingControlElement import NotifyingControlElement
