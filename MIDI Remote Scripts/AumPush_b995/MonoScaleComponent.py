@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9.05 Suite.app/Contents/App-Resources/MIDI Remote Scripts/AumPush_b995/MonoScaleComponent.py
+#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/AumPush_b995/MonoScaleComponent.py
 """
 MonoScaleComponent.py
 

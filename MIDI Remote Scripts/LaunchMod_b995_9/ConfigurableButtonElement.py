@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9.05 Suite.app/Contents/App-Resources/MIDI Remote Scripts/LaunchMod_b995_9/ConfigurableButtonElement.py
+#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/LaunchMod_b995_9/ConfigurableButtonElement.py
 import Live
 from _Framework.ButtonElement import *
 from _Mono_Framework.MonoButtonElement import MonoButtonElement
@@ -21,7 +21,7 @@ class ConfigurableButtonElement(MonoButtonElement):
         self._num_colors = 9
         self._darkened = 4
         self._on_value = 127
-        self._off_value = 0
+        self._off_value = 4
         self._is_enabled = True
         self._is_notifying = False
         self._force_next_value = False
@@ -64,6 +64,13 @@ class ConfigurableButtonElement(MonoButtonElement):
     def send_value(self, value, force = False):
         MonoButtonElement.send_value(self, value, force or self._force_next_value)
         self._force_next_value = False
+
+    def send_value(self, *a, **k):
+        if self._script._host.is_enabled():
+            super(ConfigurableButtonElement, self).send_value(*a, **k)
+        else:
+            ButtonElement.send_value(self, *a, **k)
+            self._force_next_value = False
 
     def install_connections(self, install_translation_callback, install_mapping_callback, install_forwarding_callback):
         if self._is_enabled:

@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/Live8DeviceComponent.py
+#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/Live8DeviceComponent.py
 import Live
 from _Generic.Devices import *
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent

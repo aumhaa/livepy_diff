@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/MonoDeviceComponent.py
+#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/MonoDeviceComponent.py
 import Live
 from _Tools.re import *
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
@@ -166,17 +166,21 @@ class MonoDeviceComponent(DeviceComponent):
                         control.clear_send_cache()
 
                     self._bank_name = 'Bank ' + str(self._bank_index + 1)
-                    if not (self._device.class_name in self._device_banks.keys() and self._device.class_name in self._device_best_banks.keys()):
+                    if self._device.class_name in self._device_banks.keys():
+                        class_name = self._device.class_name
+                    else:
+                        class_name = 'Other'
+                    if not (class_name in self._device_banks.keys() and class_name in self._device_best_banks.keys()):
                         raise AssertionError
-                        banks = self._device_banks[self._device.class_name]
+                        banks = self._device_banks[class_name]
                         if '_alt_device_banks' in dir(host):
                             if self._type in host._alt_device_banks.keys():
-                                if self._device.class_name in host._alt_device_banks[self._type].keys():
-                                    banks = host._alt_device_banks[self._type][self._device.class_name]
+                                if class_anme in host._alt_device_banks[self._type].keys():
+                                    banks = host._alt_device_banks[self._type][class_name]
                         bank = None
                         if len(banks) > self._bank_index:
                             bank = banks[self._bank_index]
-                            self._bank_name[self._bank_index] = self._is_banking_enabled() and self._device.class_name in self._device_bank_names.keys() and self._device_bank_names[self._device.class_name]
+                            self._bank_name[self._bank_index] = self._is_banking_enabled() and class_name in self._device_bank_names.keys() and self._device_bank_names[class_name]
                 for index in range(len(host._parameter_controls)):
                     parameter = None
                     if bank != None and index in range(len(bank)):
@@ -198,17 +202,21 @@ class MonoDeviceComponent(DeviceComponent):
                     index += 1
 
     def _assign_params(self, *a):
-        self._bank_name = self._device != None and len(self._params) is not 0 and 'ModBank ' + str(self._bank_index + 1)
-        if self._device.class_name in self._device_banks.keys():
-            if not self._device.class_name in self._device_best_banks.keys():
+        if self._device != None and len(self._params) is not 0:
+            self._bank_name = 'ModBank ' + str(self._bank_index + 1)
+            class_name = self._device.class_name in self._device_banks.keys() and self._device.class_name
+        else:
+            class_name = 'Other'
+        if class_name in self._device_banks.keys():
+            if not class_name in self._device_best_banks.keys():
                 raise AssertionError
-                banks = self._device_banks[self._device.class_name]
+                banks = self._device_banks[class_name]
                 bank = None
                 if len(banks) > self._bank_index:
                     bank = banks[self._bank_index]
                     if self._is_banking_enabled():
-                        if self._device.class_name in self._device_bank_names.keys():
-                            self._bank_name[self._bank_index] = self._device_bank_names[self._device.class_name]
+                        if class_name in self._device_bank_names.keys():
+                            self._bank_name[self._bank_index] = self._device_bank_names[class_name]
                 for index in range(len(self._params)):
                     parameter = None
                     if bank != None and index in range(len(bank)):

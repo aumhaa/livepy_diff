@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9.05 Suite.app/Contents/App-Resources/MIDI Remote Scripts/AumPC40_b995_9/APC.py
+#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/AumPC40_b995_9/APC.py
 from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface

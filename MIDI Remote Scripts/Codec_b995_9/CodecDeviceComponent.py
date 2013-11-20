@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9.05 Suite.app/Contents/App-Resources/MIDI Remote Scripts/Codec_b995_9/CodecDeviceComponent.py
+#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/Codec_b995_9/CodecDeviceComponent.py
 import Live
 from _Generic.Devices import *
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent

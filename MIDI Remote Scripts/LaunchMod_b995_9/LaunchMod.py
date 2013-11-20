@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9.05 Suite.app/Contents/App-Resources/MIDI Remote Scripts/LaunchMod_b995_9/LaunchMod.py
+#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/LaunchMod_b995_9/LaunchMod.py
 from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface
@@ -10,6 +10,7 @@ from MainSelectorComponent import MainSelectorComponent
 from _Mono_Framework.MonoBridgeElement import MonoBridgeElement
 from _Mono_Framework.MonoButtonElement import MonoButtonElement
 from MonomodComponent import MonomodComponent
+from Push.M4LInterfaceComponent import M4LInterfaceComponent
 SIDE_NOTES = (8, 24, 40, 56, 72, 88, 104, 120)
 DRUM_NOTES = (41, 42, 43, 44, 45, 46, 47, 57, 58, 59, 60, 61, 62, 63, 73, 74, 75, 76, 77, 78, 79, 89, 90, 91, 92, 93, 94, 95, 105, 106, 107)
 
@@ -159,6 +160,13 @@ class LaunchMod(ControlSurface):
         if not self._suppress_session_highlight:
             ControlSurface._set_session_highlight(self, track_offset, scene_offset, width, height, include_return_tracks)
 
+    def _setup_m4l_interface(self):
+        self._m4l_interface = M4LInterfaceComponent(controls=self.controls, component_guard=self.component_guard)
+        self.get_control_names = self._m4l_interface.get_control_names
+        self.get_control = self._m4l_interface.get_control
+        self.grab_control = self._m4l_interface.grab_control
+        self.release_control = self._m4l_interface.release_control
+
     def _setup_monobridge(self):
         self._monobridge = MonoBridgeElement(self)
         self._monobridge.name = 'MonoBridge'
@@ -174,6 +182,7 @@ class LaunchMod(ControlSurface):
         self.flash()
 
     def flash(self):
-        for control in self.controls:
-            if isinstance(control, MonoButtonElement):
-                control.flash(self._timer)
+        if self._host.is_enabled():
+            for control in self.controls:
+                if isinstance(control, MonoButtonElement):
+                    control.flash(self._timer)

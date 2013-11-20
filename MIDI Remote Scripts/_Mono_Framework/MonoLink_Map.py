@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9.05 Suite.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/MonoLink_Map.py
+#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/MonoLink_Map.py
 """This document is intended to allow the user to set up 16 presets for use with the MonoLink component used in b993 and forward of Monomodular.  It defines 16 different user banks that can be switched on-the-fly for use with various monome applications.  Its default configuration is set up for several popular applications that are currently in circulation."""
 MONOLINK_ENABLE = True
 CHANNEL1_DESC = 'default'

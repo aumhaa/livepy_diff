@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/modstring.py
+#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/modstring.py
 """A collection of string operations (most are no longer used).
 
 Warning: most of the code you see here isn't normally used nowadays.

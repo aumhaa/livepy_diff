@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9.05 Suite.app/Contents/App-Resources/MIDI Remote Scripts/BlockMod_b995_9/BlockMod.py
+#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/BlockMod_b995_9/BlockMod.py
 from __future__ import with_statement
 import Live
 import time
@@ -853,7 +853,7 @@ class BlockMod(MonOhm):
         self._mixer.master_strip().set_volume_control(None)
         self._mixer.set_crossfader_control(self._fader[1])
 
-    def update(self):
+    def update_display(self):
         super(BlockMod, self).update_display()
         if self._timer == 0:
             self._shift_pressed_timer = -12

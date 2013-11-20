@@ -1,8 +1,9 @@
-#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/Livid_Base/Base.py
+#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/Livid_Base/Base.py
 from __future__ import with_statement
 import Live
 import math
 import sys
+from _Tools.re import *
 from itertools import imap, chain, starmap
 from _Framework.ButtonElement import ButtonElement
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
@@ -50,7 +51,7 @@ from Push.ConfigurableButtonElement import ConfigurableButtonElement
 from Push.LoopSelectorComponent import LoopSelectorComponent
 from Push.ComboElement import ComboElement, DoublePressElement, MultiElement, DoublePressContext
 from Push.Actions import CreateInstrumentTrackComponent, CreateDefaultTrackComponent, CaptureAndInsertSceneComponent, DuplicateDetailClipComponent, DuplicateLoopComponent, SelectComponent, DeleteComponent, DeleteSelectedClipComponent, DeleteSelectedSceneComponent, CreateDeviceComponent
-from NoteEditorComponent import NoteEditorComponent
+from Push.M4LInterfaceComponent import M4LInterfaceComponent
 DIRS = [47,
  48,
  50,
@@ -224,7 +225,7 @@ LAUNCH_QUANTIZATION = (_Q.q_quarter,
  _Q.q_8_bars)
 
 def is_device(device):
-    return device is not None and isinstance(device, Live.Device.Device)
+    return device is not None and isinstance(device, Live.Device.Device) and hasattr(device, 'name')
 
 
 def make_pad_translations(chan):
@@ -289,12 +290,12 @@ class BlockingMonoButtonElement(MonoButtonElement):
         self.display_press = False
         self._last_flash = 0
         self.scale_color = 0
-        self._skin_colors = {'NoteEditor.Step.Low': 0,
+        self._skin_colors = {'NoteEditor.Step.Low': 3,
          'NoteEditor.Step.High': 1,
          'NoteEditor.Step.Full': 2,
          'NoteEditor.Step.Muted': 3,
          'NoteEditor.Step.Empty': 0,
-         'NoteEditor.StepLow': 0,
+         'NoteEditor.StepLow': 3,
          'NoteEditor.StepHigh': 1,
          'NoteEditor.StepFull': 2,
          'NoteEditor.StepMuted': 3,
@@ -1314,6 +1315,7 @@ class Base(ControlSurface):
             self._setup_vertical_offset_component()
             self._setup_scale_offset_component()
             self._setup_session_recording_component()
+            self._setup_m4l_interface()
             self._setup_drumgroup()
             self._setup_step_sequencer()
             self._device.add_device_listener(self._on_new_device_set)
@@ -1371,6 +1373,14 @@ class Base(ControlSurface):
         self._dn_button = self._nav_buttons[UDLR[1]]
         self._lt_button = self._nav_buttons[UDLR[2]]
         self._rt_button = self._nav_buttons[UDLR[3]]
+        for button in self._button:
+            button._descriptor = 'None'
+
+        for touchpad in self._touchpad:
+            touchpad._descriptor = 'None'
+
+        for pad in self._pad:
+            pad._descriptor = 'None'
 
     def _setup_mixer_control(self):
         is_momentary = True
@@ -1407,6 +1417,7 @@ class Base(ControlSurface):
                 clip_slot.set_recording_value(CLIP_RECORDING)
 
         self._session.set_mixer(self._mixer)
+        self._session.set_track_banking_increment(TRACK_BANKING_INCREMENT)
         self.set_highlighting_session_component(self._session)
         self._session._do_show_highlight()
 
@@ -1503,50 +1514,64 @@ class Base(ControlSurface):
         self._clip_creator = ClipCreator()
         self._recorder = BaseSessionRecordingComponent(self._clip_creator, ViewControlComponent())
 
+    def _setup_m4l_interface(self):
+        self._m4l_interface = M4LInterfaceComponent(controls=self.controls, component_guard=self.component_guard)
+        self.get_control_names = self._m4l_interface.get_control_names
+        self.get_control = self._m4l_interface.get_control
+        self.grab_control = self._m4l_interface.grab_control
+        self.release_control = self._m4l_interface.release_control
+
     def _setup_drumgroup(self):
         self._drumgroup = DrumGroupComponent()
 
     def _setup_mod(self):
         if isinstance(__builtins__, dict):
-            if 'monomodular' not in __builtins__.keys():
+            if 'monomodular' not in __builtins__.keys() or not isinstance(__builtins__['monomodular'], ModRouter):
                 __builtins__['monomodular'] = ModRouter()
-            self.monomodular = __builtins__['monomodular']
-        else:
-            if not hasattr(__builtins__, 'monomodular'):
-                setattr(__builtins__, 'monomodular', ModRouter())
-            self.monomodular = __builtins__['monomodular']
+        elif not hasattr(__builtins__, 'monomodular') or not isinstance(__builtins__['monomodular'], ModRouter):
+            setattr(__builtins__, 'monomodular', ModRouter())
+        self.monomodular = __builtins__['monomodular']
         if not self.monomodular.has_host():
             self.monomodular.set_host(self)
         self.monomodular.name = 'monomodular_switcher'
         self.modhandler = BaseModHandler(script=self, detect_mod=self._on_new_device_set)
+        self.modhandler.name = 'ModHandler'
 
     def _setup_OSC_layer(self):
-        self._prefix = '/Base'
+        self._OSC_id = 0
+        if hasattr(__builtins__, 'control_surfaces') or isinstance(__builtins__, dict) and 'control_surfaces' in __builtins__.keys():
+            for cs in __builtins__['control_surfaces']:
+                if cs is self:
+                    break
+                elif isinstance(cs, Base):
+                    self._OSC_id += 1
+
+        self._prefix = '/Live/Base/' + str(self._OSC_id)
         self._outPrt = OSC_OUTPORT
         if self.oscServer is not None:
             self.oscServer.shutdown()
         self.oscServer = RemixNet.OSCServer('localhost', self._outPrt, 'localhost', 10001)
 
     def _setup_step_sequencer(self):
-        self._grid_resolution = GridResolution()
-        self._c_instance.playhead.enabled = True
+        self._grid_resolution = self.register_disconnectable(GridResolution())
         self._playhead_element = PlayheadElement(self._c_instance.playhead)
+        self._playhead_element.reset()
         self._skin = make_default_skin()
+        self._note_sequencer = StepSeqComponent(self._clip_creator, self._skin, grid_resolution=self._grid_resolution, name='Note_Sequencer')
+        self._note_sequencer._playhead_component._notes = tuple(range(16))
+        self._note_sequencer._playhead_component._triplet_notes = tuple(chain(*starmap(range, ((0, 6), (8, 14)))))
+        self._note_sequencer.set_enabled(True)
         self._step_sequencer = StepSeqComponent(self._clip_creator, self._skin, grid_resolution=self._grid_resolution, name='Step_Sequencer')
+        self._step_sequencer._note_editor._visible_steps = self._visible_steps
+        self._step_sequencer._drum_group._update_pad_led = self._drum_group_update_pad_led
+        self._step_sequencer._drum_group._update_control_from_script = self._update_control_from_script
         self._step_sequencer._playhead_component._notes = tuple(range(16))
         self._step_sequencer._playhead_component._triplet_notes = tuple(chain(*starmap(range, ((0, 3),
          (4, 7),
          (8, 11),
          (12, 15)))))
-        self._step_sequencer._drum_group._update_pad_led = self._drum_group_update_pad_led
-        self._step_sequencer._drum_group._update_control_from_script = self._update_control_from_script
-        self._step_sequencer.layer = Layer(playhead=self._playhead_element)
+        self._step_sequencer.set_enabled(True)
         self._on_detail_clip_changed.subject = self.song().view
-        self._step_sequencer._note_editor._visible_steps = self._visible_steps
-        self._note_sequencer = StepSeqComponent(self._clip_creator, self._skin, grid_resolution=self._grid_resolution, name='Note_Sequencer')
-        self._note_sequencer.layer = Layer(playhead=self._playhead_element)
-        self._note_sequencer._playhead_component._notes = tuple(range(16))
-        self._note_sequencer._playhead_component._triplet_notes = tuple(chain(*starmap(range, ((0, 7), (8, 15)))))
 
     def _visible_steps(self):
         first_time = self._step_sequencer._note_editor.page_length * self._step_sequencer._note_editor._page_index
@@ -1658,11 +1683,16 @@ class Base(ControlSurface):
 
                 for row in range(4):
                     self._scene[row].set_launch_button(self._pad[7 + row * 8])
+                    self._pad[7 + row * 8]._descriptor = 'Scene'
                     self._pad[7 + row * 8].set_on_off_values(7, 3)
                     self._pad[7 + row * 8].turn_off()
 
                 self._session.set_scene_bank_buttons(self._dn_button, self._up_button)
+                self._dn_button._descriptor = 'SceneDn'
+                self._up_button._descriptor = 'SceneUp'
                 self._session.set_track_bank_buttons(self._lt_button, self._rt_button)
+                self._lt_button._descriptor = 'TrackLeft'
+                self._rt_button._descriptor = 'TrackRight'
                 self._current_nav_buttons = self._button[4:8]
                 for index in range(4):
                     self._button[index + 4].set_on_off_values(SESSION_NAV[0], 0)
@@ -1689,10 +1719,13 @@ class Base(ControlSurface):
                         for row in range(4):
                             self._pad[column + row * 8].set_force_next_value()
                             self._scene[row].clip_slot(column).set_launch_button(self._pad[column + row * 8])
+                            self._pad[column + row * 8]._descriptor = 'Launch'
 
                     for row in range(4):
                         self._scene[row].set_launch_button(self._pad[7 + row * 8])
+                        self._pad[7 + row * 8]._descriptor = 'Scene'
 
+                self._notify_desciptors()
                 self.request_rebuild_midi_map()
         else:
             self._shift_update(self._mode_selector._mode_index, False)
@@ -1735,6 +1768,8 @@ class Base(ControlSurface):
                         self._offsets[cur_chan]['drumoffset'] = offset
                         self._set_device_attribute(self._top_device(), 'drumoffset', offset)
                         self.show_message('New drum root is ' + str(self._offsets[cur_chan]['drumoffset']))
+                        if OSC_TRANSMIT:
+                            self.oscServer.sendOSC(self._prefix + '/glob/offset/', str(self.generate_strip_string(offset)))
                         newval = list(str(offset))
                         if len(newval) == 2:
                             self._display_chars(newval[0], newval[1])
@@ -1744,6 +1779,8 @@ class Base(ControlSurface):
                         self._offsets[cur_chan]['offset'] = offset
                         self._set_device_attribute(self._top_device(), 'offset', offset)
                         self.show_message('New root is Note# ' + str(self._offsets[cur_chan]['offset']) + ', ' + str(NOTENAMES[self._offsets[cur_chan]['offset']]))
+                        if OSC_TRANSMIT:
+                            self.oscServer.sendOSC(self._prefix + '/glob/offset/', str(self.generate_strip_string(offset)))
                         newval = list(str(offset))
                         if len(newval) >= 2:
                             self._display_chars(newval[0], newval[1])
@@ -1764,6 +1801,8 @@ class Base(ControlSurface):
                     self._offsets[cur_chan]['vertoffset'] = offset
                     self._set_device_attribute(self._top_device(), 'vertoffset', offset)
                     self.show_message('New vertical offset is ' + str(self._offsets[cur_chan]['vertoffset']))
+                    if OSC_TRANSMIT:
+                        self.oscServer.sendOSC(self._prefix + '/glob/vertoffset/', str(self.generate_strip_string(offset)))
                     newval = list(str(offset))
                     if len(newval) >= 2:
                         self._display_chars(newval[0], newval[1])
@@ -1784,6 +1823,8 @@ class Base(ControlSurface):
                     self._offsets[cur_chan]['scale'] = SCALENAMES[offset]
                     self._set_device_attribute(self._top_device(), 'scale', SCALENAMES[offset])
                     self.show_message('New scale is ' + str(self._offsets[cur_chan]['scale']))
+                    if OSC_TRANSMIT:
+                        self.oscServer.sendOSC(self._prefix + '/glob/offset/scale/', str(self.generate_strip_string(SCALENAMES[offset])))
                     if str(SCALENAMES[offset]) in SCALEABBREVS.keys():
                         newval = list(str(SCALEABBREVS[str(SCALENAMES[offset])]))
                     else:
@@ -1805,6 +1846,7 @@ class Base(ControlSurface):
                     if cur_chan in CHANNELS:
                         cur_chan = CHANNELS.index(cur_chan) % 15 + 1
                         self._offsets[cur_chan]['split'] = bool(mode)
+                        self._set_device_attribute(self._top_device(), 'split', bool(mode))
 
     def _sequencer_mode_value(self, mode):
         if not self.pad_held():
@@ -1817,6 +1859,7 @@ class Base(ControlSurface):
                     if cur_chan in CHANNELS:
                         cur_chan = CHANNELS.index(cur_chan) % 15 + 1
                         self._offsets[cur_chan]['sequencer'] = bool(mode)
+                        self._set_device_attribute(self._top_device(), 'sequencer', bool(mode))
 
     def _deassign_all(self):
         self.modhandler._fader_color_override = False
@@ -1851,11 +1894,13 @@ class Base(ControlSurface):
             self._step_sequencer.set_drum_bank_down_button(None)
             self._step_sequencer.set_mute_button(None)
             self._step_sequencer.set_solo_button(None)
+            self._step_sequencer.set_playhead(None)
             self._on_note_matrix_pressed.subject = None
             self._note_sequencer.set_loop_selector_matrix(None)
             self._note_sequencer.set_quantization_buttons(None)
             self._note_sequencer.set_follow_button(None)
             self._note_sequencer.set_button_matrix(None)
+            self._note_sequencer.set_playhead(None)
             self._drumgroup.set_drum_matrix(None)
             self.modhandler._assign_keys(None)
             self.modhandler._assign_base_grid(None)
@@ -1887,6 +1932,7 @@ class Base(ControlSurface):
                 pad.use_default_message()
                 pad.reset(True)
                 pad.set_enabled(True)
+                pad._descriptor = '_'
 
             for pad in self._pad:
                 pad.display_press = False
@@ -1895,6 +1941,7 @@ class Base(ControlSurface):
                 pad.use_default_message()
                 pad.reset(True)
                 pad.set_enabled(True)
+                pad._descriptor = '_'
                 pad.set_force_next_value()
 
             for pad in self._pad_CC:
@@ -1908,6 +1955,7 @@ class Base(ControlSurface):
                 button.use_default_message()
                 button.reset(True)
                 button.set_enabled(True)
+                button._descriptor = '_'
 
             for fader in self._fader[0:8]:
                 fader.release_parameter()
@@ -1943,10 +1991,15 @@ class Base(ControlSurface):
             for index in range(8):
                 self._touchpad[index].set_on_off_values(CHAN_SELECT, 0)
                 self._mixer.channel_strip(index).set_select_button(self._touchpad[index])
+                self._touchpad[index]._descriptor = 'Select'
                 self._mixer.channel_strip(index).set_volume_control(self._fader[index])
 
             self._session.set_scene_bank_buttons(self._dn_button, self._up_button)
+            self._dn_button._descriptor = 'SceneDn'
+            self._up_button._descriptor = 'SceneUp'
             self._session.set_track_bank_buttons(self._lt_button, self._rt_button)
+            self._lt_button._descriptor = 'TrackDn'
+            self._rt_button._descriptor = 'TrackUp'
             self._current_nav_buttons = self._button[4:8]
             for index in range(4):
                 self._button[index + 4].set_on_off_values(SESSION_NAV[shifted], 0)
@@ -1956,6 +2009,7 @@ class Base(ControlSurface):
                 for column in range(8):
                     for row in range(4):
                         self._scene[row].clip_slot(column).set_launch_button(self._pad[column + row * 8])
+                        self._pad[column + row * 8]._descriptor = 'Clip'
 
             else:
                 self._send_midi(tuple([240,
@@ -1977,16 +2031,21 @@ class Base(ControlSurface):
                 self._session._shifted = True
                 for index in range(8):
                     self._pad[index].set_on_off_values(TRACK_MUTE, 0)
+                    self._pad[index]._descriptor = 'Mute'
                     self._mixer.channel_strip(index).set_mute_button(self._pad[index])
                     self._pad[index + 8].set_on_off_values(TRACK_SOLO, 0)
+                    self._pad[index + 8]._descriptor = 'Solo'
                     self._mixer.channel_strip(index).set_solo_button(self._pad[index + 8])
                     self._pad[index + 16].set_on_off_values(TRACK_ARM, 0)
+                    self._pad[index + 16]._descriptor = 'Arm'
                     self._mixer.channel_strip(index).set_arm_button(self._pad[index + 16])
                     self._pad[index + 24].set_on_off_values(TRACK_STOP, TRACK_STOP)
                     self._pad[index + 24].send_value(TRACK_STOP)
+                    self._pad[index + 24]._descriptor = 'Stop'
 
                 self._session.set_stop_track_clip_buttons(tuple(self._pad[24:32]))
             self._mixer.update()
+            self._notify_descriptors()
         self.request_rebuild_midi_map()
 
     def _set_layer1(self, shifted = False):
@@ -2017,6 +2076,7 @@ class Base(ControlSurface):
                 for index in range(8):
                     self._touchpad[index].set_on_off_values(CHAN_SELECT, 0)
                     self._mixer.channel_strip(index).set_select_button(self._touchpad[index])
+                    self._touchpad[index]._descriptor = 'Select'
 
                 if self._mixer.shifted() or not self._assign_midi_layer():
                     self._send_midi(LIVEBUTTONMODE)
@@ -2025,7 +2085,11 @@ class Base(ControlSurface):
                             self._scene[row].clip_slot(column).set_launch_button(self._pad[column + row * 8])
 
                     self._session.set_scene_bank_buttons(self._dn_button, self._up_button)
+                    self._dn_button._descriptor = 'SceneDn'
+                    self._up_button._descriptor = 'SceneUp'
                     self._session.set_track_bank_buttons(self._lt_button, self._rt_button)
+                    self._lt_button._descriptor = 'TrackLeft'
+                    self._rt_button._descriptor = 'TrackRight'
                     for index in range(4):
                         self._button[index + 4].set_on_off_values(SESSION_NAV[shifted], 0)
 
@@ -2034,9 +2098,13 @@ class Base(ControlSurface):
                     self._session.update()
                 else:
                     self._button[4].set_on_off_values(OVERDUB + 7, OVERDUB)
+                    self._button[4]._descriptor = 'Overdub'
                     self._button[5].set_on_off_values(NEW + 7, NEW)
+                    self._button[5]._descriptor = 'New'
                     self._button[6].set_on_off_values(RECORD + 7, RECORD)
+                    self._button[6]._descriptor = 'Record'
                     self._button[7].set_on_off_values(LENGTH + 7, LENGTH)
+                    self._button[7]._descriptor = 'Length'
                     self._transport.set_overdub_button(self._button[4])
                     self._recorder.set_new_button(self._button[5])
                     self._recorder.set_record_button(self._button[6])
@@ -2051,7 +2119,11 @@ class Base(ControlSurface):
                     self._send_midi(LIVEBUTTONMODE)
                     self._session._shifted = True
                     self._session.set_scene_bank_buttons(self._dn_button, self._up_button)
+                    self._dn_button._descriptor = 'SceneDn'
+                    self._up_button._descriptor = 'SceneUp'
                     self._session.set_track_bank_buttons(self._lt_button, self._rt_button)
+                    self._lt_button._descriptor = 'TrackDn'
+                    self._lt_button._descriptor = 'TrackUp'
                     self._current_nav_buttons = self._button[4:8]
                     for index in range(4):
                         self._button[index + 4].set_on_off_values(SESSION_NAV[shifted], 0)
@@ -2074,18 +2146,23 @@ class Base(ControlSurface):
                     if not self.pad_held():
                         for index in range(8):
                             self._pad[index].set_on_off_values(TRACK_MUTE, 0)
+                            self._pad[index]._descriptor = 'Mute'
                             self._mixer.channel_strip(index).set_mute_button(self._pad[index])
+                            self._pad[index + 8]._descriptor = 'Solo'
                             self._pad[index + 8].set_on_off_values(TRACK_SOLO, 0)
                             self._mixer.channel_strip(index).set_solo_button(self._pad[index + 8])
+                            self._pad[index + 16]._descriptor = 'Arm'
                             self._pad[index + 16].set_on_off_values(TRACK_ARM, 0)
                             self._mixer.channel_strip(index).set_arm_button(self._pad[index + 16])
                             self._pad[index + 24].set_on_off_values(TRACK_STOP, TRACK_STOP)
                             self._pad[index + 24].send_value(TRACK_STOP)
+                            self._pad[index + 24]._descriptor = 'Stop'
 
                         self._session.set_stop_track_clip_buttons(tuple(self._pad[24:32]))
                     else:
                         self._assign_midi_layer()
             self._mixer.update()
+            self._notify_descriptors()
         self.request_rebuild_midi_map()
 
     def _set_layer2(self, shifted = False):
@@ -2113,6 +2190,7 @@ class Base(ControlSurface):
                  247]))
                 for index in range(8):
                     self._touchpad[index].set_on_off_values(CHAN_SELECT, 0)
+                    self._touchpad[index]._descriptor = 'Select'
                     self._mixer.channel_strip(index).set_select_button(self._touchpad[index])
 
                 if self._mixer.shifted() or not self._assign_midi_layer():
@@ -2120,14 +2198,19 @@ class Base(ControlSurface):
                     for column in range(8):
                         for row in range(4):
                             self._scene[row].clip_slot(column).set_launch_button(self._pad[column + row * 8])
+                            self._pad[column + row * 8]._descriptor = 'Clip'
 
                 self._device.set_bank_nav_buttons(self._up_button, self._dn_button)
                 self._device_navigator.set_nav_buttons(self._rt_button, self._lt_button)
                 self._current_nav_buttons = self._button[4:8]
                 self._up_button.set_on_off_values(BANK_NAV, 0)
                 self._dn_button.set_on_off_values(BANK_NAV, 0)
+                self._dn_button._descriptor = 'BankDn'
+                self._up_button._descriptor = 'BankUp'
                 self._lt_button.set_on_off_values(DEVICE_NAV, 0)
                 self._rt_button.set_on_off_values(DEVICE_NAV, 0)
+                self._lt_button._descriptor = 'DeviceLeft'
+                self._rt_button._descriptor = 'DeviceRight'
                 self._device.update()
                 self._device_navigator.update()
             else:
@@ -2135,6 +2218,7 @@ class Base(ControlSurface):
                 if not is_midi:
                     for index in range(8):
                         self._touchpad[index].set_on_off_values(CHAN_SELECT, 0)
+                        self._touchpad[index]._descriptor = 'Select'
                         self._mixer.channel_strip(index).set_select_button(self._touchpad[index])
 
                     self._send_midi(LIVEBUTTONMODE)
@@ -2166,19 +2250,27 @@ class Base(ControlSurface):
                     if not self.pad_held():
                         for index in range(8):
                             self._pad[index].set_on_off_values(TRACK_MUTE, 0)
+                            self._pad[index]._descriptor = 'Mute'
                             self._mixer.channel_strip(index).set_mute_button(self._pad[index])
                             self._pad[index + 8].set_on_off_values(TRACK_SOLO, 0)
+                            self._pad[index + 8]._descriptor = 'Solo'
                             self._mixer.channel_strip(index).set_solo_button(self._pad[index + 8])
                             self._pad[index + 16].set_on_off_values(TRACK_ARM, 0)
+                            self._pad[index + 16]._descriptor = 'Arm'
                             self._mixer.channel_strip(index).set_arm_button(self._pad[index + 16])
                             self._pad[index + 24].set_on_off_values(TRACK_STOP, TRACK_STOP)
                             self._pad[index + 24].send_value(TRACK_STOP)
+                            self._pad[index + 24]._descriptor = 'Stop'
 
                         self._session.set_stop_track_clip_buttons(tuple(self._pad[24:32]))
                     else:
                         self._assign_midi_layer()
                 self._device_navigator.set_layer_buttons(self._rt_button, self._lt_button)
+                self._rt_button._descriptor = 'BankUp'
+                self._lt_button._descriptor = 'BankDn'
                 self._device_navigator.set_chain_nav_buttons(self._up_button, self._dn_button)
+                self._up_button._descriptor = 'ChainUp'
+                self._dn_button._descriptor = 'ChainDn'
                 self._current_nav_buttons = self._button[4:8]
                 self._up_button.set_on_off_values(CHAIN_NAV, 0)
                 self._dn_button.set_on_off_values(CHAIN_NAV, 0)
@@ -2188,6 +2280,7 @@ class Base(ControlSurface):
                 self._device_navigator.update()
             self._mixer.update()
         self.schedule_message(2, self._step_sequencer._drum_group._update_drum_pad_leds)
+        self._notify_descriptors()
         self.request_rebuild_midi_map()
 
     def _set_layer3(self, shifted = False):
@@ -2200,6 +2293,7 @@ class Base(ControlSurface):
             self._send_midi(USERBUTTONMODE)
             for index in range(8):
                 self._mixer.channel_strip(index).set_select_button(self._touchpad[index])
+                self._touchpad[index]._descriptor = 'Select'
                 self._touchpad[index].set_on_off_values(CHAN_SELECT, 0)
 
             self._mixer.master_strip().set_volume_control(self._fader[8])
@@ -2225,10 +2319,35 @@ class Base(ControlSurface):
              2,
              247]))
             self._send_midi(tuple([191, 122, 72]))
+            self._notify_descriptors()
+
+    def set_chain_selector(self, mode):
+        key = str('@userChain')
+        preset = None
+        for track in range(len(self.song().tracks)):
+            for device in range(len(self.song().tracks[track].devices)):
+                if match(key, str(self.song().tracks[track].devices[device].name)) != None:
+                    preset = self.song().tracks[track].devices[device]
+
+        for return_track in range(len(self.song().return_tracks)):
+            for device in range(len(self.song().return_tracks[return_track].devices)):
+                if match(key, str(self.song().return_tracks[return_track].devices[device].name)) != None:
+                    preset = self.song().return_tracks[return_track].devices[device]
+
+        for device in range(len(self.song().master_track.devices)):
+            if match(key, str(self.song().master_track.devices[device].name)) != None:
+                preset = self.song().master_track.devices[device]
+
+        if preset != None:
+            for parameter in preset.parameters:
+                if parameter.name == 'Chain Selector':
+                    parameter.value = max(min(128 / 3 * mode, 127), 0)
+                    break
 
     def _assign_midi_layer(self):
         cur_track = self._mixer._selected_strip._track
         is_midi = False
+        scale, offset, vertoffset = (' ', ' ', ' ')
         if cur_track.has_midi_input:
             if AUTO_ARM_SELECTED:
                 if not cur_track.arm:
@@ -2247,7 +2366,6 @@ class Base(ControlSurface):
                  offsets['sequencer'])
                 if scale == 'Auto':
                     scale = self._detect_instrument_type(cur_track)
-                    self.log_message('auto found: ' + str(scale))
                 if scale == 'Session':
                     is_midi = False
                 elif scale == 'Mod':
@@ -2266,6 +2384,7 @@ class Base(ControlSurface):
                                 self._offset_component._shifted_value = 3
                                 self._pad[column + row * 8].set_enabled(False)
                                 self._pad[column + row * 8].set_channel(cur_chan)
+                                self._pad[column + row * 8]._descriptor = str(NOTENAMES[self._pad[column + row * 8]._msg_identifier])
                                 self._pad_CC[column + row * 8].set_enabled(False)
                                 self._pad_CC[column + row * 8].set_channel(cur_chan)
                                 if not sequencer:
@@ -2287,6 +2406,7 @@ class Base(ControlSurface):
                                 self._offset_component._shifted_value = 11
                                 self._pad[column + row * 8].set_enabled(False)
                                 self._pad[column + row * 8].set_channel(cur_chan)
+                                self._pad[column + row * 8]._descriptor = str(NOTENAMES[self._pad[column + row * 8]._msg_identifier])
                                 self._pad_CC[column + row * 8].set_enabled(False)
                                 self._pad_CC[column + row * 8].set_channel(cur_chan)
                                 if not sequencer:
@@ -2296,6 +2416,7 @@ class Base(ControlSurface):
                         self.set_feedback_channels(range(cur_chan, cur_chan + 1))
                         if scale is 'DrumPad':
                             self.set_pad_translations(make_pad_translations(cur_chan))
+                            self._step_sequencer.set_playhead(self._playhead_element)
                             self._step_sequencer._drum_group.set_select_button(self._button[self._layer])
                             self._step_sequencer.set_button_matrix(self._base_grid.submatrix[4:8, :4])
                             self._step_sequencer.set_drum_matrix(self._base_grid.submatrix[:4, :4])
@@ -2341,7 +2462,7 @@ class Base(ControlSurface):
                                     pad.set_channel(cur_chan)
 
                         else:
-                            self.log_message('assign stuff to note sequencer')
+                            self._note_sequencer.set_playhead(self._playhead_element)
                             self._note_sequencer.set_button_matrix(self._base_grid.submatrix[:8, :2])
                             for x, pad in enumerate(self._pad):
                                 pad.display_press = False
@@ -2364,6 +2485,7 @@ class Base(ControlSurface):
                                 self._pad[column + row * 8].scale_color = DRUMCOLORS[column < 4]
                                 self._pad[column + row * 8].display_press = True
                                 self._pad[column + row * 8].press_flash(0, True)
+                                self._pad[column + row * 8]._descriptor = str(NOTENAMES[self._pad[column + row * 8]._msg_identifier])
                                 self._pad_CC[column + row * 8].set_identifier((DRUMNOTES[column + row * 8] + self._offsets[cur_chan]['drumoffset'] * 4) % 127)
                                 self._offset_component._shifted_value = 3
                             else:
@@ -2373,6 +2495,7 @@ class Base(ControlSurface):
                                 self._pad[column + row * 8].scale_color = KEYCOLORS[(note % 12 in WHITEKEYS) + (note_pos % scale_len == 0) * 2]
                                 self._pad[column + row * 8].display_press = True
                                 self._pad[column + row * 8].press_flash(0, True)
+                                self._pad[column + row * 8]._descriptor = str(NOTENAMES[self._pad[column + row * 8]._msg_identifier])
                                 self._pad_CC[column + row * 8].set_identifier(note % 127)
                                 self._offset_component._shifted_value = 11
                             self._pad[column + row * 8].set_enabled(False)
@@ -2386,11 +2509,16 @@ class Base(ControlSurface):
 
             else:
                 is_midi = False
+        if OSC_TRANSMIT:
+            self.oscServer.sendOSC(self._prefix + '/glob/scale/', str(self.generate_strip_string(scale)))
+            self.oscServer.sendOSC(self._prefix + '/glob/offset/', str(self.generate_strip_string(offset)))
+            self.oscServer.sendOSC(self._prefix + '/glob/vertoffset/', str(self.generate_strip_string(vertoffset)))
         return is_midi
 
     def _assign_midi_shift_layer(self):
         cur_track = self._mixer._selected_strip._track
         is_midi = False
+        scale, offset, vertoffset = (' ', ' ', ' ')
         if cur_track.has_midi_input:
             self._send_midi(LIVEBUTTONMODE)
             if AUTO_ARM_SELECTED:
@@ -2416,9 +2544,11 @@ class Base(ControlSurface):
                 else:
                     for button in self._touchpad[0:1]:
                         button.set_on_off_values(SPLITMODE, 0)
+                        button._descriptor = 'Split'
 
                     for button in self._touchpad[1:2]:
                         button.set_on_off_values(SEQUENCERMODE, 0)
+                        button._descriptor = 'Seq'
 
                     self._sequencer_mode_selector._mode_index = int(self._offsets[cur_chan]['sequencer'])
                     self._sequencer_mode_selector.set_enabled(True)
@@ -2427,18 +2557,24 @@ class Base(ControlSurface):
                     for button in self._touchpad[4:6]:
                         button.set_on_off_values(SCALEOFFSET, 0)
 
+                    self._touchpad[4]._descriptor = '< Scale'
+                    self._touchpad[5]._descriptor = 'Scale >'
                     self._scale_offset_component._offset = SCALENAMES.index(self._offsets[cur_chan]['scale'])
                     self._scale_offset_component.set_offset_change_buttons(self._touchpad[5], self._touchpad[4])
                     if scale is not 'DrumPad':
                         for button in self._touchpad[2:4]:
                             button.set_on_off_values(VERTOFFSET, 0)
 
+                        self._touchpad[2]._descriptor = '< Vertical'
+                        self._touchpad[3]._descriptor = 'Vertical >'
                         self._vertical_offset_component._offset = self._offsets[cur_chan]['vertoffset']
                         self._vertical_offset_component.set_offset_change_buttons(self._touchpad[3], self._touchpad[2])
                     if not sequencer or not split:
                         for button in self._touchpad[6:8]:
                             button.set_on_off_values(OFFSET, 0)
 
+                        self._touchpad[6]._descriptor = '< Offset'
+                        self._touchpad[7]._descriptor = 'Offset >'
                         if scale is 'Auto':
                             scale = self._detect_instrument_type(cur_track)
                         if scale is 'DrumPad':
@@ -2450,14 +2586,18 @@ class Base(ControlSurface):
                     elif scale is 'DrumPad':
                         is_midi = 'DrumSequencer'
                         self._step_sequencer.set_drum_bank_up_button(self._touchpad[7])
+                        self._touchpad[7]._descriptor = 'Bank Up'
                         self._step_sequencer.set_drum_bank_down_button(self._touchpad[6])
+                        self._touchpad[6]._descriptor = 'Bank Down'
                         for pad in self._touchpad[6:8]:
                             pad.set_on_off_values(DRUMBANK, 0)
 
                         self._step_sequencer.set_mute_button(self._touchpad[2])
+                        self._touchpad[2]._descriptor = 'Pad Mute'
                         self._touchpad[2].set_on_off_values(MUTE + 7, MUTE)
                         self._touchpad[2].turn_off()
                         self._step_sequencer.set_solo_button(self._touchpad[3])
+                        self._touchpad[3]._descriptor = 'Pad Solo'
                         self._touchpad[3].set_on_off_values(SOLO + 7, SOLO)
                         self._touchpad[3].turn_off()
                         self.set_pad_translations(make_pad_translations(cur_chan))
@@ -2502,8 +2642,23 @@ class Base(ControlSurface):
 
                         self._step_sequencer.set_drum_matrix(self._base_grid.submatrix[:4, :4])
                         self._step_sequencer.set_loop_selector_matrix(self._base_grid.submatrix[4:8, :2])
-                        self._step_sequencer.set_quantization_buttons(self._pad[20:24] + self._pad[28:31])
+                        for button in self._base_grid.submatrix[4:8, :2]:
+                            button._descriptor = '- L -'
+
+                        quant_buttons = self._pad[20:24] + self._pad[28:31]
+                        self._step_sequencer.set_quantization_buttons(quant_buttons)
+                        for button in quant_buttons:
+                            button._descriptor = ['1/32',
+                             '1/32t',
+                             '1/16',
+                             '1/16t',
+                             '1/8',
+                             '1/8t',
+                             '1/4',
+                             '1/4t'][quant_buttons.index(button)]
+
                         self._step_sequencer.set_follow_button(self._pad[31])
+                        self._pad[31]._descriptor = 'Follow'
                         self.reset_controlled_track()
                         self.schedule_message(2, self._step_sequencer._drum_group._update_drum_pad_leds)
                     else:
@@ -2511,6 +2666,8 @@ class Base(ControlSurface):
                         for button in self._touchpad[6:8]:
                             button.set_on_off_values(OFFSET, 0)
 
+                        self._touchpad[6]._descriptor = '< Offset'
+                        self._touchpad[7]._descriptor = 'Offset >'
                         self._offset_component._offset = self._offsets[cur_chan]['offset']
                         self._offset_component.set_offset_change_buttons(self._touchpad[7], self._touchpad[6])
                         scale_len = len(SCALES[scale])
@@ -2530,14 +2687,42 @@ class Base(ControlSurface):
 
                         self._on_note_matrix_pressed.subject = self._base_grid
                         self._note_sequencer.set_loop_selector_matrix(self._base_grid.submatrix[:8, :1])
+                        for button in self._base_grid.submatrix[:8, :1]:
+                            button._descriptor = '- L -'
+
                         self._note_sequencer.set_quantization_buttons(self._pad[8:15])
+                        for button in self._pad[8:15]:
+                            button._descriptor = ['1/32',
+                             '1/32t',
+                             '1/16',
+                             '1/16t',
+                             '1/8',
+                             '1/8t',
+                             '1/4',
+                             '1/4t'][self._pad[8:15].index(button)]
+
                         self._note_sequencer.set_follow_button(self._pad[15])
+                        self._pad[15]._descriptor = 'Follow'
+        if OSC_TRANSMIT:
+            self.oscServer.sendOSC(self._prefix + '/glob/scale/', str(self.generate_strip_string(scale)))
+            self.oscServer.sendOSC(self._prefix + '/glob/offset/', str(self.generate_strip_string(offset)))
+            self.oscServer.sendOSC(self._prefix + '/glob/vertoffset/', str(self.generate_strip_string(vertoffset)))
         return is_midi
 
+    def _notify_descriptors(self):
+        if OSC_TRANSMIT:
+            for pad in self._pad:
+                self.oscServer.sendOSC(self._prefix + '/' + pad.name + '/lcd_name/', str(self.generate_strip_string(pad._descriptor)))
+
+            for touchpad in self._touchpad:
+                self.oscServer.sendOSC(self._prefix + '/' + touchpad.name + '/lcd_name/', str(self.generate_strip_string(touchpad._descriptor)))
+
+            for button in self._button:
+                self.oscServer.sendOSC(self._prefix + '/' + button.name + '/lcd_name/', str(self.generate_strip_string(button._descriptor)))
+
     def _current_device_offsets(self, dict_entry):
-        self.log_message('finding current device offsets')
         selected_device = self._top_device()
-        if selected_device is not None:
+        if selected_device is not None and hasattr(selected_device, 'name'):
             name = selected_device.name
             self.log_message('device name: ' + str(name.split(' ')))
             for item in name.split(' '):
@@ -2556,12 +2741,10 @@ class Base(ControlSurface):
                         if vals[0] == 'scale' and vals[1] in SCALES.keys():
                             dict_entry[vals[0]] = str(vals[1])
                         elif vals[0] in ('sequencer', 'split'):
-                            dict_entry[vals[0]] = bool(vals[1])
+                            if vals[1] in ('False', 'True'):
+                                dict_entry[vals[0]] = bool(['False', 'True'].index(vals[1]))
                         elif vals[0] in ('offset', 'vertoffset', 'drumoffset'):
                             dict_entry[vals[0]] = int(vals[1])
-
-            for key in dict_entry.keys():
-                self.log_message('key: ' + str(key) + ' entry:' + str(dict_entry[key]))
 
         return dict_entry
 
@@ -2577,7 +2760,7 @@ class Base(ControlSurface):
 
     def _top_device(self):
         selected_device = self._device._device
-        if selected_device is not None:
+        if selected_device is not None and hasattr(selected_device, 'canonical_parent'):
             while not isinstance(selected_device.canonical_parent, Live.Track.Track):
                 selected_device = selected_device.canonical_parent
 
@@ -2743,6 +2926,11 @@ class Base(ControlSurface):
         elif self._layer is 3:
             char2 = str(self._user_mode_selector._mode_index + 1)
         self._display_chars(char1, char2)
+        if OSC_TRANSMIT:
+            self.oscServer.sendOSC(self._prefix + '/glob/mode/', str(self.generate_strip_string(['Launch',
+             'Sends',
+             'Device',
+             'User'][self._layer])))
 
     def _register_pad_pressed(self, bytes):
         raise len(bytes) is 8 or AssertionError
@@ -2759,7 +2947,6 @@ class Base(ControlSurface):
 
     @subject_slot('value')
     def _on_duplicate_button_value(self, value):
-        self.log_message('duplicate button value: ' + str(value))
         track = self._mixer.selected_strip()._track
         if value is not 0 and track is not None:
             try:
@@ -2770,7 +2957,6 @@ class Base(ControlSurface):
 
     @subject_slot('value')
     def _on_new_button_value(self, value):
-        self.log_message('new button value: ' + str(value))
         song = self.song()
         view = song.view
         try:
@@ -2809,6 +2995,10 @@ class Base(ControlSurface):
     def _on_duplicate_clip_value(self, value, x, y, is_momentary):
         pass
 
+    @subject_slot('value')
+    def _on_clip_fired(self, *a, **k):
+        pass
+
     def update_display(self):
         super(Base, self).update_display()
         self._timer = (self._timer + 1) % 256
@@ -2825,6 +3015,8 @@ class Base(ControlSurface):
         self._monobridge._send('Device_Name', 'lcd_name', str(self.generate_strip_string('Device')))
         self._monobridge._send('Device_Name', 'lcd_value', str(self.generate_strip_string(name)))
         self.touched()
+        if OSC_TRANSMIT:
+            self.oscServer.sendOSC(self._prefix + '/glob/device/', str(self.generate_strip_string(name)))
 
     def _on_device_bank_changed(self):
         name = 'No Bank'
@@ -2846,6 +3038,8 @@ class Base(ControlSurface):
         NUM_CHARS_PER_DISPLAY_STRIP = 12
         if not display_string:
             return ' ' * NUM_CHARS_PER_DISPLAY_STRIP
+        else:
+            display_string = str(display_string)
         if len(display_string.strip()) > NUM_CHARS_PER_DISPLAY_STRIP - 1 and display_string.endswith('dB') and display_string.find('.') != -1:
             display_string = display_string[:-2]
         if len(display_string) > NUM_CHARS_PER_DISPLAY_STRIP - 1:
@@ -2876,16 +3070,16 @@ class Base(ControlSurface):
     def notification_to_bridge(self, name, value, sender):
         if isinstance(sender, MonoEncoderElement):
             if OSC_TRANSMIT:
-                self.oscServer.sendOSC('/Base/' + sender.name + '/lcd_name/', str(self.generate_strip_string(name)))
-                self.oscServer.sendOSC('/Base/' + sender.name + '/lcd_value/', str(self.generate_strip_string(value)))
+                self.oscServer.sendOSC(self._prefix + '/' + sender.name + '/lcd_name/', str(self.generate_strip_string(name)))
+                self.oscServer.sendOSC(self._prefix + '/' + sender.name + '/lcd_value/', str(self.generate_strip_string(value)))
             self._monobridge._send(sender.name, 'lcd_name', str(self.generate_strip_string(name)))
             self._monobridge._send(sender.name, 'lcd_value', str(self.generate_strip_string(value)))
         else:
             self._monobridge._send(name, 'lcd_name', str(self.generate_strip_string(name)))
             self._monobridge._send(name, 'lcd_value', str(self.generate_strip_string(value)))
             if OSC_TRANSMIT:
-                self.oscServer.sendOSC('/Base/' + name + '/lcd_name/', str(self.generate_strip_string(name)))
-                self.oscServer.sendOSC('/Base/' + name + '/lcd_value/', str(self.generate_strip_string(value)))
+                self.oscServer.sendOSC(self._prefix + '/' + name + '/lcd_name/', str(self.generate_strip_string(name)))
+                self.oscServer.sendOSC(self._prefix + '/' + name + '/lcd_value/', str(self.generate_strip_string(value)))
 
     def touched(self):
         if self._touched is 0:

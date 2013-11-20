@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9.05 Suite.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/MonomodComponent.py
+#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/MonomodComponent.py
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.ButtonElement import ButtonElement
@@ -275,7 +275,7 @@ class MonomodComponent(CompoundComponent):
                             elif x == 4:
                                 self.display_active_client()
                         else:
-                            self._active_client._send_key(x, value)
+                            self._active_client._send_key(x, int(value > 0))
             elif self._shift_pressed == 0:
                 if self._active_client._is_monolink and self._alt_pressed > 0:
                     if value > 0:
@@ -292,13 +292,13 @@ class MonomodComponent(CompoundComponent):
                             elif x == 4:
                                 self.display_active_client()
                             else:
-                                self._active_client._send_key(x, value)
+                                self._active_client._send_key(x, int(value > 0))
                         else:
-                            self._active_client._send_key(x, value)
+                            self._active_client._send_key(x, int(value > 0))
                     else:
-                        self._active_client._send_grid(x + self._x, y + self._y, value)
+                        self._active_client._send_grid(x + self._x, y + self._y, int(value > 0))
                 else:
-                    self._active_client._send_grid(x + self._x, y + self._y, value)
+                    self._active_client._send_grid(x + self._x, y + self._y, int(value > 0))
 
     def _update_grid(self):
         if self.is_enabled() and self._grid != None and self._active_client != None:
@@ -310,14 +310,18 @@ class MonomodComponent(CompoundComponent):
         if self.is_enabled() and self._grid != None:
             if column in range(self._x, self._x + 8):
                 if row in range(self._y, self._y + 8):
+                    button = None
+                    color = int(self._colors[value])
                     if self._shift_pressed == 0:
                         if self._locked == 1:
                             if row - self._y < 7:
-                                self._grid.get_button(column - self._x, row - self._y).send_value(int(self._colors[value]))
+                                button = self._grid.get_button(column - self._x, row - self._y)
                         else:
-                            self._grid.get_button(column - self._x, row - self._y).send_value(int(self._colors[value]))
+                            button = self._grid.get_button(column - self._x, row - self._y)
                     elif FILTER[row - self._y][column - self._x] == 1:
-                        self._grid.get_button(column - self._x, row - self._y).send_value(int(self._colors[value]))
+                        button = self._grid.get_button(column - self._x, row - self._y)
+                    if button and button._last_sent_value is not color:
+                        button.send_value(color)
 
     def _set_alt_button(self, alt):
         if self._alt_button != None:
@@ -419,7 +423,6 @@ class MonomodComponent(CompoundComponent):
                     self.display_active_client()
             else:
                 self._active_client._send_key(self._keys.index(sender), int(value != 0))
-            self._active_client._send_key(self._keys.index(sender), int(value != 0))
 
     def _update_keys(self):
         if self._alt_pressed > 0:
@@ -431,15 +434,19 @@ class MonomodComponent(CompoundComponent):
                 self._send_key(6, self._active_client.device.parameters[0].value > 0)
             self._send_key(5, self._active_client._mute == 0)
         else:
-            for index in range(len(self._keys)):
+            for index in range(8):
                 self._send_key(index, self._active_client._key[index])
 
     def _send_key(self, index, value):
         if self.is_enabled():
+            button = None
+            color = int(self._colors[value])
             if self._shift_pressed > 0 or self._locked > 0:
-                self._grid.get_button(index, 7).send_value(int(self._colors[value]))
+                button = self._grid.get_button(index, 7)
             if self._keys != None and len(self._keys) > index:
-                self._keys[index].send_value(int(self._colors[value]))
+                button = self._keys[index]
+            if button and button._last_sent_value is not color:
+                button.send_value(color)
 
     def _set_nav_buttons(self, buttons):
         if self._nav_buttons != None:

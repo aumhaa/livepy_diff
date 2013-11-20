@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9.05 Suite.app/Contents/App-Resources/MIDI Remote Scripts/MonOhm_b995_9/MonOhm.py
+#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/MonOhm_b995_9/MonOhm.py
 from __future__ import with_statement
 import Live
 import time

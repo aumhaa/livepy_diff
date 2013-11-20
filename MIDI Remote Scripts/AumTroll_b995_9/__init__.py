@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9.05 Suite.app/Contents/App-Resources/MIDI Remote Scripts/AumTroll_b995_9/__init__.py
+#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/AumTroll_b995_9/__init__.py
 from AumTroll import AumTroll
 
 def create_instance(c_instance):

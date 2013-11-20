@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/Livid_Base/Map.py
+#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/Livid_Base/Map.py
 """
 Base_Map.py
 
@@ -77,6 +77,7 @@ BASE_RUNNERS = [68,
  75]
 BASE_LCDS = [34, 35]
 FOLLOW = True
+TRACK_BANKING_INCREMENT = 8
 COLOR_MAP = [2,
  64,
  4,

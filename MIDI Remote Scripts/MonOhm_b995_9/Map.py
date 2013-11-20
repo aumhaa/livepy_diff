@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9.05 Suite.app/Contents/App-Resources/MIDI Remote Scripts/MonOhm_b995_9/Map.py
+#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/MonOhm_b995_9/Map.py
 """
 Map.py
 
@@ -423,9 +423,9 @@ COLOR_MAP = [2,
  127,
  32]
 RGB_COLOR_DEFS = {'MUTE': 2,
- 'SOLO': 9,
+ 'SOLO': 10,
  'ARM': 5,
- 'SEND_RESET': 8,
+ 'SEND_RESET': 9,
  'SCENE_LAUNCH': 3,
  'USER1_COLOR': 4,
  'USER2_COLOR': 5,
@@ -441,12 +441,12 @@ RGB_COLOR_DEFS = {'MUTE': 2,
  'STOP': 127,
  'RECORD': 5,
  'PLAY': 6,
- 'PLAY_ON': 18,
+ 'PLAY_ON': 20,
  'DEVICE_BANK': 127,
  'DEVICE_NAV': 1,
  'DEVICE_ON': 127,
  'DEVICE_LOCK': 4,
- 'CLIP_RECORDING': 11,
+ 'CLIP_RECORDING': 12,
  'CLIP_STARTED': 6,
  'CLIP_STOP': 127,
  'CLIP_TRG_REC': 4,

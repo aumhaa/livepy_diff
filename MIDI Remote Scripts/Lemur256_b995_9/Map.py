@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9.05 Suite.app/Contents/App-Resources/MIDI Remote Scripts/Lemur256_b995_9/Map.py
+#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/Lemur256_b995_9/Map.py
 MAP_VERSION = 'LemurPad'
 FORCE_TYPE = True
 FORCE_COLOR_TYPE = 0

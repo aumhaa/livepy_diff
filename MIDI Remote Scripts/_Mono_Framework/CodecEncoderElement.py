@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9.05 Suite.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/CodecEncoderElement.py
+#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/CodecEncoderElement.py
 import Live
 from _Framework.EncoderElement import EncoderElement
 from _Framework.InputControlElement import InputControlElement

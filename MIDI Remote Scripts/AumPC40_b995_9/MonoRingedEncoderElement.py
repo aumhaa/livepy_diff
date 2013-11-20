@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9.05 Suite.app/Contents/App-Resources/MIDI Remote Scripts/AumPC40_b995_9/MonoRingedEncoderElement.py
+#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/AumPC40_b995_9/MonoRingedEncoderElement.py
 import Live
 from _Framework.ButtonElement import ButtonElement
 from _Framework.EncoderElement import EncoderElement

@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9.05 Suite.app/Contents/App-Resources/MIDI Remote Scripts/LaunchMod_b995_9/DefChannelStripComponent.py
+#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/LaunchMod_b995_9/DefChannelStripComponent.py
 import Live
 from _Framework.ChannelStripComponent import ChannelStripComponent
 from ConfigurableButtonElement import ConfigurableButtonElement
