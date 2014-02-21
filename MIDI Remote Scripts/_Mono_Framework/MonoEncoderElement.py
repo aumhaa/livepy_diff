@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/MonoEncoderElement.py
+#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/MonoEncoderElement.py
 import Live
 from _Framework.EncoderElement import EncoderElement
 from _Framework.InputControlElement import InputControlElement
@@ -91,11 +91,19 @@ class MonoEncoderElement(EncoderElement):
         if parameter:
             if isinstance(parameter, Live.DeviceParameter.DeviceParameter):
                 if str(parameter.original_name) == 'Track Volume' or self._mapped_to_midi_velocity is True:
-                    self._parameter_lcd_name = str(parameter.canonical_parent.canonical_parent.name)
+                    try:
+                        self._parameter_lcd_name = str(parameter.canonical_parent.canonical_parent.name)
+                    except:
+                        self._parameter_lcd_name = ' '
+
                 elif str(parameter.original_name) == 'Track Panning':
                     self._parameter_lcd_name = 'Pan'
                 else:
-                    self._parameter_lcd_name = str(parameter.name)
+                    try:
+                        self._parameter_lcd_name = str(parameter.name)
+                    except:
+                        self._parameter_lcd_name = ' '
+
             try:
                 self._parameter_last_value = str(self.mapped_parameter())
             except:

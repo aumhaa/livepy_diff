@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/Codec_b995_9/Codec.py
+#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/Codec_b995_9/Codec.py
 from __future__ import with_statement
 import Live
 import time
@@ -17,7 +17,9 @@ from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from _Framework.NotifyingControlElement import NotifyingControlElement
 from _Framework.SessionComponent import SessionComponent
 from _Framework.TransportComponent import TransportComponent
+from _Framework.Task import *
 from _Generic.Devices import *
+from Push.M4LInterfaceComponent import M4LInterfaceComponent
 from _Mono_Framework.DetailViewControllerComponent import DetailViewControllerComponent
 from _Mono_Framework.CodecEncoderElement import CodecEncoderElement
 from _Mono_Framework.EncoderMatrixElement import EncoderMatrixElement
@@ -178,8 +180,6 @@ class CodecMonomodComponent(MonomodComponent):
         self._host_name = 'Code'
 
     def select_client(self, number, *a, **k):
-        self._script.set_local_ring_control(self._active_client._local_ring_control)
-        self._script.set_absolute_mode(self._active_client._absolute_mode)
         super(CodecMonomodComponent, self)._select_client(number, *a, **k)
 
     def _matrix_value(self, value, x, y, is_momentary):
@@ -253,7 +253,6 @@ class CodecMonomodComponent(MonomodComponent):
                 self._keys[index].send_value(int(self._colors[value]))
 
     def on_enabled_changed(self):
-        super(CodecMonomodComponent, self).on_enabled_changed()
         if self._active_client != None:
             if self.is_enabled():
                 self._active_client._device_component.update()
@@ -265,6 +264,20 @@ class CodecMonomodComponent(MonomodComponent):
 
                 self._script.set_absolute_mode(1)
                 self._script.set_local_ring_control(1)
+        super(CodecMonomodComponent, self).on_enabled_changed()
+
+    def _update_shift_button(self):
+        if self._shift_button != None:
+            if self._shift_pressed != 0:
+                self._shift_button.turn_on()
+            else:
+                self._shift_button.send_value(7, True)
+
+    def update(self):
+        if self.is_enabled() and self._allow_updates == True and self._active_client != None:
+            self.set_absolute_mode(self._active_client._absolute_mode)
+            self.set_local_ring_control(self._active_client._local_ring_control)
+        super(CodecMonomodComponent, self).update()
 
     def _dial_matrix_value(self, value, x, y):
         if self.is_enabled() and self._active_client != None:
@@ -349,6 +362,9 @@ class CodecMonomodComponent(MonomodComponent):
     def set_appointed_device(self, *a, **k):
         pass
 
+    def _send_nav_box(self):
+        pass
+
 
 class MonomodModeComponent(ModeSelectorComponent):
 
@@ -419,6 +435,10 @@ class ShiftModeComponent(ModeSelectorComponent):
             button.add_value_listener(self._mode_value, identify_sender)
             self._modes_buttons.append(button)
 
+    def _mode_value(self, *a, **k):
+        if self.is_enabled():
+            super(ShiftModeComponent, self)._mode_value(*a, **k)
+
 
 class Codec(ControlSurface):
     __module__ = __name__
@@ -434,6 +454,7 @@ class Codec(ControlSurface):
         self._hosts = []
         self._linked_script = None
         self._local_ring_control = True
+        self._absolute_mode = True
         self._last_device = None
         self._device_list = [None,
          None,
@@ -449,8 +470,10 @@ class Codec(ControlSurface):
         self._shift_pressed = 0
         self._shift_pressed_timer = 0
         self._shift_thresh = SHIFT_THRESH
+        self._shift_fix = time.clock()
         self._use_device_selector = USE_DEVICE_SELECTOR
         self._device_selection_follows_track_selection = FOLLOW
+        self._leds_last = 0
         with self.component_guard():
             self._setup_controls()
             self._setup_monobridge()
@@ -464,7 +487,8 @@ class Codec(ControlSurface):
             self._setup_device_selector()
             self._setup_send_reset()
             self._setup_default_buttons()
-            self.set_local_ring_control(1)
+            self._setup_m4l_interface()
+            self.set_local_ring_control(True)
             self.song().view.add_selected_track_listener(self._update_selected_device)
             self._initialize_code()
         self.log_message('<<<<<<<<<<<<<<<<<<<<<<<<< Codec ' + str(self._monomod_version) + ' log opened >>>>>>>>>>>>>>>>>>>>>>>>>')
@@ -472,9 +496,10 @@ class Codec(ControlSurface):
         self.request_rebuild_midi_map()
 
     def _initialize_code(self):
-        self._send_midi(factoryreset)
-        self._send_midi(btn_channels)
-        self._send_midi(enc_channels)
+        if FACTORY_RESET:
+            self._send_midi(factoryreset)
+            self._send_midi(btn_channels)
+            self._send_midi(enc_channels)
 
     def _setup_monobridge(self):
         self._monobridge = MonoBridgeElement(self)
@@ -627,6 +652,13 @@ class Codec(ControlSurface):
         self._value_default.set_buttons(buttons)
         self._value_default.set_dials(dials)
 
+    def _setup_m4l_interface(self):
+        self._m4l_interface = M4LInterfaceComponent(controls=self.controls, component_guard=self.component_guard)
+        self.get_control_names = self._m4l_interface.get_control_names
+        self.get_control = self._m4l_interface.get_control
+        self.grab_control = self._m4l_interface.grab_control
+        self.release_control = self._m4l_interface.release_control
+
     def _device_select_value(self, value, sender):
         if not self._shift_pressed:
             if sender.is_momentary or value > 0:
@@ -649,12 +681,19 @@ class Codec(ControlSurface):
         self._shift_pressed = int(value != 0)
         if self._shift_pressed > 0:
             self._send_midi(SLOWENCODER)
-            if self._shift_pressed_timer + self._shift_thresh > self._timer:
-                self.log_message('mod mode: ' + str(abs(self._monomod_mode._mode_index - 1)))
-                self._monomod_mode.set_mode(max(0, min(1, abs(self._monomod_mode._mode_index - 1))))
-            self._shift_pressed_timer = self._timer % 256
         else:
+            if self._shift_pressed_timer > 0:
+                self._monomod_mode.set_mode(max(0, min(1, abs(self._monomod_mode._mode_index - 1))))
+                self._shift_pressed_timer = 0
+            elif self._shift_pressed_timer == 0:
+                self._shift_pressed_timer = 1
+                self.schedule_message(int(self._shift_thresh), self._shift_timer)
             self._send_midi(NORMALENCODER)
+        if self._shift_button != None:
+            self._shift_button.send_value(self._shift_pressed + 28 * self._monomod_mode._mode_index)
+
+    def _shift_timer(self, *a, **k):
+        self._shift_pressed_timer = 0
 
     def _mod_mode_update(self):
         if self._monomod_mode._mode_index == 0:
@@ -712,6 +751,10 @@ class Codec(ControlSurface):
              None]))
 
         for index in range(4):
+            self._device[index].set_on_off_button(None)
+            self._device[index].set_lock_button(None)
+            self._device[index].set_bank_nav_buttons(None, None)
+            self._device[index].set_nav_buttons(None, None)
             self._device[index].set_enabled(False)
             self._device[index]._parameter_controls = None
 
@@ -720,6 +763,8 @@ class Codec(ControlSurface):
         self._device_selector.set_enabled(False)
         self._deassign_buttons()
         for control in self.controls:
+            if isinstance(control, ButtonElement):
+                control.release_parameter()
             control.reset()
 
         self.request_rebuild_midi_map()
@@ -761,6 +806,10 @@ class Codec(ControlSurface):
             for control in range(8):
                 device_param_controls.append(self._dial[control][index])
 
+            self._device[index].set_on_off_button(self._button[1][index])
+            self._device[index].set_lock_button(self._button[2][index])
+            self._device[index].set_bank_nav_buttons(self._button[4][index], self._button[5][index])
+            self._device[index].set_nav_buttons(self._button[6][index], self._button[7][index])
             self._device[index].set_parameter_controls(tuple(device_param_controls))
             self._device[index].set_enabled(True)
 
@@ -813,7 +862,8 @@ class Codec(ControlSurface):
 
         if self._session._is_linked():
             self._session._unlink()
-        self.song().view.remove_selected_track_listener(self._update_selected_device)
+        if self.song().view.selected_track_has_listener(self._update_selected_device):
+            self.song().view.remove_selected_track_listener(self._update_selected_device)
         self._hosts = []
         if self._linked_script != None:
             self._linked_script._update_linked_device_selection = None
@@ -854,8 +904,6 @@ class Codec(ControlSurface):
     def update_display(self):
         ControlSurface.update_display(self)
         self._timer = (self._timer + 1) % 256
-        if self._timer == 0:
-            self._shift_pressed_timer = -12
         if self._local_ring_control is False:
             self.send_ring_leds()
         self.flash()
@@ -870,21 +918,24 @@ class Codec(ControlSurface):
                     control.flash(self._timer)
 
     def send_ring_leds(self):
-        leds = [240,
-         0,
-         1,
-         97,
-         4,
-         31]
-        for column in range(8):
-            for row in range(4):
-                wheel = self._dial[column][row]
-                bytes = wheel._get_ring()
-                leds.append(bytes[0])
-                leds.append(int(bytes[1]) + int(bytes[2]))
+        if self._host._is_enabled == True:
+            leds = [240,
+             0,
+             1,
+             97,
+             4,
+             31]
+            for column in range(8):
+                for row in range(4):
+                    wheel = self._dial[column][row]
+                    bytes = wheel._get_ring()
+                    leds.append(bytes[0])
+                    leds.append(int(bytes[1]) + int(bytes[2]))
 
-        leds.append(247)
-        self._send_midi(tuple(leds))
+            leds.append(247)
+            if not leds == self._leds_last:
+                self._send_midi(tuple(leds))
+                self._leds_last = leds
 
     def set_absolute_mode(self, val = 1):
         self._absolute_mode = val != 0
@@ -932,6 +983,7 @@ class Codec(ControlSurface):
              8,
              72,
              247]))
+            self._dial_matrix.reset()
         else:
             self._send_midi(tuple([240,
              0,
@@ -941,6 +993,10 @@ class Codec(ControlSurface):
              8,
              64,
              247]))
+            self.schedule_message(2, self._clear_rings)
+
+    def _clear_rings(self):
+        self._leds_last = 1
 
     def device_follows_track(self, val):
         self._device_selection_follows_track_selection = val == 1
@@ -997,16 +1053,6 @@ class Codec(ControlSurface):
             self._monobridge._send('touch', 'off')
         else:
             self.schedule_message(2, self.check_touch)
-
-    def get_clip_names(self):
-        clip_names = []
-        for scene in self._session._scenes:
-            for clip_slot in scene._clip_slots:
-                if clip_slot.has_clip() is True:
-                    clip_names.append(clip_slot._clip_slot)
-                    return clip_slot._clip_slot
-
-        return clip_names
 
     def allow_updates(self, allow_updates):
         for component in self.components:

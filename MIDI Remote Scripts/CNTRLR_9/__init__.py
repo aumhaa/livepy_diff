@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/CNTRLR_9/__init__.py
+#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/CNTRLR_9/__init__.py
 from Cntrlr import Cntrlr
 
 def create_instance(c_instance):

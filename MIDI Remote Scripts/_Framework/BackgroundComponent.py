@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/BackgroundComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/BackgroundComponent.py
 from functools import partial
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.SubjectSlot import SubjectSlotError
@@ -45,6 +45,7 @@ class BackgroundComponent(ControlSurfaceComponent):
         pass
 
     def update(self):
+        super(BackgroundComponent, self).update()
         if self.is_enabled():
             for control in self._control_map.itervalues():
                 self._reset_control(control)

@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/MonoButtonElement.py
+#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/MonoButtonElement.py
 import Live
 from _Framework.ButtonElement import ButtonElement
 from _Framework.InputControlElement import InputControlElement

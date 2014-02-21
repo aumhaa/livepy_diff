@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/Debug/Debug.py
+#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/Debug/Debug.py
 import Live
 import os, __builtin__, __main__, _ast, _codecs, _functools, _md5, _random, _sha, _sha256, _sha512, _socket, _sre, _ssl, _struct, _symtable, _types, _weakref, binascii, cStringIO, collections, datetime, errno, exceptions, fcntl, gc, imp, itertools, marshal, math, operator, posix, pwd, select, signal, sys, thread, time, unicodedata, xxsubtype, zipimport, zlib
 modules = [__builtin__,
@@ -86,6 +86,8 @@ MODS_TO_REBUILD = ['Debug',
  'Monomodular']
 from _Framework.ControlSurface import ControlSurface
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
+if not '/Users/amounra/monomodular_git/L9 Python Scripts/' in sys.path:
+    sys.path.append('/Users/amounra/monomodular_git/L9 Python Scripts/')
 
 class Debug(ControlSurface):
 
@@ -95,7 +97,6 @@ class Debug(ControlSurface):
         self._scripts = []
 
     def _log_dirs(self):
-        self.log_message(str())
         self.log_message(str(sys.path))
 
     def _reimport_loaded_modules(self):

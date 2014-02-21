@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/CNTRLR_9/Map.py
+#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/CNTRLR_9/Map.py
 """
 Cntrlr_Map.py
 
@@ -343,7 +343,7 @@ COLOR_MAP = [2,
 MUTE = [2, 2, 127]
 SOLO = [3, 9, 127]
 ARM = [5, 5, 8]
-SEND_RESET = [7, 7, 7]
+SEND_RESET = [1, 7, 7]
 STOP_CLIPS = [127, 1, 1]
 STOP_CLIPS_OFF = [127, 127, 127]
 SELECT = [127, 127, 127]

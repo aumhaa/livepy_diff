@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/MonoChopperComponent.py
+#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/MonoChopperComponent.py
 import Live
 import time
 import math
@@ -23,6 +23,7 @@ class MonoChopperComponent(ControlSurfaceComponent):
         self._matrix = None
         self._track = self.song().view.selected_track
         self._change = time.clock()
+        self._interval = 0.01
         self.song().add_tempo_listener(self._on_tempo_change)
         self._tempo = self._cs.song().tempo
         self._on_tempo_change()
@@ -63,6 +64,7 @@ class MonoChopperComponent(ControlSurfaceComponent):
             start = self._clip_focus.loop_start
             end = self._clip_focus.loop_end
             length = end - start
+            self._interval = time.clock() - self._change
             self._change = time.clock()
             if self.is_enabled():
                 for index in range(16):

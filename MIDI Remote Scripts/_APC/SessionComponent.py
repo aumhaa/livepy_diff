@@ -1,12 +1,8 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/APC40/APCSessionComponent.py
-import Live
-from _Framework.SessionComponent import SessionComponent
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_APC/SessionComponent.py
+from _Framework.SessionComponent import SessionComponent as SessionComponentBase
 
-class APCSessionComponent(SessionComponent):
+class SessionComponent(SessionComponentBase):
     """ Special SessionComponent for the APC controllers' combination mode """
-
-    def __init__(self, num_tracks, num_scenes):
-        SessionComponent.__init__(self, num_tracks, num_scenes)
 
     def link_with_track_offset(self, track_offset):
         if not track_offset >= 0:

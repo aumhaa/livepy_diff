@@ -1,6 +1,7 @@
-#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/EncoderMatrixElement.py
+#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/EncoderMatrixElement.py
 from __future__ import with_statement
 import contextlib
+from _Framework.Util import product
 from _Framework.EncoderElement import EncoderElement
 from _Framework.SubjectSlot import SubjectEvent
 from _Framework.Signal import Signal
@@ -8,6 +9,7 @@ from _Framework.NotifyingControlElement import NotifyingControlElement
 from _Framework.Util import in_range
 from _Framework.Debug import debug_print
 from _Framework.Disconnectable import Disconnectable
+from _Framework.ButtonMatrixElement import ButtonMatrixElement
 
 class InputSignal(Signal):
     """
@@ -104,3 +106,34 @@ class EncoderMatrixElement(NotifyingControlElement):
         raise isinstance(self._dial_coordinates[sender], tuple) or AssertionError
         coordinates = tuple(self._dial_coordinates[sender])
         self.notify_value(value, coordinates[0], coordinates[1])
+
+
+class NewEncoderMatrixElement(ButtonMatrixElement):
+    """ Class representing a 2-dimensional set of buttons """
+
+    def __init__(self, script, *a, **k):
+        super(NewEncoderMatrixElement, self).__init__(*a, **k)
+        self._script = script
+        self._dials = []
+        self._dial_coordinates = {}
+        self._max_row_width = 0
+
+    def disconnect(self):
+        super(NewEncoderMatrixElement, self).disconnect()
+        self._dials = None
+        self._dial_coordinates = None
+
+    def get_dial(self, *a, **k):
+        self.get_button(self, *a, **k)
+
+    def _dial_value(self, value, sender):
+        raise isinstance(value, int) or AssertionError
+        raise sender in self._dial_coordinates.keys() or AssertionError
+        raise isinstance(self._dial_coordinates[sender], tuple) or AssertionError
+        coordinates = tuple(self._dial_coordinates[sender])
+        self.notify_value(value, coordinates[0], coordinates[1])
+
+    def xiterbuttons(self):
+        for i, j in product(xrange(self.width()), xrange(self.height())):
+            button = self.get_button(i, j)
+            yield (button, (i, j))

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/APC40/APC.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_APC/APC.py
 from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface
@@ -18,46 +18,26 @@ class APC(ControlSurface):
         track_offset = 0
         for instance in APC._active_instances:
             instance._activate_combination_mode(track_offset, support_devices)
-            track_offset += instance._session.width()
+            track_offset += instance.highlighting_session_component().width()
 
     _combine_active_instances = staticmethod(_combine_active_instances)
 
-    def __init__(self, c_instance):
-        ControlSurface.__init__(self, c_instance)
-        with self.component_guard():
-            self._suppress_session_highlight = True
-            self._suppress_send_midi = True
-            self._suggested_input_port = 'Akai ' + self.__class__.__name__
-            self._suggested_output_port = 'Akai ' + self.__class__.__name__
-            self._shift_button = None
-            self._matrix = None
-            self._session = None
-            self._session_zoom = None
-            self._mixer = None
-            self._setup_session_control()
-            self._setup_mixer_control()
-            self._session.set_mixer(self._mixer)
-            self._shift_button.name = 'Shift_Button'
-            self._setup_custom_components()
-            self.set_highlighting_session_component(self._session)
-            for component in self.components:
-                component.set_enabled(False)
-
+    def __init__(self, *a, **k):
+        super(APC, self).__init__(*a, **k)
+        self._suppress_session_highlight = True
+        self._suppress_send_midi = True
+        self._suggested_input_port = 'Akai ' + self.__class__.__name__
+        self._suggested_output_port = 'Akai ' + self.__class__.__name__
         self._device_id = 0
         self._common_channel = 0
         self._dongle_challenge = (Live.Application.get_random_int(0, 2000000), Live.Application.get_random_int(2000001, 4000000))
 
     def disconnect(self):
         self._do_uncombine()
-        self._shift_button = None
-        self._matrix = None
-        self._session = None
-        self._session_zoom = None
-        self._mixer = None
-        ControlSurface.disconnect(self)
+        super(APC, self).disconnect()
 
     def refresh_state(self):
-        ControlSurface.refresh_state(self)
+        super(APC, self).refresh_state()
         self.schedule_message(5, self._update_hardware)
 
     def handle_sysex(self, midi_bytes):
@@ -72,36 +52,8 @@ class APC(ControlSurface):
             version_bytes = midi_bytes[9:13]
             self._device_id = midi_bytes[13]
             self._send_introduction_message()
-            challenge1 = [0,
-             0,
-             0,
-             0,
-             0,
-             0,
-             0,
-             0]
-            challenge2 = [0,
-             0,
-             0,
-             0,
-             0,
-             0,
-             0,
-             0]
-            for index in range(8):
-                challenge1[index] = self._dongle_challenge[0] >> 4 * (7 - index) & 15
-                challenge2[index] = self._dongle_challenge[1] >> 4 * (7 - index) & 15
-
-            dongle_message = (240,
-             MANUFACTURER_ID,
-             self._device_id,
-             self._product_model_id_byte(),
-             80,
-             0,
-             16) + tuple(challenge1) + tuple(challenge2) + (247,)
-            self._send_midi(dongle_message)
-            message = self.__class__.__name__ + ': Got response from controller, version ' + str((version_bytes[0] << 4) + version_bytes[1]) + '.' + str((version_bytes[2] << 4) + version_bytes[3])
-            self.log_message(message)
+            self._send_dongle_challenge()
+            self._log_version(version_bytes)
 
     def _on_dongle_response(self, midi_bytes):
         if midi_bytes[1] == MANUFACTURER_ID and midi_bytes[3] == self._product_model_id_byte() and midi_bytes[2] == self._device_id and midi_bytes[5] == 0:
@@ -138,13 +90,12 @@ class APC(ControlSurface):
          scene_offset,
          width,
          height) == (-1, -1, -1, -1):
-            ControlSurface._set_session_highlight(self, track_offset, scene_offset, width, height, include_return_tracks)
+            super(APC, self)._set_session_highlight(track_offset, scene_offset, width, height, include_return_tracks)
 
     def _send_midi(self, midi_bytes, optimized = None):
-        sent_successfully = False
         if not self._suppress_send_midi:
-            sent_successfully = ControlSurface._send_midi(self, midi_bytes, optimized=optimized)
-        return sent_successfully
+            return super(APC, self)._send_midi(midi_bytes, optimized=optimized)
+        return False
 
     def _send_introduction_message(self, mode_byte = ABLETON_MODE):
         self._send_midi((240,
@@ -160,28 +111,56 @@ class APC(ControlSurface):
          self.application().get_bugfix_version(),
          247))
 
+    def _send_dongle_challenge(self):
+        challenge1 = [0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0]
+        challenge2 = [0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0]
+        for index in range(8):
+            challenge1[index] = self._dongle_challenge[0] >> 4 * (7 - index) & 15
+            challenge2[index] = self._dongle_challenge[1] >> 4 * (7 - index) & 15
+
+        dongle_message = (240,
+         MANUFACTURER_ID,
+         self._device_id,
+         self._product_model_id_byte(),
+         80,
+         0,
+         16) + tuple(challenge1) + tuple(challenge2) + (247,)
+        self._send_midi(dongle_message)
+
+    def _log_version(self, version_bytes):
+        message = self.__class__.__name__ + ': Got response from controller, version ' + str((version_bytes[0] << 4) + version_bytes[1]) + '.' + str((version_bytes[2] << 4) + version_bytes[3])
+        self.log_message(message)
+
     def _activate_combination_mode(self, track_offset, support_devices):
-        self._session.link_with_track_offset(track_offset)
+        self.highlighting_session_component().link_with_track_offset(track_offset)
+
+    def _should_combine(self):
+        return DO_COMBINE
 
     def _do_combine(self):
-        if DO_COMBINE and self not in APC._active_instances:
+        if self._should_combine() and self not in APC._active_instances:
             APC._active_instances.append(self)
             APC._combine_active_instances()
 
     def _do_uncombine(self):
         if self in APC._active_instances:
             APC._active_instances.remove(self)
-            self._session.unlink()
+            self.highlighting_session_component().unlink()
             APC._combine_active_instances()
-
-    def _setup_session_control(self):
-        raise AssertionError, 'Function _setup_session_control must be overridden by subclass'
-
-    def _setup_mixer_control(self):
-        raise AssertionError, 'Function _setup_mixer_control must be overridden by subclass'
-
-    def _setup_custom_components(self):
-        raise AssertionError, 'Function _setup_custom_components must be overridden by subclass'
 
     def _product_model_id_byte(self):
         raise AssertionError, 'Function _product_model_id_byte must be overridden by subclass'

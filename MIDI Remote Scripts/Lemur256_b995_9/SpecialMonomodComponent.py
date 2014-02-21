@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/Lemur256_b995_9/SpecialMonomodComponent.py
+#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/Lemur256_b995_9/SpecialMonomodComponent.py
 import Live
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
@@ -436,4 +436,16 @@ class SpecialMonomodComponent(CompoundComponent):
         pass
 
     def _update_wheel(self):
+        pass
+
+    def _send_c_grid(self, column, row, value):
+        pass
+
+    def _send_c_key(self, index, value):
+        pass
+
+    def _send_c_wheel(self, column, row, wheel, parameter = None):
+        pass
+
+    def _update_c_wheel(self):
         pass

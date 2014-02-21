@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/MonoClient.py
+#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/MonoClient.py
 from __future__ import with_statement
 import contextlib
 from _Framework.SubjectSlot import SubjectEvent
@@ -208,8 +208,6 @@ class MonoClient(NotifyingControlElement):
         self._device_parent = device.canonical_parent
         if not self._device_parent.devices_has_listener(self._device_listener):
             self._device_parent.add_devices_listener(self._device_listener)
-        self._mute = 0
-        self._send('toggle_mute', self._mute)
         for host in self._active_host:
             host.update()
 

@@ -1,11 +1,11 @@
-#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/MonomodComponent.py
+#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/MonomodComponent.py
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.ButtonElement import ButtonElement
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
 from _Framework.EncoderElement import EncoderElement
 from _Mono_Framework.MonoButtonElement import MonoButtonElement
-from _Mono_Framework.EncoderMatrixElement import EncoderMatrixElement
+from _Mono_Framework.EncoderMatrixElement import EncoderMatrixElement, NewEncoderMatrixElement
 DEBUG = False
 MODES = ['SerialOSC', 'MonomeSerial']
 INITIAL_SCROLLING_DELAY = 5
@@ -421,6 +421,8 @@ class MonomodComponent(CompoundComponent):
                     self.toggle_mute_active_client()
                 elif self._keys.index(sender) == 4:
                     self.display_active_client()
+                else:
+                    self._active_client._send_key(self._keys.index(sender), int(value != 0))
             else:
                 self._active_client._send_key(self._keys.index(sender), int(value != 0))
 
@@ -693,7 +695,7 @@ class MonomodComponent(CompoundComponent):
         self._color_maps[number] = map
 
     def _set_dial_matrix(self, dial_matrix = None, button_matrix = None, *a, **k):
-        if not isinstance(dial_matrix, (EncoderMatrixElement, type(None))):
+        if not isinstance(dial_matrix, (EncoderMatrixElement, NewEncoderMatrixElement, type(None))):
             raise AssertionError
             if dial_matrix != self._dial_matrix:
                 if self._dial_matrix != None:

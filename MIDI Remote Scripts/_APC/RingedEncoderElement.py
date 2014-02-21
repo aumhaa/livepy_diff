@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/APC40/RingedEncoderElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_APC/RingedEncoderElement.py
 from _Framework.EncoderElement import EncoderElement
 from _Framework.ButtonElement import ButtonElement
 RING_OFF_VALUE = 0
@@ -7,10 +7,12 @@ RING_VOL_VALUE = 2
 RING_PAN_VALUE = 3
 
 class RingedEncoderElement(EncoderElement):
-    """ Class representing a continuous control on the controller enclosed with an LED ring """
+    """
+    Class representing a continuous control on the controller enclosed with an LED ring
+    """
 
-    def __init__(self, msg_type, channel, identifier, map_mode):
-        EncoderElement.__init__(self, msg_type, channel, identifier, map_mode)
+    def __init__(self, msg_type, channel, identifier, map_mode, *a, **k):
+        super(RingedEncoderElement, self).__init__(msg_type, channel, identifier, map_mode, *a, **k)
         self._ring_mode_button = None
         self.set_needs_takeover(False)
 
@@ -24,14 +26,14 @@ class RingedEncoderElement(EncoderElement):
     def connect_to(self, parameter):
         if parameter != self._parameter_to_map_to and not self.is_mapped_manually():
             self._ring_mode_button.send_value(RING_OFF_VALUE, force=True)
-        EncoderElement.connect_to(self, parameter)
+        super(RingedEncoderElement, self).connect_to(parameter)
 
     def release_parameter(self):
-        EncoderElement.release_parameter(self)
+        super(RingedEncoderElement, self).release_parameter()
         self._update_ring_mode()
 
     def install_connections(self, install_translation_callback, install_mapping_callback, install_forwarding_callback):
-        EncoderElement.install_connections(self, install_translation_callback, install_mapping_callback, install_forwarding_callback)
+        super(RingedEncoderElement, self).install_connections(install_translation_callback, install_mapping_callback, install_forwarding_callback)
         if not self._is_mapped and self.value_listener_count() == 0:
             self._is_being_forwarded = install_forwarding_callback(self)
         self._update_ring_mode()

@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Skin.py
-import SkinDefault
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/Skin.py
+from itertools import chain
 
 class SkinColorMissingError(Exception):
     pass
@@ -10,7 +10,8 @@ class Skin(object):
     def __init__(self, colors = None, *a, **k):
         super(Skin, self).__init__(*a, **k)
         self._colors = {}
-        self._fill_colors(colors)
+        if colors is not None:
+            self._fill_colors(colors)
 
     def _fill_colors(self, colors, pathname = ''):
         try:
@@ -35,6 +36,7 @@ class Skin(object):
         return self._colors.iteritems()
 
 
-def make_default_skin():
-    skin = Skin(SkinDefault.Colors)
+def merge_skins(*skins):
+    skin = Skin()
+    skin._colors = dict(chain(*map(lambda s: s._colors.items(), skins)))
     return skin

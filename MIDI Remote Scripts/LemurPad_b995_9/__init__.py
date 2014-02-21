@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/LemurPad_b995_9/__init__.py
+#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/LemurPad_b995_9/__init__.py
 from LemurPad import LemurPad
 
 def create_instance(c_instance):

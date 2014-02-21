@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/Live8DeviceComponent.py
+#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/Live8DeviceComponent.py
 import Live
 from _Generic.Devices import *
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
@@ -204,7 +204,11 @@ class Live8DeviceComponent(ControlSurfaceComponent):
                 old_bank_name = self._bank_name
                 self._assign_parameters()
                 if self._bank_name != old_bank_name:
-                    self._show_msg_callback(self._device.name + ' Bank: ' + self._bank_name)
+                    try:
+                        self._show_msg_callback(self._device.name + ' Bank: ' + self._bank_name)
+                    except:
+                        pass
+
             if self._bank_up_button != None and self._bank_down_button != None:
                 if self._number_of_parameter_banks() > self._bank_index + 1:
                     self._bank_up_button.turn_on()
@@ -296,7 +300,10 @@ class Live8DeviceComponent(ControlSurfaceComponent):
                         self._bank_index = bank
                         self.update()
                 else:
-                    self._show_msg_callback(self._device.name + ' Bank: ' + self._bank_name)
+                    try:
+                        self._show_msg_callback(self._device.name + ' Bank: ' + self._bank_name)
+                    except:
+                        pass
 
     def _is_banking_enabled(self):
         direct_banking = self._bank_buttons != None

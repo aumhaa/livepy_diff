@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/LaunchMod_b995_9/ConfigurableButtonElement.py
+#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/LaunchMod_b995_9/ConfigurableButtonElement.py
 import Live
 from _Framework.ButtonElement import *
 from _Mono_Framework.MonoButtonElement import MonoButtonElement

@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/AumTroll_b995_9/Map.py
+#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/AumTroll_b995_9/Map.py
 """
 Cntrlr_Map.py
 
@@ -185,3 +185,14 @@ ZOOM_STOPPED = [1, 127, 127]
 ZOOM_PLAYING = [6, 6, 15]
 ZOOM_SELECTED = [8, 1, 8]
 STOP_CLIP = [127, 127, 2]
+DEVICE_COLORS = {'midi_effect': 2,
+ 'audio_effect': 5,
+ 'instrument': 7,
+ 'Operator': 3,
+ 'DrumGroupDevice': 6,
+ 'MxDeviceMidiEffect': 4,
+ 'MxDeviceInstrument': 4,
+ 'MxDeviceAudioEffect': 4,
+ 'InstrumentGroupDevice': 1,
+ 'MidiEffectGroupDevice': 1,
+ 'AudioEffectGroupDevice': 1}

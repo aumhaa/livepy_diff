@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/LaunchMod_b995_9/SpecialMixerComponent.py
+#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/LaunchMod_b995_9/SpecialMixerComponent.py
 import Live
 from _Framework.MixerComponent import MixerComponent
 from DefChannelStripComponent import DefChannelStripComponent

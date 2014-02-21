@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/LaunchMod_b995_9/LaunchMod.py
+#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/LaunchMod_b995_9/LaunchMod.py
 from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface

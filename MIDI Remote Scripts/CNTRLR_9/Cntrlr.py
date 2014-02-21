@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/CNTRLR_9/Cntrlr.py
+#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/CNTRLR_9/Cntrlr.py
 from __future__ import with_statement
 import Live
 import time
@@ -429,6 +429,7 @@ class CntrlrMonomodComponent(MonomodComponent):
 
     def __init__(self, *a, **k):
         super(CntrlrMonomodComponent, self).__init__(*a, **k)
+        self._alt_device_banks = MOD_TYPES
 
     def _send_grid(self, *a):
         pass
@@ -581,6 +582,9 @@ class CntrlrMonomodComponent(MonomodComponent):
                     if not self._active_client._device_component.is_enabled():
                         self._send_to_lcd(column, row, self._active_client._c_wheel[column][row])
 
+    def _update_wheel(self):
+        self._update_c_wheel()
+
     def set_c_local_ring_control(self, val = 1):
         self._c_local_ring_control = val != 0
         self._script.set_local_ring_control(self._c_local_ring_control)
@@ -618,6 +622,9 @@ class CntrlrMonomodComponent(MonomodComponent):
             for index in range(4):
                 self._script._shift_mode._modes_buttons[index].send_value(0)
 
+    def _send_nav_box(self):
+        pass
+
 
 class Cntrlr(ControlSurface):
     __module__ = __name__
@@ -639,6 +646,7 @@ class Cntrlr(ControlSurface):
         self.set_local_ring_control(1)
         self._absolute_mode = 1
         self.flash_status = 1
+        self._leds_last = None
         self._device_selection_follows_track_selection = FOLLOW
         with self.component_guard():
             self._setup_monobridge()
@@ -850,7 +858,7 @@ class Cntrlr(ControlSurface):
         self._shift_mode.set_mode_buttons([ self._encoder_button[index] for index in range(4) ])
 
     def deassign_live_controls(self):
-        """THIS SECTION IS MISSING FROM THE ORIGINAL SCRIPT AND NEEDS TO BE FIXED...THE ASSIGNMENTS WERE MADE AT __init__"""
+        self._leds_last = None
         for index in range(4):
             self._mixer.channel_strip(index).set_volume_control(None)
 
@@ -1336,7 +1344,9 @@ class Cntrlr(ControlSurface):
                 leds.append(int(bytes[1]) + int(bytes[2]))
 
             leds.append(247)
-            self._send_midi(tuple(leds))
+            if not leds == self._leds_last:
+                self._send_midi(tuple(leds))
+                self._leds_last = leds
 
     def _release_mod_dials(self):
         if self._client is not None:

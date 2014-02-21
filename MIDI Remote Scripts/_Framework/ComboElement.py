@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ComboElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ComboElement.py
 from __future__ import with_statement
 from itertools import imap
 from contextlib import contextmanager
@@ -307,3 +307,28 @@ class MultiElement(CompoundElement, ButtonElementMixin):
 
     def on_nested_control_element_released(self, control):
         pass
+
+
+class ToggleElement(WrapperElement):
+    """
+    An Element wrapper that enables one of the nested elements based on
+    a toggle state.
+    """
+
+    def __init__(self, on_control = None, off_control = None, *a, **k):
+        super(ToggleElement, self).__init__(*a, **k)
+        self._on_control = on_control
+        self._off_control = off_control
+        self._toggled = False
+        self._update_toggled()
+
+    def set_toggled(self, value):
+        self._toggled = value
+        self._update_toggled()
+
+    def _update_toggled(self):
+        if self.has_control_element(self._wrapped_control):
+            self.unregister_control_element(self._wrapped_control)
+        self._wrapped_control = self._on_control if self._toggled else self._off_control
+        if self._wrapped_control != None:
+            self.register_control_element(self._wrapped_control)

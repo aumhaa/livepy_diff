@@ -1,8 +1,9 @@
-#Embedded file name: /Applications/Ableton Live 9 Standard.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/CodecEncoderElement.py
+#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/CodecEncoderElement.py
 import Live
 from _Framework.EncoderElement import EncoderElement
 from _Framework.InputControlElement import InputControlElement
 from _Framework.NotifyingControlElement import NotifyingControlElement
+from _Framework.SubjectSlot import subject_slot, subject_slot_group
 MIDI_NOTE_TYPE = 0
 MIDI_CC_TYPE = 1
 MIDI_PB_TYPE = 2
@@ -105,9 +106,14 @@ class CodecEncoderElement(EncoderElement):
         self._is_enabled = True
         self._paramter_lcd_name = ' '
         self._parameter_last_value = None
+        self._parameter_last_num_value = 0
         self._mapped_to_midi_velocity = False
         self.set_report_values(True, False)
         self._last_received = -1
+
+    def reset(self, force = False):
+        self.force_next_send()
+        self.send_value(0)
 
     def _reset_to_center(self):
         self._last_received = 64
@@ -123,11 +129,20 @@ class CodecEncoderElement(EncoderElement):
     def change_ring_mode(self, mode):
         self._ring_mode = mode
 
+    def set_ring_value(self, val):
+        self._ring_value = val
+
     def ring_mode(self):
         return self._ring_mode
 
-    def set_ring_value(self, val):
-        self._ring_value = val
+    def set_custom(self, val):
+        self._ring_custom = self._calculate_custom(''.join([ str(i) for i in val ]))
+
+    def set_green(self, val, *a):
+        self._ring_green = int(val > 0)
+
+    def set_mode(self, val, *a):
+        self._ring_mode = val
 
     def _calculate_custom(self, ring_leds):
         self._raw_custom = str(ring_leds)
@@ -144,11 +159,19 @@ class CodecEncoderElement(EncoderElement):
 
     def _get_ring(self):
         if self._ring_mode < 4:
-            byte1 = RING_MODE[self._ring_mode][self._ring_value % len(RING_MODE[self._ring_mode])][0]
-            byte2 = RING_MODE[self._ring_mode][self._ring_value % len(RING_MODE[self._ring_mode])][1]
+            mode = RING_MODE[self._ring_mode]
+            length = len(mode)
+            byte1 = mode[self._ring_value % length][0]
+            byte2 = mode[self._ring_value % length][1]
+            bytes = [byte1, byte2]
+        elif self._ring_mode == 5:
+            mode = RING_MODE[0]
+            length = max(0, len(mode) - 1)
+            byte1 = mode[int(self._parameter_last_num_value * length)][0]
+            byte2 = mode[int(self._parameter_last_num_value * length)][1]
             bytes = [byte1, byte2]
         else:
-            bytes = self._ring_custom[self._ring_value % len(self._ring_custom)]
+            bytes = self._ring_custom[self._ring_value % len(self._ring_custom) * len(RING_MODE[0])]
         bytes.append(self._ring_green * 32)
         return bytes
 
@@ -162,24 +185,28 @@ class CodecEncoderElement(EncoderElement):
             self.receive_value(int(value))
 
     def connect_to(self, parameter):
-        if not parameter != None:
+        if parameter == None:
+            self.release_parameter()
+        elif not isinstance(parameter, Live.DeviceParameter.DeviceParameter):
             raise AssertionError
-            if not isinstance(parameter, Live.DeviceParameter.DeviceParameter):
-                raise AssertionError
-                self._mapped_to_midi_velocity = False
-                assignment = parameter
-                if str(parameter.name) == str('Track Volume'):
-                    if parameter.canonical_parent.canonical_parent.has_audio_output is False:
-                        assignment = len(parameter.canonical_parent.canonical_parent.devices) > 0 and str(parameter.canonical_parent.canonical_parent.devices[0].class_name) == str('MidiVelocity') and parameter.canonical_parent.canonical_parent.devices[0].parameters[6]
-                        self._mapped_to_midi_velocity = True
-        self._parameter_to_map_to = assignment
-        self.add_parameter_listener(self._parameter_to_map_to)
+            self._mapped_to_midi_velocity = False
+            assignment = parameter
+            if str(parameter.name) == str('Track Volume'):
+                if parameter.canonical_parent.canonical_parent.has_audio_output is False:
+                    if len(parameter.canonical_parent.canonical_parent.devices) > 0:
+                        if str(parameter.canonical_parent.canonical_parent.devices[0].class_name) == str('MidiVelocity'):
+                            assignment = parameter.canonical_parent.canonical_parent.devices[0].parameters[6]
+                            self._mapped_to_midi_velocity = True
+            self._parameter_to_map_to = assignment
+            self.add_parameter_listener(self._parameter_to_map_to)
+            self._parameter_last_num_value = type(self._parameter) is not type(None) and (self._parameter.value - self._parameter.min) / (self._parameter.max - self._parameter.min)
 
     def release_parameter(self):
         if self._parameter_to_map_to != None:
             self.remove_parameter_listener(self._parameter_to_map_to)
         self.send_value(0, True)
         InputControlElement.release_parameter(self)
+        self._parameter_last_num_value = 0
 
     def script_wants_forwarding(self):
         if not self._is_enabled:
@@ -192,6 +219,7 @@ class CodecEncoderElement(EncoderElement):
 
     def forward_parameter_value(self):
         if type(self._parameter) is not type(None):
+            self._parameter_last_num_value = (self._parameter.value - self._parameter.min) / (self._parameter.max - self._parameter.min)
             try:
                 parameter = str(self.mapped_parameter())
             except:
