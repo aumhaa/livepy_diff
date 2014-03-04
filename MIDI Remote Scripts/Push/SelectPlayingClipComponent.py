@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SelectPlayingClipComponent.py
+
 """
 Component that automatically selects the playing clip in the selected track.
 """

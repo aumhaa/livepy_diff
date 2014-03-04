@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_APC/APC.py
+
 from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface

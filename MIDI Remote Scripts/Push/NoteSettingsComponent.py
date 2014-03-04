@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/NoteSettingsComponent.py
+
 import math
 from functools import partial
 from itertools import imap

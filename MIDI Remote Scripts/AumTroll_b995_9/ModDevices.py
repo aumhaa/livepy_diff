@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/AumTroll_b995_9/ModDevices.py
+
 ENDCODER_BANK_CONTROL1 = ['ModDevice_knob0',
  'ModDevice_knob1',
  'ModDevice_knob2',

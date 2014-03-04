@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/_Mono_Framework/LiveUtils.py
+
 """
 # LiveUtils, a collection of simple utility functions for controlling Ableton Live
 # Copyright (C) 2007 Rob King (rob@e-mu.org)

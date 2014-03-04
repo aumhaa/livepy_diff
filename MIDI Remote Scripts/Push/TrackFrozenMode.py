@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/TrackFrozenMode.py
+
 from _Framework.ModesComponent import ModesComponent
 from _Framework.SubjectSlot import subject_slot
 

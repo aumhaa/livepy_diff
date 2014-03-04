@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Actions.py
+
 from itertools import izip, count
 import Live
 _Q = Live.Song.Quantization

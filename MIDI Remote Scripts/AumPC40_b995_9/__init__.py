@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/AumPC40_b995_9/__init__.py
+
 from AumPC40 import AumPC40
 
 def create_instance(c_instance):

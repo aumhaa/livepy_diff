@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/AumTroll_b995_9/AumTroll.py
+
 from __future__ import with_statement
 import Live
 import time

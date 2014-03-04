@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/WithPriority.py
+
 from _Framework.ComboElement import WrapperElement
 from _Framework.Resource import PrioritizedResource
 from _Framework.Util import nop

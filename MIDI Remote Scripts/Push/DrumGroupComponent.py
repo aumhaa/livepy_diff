@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/DrumGroupComponent.py
+
 from itertools import imap, ifilter
 from _Framework.SubjectSlot import subject_slot
 from _Framework.Util import find_if, first

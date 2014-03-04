@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/Codex/__init__.py
+
 from Codex import Codex
 
 def create_instance(c_instance):

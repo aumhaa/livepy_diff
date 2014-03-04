@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/M4LInterfaceComponent.py
+
 from __future__ import with_statement
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 

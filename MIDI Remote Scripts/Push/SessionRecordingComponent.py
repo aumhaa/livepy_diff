@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SessionRecordingComponent.py
+
 from functools import partial
 from _Framework.SessionRecordingComponent import SessionRecordingComponent
 from _Framework.Util import forward_property

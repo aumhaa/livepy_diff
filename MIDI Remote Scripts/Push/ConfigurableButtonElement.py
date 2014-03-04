@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ConfigurableButtonElement.py
+
 from _Framework.ButtonElement import ButtonElement, ON_VALUE, OFF_VALUE
 from _Framework.Skin import Skin, SkinColorMissingError
 from Colors import Basic

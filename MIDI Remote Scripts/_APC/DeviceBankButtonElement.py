@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_APC/DeviceBankButtonElement.py
+
 from _Framework.ComboElement import ComboElement
 
 class DeviceBankButtonElement(ComboElement):

@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/MonoPedal/__init__.py
+
 from MonoPedal import MonoPedal
 
 def create_instance(c_instance):

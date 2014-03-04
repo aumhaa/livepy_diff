@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/consts.py
+
 from _Framework.Resource import PrioritizedResource
 import sys
 DISPLAY_LENGTH = 72

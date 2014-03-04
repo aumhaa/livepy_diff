@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/MixerComponent.py
+
 from ButtonElement import ButtonElement
 from ChannelStripComponent import ChannelStripComponent
 from CompoundComponent import CompoundComponent

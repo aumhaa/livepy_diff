@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Selection.py
+
 """
 Object that encapsulates selection in the Push controller.
 """

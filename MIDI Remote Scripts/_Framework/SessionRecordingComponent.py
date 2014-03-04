@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/SessionRecordingComponent.py
+
 from _Framework.SubjectSlot import subject_slot
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.Util import find_if, index_if

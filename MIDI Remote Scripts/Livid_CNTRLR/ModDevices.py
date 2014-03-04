@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/Livid_CNTRLR/ModDevices.py
+
 STEPPR_BANKS = {'InstrumentGroupDevice': [['Macro 1',
                             'Macro 2',
                             'Macro 3',

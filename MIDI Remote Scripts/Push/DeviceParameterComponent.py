@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/DeviceParameterComponent.py
+
 from itertools import chain, repeat
 import Live
 AutomationState = Live.DeviceParameter.AutomationState

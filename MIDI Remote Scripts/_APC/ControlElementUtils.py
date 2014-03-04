@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_APC/ControlElementUtils.py
+
 import Live
 MapMode = Live.MidiMap.MapMode
 from _Framework.EncoderElement import EncoderElement

@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/AumPush_b995/AumPush.py
+
 from __future__ import with_statement
 import Live
 from contextlib import contextmanager

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/MelodicComponent.py
+
 from __future__ import with_statement
 from _Framework.Util import forward_property, find_if
 from _Framework.SubjectSlot import subject_slot

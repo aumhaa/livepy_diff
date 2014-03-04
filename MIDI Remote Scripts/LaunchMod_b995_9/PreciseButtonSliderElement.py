@@ -1,4 +1,4 @@
-#Embedded file name: /Applications/Ableton Live 9 Beta.app/Contents/App-Resources/MIDI Remote Scripts/LaunchMod_b995_9/PreciseButtonSliderElement.py
+
 from _Framework.ButtonSliderElement import ButtonSliderElement
 from _Framework.InputControlElement import *
 from ConfigurableButtonElement import ConfigurableButtonElement
