@@ -83,7 +83,7 @@ class APC(ControlSurface):
 
         self._suppress_send_midi = False
         self._do_uncombine()
-        self._send_midi((240, 126, 0, 6, 1, 247))
+        self._send_identity_request()
 
     def _set_session_highlight(self, track_offset, scene_offset, width, height, include_return_tracks):
         if not self._suppress_session_highlight or (track_offset,
@@ -96,6 +96,9 @@ class APC(ControlSurface):
         if not self._suppress_send_midi:
             return super(APC, self)._send_midi(midi_bytes, optimized=optimized)
         return False
+
+    def _send_identity_request(self):
+        self._send_midi((240, 126, 0, 6, 1, 247))
 
     def _send_introduction_message(self, mode_byte = ABLETON_MODE):
         self._send_midi((240,

@@ -546,6 +546,7 @@ class BrowserComponent(CompoundComponent):
     COLUMN_SIZE = 4
     enter_button = ButtonControl(**consts.SIDE_BUTTON_COLORS)
     exit_button = ButtonControl(**consts.SIDE_BUTTON_COLORS)
+    shift_button = ButtonControl()
 
     def __init__(self, browser = None, *a, **k):
         super(BrowserComponent, self).__init__(*a, **k)
@@ -561,6 +562,8 @@ class BrowserComponent(CompoundComponent):
             component.last_action_item = lambda : self._last_loaded_item
             component.item_formatter = partial(self._item_formatter, i)
 
+        self._select_buttons = []
+        self._state_buttons = []
         self._encoder_controls = []
         self._on_list_item_action.replace_subjects(self._list_components)
         self._on_hotswap_target_changed.subject = self._browser
@@ -573,10 +576,6 @@ class BrowserComponent(CompoundComponent):
         self._skip_next_preselection = False
         self._browser_model_dirty = True
         self._on_content_lists_changed()
-
-    @property
-    def list_components(self):
-        return self._list_components
 
     def set_display_line1(self, display):
         self.set_display_line_with_index(display, 0)
@@ -594,6 +593,59 @@ class BrowserComponent(CompoundComponent):
         if display:
             sources = self._data_sources[index::self.COLUMN_SIZE]
             display.set_data_sources(sources)
+
+    def set_select_buttons(self, buttons):
+        for button in buttons or []:
+            if button:
+                button.reset()
+
+        self._on_select_matrix_value.subject = buttons or None
+        self._select_buttons = buttons
+        buttons = buttons or (None, None, None, None, None, None, None, None)
+        for component, button in izip(self._list_components, buttons[1::2]):
+            self._set_button_if_enabled(component, 'action_button', button)
+
+        for component, button in izip(self._list_components, buttons[::2]):
+            if self.shift_button.is_pressed:
+                self._set_button_if_enabled(component, 'prev_page_button', button)
+                self._set_button_if_enabled(component, 'select_prev_button', None)
+            else:
+                self._set_button_if_enabled(component, 'prev_page_button', None)
+                self._set_button_if_enabled(component, 'select_prev_button', button)
+
+    def set_state_buttons(self, buttons):
+        for button in buttons or []:
+            if button:
+                button.reset()
+
+        self._on_state_matrix_value.subject = buttons or None
+        self._state_buttons = buttons
+        buttons = buttons or (None, None, None, None, None, None, None, None)
+        for component, button in izip(self._list_components, buttons[::2]):
+            if self.shift_button.is_pressed:
+                self._set_button_if_enabled(component, 'next_page_button', button)
+                self._set_button_if_enabled(component, 'select_next_button', None)
+            else:
+                self._set_button_if_enabled(component, 'next_page_button', None)
+                self._set_button_if_enabled(component, 'select_next_button', button)
+
+        for button in buttons[1::2]:
+            if button and self.is_enabled():
+                button.set_light('DefaultButton.Disabled')
+
+    @shift_button.value
+    def shift_button(self, value, control):
+        self.set_select_buttons(self._select_buttons)
+        self.set_state_buttons(self._state_buttons)
+
+    def _set_button_if_enabled(self, component, name, button):
+        control = getattr(component, name)
+        if component.is_enabled(explicit=True):
+            control.set_control_element(button)
+        else:
+            control.set_control_element(None)
+            if button and self.is_enabled():
+                button.set_light('DefaultButton.Disabled')
 
     def set_encoder_controls(self, encoder_controls):
         if encoder_controls:
@@ -614,6 +666,8 @@ class BrowserComponent(CompoundComponent):
     def update(self):
         super(BrowserComponent, self).update()
         if self.is_enabled():
+            self.set_state_buttons(self._state_buttons)
+            self.set_select_buttons(self._select_buttons)
             self._update_browser_model()
 
     def reset_load_memory(self):
@@ -797,6 +851,8 @@ class BrowserComponent(CompoundComponent):
             for component in last[1:]:
                 component.set_enabled(False)
 
+        self.set_select_buttons(self._select_buttons)
+        self.set_state_buttons(self._state_buttons)
         self.set_encoder_controls(self._encoder_controls)
         self._update_navigation_button_state()
 

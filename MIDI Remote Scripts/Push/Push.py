@@ -55,7 +55,7 @@ from Selection import PushSelection
 from AccentComponent import AccentComponent
 from AutoArmComponent import AutoArmComponent
 from QuantizationComponent import QuantizationComponent
-from WithPriority import Resetting
+from WithPriority import Resetting, WithPriority
 from Settings import make_pad_parameters, SETTING_WORKFLOW, SETTING_THRESHOLD, SETTING_CURVE
 from PadSensitivity import PadUpdateComponent, pad_parameter_sender
 from PlayheadElement import PlayheadElement, NullPlayhead
@@ -591,13 +591,7 @@ class Push(OptimizedControlSurface):
         return ClipControlComponent(loop_layer=Layer(encoders=self._global_param_controls.submatrix[:4, :], shift_button=self._shift_button, name_display=self._display_line1.subdisplay[:36], value_display=self._display_line2.subdisplay[:36]), audio_layer=Layer(encoders=self._global_param_controls.submatrix[4:, :], shift_button=self._shift_button, name_display=self._display_line1.subdisplay[36:], value_display=self._display_line2.subdisplay[36:]), clip_name_layer=Layer(display=self._display_line3), name='Clip_Control', is_enabled=False)
 
     def _create_browser(self):
-        browser = BrowserComponent(name='Browser', is_enabled=False, layer=Layer(encoder_controls=self._global_param_controls, display_line1=self._display_line1, display_line2=self._display_line2, display_line3=self._display_line3, display_line4=self._display_line4, enter_button=self._in_button, exit_button=self._out_button, _notification=self._notification.use_full_display(2), priority=consts.BROWSER_PRIORITY))
-        for i, list_component in enumerate(browser.list_components):
-            prev_button = self._select_buttons_raw[i * 2]
-            next_button = self._track_state_buttons_raw[i * 2]
-            action_button = self._select_buttons_raw[i * 2 + 1]
-            list_component.layer = Layer(select_next_button=next_button, select_prev_button=prev_button, next_page_button=self._with_shift(next_button), prev_page_button=self._with_shift(prev_button), action_button=action_button, priority=consts.BROWSER_PRIORITY)
-
+        browser = BrowserComponent(name='Browser', is_enabled=False, layer=Layer(encoder_controls=self._global_param_controls, display_line1=self._display_line1, display_line2=self._display_line2, display_line3=self._display_line3, display_line4=self._display_line4, enter_button=self._in_button, exit_button=self._out_button, select_buttons=self._select_buttons, state_buttons=self._track_state_buttons, shift_button=WithPriority(consts.SHARED_PRIORITY, self._shift_button), _notification=self._notification.use_full_display(2), priority=consts.BROWSER_PRIORITY))
         return browser
 
     def _create_create_device_right(self):
@@ -624,14 +618,14 @@ class Push(OptimizedControlSurface):
 
         class BrowserMode(MultiEntryMode):
 
-            def __init__(inner_self, *a, **k):
-                super(BrowserMode, inner_self).__init__(LazyComponentMode(self._create_browser), *a, **k)
+            def __init__(self, create_browser = nop, *a, **k):
+                super(BrowserMode, self).__init__(LazyComponentMode(create_browser), *a, **k)
 
             @property
             def component(self):
                 return self._mode.component
 
-        self._browser_mode = BrowserMode()
+        self._browser_mode = BrowserMode(self._create_browser)
         self._browser_hotswap_mode = MultiEntryMode(BrowserHotswapMode(application=self.application()))
         self._browser_dialog_mode = MultiEntryMode([SetAttributeMode(lambda : self._browser_mode.component.layer, 'priority', consts.MODAL_DIALOG_PRIORITY), self._browser_mode])
         self._on_browse_mode_changed.subject = self.application().view
