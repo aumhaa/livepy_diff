@@ -152,8 +152,11 @@ class Push(OptimizedControlSurface):
                 if song_view.selected_track != old_selected_track:
                     self._track_selection_changed_by_action()
 
+    def _needs_to_deactivate_session_recording(self):
+        return self._matrix_modes.selected_mode == 'note' and self.song().exclusive_arm
+
     def _track_selection_changed_by_action(self):
-        if self._matrix_modes.selected_mode == 'note':
+        if self._needs_to_deactivate_session_recording():
             self._session_recording.deactivate_recording()
         if self._auto_arm.needs_restore_auto_arm:
             self._auto_arm.restore_auto_arm()
@@ -489,7 +492,7 @@ class Push(OptimizedControlSurface):
     def _init_track_modes(self):
         self._track_modes = ModesComponent(name='Track_Modes')
         self._track_modes.set_enabled(False)
-        self._track_modes.add_mode('stop', [AddLayerMode(self._stop_clips, self._stop_track_clips_layer), self._session_mode])
+        self._track_modes.add_mode('stop', AddLayerMode(self._stop_clips, self._stop_track_clips_layer))
         self._track_modes.add_mode('solo', AddLayerMode(self._mixer, self._mixer_solo_layer))
         self._track_modes.add_mode('mute', AddLayerMode(self._mixer, self._mixer_mute_layer))
         self._track_modes.layer = Layer(stop_button=self._global_track_stop_button, mute_button=self._global_mute_button, solo_button=self._global_solo_button, shift_button=self._shift_button)
