@@ -6,7 +6,7 @@ from _Framework.ButtonSliderElement import ButtonSliderElement
 from _Framework.ClipSlotComponent import ClipSlotComponent
 from _Framework.ChannelStripComponent import ChannelStripComponent
 from _Framework.SceneComponent import SceneComponent
-from _Framework.SessionZoomingComponent import SessionZoomingComponent
+from _Framework.SessionZoomingComponent import DeprecatedSessionZoomingComponent
 from ConfigurableButtonElement import ConfigurableButtonElement
 from SpecialSessionComponent import SpecialSessionComponent
 from SubSelectorComponent import *
@@ -24,7 +24,7 @@ class MainSelectorComponent(ModeSelectorComponent):
         raise isinstance(config_button, ButtonElement) or AssertionError
         ModeSelectorComponent.__init__(self)
         self._session = SpecialSessionComponent(matrix.width(), matrix.height())
-        self._zooming = SessionZoomingComponent(self._session)
+        self._zooming = DeprecatedSessionZoomingComponent(self._session)
         self._session.name = 'Session_Control'
         self._zooming.name = 'Session_Overview'
         self._matrix = matrix

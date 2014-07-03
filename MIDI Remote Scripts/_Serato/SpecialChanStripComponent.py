@@ -1,5 +1,4 @@
 
-import Live
 from _Framework.ChannelStripComponent import ChannelStripComponent
 
 class SpecialChanStripComponent(ChannelStripComponent):

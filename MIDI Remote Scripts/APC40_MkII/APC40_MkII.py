@@ -10,8 +10,8 @@ from _Framework.ModesComponent import ModesComponent, ImmediateBehaviour, DelayM
 from _Framework.Resource import PrioritizedResource
 from _Framework.SessionRecordingComponent import SessionRecordingComponent
 from _Framework.SessionZoomingComponent import SessionZoomingComponent
-from _Framework.Skin import merge_skins
 from _Framework.ClipCreator import ClipCreator
+from _Framework.Util import recursive_map
 from Push import Colors
 from _APC.APC import APC
 from _APC.DeviceComponent import DeviceComponent
@@ -35,7 +35,6 @@ class APC40_MkII(APC, OptimizedControlSurface):
         self._default_skin = make_default_skin()
         self._stop_button_skin = make_stop_button_skin()
         self._crossfade_button_skin = make_crossfade_button_skin()
-        self._skin = merge_skins(self._color_skin, self._default_skin, self._stop_button_skin, self._crossfade_button_skin)
         with self.component_guard():
             self._create_controls()
             self._create_bank_toggle()
@@ -51,6 +50,9 @@ class APC40_MkII(APC, OptimizedControlSurface):
         self.set_highlighting_session_component(self._session)
         self.set_device_component(self._device)
         self._device_selection_follows_track_selection = True
+
+    def _with_shift(self, button):
+        return ComboElement(button, modifiers=[self._shift_button])
 
     def _create_controls(self):
         make_on_off_button = partial(make_button, skin=self._default_skin)
@@ -75,7 +77,8 @@ class APC40_MkII(APC, OptimizedControlSurface):
         self._down_button = make_button(0, 95, name='Bank_Select_Down_Button')
         self._stop_buttons = ButtonMatrixElement(rows=[[ make_stop_button(track) for track in xrange(NUM_TRACKS) ]])
         self._stop_all_button = make_button(0, 81, name='Stop_All_Clips_Button')
-        self._scene_launch_buttons = ButtonMatrixElement(rows=[[ make_color_button(0, scene + 82, name='Scene_%d_Launch_Button' % scene) for scene in xrange(NUM_SCENES) ]])
+        self._scene_launch_buttons_raw = [ make_color_button(0, scene + 82, name='Scene_%d_Launch_Button' % scene) for scene in xrange(NUM_SCENES) ]
+        self._scene_launch_buttons = ButtonMatrixElement(rows=[self._scene_launch_buttons_raw])
         self._matrix_rows_raw = [ [ make_matrix_button(track, scene) for track in xrange(NUM_TRACKS) ] for scene in xrange(NUM_SCENES) ]
         self._session_matrix = ButtonMatrixElement(rows=self._matrix_rows_raw)
         self._pan_button = make_on_off_button(0, 87, name='Pan_Button')
@@ -123,6 +126,8 @@ class APC40_MkII(APC, OptimizedControlSurface):
         self._detail_view_button = self._device_control_buttons_raw[7]
         self._detail_view_button.name = 'Detail_View_Button'
         self._foot_pedal_button = DoublePressElement(make_pedal_button(64, name='Foot_Pedal'))
+        self._shifted_matrix = ButtonMatrixElement(rows=recursive_map(self._with_shift, self._matrix_rows_raw))
+        self._shifted_scene_buttons = ButtonMatrixElement(rows=[[ self._with_shift(button) for button in self._scene_launch_buttons_raw ]])
 
     def _create_bank_toggle(self):
         self._bank_toggle = BankToggleComponent(is_enabled=False, layer=Layer(bank_toggle_button=self._bank_button))
@@ -139,7 +144,7 @@ class APC40_MkII(APC, OptimizedControlSurface):
         clip_color_table = Colors.CLIP_COLOR_TABLE.copy()
         clip_color_table[16777215] = 119
         self._session.set_rgb_mode(clip_color_table, Colors.RGB_COLOR_TABLE)
-        self._session_zoom = SessionZoomingComponent(self._session, name='Session_Overview', enable_skinning=True, is_enabled=False, layer=Layer(button_matrix=self._session_matrix, zoom_button=self._shift_button, nav_left_button=self._left_button, nav_right_button=self._right_button, nav_up_button=self._up_button, nav_down_button=self._down_button, scene_bank_buttons=self._scene_launch_buttons))
+        self._session_zoom = SessionZoomingComponent(self._session, name='Session_Overview', enable_skinning=True, is_enabled=False, layer=Layer(button_matrix=self._shifted_matrix, nav_left_button=self._with_shift(self._left_button), nav_right_button=self._with_shift(self._right_button), nav_up_button=self._with_shift(self._up_button), nav_down_button=self._with_shift(self._down_button), scene_bank_buttons=self._shifted_scene_buttons))
 
     def _create_mixer(self):
         self._mixer = MixerComponent(NUM_TRACKS, auto_name=True, is_enabled=False, invert_mute_feedback=True, layer=Layer(volume_controls=self._volume_controls, arm_buttons=self._arm_buttons, solo_buttons=self._solo_buttons, mute_buttons=self._mute_buttons, shift_button=self._shift_button, track_select_buttons=self._select_buttons, prehear_volume_control=self._prehear_control, crossfader_control=self._crossfader_control, crossfade_buttons=self._crossfade_buttons))

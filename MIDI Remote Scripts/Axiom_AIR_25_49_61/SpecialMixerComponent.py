@@ -5,8 +5,8 @@ from DisplayingChanStripComponent import DisplayingChanStripComponent
 class SpecialMixerComponent(MixerComponent):
     """ Special mixer class that uses displaying channel strips """
 
-    def __init__(self, name_display, value_display, num_tracks, num_returns = 0, with_eqs = False, with_filters = False):
-        MixerComponent.__init__(self, num_tracks, num_returns=0, with_eqs=False, with_filters=False)
+    def __init__(self, name_display, value_display, num_tracks, num_returns = 0):
+        MixerComponent.__init__(self, num_tracks, num_returns=0)
         self._name_display = name_display
         self._value_display = value_display
         for index in range(num_tracks):

@@ -9,7 +9,7 @@ from _Framework import Task, Defaults
 from LoopSelectorComponent import create_clip_in_selected_slot
 from MatrixMaps import PAD_FEEDBACK_CHANNEL
 DEFAULT_VELOCITY = 100
-BEAT_TIME_EPSILON = 1.0000000000000006e-05
+BEAT_TIME_EPSILON = 1e-05
 
 def color_for_note(note):
     velocity = note[3]

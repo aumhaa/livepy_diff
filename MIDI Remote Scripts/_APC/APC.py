@@ -156,7 +156,7 @@ class APC(ControlSurface):
 
     def _do_combine(self):
         if self._should_combine() and self not in APC._active_instances:
-            APC._active_instances.append(self)
+            APC._active_instances = sorted(APC._active_instances + [self], key=lambda x: x.instance_identifier())
             APC._combine_active_instances()
 
     def _do_uncombine(self):

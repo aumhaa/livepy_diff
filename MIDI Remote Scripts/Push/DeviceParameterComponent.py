@@ -1,5 +1,5 @@
 
-from itertools import chain, repeat
+from itertools import chain, repeat, ifilter
 import Live
 AutomationState = Live.DeviceParameter.AutomationState
 from _Framework.Util import first, second
@@ -108,7 +108,7 @@ class DeviceParameterComponent(ControlSurfaceComponent):
             source.set_display_string('')
 
     def _release_parameters(self):
-        for encoder in self._parameter_controls or []:
+        for encoder in ifilter(None, self._parameter_controls or []):
             encoder.release_parameter()
 
     def _connect_parameters(self):

@@ -1,8 +1,9 @@
 
 from __future__ import with_statement
-from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
+from ControlElement import ControlElementClient
+from ControlSurfaceComponent import ControlSurfaceComponent
 
-class M4LInterfaceComponent(ControlSurfaceComponent):
+class M4LInterfaceComponent(ControlSurfaceComponent, ControlElementClient):
     """
     Simplified API for interaction from M4L as a high priority layer
     superposed on top of any functionality.

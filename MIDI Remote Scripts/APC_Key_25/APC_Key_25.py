@@ -5,8 +5,7 @@ from _Framework.ButtonMatrixElement import ButtonMatrixElement
 from _Framework.ControlSurface import OptimizedControlSurface
 from _Framework.ComboElement import ComboElement
 from _Framework.Layer import Layer
-from _Framework.Defaults import TIMER_DELAY
-from _Framework.ModesComponent import AddLayerMode, ModesComponent, DelayMode, LayerMode
+from _Framework.ModesComponent import AddLayerMode, ModesComponent
 from _Framework.SessionComponent import SessionComponent
 from _Framework.Resource import SharedResource
 from _Framework.Util import nop
@@ -17,7 +16,6 @@ from _APC.DeviceComponent import DeviceComponent
 from _APC.SkinDefault import make_default_skin, make_biled_skin, make_stop_button_skin
 from .SendToggleComponent import SendToggleComponent
 from .MixerComponent import MixerComponent
-MODE_PRIORITY = 2
 
 class APC_Key_25(APC, OptimizedControlSurface):
     """ Script for Akai's APC_Key_25 Controller """
@@ -34,6 +32,8 @@ class APC_Key_25(APC, OptimizedControlSurface):
 
     def __init__(self, *a, **k):
         super(APC_Key_25, self).__init__(*a, **k)
+        self._suppress_session_highlight = False
+        self._suppress_send_midi = False
         self._color_skin = make_biled_skin()
         self._default_skin = make_default_skin()
         self._stop_button_skin = make_stop_button_skin()
@@ -47,32 +47,12 @@ class APC_Key_25(APC, OptimizedControlSurface):
             self.set_device_component(self._device)
             self.set_highlighting_session_component(self._session)
             self._session.set_mixer(self._mixer)
-            self._create_encoder_modes()
-            self._create_track_button_modes()
-            for component in self.components:
-                component.set_enabled(False)
-
+            self._encoder_modes = self._create_encoder_modes()
+            self._track_modes = self._create_track_button_modes()
         self._device_selection_follows_track_selection = True
 
     def get_matrix_button(self, column, row):
         return self._matrix_buttons[row][column]
-
-    def _product_model_id_byte(self):
-        return 39
-
-    def _should_combine(self):
-        return False
-
-    def _update_hardware(self):
-        self._session.set_show_highlight(False)
-        super(APC_Key_25, self)._update_hardware()
-
-    def _send_identity_request(self):
-        self._send_midi((240, 126, 127, 6, 1, 247))
-
-    def _send_dongle_challenge(self):
-        self._on_handshake_successful()
-        self._session.set_show_highlight(True)
 
     def _create_controls(self):
         make_on_off_button = partial(make_button, skin=self._default_skin)
@@ -110,9 +90,7 @@ class APC_Key_25(APC, OptimizedControlSurface):
         return make_button(0, 81, name='Stop_All_Clips_Button')
 
     def _create_session(self):
-        session = SessionComponent(self.SESSION_WIDTH, self.SESSION_HEIGHT, auto_name=True, enable_skinning=True, is_enabled=False, layer=Layer(scene_launch_buttons=self.wrap_matrix(self._scene_launch_buttons), clip_launch_buttons=self._session_matrix))
-        self._high_priority_layer = Layer(priority=MODE_PRIORITY, stop_all_clips_button=self._stop_all_button, track_bank_left_button=self._left_button, track_bank_right_button=self._right_button, scene_bank_up_button=self._up_button, scene_bank_down_button=self._down_button)
-        self._high_priority_layer.grab(session)
+        session = SessionComponent(self.SESSION_WIDTH, self.SESSION_HEIGHT, auto_name=True, enable_skinning=True, is_enabled=False, layer=Layer(scene_launch_buttons=self.wrap_matrix(self._scene_launch_buttons), clip_launch_buttons=self._session_matrix, stop_all_clips_button=self._stop_all_button, track_bank_left_button=self._left_button, track_bank_right_button=self._right_button, scene_bank_up_button=self._up_button, scene_bank_down_button=self._down_button))
         for scene_index in xrange(self.SESSION_HEIGHT):
             for track_index in xrange(self.SESSION_WIDTH):
                 slot = session.scene(scene_index).clip_slot(track_index)
@@ -136,13 +114,14 @@ class APC_Key_25(APC, OptimizedControlSurface):
     def _create_encoder_modes(self):
         knob_modes = ModesComponent(name='Knob Modes', is_enabled=False)
         parameter_knobs_matrix = self.wrap_matrix(self._parameter_knobs)
+        send_toggle_component = SendToggleComponent(self._mixer, name='Toggle Send', is_enabled=False, layer=Layer(toggle_button=self._send_button, priority=1))
         knob_modes.add_mode('volume', AddLayerMode(self._mixer, Layer(volume_controls=parameter_knobs_matrix)))
         knob_modes.add_mode('pan', AddLayerMode(self._mixer, Layer(pan_controls=parameter_knobs_matrix)))
-        knob_modes.add_mode('send', [AddLayerMode(self._mixer, Layer(send_controls=parameter_knobs_matrix)), DelayMode(LayerMode(SendToggleComponent(self._mixer, name='Toggle Send', is_enabled=False), Layer(priority=MODE_PRIORITY, toggle_button=self._send_button)), delay=TIMER_DELAY)])
+        knob_modes.add_mode('send', [AddLayerMode(self._mixer, Layer(send_controls=parameter_knobs_matrix)), send_toggle_component])
         knob_modes.add_mode('device', AddLayerMode(self._device, Layer(parameter_controls=parameter_knobs_matrix)))
         knob_modes.selected_mode = 'volume'
         knob_modes.layer = Layer(volume_button=self._volume_button, pan_button=self._pan_button, send_button=self._send_button, device_button=self._device_button)
-        knob_modes.layer.priority = MODE_PRIORITY
+        return knob_modes
 
     def _create_track_button_modes(self):
         track_button_modes = ModesComponent(name='Track Button Modes', is_enabled=False)
@@ -154,3 +133,33 @@ class APC_Key_25(APC, OptimizedControlSurface):
         track_button_modes.add_mode('select', AddLayerMode(self._mixer, layer=Layer(track_select_buttons=select_button_matrix)))
         track_button_modes.selected_mode = 'clip_stop'
         track_button_modes.layer = Layer(clip_stop_button=self._stop_button, solo_button=self._solo_button, arm_button=self._arm_button, mute_button=self._mute_button, select_button=self._select_button)
+        return track_button_modes
+
+    def _enable_components(self):
+        with self.component_guard():
+            self._session.set_enabled(True)
+            self._mixer.set_enabled(True)
+            self._device.set_enabled(True)
+            if self.HAS_TRANSPORT:
+                self._transport.set_enabled(True)
+            self._encoder_modes.set_enabled(True)
+            self._track_modes.set_enabled(True)
+
+    def _should_combine(self):
+        return False
+
+    def _update_hardware(self):
+        self._send_midi((240, 126, 127, 6, 1, 247))
+
+    def _product_model_id_byte(self):
+        return 39
+
+    def _on_identity_response(self, midi_bytes):
+        super(APC_Key_25, self)._on_identity_response(midi_bytes)
+        self._enable_components()
+
+    def _send_dongle_challenge(self):
+        pass
+
+    def _on_handshake_successful(self):
+        pass

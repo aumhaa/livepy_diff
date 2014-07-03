@@ -114,6 +114,16 @@ class TouchStripElement(InputControlElement, SlotManager):
     def touch_button(self):
         return self._touch_button
 
+    def _get_mode(self):
+        return self._behaviour.mode if self._behaviour != None else None
+
+    def _set_mode(self, mode):
+        if not in_range(mode, 0, TouchStripModes.COUNT):
+            raise IndexError('Invalid Touch Strip Mode %d' % mode)
+        self.behaviour = SimpleBehaviour(mode=mode)
+
+    mode = property(_get_mode, _set_mode)
+
     def _set_behaviour(self, behaviour):
         if not behaviour:
             behaviour = DEFAULT_BEHAVIOUR

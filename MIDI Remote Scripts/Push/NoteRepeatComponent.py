@@ -67,7 +67,7 @@ class NoteRepeatComponent(CompoundComponent):
         self._update_note_repeat(enabled=self.is_enabled())
 
     def _enable_note_repeat(self):
-        self._last_record_quantization = self._song.midi_recording_quantization
+        self._last_record_quantization = self.song().midi_recording_quantization
         self._set_recording_quantization(False)
         self._update_note_repeat(enabled=True)
 

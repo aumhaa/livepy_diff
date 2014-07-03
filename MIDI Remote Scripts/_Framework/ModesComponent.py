@@ -261,7 +261,7 @@ class DelayMode(Mode):
         raise mode is not None or AssertionError
         raise parent_task_group is not None or AssertionError
         delay = delay or Defaults.MOMENTARY_DELAY
-        self._mode = mode
+        self._mode = tomode(mode)
         self._mode_entered = False
         self._delay_task = parent_task_group.add(Task.sequence(Task.wait(delay), Task.run(self._enter_mode_delayed)))
         self._delay_task.kill()

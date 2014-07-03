@@ -120,3 +120,7 @@ class ButtonElement(InputControlElement, ButtonElementMixin):
         super(ButtonElement, self).receive_value(value)
         if pressed_before and not self.is_pressed():
             self._undo_step_handler.end_undo_step()
+
+    def disconnect(self):
+        super(ButtonElement, self).disconnect()
+        self._undo_step_handler = None

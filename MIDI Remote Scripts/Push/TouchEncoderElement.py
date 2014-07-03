@@ -82,3 +82,7 @@ class TouchEncoderElement(EncoderElement, SlotManager):
             self._trigger_undo_step = False
             self._undo_step_open = True
         super(TouchEncoderElement, self).receive_value(value)
+
+    def disconnect(self):
+        super(TouchEncoderElement, self).disconnect()
+        self._undo_step_handler = None

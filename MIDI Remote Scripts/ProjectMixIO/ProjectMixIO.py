@@ -37,6 +37,7 @@ class ProjectMixIO:
         self.__option_is_pressed = False
         self.__ctrl_is_pressed = False
         self.__alt_is_pressed = False
+        self.is_pro_version = False
 
     def disconnect(self):
         for c in self.__components:
