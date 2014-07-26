@@ -1,8 +1,9 @@
 
-from SubjectSlot import subject_slot, subject_slot_group
-from CompoundComponent import CompoundComponent
-from ScrollComponent import ScrollComponent
-from Util import in_range
+from __future__ import absolute_import
+from .CompoundComponent import CompoundComponent
+from .ScrollComponent import ScrollComponent
+from .SubjectSlot import subject_slot, subject_slot_group
+from .Util import in_range
 
 class SessionZoomingComponent(CompoundComponent):
     """

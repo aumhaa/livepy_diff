@@ -1,8 +1,9 @@
 
+from __future__ import absolute_import
 import Live
-from ControlSurfaceComponent import ControlSurfaceComponent
-from Util import in_range
-from SubjectSlot import subject_slot
+from .ControlSurfaceComponent import ControlSurfaceComponent
+from .SubjectSlot import subject_slot
+from .Util import in_range
 
 def find_nearest_color(rgb_table, src_hex_color):
 

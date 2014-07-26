@@ -1,6 +1,7 @@
 
+from __future__ import absolute_import
 from .ControlSurface import ControlSurface
-import Task
+from . import Task
 SYSEX_IDENTITY_REQUEST = (240, 126, 0, 6, 1, 247)
 
 class IdentifiableControlSurface(ControlSurface):

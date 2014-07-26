@@ -2,6 +2,7 @@
 """
 Various utilities.
 """
+from __future__ import absolute_import
 from contextlib import contextmanager
 from functools import wraps, partial
 from itertools import chain

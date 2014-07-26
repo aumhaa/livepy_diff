@@ -1,6 +1,7 @@
 
-from Util import find_if, nop
+from __future__ import absolute_import
 from functools import partial
+from .Util import find_if, nop
 
 def default_combiner(results):
     for _ in results:

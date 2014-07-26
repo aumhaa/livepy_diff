@@ -1,8 +1,9 @@
 
-from ChannelStripComponent import ChannelStripComponent, release_control
-from CompoundComponent import CompoundComponent
-from SubjectSlot import subject_slot
-from Util import clamp
+from __future__ import absolute_import
+from .ChannelStripComponent import ChannelStripComponent, release_control
+from .CompoundComponent import CompoundComponent
+from .SubjectSlot import subject_slot
+from .Util import clamp
 
 def turn_button_on_off(button, on = True):
     if button != None:

@@ -1,8 +1,9 @@
 
-from _Framework.Control import ButtonControl
-from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
-from _Framework import Task
-from _Framework import Defaults
+from __future__ import absolute_import
+from . import Defaults
+from . import Task
+from .Control import ButtonControl
+from .ControlSurfaceComponent import ControlSurfaceComponent
 
 class Scrollable(object):
     """

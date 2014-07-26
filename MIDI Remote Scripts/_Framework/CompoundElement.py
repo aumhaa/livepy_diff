@@ -1,10 +1,10 @@
 
-from __future__ import with_statement
+from __future__ import absolute_import, with_statement
 from itertools import ifilter
-from ControlElement import ControlElementClient
-from SubjectSlot import subject_slot_group, SlotManager
-from NotifyingControlElement import NotifyingControlElement
-from Util import BooleanContext, first, second
+from .ControlElement import ControlElementClient
+from .SubjectSlot import subject_slot_group, SlotManager
+from .NotifyingControlElement import NotifyingControlElement
+from .Util import BooleanContext, first, second
 
 class NestedElementClient(ControlElementClient):
 
@@ -58,7 +58,7 @@ class CompoundElement(NotifyingControlElement, SlotManager, ControlElementClient
         """
         raise NotImplementedError
 
-    def on_nested_control_element_value(self, control, value):
+    def on_nested_control_element_value(self, value, control):
         """
         Notifies that an owned control element has received a value.
         """

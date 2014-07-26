@@ -6,7 +6,8 @@ given device instances.
 [jbo] After some though about this, I personally believe that moving
 banking to the C++ code is the best mid-term solution.
 """
-from SubjectSlot import Subject
+from __future__ import absolute_import
+from .SubjectSlot import Subject
 
 class DeviceBankRegistry(Subject):
     __subject_events__ = ('device_bank',)

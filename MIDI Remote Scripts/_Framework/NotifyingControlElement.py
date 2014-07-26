@@ -1,6 +1,7 @@
 
-from SubjectSlot import Subject, SubjectEvent
-from ControlElement import ControlElement
+from __future__ import absolute_import
+from .SubjectSlot import Subject, SubjectEvent
+from .ControlElement import ControlElement
 
 class NotifyingControlElement(Subject, ControlElement):
     """

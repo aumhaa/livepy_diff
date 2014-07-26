@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import
 import Live
 from .ButtonMatrixElement import ButtonMatrixElement
 from .ButtonElement import ButtonElement

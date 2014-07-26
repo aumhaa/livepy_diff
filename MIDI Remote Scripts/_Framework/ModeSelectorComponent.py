@@ -1,7 +1,8 @@
 
-from ControlSurfaceComponent import ControlSurfaceComponent
-from ButtonElement import ButtonElement
-from MomentaryModeObserver import MomentaryModeObserver
+from __future__ import absolute_import
+from .ButtonElement import ButtonElement
+from .ControlSurfaceComponent import ControlSurfaceComponent
+from .MomentaryModeObserver import MomentaryModeObserver
 
 class ModeSelectorComponent(ControlSurfaceComponent):
     """ Class for switching between modes, handle several functions with few controls """

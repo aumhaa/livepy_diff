@@ -1,8 +1,9 @@
 
-from _Framework.SubjectSlot import subject_slot
-from _Framework.CompoundComponent import CompoundComponent
-from _Framework.Util import find_if
-from _Framework.ToggleComponent import ToggleComponent
+from __future__ import absolute_import
+from .CompoundComponent import CompoundComponent
+from .SubjectSlot import subject_slot
+from .ToggleComponent import ToggleComponent
+from .Util import find_if
 import Live
 
 def track_fired_slot(track):

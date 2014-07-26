@@ -1,5 +1,6 @@
 
-from SubjectSlot import Subject, subject_slot, SlotManager
+from __future__ import absolute_import
+from .SubjectSlot import Subject, subject_slot, SlotManager
 
 class TrackArmState(Subject, SlotManager):
     __subject_events__ = ('arm',)

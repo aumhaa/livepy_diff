@@ -1,6 +1,7 @@
 
-from SubjectSlot import subject_slot
-from ControlSurfaceComponent import ControlSurfaceComponent
+from __future__ import absolute_import
+from .ControlSurfaceComponent import ControlSurfaceComponent
+from .SubjectSlot import subject_slot
 
 class ToggleComponent(ControlSurfaceComponent):
     """

@@ -1,5 +1,6 @@
 
-import Defaults
+from __future__ import absolute_import
+from . import Defaults
 
 class MomentaryModeObserver(object):
     """ Listens to the changes of a given set of controls and decides which mode to use """

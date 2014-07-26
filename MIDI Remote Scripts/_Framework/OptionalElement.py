@@ -1,6 +1,7 @@
 
-from _Framework.ComboElement import ToggleElement
-from _Framework.SubjectSlot import SlotManager, subject_slot, Subject, SubjectEvent
+from __future__ import absolute_import
+from .ComboElement import ToggleElement
+from .SubjectSlot import SlotManager, subject_slot
 
 class ChoosingElement(ToggleElement, SlotManager):
     """

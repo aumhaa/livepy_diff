@@ -1,7 +1,8 @@
 
+from __future__ import absolute_import
 import Live
-from EncoderElement import EncoderElement
-from InputControlElement import MIDI_NOTE_TYPE
+from .EncoderElement import EncoderElement
+from .InputControlElement import MIDI_NOTE_TYPE
 
 class SliderElement(EncoderElement):
     """ Class representing a slider on the controller """

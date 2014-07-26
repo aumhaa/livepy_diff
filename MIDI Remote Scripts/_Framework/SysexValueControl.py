@@ -1,5 +1,6 @@
 
-from _Framework.InputControlElement import InputControlElement, MIDI_SYSEX_TYPE
+from __future__ import absolute_import
+from .InputControlElement import InputControlElement, MIDI_SYSEX_TYPE
 
 class SysexValueControl(InputControlElement):
     """

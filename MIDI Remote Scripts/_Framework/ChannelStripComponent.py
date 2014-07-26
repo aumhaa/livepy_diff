@@ -1,9 +1,10 @@
 
-import Live
+from __future__ import absolute_import
 from itertools import chain
-from ControlSurfaceComponent import ControlSurfaceComponent
-from DisplayDataSource import DisplayDataSource
-from _Framework.Util import nop
+import Live
+from .ControlSurfaceComponent import ControlSurfaceComponent
+from .DisplayDataSource import DisplayDataSource
+from .Util import nop
 
 def release_control(control):
     if control != None:

@@ -1,6 +1,7 @@
 
-from CompoundElement import CompoundElement
-from Util import in_range, product, const, slicer, to_slice
+from __future__ import absolute_import
+from .CompoundElement import CompoundElement
+from .Util import in_range, product, const, slicer, to_slice
 
 class ButtonMatrixElement(CompoundElement):
     """

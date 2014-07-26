@@ -1,5 +1,6 @@
 
-from ControlSurfaceComponent import ControlSurfaceComponent
+from __future__ import absolute_import
+from .ControlSurfaceComponent import ControlSurfaceComponent
 
 class CompoundComponent(ControlSurfaceComponent):
     """ Base class for classes encompasing other components to form complex components """

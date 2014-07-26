@@ -1,8 +1,9 @@
 
+from __future__ import absolute_import
 from itertools import ifilter
-from _Framework.Util import product
 from .ControlSurfaceComponent import ControlSurfaceComponent
 from .Dependency import depends
+from .Util import product
 NUM_PADS_X = 4
 NUM_PADS_Y = 4
 

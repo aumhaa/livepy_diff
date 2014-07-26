@@ -2,11 +2,12 @@
 """
 Family of classes for maintaining connections with optional subjects.
 """
+from __future__ import absolute_import
 from itertools import izip, repeat
 from functools import partial, wraps
-from Signal import Signal
-from Util import instance_decorator, monkeypatch, monkeypatch_extend, NamedTuple, mixin
-from Disconnectable import Disconnectable, CompoundDisconnectable
+from .Disconnectable import Disconnectable, CompoundDisconnectable
+from .Signal import Signal
+from .Util import instance_decorator, monkeypatch, monkeypatch_extend, NamedTuple, mixin
 
 class SubjectSlotError(Exception):
     pass

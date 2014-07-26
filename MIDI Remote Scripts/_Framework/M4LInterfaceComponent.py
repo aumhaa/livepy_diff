@@ -1,7 +1,7 @@
 
-from __future__ import with_statement
-from ControlElement import ControlElementClient
-from ControlSurfaceComponent import ControlSurfaceComponent
+from __future__ import absolute_import, with_statement
+from .ControlElement import ControlElementClient
+from .ControlSurfaceComponent import ControlSurfaceComponent
 
 class M4LInterfaceComponent(ControlSurfaceComponent, ControlElementClient):
     """

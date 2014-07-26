@@ -94,8 +94,11 @@ class Launchpad(ControlSurface):
                 response = long(midi_bytes[5])
                 response += long(midi_bytes[6]) << 8
                 if response == Live.Application.encrypt_challenge2(self._challenge):
-                    self._suppress_send_midi = False
-                    self.set_enabled(True)
+                    self._on_handshake_successful()
+
+    def _on_handshake_successful(self):
+        self._suppress_send_midi = False
+        self.set_enabled(True)
 
     def build_midi_map(self, midi_map_handle):
         ControlSurface.build_midi_map(self, midi_map_handle)

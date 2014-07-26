@@ -1,10 +1,10 @@
 
-from __future__ import with_statement
+from __future__ import absolute_import, with_statement
 from functools import partial
-from Defaults import MOMENTARY_DELAY
-from SubjectSlot import SlotManager
-from Util import clamp, lazy_attribute, mixin, nop
-import Task
+from . import Task
+from .Defaults import MOMENTARY_DELAY
+from .SubjectSlot import SlotManager
+from .Util import clamp, lazy_attribute, mixin, nop
 
 class ControlManager(SlotManager):
 

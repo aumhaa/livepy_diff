@@ -3,9 +3,9 @@
 Task management.
 """
 import functools
-from Dependency import depends
-from Util import remove_if, find_if, linear as linear_fn, print_message, const
 import traceback
+from .Dependency import depends
+from .Util import remove_if, find_if, linear as linear_fn, print_message, const
 
 class TaskError(Exception):
     pass

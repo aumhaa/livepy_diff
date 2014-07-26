@@ -1,6 +1,7 @@
 
-from ModeSelectorComponent import ModeSelectorComponent
-from InputControlElement import InputControlElement
+from __future__ import absolute_import
+from .InputControlElement import InputControlElement
+from .ModeSelectorComponent import ModeSelectorComponent
 
 class ChannelTranslationSelector(ModeSelectorComponent):
     """ Class switches modes by translating the given controls' message channel """

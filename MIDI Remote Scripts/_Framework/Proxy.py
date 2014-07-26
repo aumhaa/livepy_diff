@@ -1,6 +1,6 @@
 
-from __future__ import with_statement
-from _Framework.Util import BooleanContext
+from __future__ import absolute_import, with_statement
+from .Util import BooleanContext
 
 class ProxyBase(object):
     """
