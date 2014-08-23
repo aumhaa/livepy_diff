@@ -739,3 +739,8 @@ class OptimizedControlSurface(ControlSurface):
             with self._ownership_handler_injector:
                 yield
                 self._optimized_ownership_handler.commit_ownership_changes()
+
+    def _register_control(self, control):
+        super(OptimizedControlSurface, self)._register_control(control)
+        if hasattr(control, '_is_resource_based'):
+            control._is_resource_based = True

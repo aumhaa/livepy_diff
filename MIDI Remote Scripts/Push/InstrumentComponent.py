@@ -5,7 +5,7 @@ from _Framework.CompoundComponent import CompoundComponent
 from _Framework.ModesComponent import DisplayingModesComponent, EnablingModesComponent
 from _Framework.DisplayDataSource import DisplayDataSource, adjust_string_crop
 from _Framework.Util import recursive_map, index_if, forward_property, first
-from _Framework.SubjectSlot import subject_slot
+from _Framework.SubjectSlot import subject_slot, subject_slot_group
 from MessageBoxComponent import Messenger
 from ScrollableList import ListComponent
 from SlideComponent import SlideComponent, Slideable
@@ -86,7 +86,6 @@ class InstrumentScalesComponent(CompoundComponent):
 
     def __init__(self, *a, **k):
         super(InstrumentScalesComponent, self).__init__(*a, **k)
-        self._key_center_slots = self.register_slot_manager()
         self._key_center_buttons = []
         self._encoder_touch_button_slots = self.register_slot_manager()
         self._encoder_touch_buttons = []
@@ -198,28 +197,23 @@ class InstrumentScalesComponent(CompoundComponent):
         self._modus_list.encoders.set_control_element([encoders[0]] if encoders else [])
 
     def set_key_center_buttons(self, buttons):
-        if not (not buttons or len(buttons) == 12):
-            raise AssertionError
-            buttons = buttons or []
-            self._key_center_buttons = self._key_center_buttons != buttons and buttons
-            self._key_center_slots.disconnect()
-            for button in buttons:
-                self._key_center_slots.register_slot(button, self._on_key_center_button_value, 'value', extra_kws=dict(identify_sender=True))
-
-            self._update_key_center_buttons()
+        raise not buttons or len(buttons) == 12 or AssertionError
+        buttons = buttons or []
+        self._key_center_buttons = buttons
+        self._on_key_center_button_value.replace_subjects(buttons)
+        self._update_key_center_buttons()
 
     def set_absolute_relative_button(self, absolute_relative_button):
-        if absolute_relative_button != self._absolute_relative_button:
-            self._absolute_relative_button = absolute_relative_button
-            self._on_absolute_relative_value.subject = absolute_relative_button
-            self._update_absolute_relative_button()
+        self._absolute_relative_button = absolute_relative_button
+        self._on_absolute_relative_value.subject = absolute_relative_button
+        self._update_absolute_relative_button()
 
     def set_diatonic_chromatic_button(self, diatonic_chromatic_button):
-        if diatonic_chromatic_button != self._diatonic_chromatic_button:
-            self._diatonic_chromatic_button = diatonic_chromatic_button
-            self._on_diatonic_chromatic_value.subject = diatonic_chromatic_button
-            self._update_diatonic_chromatic_button()
+        self._diatonic_chromatic_button = diatonic_chromatic_button
+        self._on_diatonic_chromatic_value.subject = diatonic_chromatic_button
+        self._update_diatonic_chromatic_button()
 
+    @subject_slot_group('value')
     def _on_key_center_button_value(self, value, sender):
         if self.is_enabled() and (value or not sender.is_momentary()):
             index = list(self._key_center_buttons).index(sender)
