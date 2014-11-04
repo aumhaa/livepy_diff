@@ -71,6 +71,7 @@ class ControlElement(Disconnectable):
         ControlElement is wrapped in any form of Proxy object.
         """
         send_midi = nop
+        reset_state = nop
 
         def __init__(self, outer = None, *a, **k):
             super(ControlElement.ProxiedInterface, self).__init__(*a, **k)
@@ -115,6 +116,9 @@ class ControlElement(Disconnectable):
 
     def reset(self):
         raise NotImplementedError
+
+    def reset_state(self):
+        pass
 
     @property
     def resource(self):

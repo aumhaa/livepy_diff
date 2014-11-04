@@ -13,6 +13,7 @@ class Defaults:
     class DefaultButton:
         On = Color(127)
         Off = Color(0)
+        Disabled = Color(0)
 
 
 class BiLedColors:

@@ -5,7 +5,7 @@ Various utilities.
 from __future__ import absolute_import
 from contextlib import contextmanager
 from functools import wraps, partial
-from itertools import chain
+from itertools import chain, imap
 
 def clamp(val, minv, maxv):
     return max(minv, min(val, maxv))
@@ -434,6 +434,17 @@ def chain_from_iterable(iterables):
     for it in iterables:
         for element in it:
             yield element
+
+
+def is_matrix(iterable):
+    """
+    Returns True if 'iterable' is a two dimensional iterable where each iterable is
+    not empty
+    """
+    if is_iterable(iterable) and len(iterable) > 0:
+        return all(imap(lambda x: is_iterable(x) and len(iterable[0]) == len(x) and len(x) > 0, iterable))
+    else:
+        return False
 
 
 def first(seq):

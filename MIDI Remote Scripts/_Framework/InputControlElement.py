@@ -125,6 +125,7 @@ class InputControlElement(NotifyingControlElement):
         use_default_message = nop
         set_channel = nop
         message_channel = const(None)
+        reset_state = nop
 
     __subject_events__ = (SubjectEvent(name='value', signal=InputSignal, override=True),)
     _input_signal_listener_count = 0
@@ -378,7 +379,11 @@ class InputControlElement(NotifyingControlElement):
     def reset(self):
         """ Send 0 to reset motorized faders and turn off LEDs """
         self.send_value(0)
+
+    def reset_state(self):
+        self.use_default_message()
         self.suppress_script_forwarding = False
+        self.release_parameter()
 
     def receive_value(self, value):
         value = getattr(value, 'midi_value', value)
