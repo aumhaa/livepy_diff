@@ -122,6 +122,10 @@ class CompoundElement(NotifyingControlElement, SlotManager, ControlElementClient
         for element in self.owned_control_elements():
             element.reset()
 
+    def reset_state(self):
+        for element in self.owned_control_elements():
+            element.reset_state()
+
     def add_value_listener(self, *a, **k):
         if self.value_listener_count() == 0:
             self.request_listen_nested_control_elements()

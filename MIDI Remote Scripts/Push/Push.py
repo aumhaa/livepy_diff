@@ -720,7 +720,7 @@ class Push(OptimizedControlSurface):
         self._capture_and_insert_scene = CaptureAndInsertSceneComponent(name='Capture_And_Insert_Scene', is_root=True)
         self._capture_and_insert_scene.set_enabled(True)
         self._capture_and_insert_scene.layer = Layer(action_button=capture_element)
-        duplicate_element = OptionalElement(ComboElement(self._duplicate_button, negative_modifiers=[self._shift_button]), self._settings[SETTING_WORKFLOW], False)
+        duplicate_element = OptionalElement(self._duplicate_button, self._settings[SETTING_WORKFLOW], False)
         self._duplicate_detail_clip = DuplicateDetailClipComponent(name='Duplicate_Detail_Clip', is_root=True)
         self._duplicate_detail_clip.set_enabled(True)
         self._duplicate_detail_clip.layer = Layer(action_button=duplicate_element)

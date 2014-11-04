@@ -66,6 +66,10 @@ class ConfigurableButtonElement(ButtonElement):
         self.set_channel(NON_FEEDBACK_CHANNEL)
         self.set_enabled(True)
 
+    def reset_state(self):
+        super(ConfigurableButtonElement, self).reset_state()
+        self.states = dict(self.default_states)
+
     def set_on_off_values(self, on_value, off_value):
         self.states[True] = on_value
         self.states[False] = off_value

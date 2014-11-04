@@ -161,7 +161,7 @@ class SessionZoomingComponent(CompoundComponent):
 
     @subject_slot_group('value')
     def _on_scene_bank_value(self, value, sender):
-        if self.is_enabled():
+        if self.is_enabled() and self._buttons:
             if value != 0 or not sender.is_momentary():
                 button_offset = list(self._scene_bank_buttons).index(sender)
                 scene_offset = button_offset * self._buttons.height() * self._session.height()

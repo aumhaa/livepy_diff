@@ -5,7 +5,7 @@ Various utilities.
 from __future__ import absolute_import
 from contextlib import contextmanager
 from functools import wraps, partial
-from itertools import chain
+from itertools import chain, imap
 
 def clamp(val, minv, maxv):
     return max(minv, min(val, maxv))
@@ -223,6 +223,7 @@ def instance_decorator(decorator):
         def __init__(self, func = nop, *args, **kws):
             self.__name__ = func.__name__
             self.__doc__ = func.__doc__
+            self._data_name = '%s_%d_decorated_instance' % (func.__name__, id(self))
             self._func = func
             self._args = args
             self._kws = kws
@@ -230,9 +231,13 @@ def instance_decorator(decorator):
         def __get__(self, obj, cls = None):
             if obj is None:
                 return
-            decorated = decorator(obj, self._func, *self._args, **self._kws)
-            obj.__dict__[self.__name__] = decorated
-            return decorated
+            data_name = self._data_name
+            try:
+                return obj.__dict__[data_name]
+            except KeyError:
+                decorated = decorator(obj, self._func, *self._args, **self._kws)
+                obj.__dict__[data_name] = decorated
+                return decorated
 
     return Decorator
 
@@ -429,6 +434,17 @@ def chain_from_iterable(iterables):
     for it in iterables:
         for element in it:
             yield element
+
+
+def is_matrix(iterable):
+    """
+    Returns True if 'iterable' is a two dimensional iterable where each iterable is
+    not empty
+    """
+    if is_iterable(iterable) and len(iterable) > 0:
+        return all(imap(lambda x: is_iterable(x) and len(iterable[0]) == len(x) and len(x) > 0, iterable))
+    else:
+        return False
 
 
 def first(seq):

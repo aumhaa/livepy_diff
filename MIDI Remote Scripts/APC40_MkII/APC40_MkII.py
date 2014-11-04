@@ -172,7 +172,7 @@ class APC40_MkII(APC, OptimizedControlSurface):
 
     def _create_recording(self):
         record_button = MultiElement(self._session_record_button, self._foot_pedal_button.single_press)
-        self._session_recording = SessionRecordingComponent(ClipCreator(), self._view_control, name='Session_Recording', is_enabled=False, layer=Layer(new_button=self._foot_pedal_button.double_press, record_button=record_button))
+        self._session_recording = SessionRecordingComponent(ClipCreator(), self._view_control, name='Session_Recording', is_enabled=False, layer=Layer(new_button=self._foot_pedal_button.double_press, record_button=record_button, _uses_foot_pedal=self._foot_pedal_button))
 
     def _create_m4l_interface(self):
         self._m4l_interface = M4LInterfaceComponent(controls=self.controls, component_guard=self.component_guard, priority=1)
