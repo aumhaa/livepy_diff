@@ -143,7 +143,11 @@ def monkeypatch(target, name = None, override = False, doc = None):
         if not override and hasattr(target, patchname):
             raise TypeError('Class %s already has method %s' % (target.__name__, patchname))
         setattr(target, patchname, func)
-        func.__name__ = patchname
+        try:
+            func.__name__ = patchname
+        except AttributeError:
+            pass
+
         if doc is not None:
             func.__doc__ = doc
         return func
@@ -687,6 +691,42 @@ def print_message(*messages):
     print ' '.join(map(str, messages))
 
 
+class overlaymap(object):
+    """
+    A map-like object which takes a list of maps and
+    overlays them from left to right.
+    
+    Thus if a key occurs in a map with higher precedence,
+    it's value will appear to be in the overlaymap.
+    
+    The overlaymap is obviously read-only.
+    """
+
+    def __init__(self, *maps):
+        self._maps = maps
+
+    def __getitem__(self, key):
+        for m in self._maps:
+            if key in m:
+                return m[key]
+
+        raise KeyError, key
+
+    def keys(self):
+        res = set()
+        for key in chain_from_iterable(self._maps):
+            res.add(key)
+
+        return list(res)
+
+    def values(self):
+        return [ self[key] for key in self.keys() ]
+
+    def iteritems(self):
+        for key in self.keys():
+            yield (key, self[key])
+
+
 def trace_value(value, msg = 'Value: '):
     """
     Prints value and returns value. Useful when debugging the results
@@ -705,6 +745,8 @@ class Bindable(object):
 
     def __get__(self, obj, cls = None):
         import weakref
+        if obj is None:
+            return self
         if self._bound_instances is None:
             self._bound_instances = weakref.WeakKeyDictionary()
         bound_dict = self._bound_instances.setdefault(obj, weakref.WeakKeyDictionary())

@@ -175,6 +175,10 @@ class ToggleWithOptionsComponent(ActionWithOptionsComponent):
     _is_active = False
     _just_activated = False
 
+    def __init__(self, *a, **k):
+        super(ToggleWithOptionsComponent, self).__init__(*a, **k)
+        self.action_button.color = 'DefaultButton.Off'
+
     def _get_is_active(self):
         return self._is_active
 

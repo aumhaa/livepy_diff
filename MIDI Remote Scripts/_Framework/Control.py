@@ -4,7 +4,7 @@ from functools import partial
 from . import Task
 from .Defaults import MOMENTARY_DELAY
 from .SubjectSlot import SlotManager
-from .Util import clamp, lazy_attribute, mixin, nop, first, second, is_matrix, flatten
+from .Util import clamp, lazy_attribute, mixin, nop, first, second, is_matrix, flatten, product
 
 class ControlManager(SlotManager):
 
@@ -281,9 +281,9 @@ class ButtonControl(Control):
             self._is_pressed = True
             if self._notifications_enabled() and not is_pressed:
                 if self._pressed_listener is not None:
-                    self._pressed_listener(self._manager, self)
                     if self._repeat:
                         self._repeat_task.restart()
+                    self._pressed_listener(self._manager, self)
                 if self._has_delayed_event():
                     self._delay_task.restart()
 
@@ -749,9 +749,9 @@ class MatrixControl(ControlList):
         def set_control_element(self, control_elements):
             dimensions = (None, None)
             if hasattr(control_elements, 'width') and hasattr(control_elements, 'height'):
-                dimensions = (control_elements.width(), control_elements.height())
+                dimensions = (control_elements.height(), control_elements.width())
                 if not self._dynamic_create:
-                    control_elements = control_elements.submatrix[self.width, self.height]
+                    control_elements = [ control_elements.get_button(col, row) for row, col in product(xrange(self.height), xrange(self.width)) ]
             elif is_matrix(control_elements):
                 dimensions = (len(control_elements), len(first(control_elements)))
                 if not self._dynamic_create:

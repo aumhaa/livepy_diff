@@ -178,7 +178,7 @@ class TransportComponent(CompoundComponent):
 
     def _update_tap_tempo_button(self):
         if self.is_enabled() and self._tap_tempo_button:
-            self._tap_tempo_button.set_light(self._tap_tempo_button.is_pressed())
+            self._tap_tempo_button.set_light(True)
 
     @subject_slot('value')
     def _tempo_value(self, value):

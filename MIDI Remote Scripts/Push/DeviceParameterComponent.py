@@ -43,6 +43,19 @@ def parameter_mapping_sensitivity(parameter):
     return consts.QUANTIZED_MAPPING_SENSITIVITY if is_quantized else consts.CONTINUOUS_MAPPING_SENSITIVITY
 
 
+def fine_grain_parameter_mapping_sensitivity(parameter):
+    is_quantized = is_parameter_quantized(parameter, parameter and parameter.canonical_parent)
+    return consts.QUANTIZED_MAPPING_SENSITIVITY if is_quantized else consts.FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY
+
+
+def _update_encoder_sensitivity(encoder, parameter):
+    default = parameter_mapping_sensitivity(parameter)
+    if hasattr(encoder, 'set_sensitivities'):
+        encoder.set_sensitivities(default, fine_grain_parameter_mapping_sensitivity(parameter))
+    else:
+        encoder.mapping_sensitivity = default
+
+
 class ParameterProvider(Subject):
     __subject_events__ = ('parameters',)
 
@@ -115,7 +128,7 @@ class DeviceParameterComponent(ControlSurfaceComponent):
         for parameter, encoder in zip(self.parameters, self._parameter_controls):
             if encoder:
                 encoder.connect_to(parameter)
-                encoder.mapping_sensitivity = parameter_mapping_sensitivity(parameter)
+                _update_encoder_sensitivity(encoder, parameter)
 
     def _update_parameters(self):
         if self.is_enabled():
