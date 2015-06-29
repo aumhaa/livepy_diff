@@ -51,25 +51,25 @@ class SpecialChanStripComponent(ChannelStripComponent, Messenger):
         self._delete_handler = delete_handler
 
     def set_volume_control(self, control):
-        if control != None:
+        if control:
             control.mapping_sensitivity = consts.CONTINUOUS_MAPPING_SENSITIVITY
         super(SpecialChanStripComponent, self).set_volume_control(control)
 
     def set_pan_control(self, control):
-        if control != None:
+        if control:
             control.mapping_sensitivity = consts.CONTINUOUS_MAPPING_SENSITIVITY
         super(SpecialChanStripComponent, self).set_pan_control(control)
 
     def set_send_controls(self, controls):
         if controls != None:
             for control in controls:
-                if control != None:
+                if control:
                     control.mapping_sensitivity = consts.CONTINUOUS_MAPPING_SENSITIVITY
 
         super(SpecialChanStripComponent, self).set_send_controls(controls)
 
     def set_cue_volume_control(self, control):
-        if control != None:
+        if control:
             control.mapping_sensitivity = consts.CONTINUOUS_MAPPING_SENSITIVITY
         self._cue_volume_slot.control = control
 

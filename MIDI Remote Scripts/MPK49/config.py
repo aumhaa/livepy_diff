@@ -62,5 +62,4 @@ CONTROLLER_DESCRIPTION = {'INPUTPORT': 'Akai MPK49',
 MIXER_OPTIONS = {'NUMSENDS': 2,
  'SEND1': (-1, -1, -1, -1, -1, -1, -1, -1),
  'SEND2': (-1, -1, -1, -1, -1, -1, -1, -1),
- 'MASTERVOLUME': -1,
- 'NOTOGGLE': 0}
+ 'MASTERVOLUME': -1}

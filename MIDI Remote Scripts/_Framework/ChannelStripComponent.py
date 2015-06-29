@@ -236,6 +236,10 @@ class ChannelStripComponent(ControlSurfaceComponent):
     def track_name_data_source(self):
         return self._track_name_data_source
 
+    @property
+    def track(self):
+        return self._track
+
     def _connect_parameters(self):
         if self._pan_control != None:
             self._pan_control.connect_to(self._track.mixer_device.panning)

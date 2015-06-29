@@ -60,6 +60,9 @@ class DisplayElement(ControlElement):
         self._logical_segments = []
         self.set_num_segments(num_segments)
 
+    def __repr__(self):
+        return '<%s %r>' % (self.__class__.__name__, self.display_string)
+
     @property
     def display_string(self):
         return ''.join(imap(unicode, self._logical_segments))

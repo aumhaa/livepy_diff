@@ -66,16 +66,15 @@ class DeviceComponent(ControlSurfaceComponent, Subject):
         return self._device
 
     def set_device(self, device):
-        if not (device == None or isinstance(device, Live.Device.Device)):
-            raise AssertionError
-            if not self._locked_to_device and (device != self._device or type(device) != type(self._device)):
-                if self._device != None:
-                    self._release_parameters(self._parameter_controls)
-                self._device = device
-                self._name_property_slot.subject = device
-                self._parameters_property_slot.subject = device
-                self._on_off_property_slot.subject = self._on_off_parameter()
-                self._bank_index = self._device != None and 0
+        if not self._locked_to_device and (device != self._device or type(device) != type(self._device)):
+            if self._device != None:
+                self._release_parameters(self._parameter_controls)
+            self._device = device
+            self._name_property_slot.subject = device
+            self._parameters_property_slot.subject = device
+            self._on_off_property_slot.subject = self._on_off_parameter()
+            if self._device != None:
+                self._bank_index = 0
             self._bank_index = self._device_bank_registry.get_device_bank(self._device)
             self._bank_name = '<No Bank>'
             self._on_device_name_changed()

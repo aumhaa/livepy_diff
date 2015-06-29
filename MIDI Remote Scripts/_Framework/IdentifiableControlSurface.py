@@ -25,7 +25,7 @@ class IdentifiableControlSurface(ControlSurface):
     def on_identified(self):
         raise NotImplementedError
 
-    def refresh_state(self):
+    def port_settings_changed(self):
         self._request_task.restart()
 
     def handle_sysex(self, midi_bytes):

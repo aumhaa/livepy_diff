@@ -125,6 +125,8 @@ class InputControlElement(NotifyingControlElement):
         use_default_message = nop
         set_channel = nop
         message_channel = const(None)
+        mapped_parameter = nop
+        mapping_sensitivity = const(None)
         reset_state = nop
 
     __subject_events__ = (SubjectEvent(name='value', signal=InputSignal, override=True),)
@@ -190,6 +192,7 @@ class InputControlElement(NotifyingControlElement):
 
     def _set_mapping_sensitivity(self, sensitivity):
         self._mapping_sensitivity = sensitivity
+        self._request_rebuild()
 
     mapping_sensitivity = property(_get_mapping_sensitivity, _set_mapping_sensitivity)
 

@@ -23,7 +23,7 @@ class ToggleComponent(ControlSurfaceComponent):
             if model_transform:
                 self.model_transform = model_transform
             if view_transform:
-                self.view_transform = model_transform
+                self.view_transform = view_transform
             self.read_only = read_only and read_only
 
     def model_transform(self, value):

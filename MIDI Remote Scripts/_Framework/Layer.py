@@ -69,7 +69,11 @@ class LayerClient(ControlElementClient):
             layer._name_to_controls[name] = control_element
 
 
-class CompoundLayer(CompoundResource):
+class LayerBase(object):
+    pass
+
+
+class CompoundLayer(LayerBase, CompoundResource):
     """
     A compound resource takes two layers and makes them look like one,
     grabbing both of them.  Both can have different priorities
@@ -93,7 +97,7 @@ class CompoundLayer(CompoundResource):
             return getattr(self.second, key)
 
 
-class Layer(ExclusiveResource):
+class Layer(LayerBase, ExclusiveResource):
     """
     A layer provides a convenient interface to control resources. In a
     layer, you can group several controls by name.  The layer itself
