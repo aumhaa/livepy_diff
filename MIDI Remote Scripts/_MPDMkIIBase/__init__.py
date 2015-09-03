@@ -1,0 +1,2 @@
+
+HIDE_SCRIPT = True

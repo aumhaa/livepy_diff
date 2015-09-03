@@ -36,7 +36,8 @@ class MainDisplay(MackieControlComponent):
             raise 0 or AssertionError
         message_string = [ ord(c) for c in display_string ]
         for i in range(len(message_string)):
-            message_string[i] = message_string[i] >= 128 and 0
+            if message_string[i] >= 128:
+                message_string[i] = 0
 
         if self.__last_send_messages[display_row] != message_string:
             self.__last_send_messages[display_row] = message_string

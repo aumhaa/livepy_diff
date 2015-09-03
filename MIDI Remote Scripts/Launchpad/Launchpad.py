@@ -62,7 +62,8 @@ class Launchpad(ControlSurface):
             self._selector = MainSelectorComponent(matrix, tuple(top_buttons), tuple(side_buttons), self._config_button)
             self._selector.name = 'Main_Modes'
             for control in self.controls:
-                isinstance(control, ConfigurableButtonElement) and control.add_value_listener(self._button_value)
+                if isinstance(control, ConfigurableButtonElement):
+                    control.add_value_listener(self._button_value)
 
             self.set_highlighting_session_component(self._selector.session_component())
             self._suppress_session_highlight = False
