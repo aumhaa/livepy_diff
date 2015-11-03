@@ -1,0 +1,3 @@
+
+USER_MODE = 1
+LIVE_MODE = 0

@@ -1,7 +1,7 @@
 
 from _Framework.Skin import Skin
 from _Framework.ButtonElement import Color
-from Push.Colors import Rgb, Pulse, Blink
+from pushbase.colors import Rgb, Pulse, Blink
 GREEN = Color(1)
 GREEN_BLINK = Color(2)
 RED = Color(3)
