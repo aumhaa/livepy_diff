@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function
 from ableton.v2.base import listens, liveobj_valid, listenable_property
 from ableton.v2.control_surface import CompoundComponent
 from ableton.v2.control_surface.control import ToggleButtonControl
@@ -21,10 +22,13 @@ class LoopSetting(WrappingParameter):
         super(LoopSetting, self).__init__(*a, **k)
         self._conversion = convert_length_to_bars_beats_sixteenths if use_length_conversion else convert_time_to_bars_beats_sixteenths
         self.recording = False
+        self.set_property_host(self._parent)
 
     @property
     def display_value(self):
-        return unicode(self._conversion(self._get_property_value())) if not self.recording else unicode('...')
+        if not self.recording:
+            return unicode(self._conversion(self._get_property_value()))
+        return unicode('...')
 
 
 class ClipZoomHandling(ZoomHandling):
@@ -69,18 +73,23 @@ class LoopSettingsControllerComponent(LoopSettingsControllerComponentBase):
 
     @property
     def looping(self):
-        return self._loop_model.looping if self.clip else False
+        if self.clip:
+            return self._loop_model.looping
+        return False
 
     @property
     def loop_parameters(self):
         if not liveobj_valid(self.clip):
             return []
         parameters = self._looping_settings if self.looping else self._non_looping_settings
-        return [self.zoom] + parameters if self.zoom else parameters
+        if self.zoom:
+            return [self.zoom] + parameters
+        return parameters
 
     @property
     def zoom(self):
-        return getattr(self.clip, 'zoom', None) if liveobj_valid(self.clip) else None
+        if liveobj_valid(self.clip):
+            return getattr(self.clip, 'zoom', None)
 
     @listenable_property
     def processed_zoom_requests(self):
@@ -131,9 +140,13 @@ class LoopSettingsControllerComponent(LoopSettingsControllerComponentBase):
 
 class GainSetting(WrappingParameter):
 
+    def __init__(self, *a, **k):
+        super(GainSetting, self).__init__(*a, **k)
+        self.set_property_host(self._parent)
+
     @property
     def display_value(self):
-        return unicode(self._parent.clip.gain_display_string if self._parent.clip else '')
+        return unicode(self._property_host.clip.gain_display_string if self._property_host.clip else '')
 
 
 class PitchSetting(WrappingParameter):
@@ -143,6 +156,7 @@ class PitchSetting(WrappingParameter):
         self._min = min_value
         self._max = max_value
         self._unit = unit
+        self.set_property_host(self._parent)
 
     @property
     def min(self):
@@ -161,9 +175,13 @@ class PitchSetting(WrappingParameter):
 
 class WarpSetting(WrappingParameter):
 
+    def __init__(self, *a, **k):
+        super(WarpSetting, self).__init__(*a, **k)
+        self.set_property_host(self._parent)
+
     @property
     def max(self):
-        return len(self._parent.available_warp_modes) - 1
+        return len(self._property_host.available_warp_modes) - 1
 
     @property
     def is_quantized(self):
@@ -171,10 +189,10 @@ class WarpSetting(WrappingParameter):
 
     @property
     def value_items(self):
-        return map(lambda x: unicode(WARP_MODE_NAMES[x]), self._parent.available_warp_modes)
+        return map(lambda x: unicode(WARP_MODE_NAMES[x]), self._property_host.available_warp_modes)
 
     def _get_property_value(self):
-        return self._parent.available_warp_modes.index(getattr(self._parent, self._source_property))
+        return self._property_host.available_warp_modes.index(getattr(self._property_host, self._source_property))
 
 
 class AudioClipSettingsControllerComponent(AudioClipSettingsControllerComponentBase, CompoundComponent):
@@ -203,15 +221,21 @@ class AudioClipSettingsControllerComponent(AudioClipSettingsControllerComponentB
 
     @property
     def audio_parameters(self):
-        return self._audio_clip_parameters if liveobj_valid(self.clip) else []
+        if liveobj_valid(self.clip):
+            return self._audio_clip_parameters
+        return []
 
     @property
     def warping(self):
-        return self._audio_clip_model.warping if liveobj_valid(self.clip) else False
+        if liveobj_valid(self.clip):
+            return self._audio_clip_model.warping
+        return False
 
     @property
     def gain(self):
-        return self._audio_clip_model.gain if liveobj_valid(self.clip) else 0.0
+        if liveobj_valid(self.clip):
+            return self._audio_clip_model.gain
+        return 0.0
 
     @property
     def waveform_real_time_channel_id(self):

@@ -2,6 +2,7 @@
 """
 Component that navigates a series of pages.
 """
+from __future__ import absolute_import, print_function
 from math import ceil
 from itertools import imap
 from ableton.v2.base import clamp, listens

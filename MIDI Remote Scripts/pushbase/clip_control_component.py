@@ -1,5 +1,5 @@
 
-from __future__ import with_statement
+from __future__ import absolute_import, print_function
 import Live
 from ableton.v2.base import clamp, listens, liveobj_valid, nop, Subject, SlotManager, forward_property
 from ableton.v2.control_surface import Component
@@ -141,7 +141,9 @@ class LoopSettingsModel(Subject, SlotManager):
         return value * self._encoder_factor(fine_grained) * one_measure_in_note_values(self.clip)
 
     def _encoder_factor(self, fine_grained):
-        return 1.0 / one_measure_in_note_values(self.clip, 16.0) if fine_grained else 1.0
+        if fine_grained:
+            return 1.0 / one_measure_in_note_values(self.clip, 16.0)
+        return 1.0
 
 
 class LoopSettingsControllerComponent(Component):
@@ -331,7 +333,9 @@ class AudioClipSettingsModel(Subject, SlotManager):
         self.clip.pitch_fine = int(self.clip.pitch_fine + value * 100.0 * self._encoder_factor(fine_grained))
 
     def _encoder_factor(self, fine_grained):
-        return 0.1 if fine_grained else 1.0
+        if fine_grained:
+            return 0.1
+        return 1.0
 
     @listens('pitch_fine')
     def __on_pitch_fine_changed(self):
@@ -355,7 +359,9 @@ class AudioClipSettingsModel(Subject, SlotManager):
 
     @property
     def available_warp_modes(self):
-        return list(self.clip.available_warp_modes) if liveobj_valid(self.clip) else []
+        if liveobj_valid(self.clip):
+            return list(self.clip.available_warp_modes)
+        return []
 
 
 class AudioClipSettingsControllerComponent(Component):
@@ -529,7 +535,9 @@ class ClipNameComponent(Component):
 
     def _name_for_clip(self, clip):
         if clip:
-            return clip.name if clip.name else '[unnamed]'
+            if clip.name:
+                return clip.name
+            return '[unnamed]'
         else:
             return '[none]'
 

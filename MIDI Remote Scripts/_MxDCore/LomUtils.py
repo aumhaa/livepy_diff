@@ -1,6 +1,6 @@
 
 import sys
-from _Tools import types
+import types
 from MxDUtils import TupleWrapper
 from LomTypes import TUPLE_TYPES, PROPERTY_TYPES, ENUM_TYPES, ROOT_KEYS, HIDDEN_TYPES, HIDDEN_PROPERTIES, HIDDEN_PROPERTIES_FOR_TYPE, LomObjectError, LomAttributeError, is_class, get_root_prop, is_lom_object, is_cplusplus_lom_object, is_object_iterable
 
@@ -158,9 +158,9 @@ class LomPathCalculator(object):
     def _find_property_object_path(self, lom_object, parent):
         component = None
         for key in PROPERTY_TYPES.keys():
-            if isinstance(lom_object, PROPERTY_TYPES[key]):
-                if hasattr(parent, key):
-                    component = lom_object == getattr(parent, key) and key
+            if isinstance(lom_object, PROPERTY_TYPES[key]) and hasattr(parent, key):
+                if lom_object == getattr(parent, key):
+                    component = key
                     break
 
         return component
@@ -178,7 +178,9 @@ class LomPathCalculator(object):
         return component
 
     def _prepend_path_component(self, component, components):
-        return [component] + components if component != None else []
+        if component != None:
+            return [component] + components
+        return []
 
     def _calculate_path(self, lom_object, external_device_getter):
         components = []

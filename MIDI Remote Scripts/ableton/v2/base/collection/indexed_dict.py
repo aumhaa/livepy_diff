@@ -1,5 +1,6 @@
 
-from . import OrderedDict
+from __future__ import absolute_import, print_function
+from collections import OrderedDict
 
 class IndexedDict(OrderedDict):
     """ Dictionary whose values are accessible by indices """

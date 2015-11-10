@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from ...base import lazy_attribute, partial, task
 from ..defaults import MOMENTARY_DELAY, DOUBLE_CLICK_DELAY
 from .control import InputControl, control_event, control_color
@@ -43,17 +43,17 @@ class ButtonControlBase(InputControl):
             self._enabled = enabled
             self._double_click_context = double_click_context or DoubleClickContext()
 
-        def _get_enabled(self):
+        @property
+        def enabled(self):
             return self._enabled
 
-        def _set_enabled(self, enabled):
+        @enabled.setter
+        def enabled(self, enabled):
             if self._enabled != enabled:
                 if not enabled:
                     self._release_button()
                 self._enabled = enabled
                 self._send_current_color()
-
-        enabled = property(_get_enabled, _set_enabled)
 
         @property
         def is_momentary(self):
@@ -137,10 +137,10 @@ class ButtonControlBase(InputControl):
                 self._double_click_context.set_new_context(self)
 
         def _check_double_click_release(self):
-            if self._has_listener('double_clicked') and self._double_click_task.is_running:
-                if self._double_click_context.control_state == self:
-                    self._double_click_context.click_count += 1
-                    self._double_click_context.click_count == 2 and self._call_listener('double_clicked')
+            if self._has_listener('double_clicked') and self._double_click_task.is_running and self._double_click_context.control_state == self:
+                self._double_click_context.click_count += 1
+                if self._double_click_context.click_count == 2:
+                    self._call_listener('double_clicked')
                     self._double_click_task.kill()
 
         def set_double_click_context(self, context):
@@ -213,18 +213,18 @@ class PlayableControl(ButtonControl):
             if self._control_element and self._enabled:
                 self._control_element.suppress_script_forwarding = self._playable
 
-        def _get_enabled(self):
+        @property
+        def enabled(self):
             return self._enabled
 
-        def _set_enabled(self, enabled):
-            super(PlayableControl.State, self)._set_enabled(enabled)
+        @enabled.setter
+        def enabled(self, enabled):
+            super(PlayableControl.State, PlayableControl.State).enabled.fset(self, enabled)
             if not enabled and self._control_element:
                 self._control_element.reset_state()
                 self._send_current_color()
             else:
                 self.set_control_element(self._control_element)
-
-        enabled = property(_get_enabled, _set_enabled)
 
         def set_playable(self, value):
             self._playable = value

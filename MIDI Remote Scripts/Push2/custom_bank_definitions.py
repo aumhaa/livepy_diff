@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from copy import deepcopy
 from ableton.v2.base.collection import IndexedDict
 from .bank_definitions import BANK_DEFINITIONS as ORIGINAL_DEFINITIONS

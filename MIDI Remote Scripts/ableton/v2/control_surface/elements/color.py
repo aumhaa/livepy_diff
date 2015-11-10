@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function
 from ...base import listenable_property, listens, liveobj_valid, nop, Subject, SlotManager
 
 def to_midi_value(int_or_color):

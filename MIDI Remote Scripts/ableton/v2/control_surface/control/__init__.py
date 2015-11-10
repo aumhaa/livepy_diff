@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from .control import Control, ControlManager, control_color, control_event, forward_control
 from .mapped import MappedControl
 from .button import ButtonControl, ButtonControlBase, DoubleClickContext, PlayableControl

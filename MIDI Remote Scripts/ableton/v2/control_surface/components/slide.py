@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from ...base import clamp, listens, Subject
 from ..compound_component import CompoundComponent
 from .scroll import ScrollComponent, Scrollable

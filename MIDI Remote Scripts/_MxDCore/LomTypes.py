@@ -1,13 +1,13 @@
 
+import types
 import Live
-from _Tools import types
 from _Framework.ControlSurface import ControlSurface
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.ControlElement import ControlElement
 from _Framework.Util import is_iterable
-HIDDEN_TYPES = (Live.Browser.Browser, Live.Clip.AutomationEnvelope, Live.SimplerDevice.TransientLoopMode)
-HIDDEN_PROPERTIES = ('begin_undo_step', 'end_undo_step', 'begin_gesture', 'end_gesture', 'automation_envelope', 'can_be_appointed', 'copy_pad')
-HIDDEN_PROPERTIES_FOR_TYPE = {Live.SimplerDevice.SimplerDevice: ('sample_file_path', 'sample_length', 'start_marker', 'end_marker', 'slicing_sensitivity', 'slices', 'warping', 'warp_mode', 'beats_granulation_resolution', 'beats_transient_loop_mode', 'beats_transient_envelope', 'tones_grain_size', 'texture_grain_size', 'texture_flux', 'complex_pro_formants', 'complex_pro_envelope', 'gain', 'gain_display_string', 'remove_slice', 'insert_slice')}
+HIDDEN_TYPES = (Live.Browser.Browser, Live.Clip.AutomationEnvelope)
+HIDDEN_PROPERTIES = ('begin_undo_step', 'end_undo_step', 'begin_gesture', 'end_gesture', 'automation_envelope', 'can_be_appointed')
+HIDDEN_PROPERTIES_FOR_TYPE = {}
 ENUM_TYPES = (Live.Song.Quantization,
  Live.Song.RecordingQuantization,
  Live.Song.CaptureMode,
@@ -46,11 +46,13 @@ PROPERTY_TYPES = {'master_track': Live.Track.Track,
  'selected_parameter': Live.DeviceParameter.DeviceParameter,
  'selected_chain': Live.Chain.Chain,
  'selected_drum_pad': Live.DrumPad.DrumPad,
+ 'sample': Live.Sample.Sample,
  'mixer_device': (Live.MixerDevice.MixerDevice, Live.ChainMixerDevice.ChainMixerDevice),
  'view': (Live.Application.Application.View,
           Live.Song.Song.View,
           Live.Track.Track.View,
           Live.Device.Device.View,
+          Live.RackDevice.RackDevice.View,
           Live.Clip.Clip.View)}
 LIVE_APP = 'live_app'
 LIVE_SET = 'live_set'
@@ -96,8 +98,10 @@ def get_root_prop(external_device, prop_key):
     root_properties = {LIVE_APP: Live.Application.get_application,
      LIVE_SET: lambda : Live.Application.get_application().get_document(),
      CONTROL_SURFACES: get_control_surfaces}
-    raise prop_key in ROOT_KEYS or AssertionError
-    return external_device if prop_key == THIS_DEVICE else root_properties[prop_key]()
+    if not prop_key in ROOT_KEYS:
+        raise AssertionError
+        return prop_key == THIS_DEVICE and external_device
+    return root_properties[prop_key]()
 
 
 def cs_base_classes():

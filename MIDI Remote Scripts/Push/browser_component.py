@@ -1,7 +1,7 @@
 
-from __future__ import with_statement
+from __future__ import absolute_import, print_function
 from functools import partial
-from itertools import izip
+from itertools import izip, izip_longest
 import string
 import re
 import Live
@@ -267,7 +267,9 @@ class BrowserComponent(CompoundComponent):
                 if is_short_enough(item_name):
                     break
 
-        return item_name[:-1] if len(item_name) >= shortening_limit and item_name[-1] == consts.CHAR_ELLIPSIS else item_name
+        if len(item_name) >= shortening_limit and item_name[-1] == consts.CHAR_ELLIPSIS:
+            return item_name[:-1]
+        return item_name
 
     def _item_formatter(self, depth, index, item, action_in_progress):
         display_string = ''
@@ -371,7 +373,7 @@ class BrowserComponent(CompoundComponent):
         scroll_depth = len(self._browser_model.content_lists) - len(self._list_components)
         self._max_scroll_offset = max(0, scroll_depth + 2)
         self._max_hierarchy = max(0, scroll_depth)
-        for component, content, message in map(None, components, contents, messages):
+        for component, content, message in izip_longest(components, contents, messages):
             if component != None:
                 component.scrollable_list = content
                 component.empty_list_message = message

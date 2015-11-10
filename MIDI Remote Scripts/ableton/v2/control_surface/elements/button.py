@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, with_statement
+from __future__ import absolute_import, print_function
 import Live
 from ...base import BooleanContext, const, has_event, listens, SlotManager
 from ..input_control_element import InputControlElement, MIDI_CC_TYPE

@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function
 from itertools import imap
 from functools import partial
 import Live.DrumPad
@@ -34,7 +35,7 @@ def make_navigation_node(model_object, is_entering = True, session_ring = None, 
             else:
                 node = RackNode(model_object)
         else:
-            raise device_bank_registry or AssertionError, 'Navigating a device needs a bank registry'
+            raise device_bank_registry or AssertionError('Navigating a device needs a bank registry')
             node = SimpleDeviceNode(device_bank_registry, model_object)
     if node and node.parent and not node.children:
         node.disconnect()
@@ -159,7 +160,8 @@ class ModelNode(NavigationNode):
         return self._object
 
     def get_parent(self):
-        return self._object.canonical_parent if liveobj_valid(self._object) else None
+        if liveobj_valid(self._object):
+            return self._object.canonical_parent
 
     def _get_song(self):
         return self._get_parent_with_class(Live.Song.Song)
@@ -226,18 +228,18 @@ class ChainNode(ModelNode):
         super(ChainNode, self).preselect()
         new_selected_child_index = self.selected_child
         track = self._get_track()
-        if new_selected_child_index == old_selected_child_index:
-            if new_selected_child_index != None:
-                _, selected_object = self.children[new_selected_child_index]
-                isinstance(selected_object, Live.Device.Device) and track and track.view.selected_device != selected_object and self._get_song().view.select_device(selected_object)
+        if new_selected_child_index == old_selected_child_index and new_selected_child_index != None:
+            _, selected_object = self.children[new_selected_child_index]
+            if isinstance(selected_object, Live.Device.Device) and track and track.view.selected_device != selected_object:
+                self._get_song().view.select_device(selected_object)
         self._device_bank_registry.set_device_bank(track.view.selected_device, None)
 
     def delete_child(self, index):
-        if index >= 0 and index < len(self._children):
-            if not isinstance(self._children[index][1], Live.DrumPad.DrumPad):
-                drumpads_before = len(filter(lambda (_, x): isinstance(x, Live.DrumPad.DrumPad), self._children[:index]))
-                delete_index = index - drumpads_before
-                len(self.object.devices) > delete_index and self.object.delete_device(delete_index)
+        if index >= 0 and index < len(self._children) and not isinstance(self._children[index][1], Live.DrumPad.DrumPad):
+            drumpads_before = len(filter(lambda (_, x): isinstance(x, Live.DrumPad.DrumPad), self._children[:index]))
+            delete_index = index - drumpads_before
+            if len(self.object.devices) > delete_index:
+                self.object.delete_device(delete_index)
 
     def _get_children_from_model(self):
 
@@ -291,12 +293,12 @@ class ChainNode(ModelNode):
     def _set_state_in_model(self, child, value):
         if child == None:
             return False
-        elif isinstance(child, Live.DrumPad.DrumPad):
+        if isinstance(child, Live.DrumPad.DrumPad):
             if child.mute == value:
                 child.mute = not value
                 return value
             return not child.mute
-        elif child.parameters:
+        if child.parameters:
             on_off = child.parameters[0]
             if value != on_off.value and on_off.is_enabled:
                 child.parameters[0].value = int(value)
@@ -370,7 +372,7 @@ class SimpleDeviceNode(ModelNode):
 
     def __init__(self, device_bank_registry = None, *a, **k):
         super(SimpleDeviceNode, self).__init__(*a, **k)
-        raise device_bank_registry or AssertionError, 'Need a device bank registry.'
+        raise device_bank_registry or AssertionError('Need a device bank registry.')
         self._mute_next_update = False
         self._device_bank_registry = device_bank_registry
         self._on_device_bank_changed.subject = self._device_bank_registry
@@ -382,7 +384,8 @@ class SimpleDeviceNode(ModelNode):
         self._update_selected_child()
 
     def _get_selected_child_from_model(self):
-        return self._device_bank_registry.get_device_bank(self.object) if self.children else None
+        if self.children:
+            return self._device_bank_registry.get_device_bank(self.object)
 
     def _set_selected_child_in_model(self, value):
         if value != None:

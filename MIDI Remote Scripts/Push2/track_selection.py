@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function
 from functools import partial
 from itertools import chain, ifilter, izip
 import Live
@@ -79,7 +80,9 @@ class SelectedMixerTrackProvider(Subject, SlotManager):
 
     def _get_selected_chain_or_track(self):
         selected_chain = self._view.selected_chain
-        return selected_chain if selected_chain else self._view.selected_track
+        if selected_chain:
+            return selected_chain
+        return self._view.selected_track
 
 
 def get_flattened_track(track):
@@ -194,9 +197,10 @@ class SessionRingTrackProvider(SessionRingComponent, ItemProvider):
         self._on_devices_changed.replace_subjects(tracks)
         chain_listenable_tracks = [ track for track in tracks if isinstance(track, Live.Track.Track) and track ]
         instruments = flattened_list_of_instruments([ find_instrument_devices(track) for track in chain_listenable_tracks if track ])
+        instruments_with_chains = filter(lambda i: i.can_have_chains, instruments)
         self._on_is_showing_chains_changed.replace_subjects(chain_listenable_tracks)
-        self._on_chains_changed.replace_subjects(instruments)
-        self._on_instrument_return_chains_changed.replace_subjects(instruments)
+        self._on_chains_changed.replace_subjects(instruments_with_chains)
+        self._on_instrument_return_chains_changed.replace_subjects(instruments_with_chains)
 
     def _ensure_valid_track_offset(self):
         max_index = len(self.tracks_to_use()) - 1

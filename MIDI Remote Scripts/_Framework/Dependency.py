@@ -45,8 +45,7 @@ def get_dependency_for(obj, name, default = None):
     accessor = _global_injection_registry.get(name, default)
     if accessor is not None:
         return accessor()
-    else:
-        raise DependencyError('Required dependency %s not provided for %s' % (name, str(obj)))
+    raise DependencyError('Required dependency %s not provided for %s' % (name, str(obj)))
 
 
 class dependency(object):

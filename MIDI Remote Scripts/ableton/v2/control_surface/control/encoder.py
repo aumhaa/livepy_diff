@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from ...base import lazy_attribute, task, sign
 from .control import Connectable, InputControl, control_event
 
@@ -11,13 +11,14 @@ class EncoderControl(InputControl):
 
     class State(InputControl.State, Connectable):
 
-        def __init__(self, control = None, manager = None, *a, **k):
+        def __init__(self, control = None, manager = None, touch_event_delay = 0, *a, **k):
             raise control is not None or AssertionError
             raise manager is not None or AssertionError
             super(EncoderControl.State, self).__init__(control=control, manager=manager, *a, **k)
             self._is_touched = False
             self._touch_value_slot = None
             self._timer_based = False
+            self._touch_event_delay = touch_event_delay
             self._touch_value_slot = self.register_slot(None, self._on_touch_value, 'value')
 
         @property
@@ -61,8 +62,11 @@ class EncoderControl(InputControl):
             if self._notifications_enabled():
                 if not self._is_touched:
                     self._touch_encoder()
-                    self._timer_based = True
-                    self._timer_based_release_task.restart()
+                    if self._delayed_touch_task.is_running:
+                        self._delayed_touch_task.kill()
+                    else:
+                        self._timer_based = True
+                        self._timer_based_release_task.restart()
                 elif self._timer_based:
                     self._timer_based_release_task.restart()
                 if self._control_element:
@@ -71,9 +75,13 @@ class EncoderControl(InputControl):
         def _on_touch_value(self, value, *a, **k):
             if self._notifications_enabled():
                 if value:
-                    self._touch_encoder()
+                    if self._touch_event_delay > 0:
+                        self._delayed_touch_task.restart()
+                    else:
+                        self._touch_encoder()
                 else:
                     self._delayed_release_task.restart()
+                    self._delayed_touch_task.kill()
                 self._cancel_timer_based_events()
 
         @lazy_attribute
@@ -84,6 +92,10 @@ class EncoderControl(InputControl):
         def _delayed_release_task(self):
             return self.tasks.add(task.sequence(task.wait(EncoderControl.RELEASE_DELAY), task.run(self._release_encoder)))
 
+        @lazy_attribute
+        def _delayed_touch_task(self):
+            return self.tasks.add(task.sequence(task.wait(self._touch_event_delay), task.run(self._touch_encoder)))
+
         def _cancel_timer_based_events(self):
             if self._timer_based:
                 self._timer_based_release_task.kill()
@@ -92,6 +104,10 @@ class EncoderControl(InputControl):
         def _kill_all_tasks(self):
             self._delayed_release_task.kill()
             self._timer_based_release_task.kill()
+            self._delayed_touch_task.kill()
+
+    def __init__(self, *a, **k):
+        super(EncoderControl, self).__init__(extra_args=a, extra_kws=k)
 
 
 class ValueStepper(object):
@@ -153,6 +169,3 @@ class StepEncoderControl(EncoderControl):
         @property
         def num_steps(self):
             return self._stepper._num_steps
-
-    def __init__(self, *a, **k):
-        super(StepEncoderControl, self).__init__(extra_args=a, extra_kws=k)

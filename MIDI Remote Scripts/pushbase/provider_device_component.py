@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, with_statement
+from __future__ import absolute_import, print_function
 from ableton.v2.base import BooleanContext
 from ableton.v2.control_surface.components import DeviceComponent
 from .parameter_provider import ParameterProvider, generate_info

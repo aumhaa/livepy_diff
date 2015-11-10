@@ -672,7 +672,9 @@ class MxDCore(object):
     def _selector_for_note_operation(self, note_operation):
         if note_operation not in (NOTE_REPLACE_KEY, NOTE_SET_KEY):
             raise LomNoteOperationWarning('invalid note operation')
-        return 'set_notes' if note_operation == NOTE_SET_KEY else 'replace_selected_notes'
+        if note_operation == NOTE_SET_KEY:
+            return 'set_notes'
+        return 'replace_selected_notes'
 
     def _object_done_handler(self, device_id, object_id, lom_object, parameters):
         if not (isinstance(lom_object, Live.Clip.Clip) and lom_object.is_midi_clip):
@@ -858,7 +860,9 @@ class MxDCore(object):
         return result
 
     def _listenable_property_for(self, prop_name):
-        return 'has_clip' if prop_name == 'clip' else prop_name
+        if prop_name == 'clip':
+            return 'has_clip'
+        return prop_name
 
     def _parse(self, device_id, object_id, string):
         return StringHandler.parse(string, self._object_for_id(device_id))

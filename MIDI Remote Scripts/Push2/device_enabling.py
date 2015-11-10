@@ -1,7 +1,7 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
+from multipledispatch import dispatch
 import Live
-from _Tools.multipledispatch import dispatch
 from ableton.v2.base import listens, liveobj_valid
 from ableton.v2.control_surface.control import ButtonControl, control_list
 from ableton.v2.control_surface.component import Component
@@ -51,7 +51,9 @@ class DeviceEnablingComponent(Component):
 
     def _color_for_device(self, device_or_pad):
         if liveobj_valid(device_or_pad):
-            return 'DefaultButton.On' if is_active_element(device_or_pad) else 'DefaultButton.Off'
+            if is_active_element(device_or_pad):
+                return 'DefaultButton.On'
+            return 'DefaultButton.Off'
         else:
             return 'DefaultButton.Disabled'
 

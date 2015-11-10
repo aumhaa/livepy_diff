@@ -1,5 +1,6 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
+from itertools import izip_longest
 from ableton.v2.control_surface.control import ControlList
 from pushbase.device_parameter_component import DeviceParameterComponentBase
 from .mapped_control import MappedControl
@@ -13,7 +14,7 @@ class DeviceParameterComponent(DeviceParameterComponentBase):
 
     def _connect_parameters(self):
         parameters = self._parameter_provider.parameters[:self.controls.control_count]
-        for control, parameter_info in map(None, self.controls, parameters):
+        for control, parameter_info in izip_longest(self.controls, parameters):
             parameter = parameter_info.parameter if parameter_info else None
             control.mapped_parameter = parameter
             if parameter:

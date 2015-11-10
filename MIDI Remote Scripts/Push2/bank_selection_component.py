@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from ableton.v2.base import NamedTuple, listenable_property, listens, listens_group, liveobj_valid, SlotManager, nop
 from ableton.v2.control_surface import Component
 from ableton.v2.control_surface.control import control_list, forward_control, ButtonControl
@@ -53,7 +53,9 @@ class BankProvider(ItemProvider, SlotManager):
 
     def internal_bank_names(self, original_bank_names):
         num_banks = len(original_bank_names)
-        return original_bank_names if num_banks > 0 else [MAIN_KEY]
+        if num_banks > 0:
+            return original_bank_names
+        return [MAIN_KEY]
 
 
 class EditModeOptionsComponent(Component):
@@ -70,7 +72,8 @@ class EditModeOptionsComponent(Component):
 
     def _option_for_button(self, button):
         options = self.options
-        return options[button.index - 1] if len(options) > button.index - 1 else None
+        if len(options) > button.index - 1:
+            return options[button.index - 1]
 
     @option_buttons.pressed
     def option_buttons(self, button):
@@ -91,11 +94,15 @@ class EditModeOptionsComponent(Component):
 
     @listenable_property
     def device(self):
-        return self._device.name if liveobj_valid(self._device) else ''
+        if liveobj_valid(self._device):
+            return self._device.name
+        return ''
 
     @listenable_property
     def options(self):
-        return self._device_options_provider.options if self._device_options_provider else []
+        if self._device_options_provider:
+            return self._device_options_provider.options
+        return []
 
     @listens('device')
     def __on_device_changed(self):

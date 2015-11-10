@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from ableton.v2.base import SlotManager, Subject, find_if, listens, listens_group, listenable_property, liveobj_valid, clamp
 from .bank_definitions import PARAMETERS_KEY, MAIN_KEY
 from .banking_util import BANK_FORMAT, all_parameters
@@ -51,7 +51,9 @@ class DeviceParameterBank(SlotManager, Subject):
 
     @property
     def name(self):
-        return self._calc_name() if liveobj_valid(self._device) else ''
+        if liveobj_valid(self._device):
+            return self._calc_name()
+        return ''
 
     @property
     def device(self):
@@ -118,13 +120,16 @@ class MaxDeviceParameterBank(DeviceParameterBank):
 
     def __init__(self, *a, **k):
         super(MaxDeviceParameterBank, self).__init__(*a, **k)
+        raise hasattr(self._device, 'get_bank_count') or AssertionError
 
     def _calc_name(self):
         if self.bank_count() == 0:
             return MAIN_KEY
         mx_index = self.index - int(self._banking_info.has_main_bank(self._device))
         provided_name = self.device.get_bank_name(mx_index)
-        return provided_name if len(provided_name) > 0 else super(MaxDeviceParameterBank, self)._calc_name()
+        if len(provided_name) > 0:
+            return provided_name
+        return super(MaxDeviceParameterBank, self)._calc_name()
 
     def _collect_parameters(self):
         if self.bank_count() == 0:

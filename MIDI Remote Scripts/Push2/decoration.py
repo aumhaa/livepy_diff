@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from itertools import ifilter
 import Live
 from ableton.v2.base import CompoundDisconnectable, find_if, liveobj_changed, liveobj_valid, Proxy

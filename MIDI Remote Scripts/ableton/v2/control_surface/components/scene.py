@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from itertools import izip
 from ...base import in_range, listens, liveobj_valid, liveobj_changed
 from ..compound_component import CompoundComponent

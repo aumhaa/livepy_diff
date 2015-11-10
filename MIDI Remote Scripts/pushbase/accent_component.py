@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function
 from ableton.v2.control_surface.mode import ModesComponent
 
 class DummyFullVelocity(object):
@@ -16,9 +17,9 @@ class AccentComponent(ModesComponent):
         self.set_full_velocity(None)
 
     def set_full_velocity(self, full_velocity):
-        if not full_velocity:
-            full_velocity = DummyFullVelocity()
-            self._full_velocity.enabled = self._full_velocity != None and False
+        full_velocity = full_velocity or DummyFullVelocity()
+        if self._full_velocity != None:
+            self._full_velocity.enabled = False
         self._full_velocity = full_velocity
         self._full_velocity.enabled = self.selected_mode == 'enabled'
 

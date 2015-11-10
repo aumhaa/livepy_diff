@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function
 from collections import defaultdict
 import gc
 
@@ -8,7 +9,7 @@ def typename(obj):
     """
     if hasattr(obj, '__class__'):
         return obj.__class__.__name__
-    elif hasattr(obj, '__name__'):
+    if hasattr(obj, '__name__'):
         return obj.__name__
     return '<unknown>'
 

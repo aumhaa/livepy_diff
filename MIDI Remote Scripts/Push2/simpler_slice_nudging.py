@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, with_statement
+from __future__ import absolute_import, print_function
 from contextlib import contextmanager
 import Live
 from ableton.v2.base import SlotManager, find_if, liveobj_valid, clamp, listens
@@ -27,7 +27,7 @@ class SimplerSliceNudging(SlotManager):
         self.__on_nudge_delta.subject = self._nudge_parameter
 
     def _can_access_slicing_properties(self):
-        return liveobj_valid(self._simpler) and self._simpler.current_playback_mode == str(Live.SimplerDevice.PlaybackMode.slicing) and self._simpler.sample_length > 0
+        return liveobj_valid(self._simpler) and liveobj_valid(self._simpler.sample) and self._simpler.current_playback_mode == Live.SimplerDevice.PlaybackMode.slicing
 
     @listens('view.selected_slice')
     def __on_selected_slice_changed(self):
@@ -41,51 +41,33 @@ class SimplerSliceNudging(SlotManager):
             if old_slice_time >= 0:
                 if self._is_first_slice_at_time(old_slice_time):
                     new_start = self._new_start_marker_time(old_slice_time, delta)
-                    self._simpler.start_marker = new_start
+                    self._simpler.sample.start_marker = new_start
                     return
-                new_slice_time = self._new_slice_time(old_slice_time, delta)
+                new_slice_time = old_slice_time + self._sample_change_from_delta(delta)
                 if old_slice_time != new_slice_time:
-                    original_slices = self._simpler.slices
-                    self._simpler.insert_slice(new_slice_time)
-                    self._simpler.remove_slice(old_slice_time)
+                    original_slices = self._simpler.sample.slices
+                    returned_time = self._simpler.sample.move_slice(old_slice_time, new_slice_time)
                     try:
-                        self._simpler.view.selected_slice = new_slice_time
+                        self._simpler.view.selected_slice = returned_time
                     except RuntimeError:
                         self._simpler.view.selected_slice = self._simpler.slices[list(original_slices).index(old_slice_time)]
 
     def _is_first_slice_at_time(self, slice_time):
-        start_sample = self._simpler.start_marker
+        start_sample = self._simpler.sample.start_marker
         return abs(slice_time - start_sample) < MINIMUM_SLICE_DISTANCE
 
     def _new_start_marker_time(self, old_slice_time, delta):
         change_in_samples = self._sample_change_from_delta(delta)
         new_start_marker_time = old_slice_time + change_in_samples
-        return clamp(new_start_marker_time, 0, self._simpler.sample_length - MINIMUM_SLICE_DISTANCE)
+        return clamp(new_start_marker_time, 0, self._simpler.sample.length - MINIMUM_SLICE_DISTANCE)
 
     def _sample_change_from_delta(self, delta):
-        sample_length = self._simpler.sample_length
+        sample_length = self._simpler.sample.length
         change_in_samples = round(delta * sample_length / 10)
         return int(change_in_samples)
 
-    def _get_surrounding_slices(self, slice_time):
-        slices = list(self._simpler.slices)
-        index = slices.index(slice_time)
-        sample_length = self._simpler.sample_length
-        previous_slice = slices[index - 1] + MINIMUM_SLICE_DISTANCE if index > 0 else 0
-        next_slice = slices[index + 1] if index < len(slices) - 1 else sample_length
-        return (previous_slice, next_slice)
-
     def _display_value_conversion(self, _value):
         selected_slice = self._simpler.view.selected_slice if self._can_access_slicing_properties() else -1
-        return str(selected_slice) if selected_slice >= 0 else '-'
-
-    def _get_min_first_slice_length(self):
-        return Live.SimplerDevice.get_min_first_slice_length_in_samples(self._simpler.proxied_object)
-
-    def _new_slice_time(self, old_slice_time, delta):
-        previous_slice, next_slice = self._get_surrounding_slices(old_slice_time)
-        change_in_samples = self._sample_change_from_delta(delta)
-        min_second_slice_start = self._simpler.start_marker + self._get_min_first_slice_length()
-        lower_bound = max(0, min_second_slice_start, previous_slice)
-        upper_bound = min(next_slice, self._simpler.end_marker, self._simpler.sample_length) - MINIMUM_SLICE_DISTANCE
-        return clamp(old_slice_time + change_in_samples, lower_bound, upper_bound)
+        if selected_slice >= 0:
+            return str(selected_slice)
+        return '-'

@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from ...base import SlotManager
 from ..input_control_element import InputControlElement, MIDI_INVALID_TYPE
 from .button import ButtonElement

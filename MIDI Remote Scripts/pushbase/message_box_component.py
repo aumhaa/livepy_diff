@@ -1,4 +1,6 @@
 
+from __future__ import absolute_import, print_function
+from itertools import izip_longest
 from ableton.v2.base import forward_property, const, nop, listens, listenable_property
 from ableton.v2.base.dependency import dependency
 from ableton.v2.control_surface import CompoundComponent
@@ -67,7 +69,7 @@ class MessageBoxComponent(BackgroundComponent):
     def _update_display(self):
         if self._current_text != None:
             lines = self._current_text.split('\n')
-            for source_line, line in map(None, self.data_sources, lines):
+            for source_line, line in izip_longest(self.data_sources, lines):
                 if source_line:
                     source_line.set_display_string(line or '')
 

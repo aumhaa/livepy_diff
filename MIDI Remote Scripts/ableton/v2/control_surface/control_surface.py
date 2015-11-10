@@ -1,5 +1,6 @@
 
-from __future__ import absolute_import, with_statement
+from __future__ import absolute_import, print_function
+from collections import OrderedDict
 from functools import partial
 from itertools import chain, ifilter, imap
 from contextlib import contextmanager
@@ -9,7 +10,7 @@ ascii
 import logging
 import traceback
 import Live
-from ..base import BooleanContext, const, find_if, first, in_range, inject, lazy_attribute, liveobj_valid, SlotManager, task, collection
+from ..base import BooleanContext, const, find_if, first, in_range, inject, lazy_attribute, liveobj_valid, SlotManager, task
 from . import defaults
 from . import midi
 from .control_element import OptimizedOwnershipHandler
@@ -332,7 +333,7 @@ class ControlSurface(SlotManager):
             recipients allow receiving MIDI in chunks.
             This would lead to an ordered chunk: [r1.m1, r1.m2], [r2.m1, r2.m2], [r3.m1]
         """
-        midi_data_for_recipient = collection.OrderedDict()
+        midi_data_for_recipient = OrderedDict()
         for midi_bytes in midi_chunk:
             self.process_midi_bytes(midi_bytes, partial(self._merge_midi_data, midi_data=midi_data_for_recipient))
 
@@ -468,7 +469,7 @@ class ControlSurface(SlotManager):
         if not control != None:
             raise AssertionError
             if not control not in self.controls:
-                raise AssertionError, 'Control registered twice'
+                raise AssertionError('Control registered twice')
                 self.controls.append(control)
                 control.canonical_parent = self
                 isinstance(control, PhysicalDisplayElement) and self._displays.append(control)
@@ -477,7 +478,7 @@ class ControlSurface(SlotManager):
     def _register_component(self, component):
         """ puts component into the list of controls for triggering updates """
         raise component != None or AssertionError
-        raise component not in self._components or AssertionError, 'Component registered twice'
+        raise component not in self._components or AssertionError('Component registered twice')
         self._components.append(component)
         component.canonical_parent = self
 
@@ -589,24 +590,24 @@ class ControlSurface(SlotManager):
                 raise AssertionError
                 success = False
                 feedback_rule = None
-                feedback_rule = control.message_type() is MIDI_NOTE_TYPE and Live.MidiMap.NoteFeedbackRule()
+                feedback_rule = control.message_type() == MIDI_NOTE_TYPE and Live.MidiMap.NoteFeedbackRule()
                 feedback_rule.note_no = control.message_identifier()
                 feedback_rule.vel_map = feedback_map
-            elif control.message_type() is MIDI_CC_TYPE:
+            elif control.message_type() == MIDI_CC_TYPE:
                 feedback_rule = Live.MidiMap.CCFeedbackRule()
                 feedback_rule.cc_no = control.message_identifier()
                 feedback_rule.cc_value_map = feedback_map
-            elif control.message_type() is MIDI_PB_TYPE:
+            elif control.message_type() == MIDI_PB_TYPE:
                 feedback_rule = Live.MidiMap.PitchBendFeedbackRule()
                 feedback_rule.value_pair_map = feedback_map
             if not feedback_rule != None:
                 raise AssertionError
                 feedback_rule.channel = control.message_channel()
                 feedback_rule.delay_in_ms = feedback_delay
-                success = control.message_type() is MIDI_NOTE_TYPE and Live.MidiMap.map_midi_note_with_feedback_map(midi_map_handle, parameter, control.message_channel(), control.message_identifier(), feedback_rule)
-            elif control.message_type() is MIDI_CC_TYPE:
+                success = control.message_type() == MIDI_NOTE_TYPE and Live.MidiMap.map_midi_note_with_feedback_map(midi_map_handle, parameter, control.message_channel(), control.message_identifier(), feedback_rule)
+            elif control.message_type() == MIDI_CC_TYPE:
                 success = Live.MidiMap.map_midi_cc_with_feedback_map(midi_map_handle, parameter, control.message_channel(), control.message_identifier(), control.message_map_mode(), feedback_rule, not control.needs_takeover(), control.mapping_sensitivity)
-            elif control.message_type() is MIDI_PB_TYPE:
+            elif control.message_type() == MIDI_PB_TYPE:
                 success = Live.MidiMap.map_midi_pitchbend_with_feedback_map(midi_map_handle, parameter, control.message_channel(), feedback_rule, not control.needs_takeover())
             success and Live.MidiMap.send_feedback_for_parameter(midi_map_handle, parameter)
         return success
@@ -618,10 +619,10 @@ class ControlSurface(SlotManager):
             if not isinstance(control, InputControlElement):
                 raise AssertionError
                 success = False
-                success = control.message_type() is MIDI_NOTE_TYPE and Live.MidiMap.forward_midi_note(self._c_instance.handle(), midi_map_handle, control.message_channel(), control.message_identifier())
-            elif control.message_type() is MIDI_CC_TYPE:
+                success = control.message_type() == MIDI_NOTE_TYPE and Live.MidiMap.forward_midi_note(self._c_instance.handle(), midi_map_handle, control.message_channel(), control.message_identifier())
+            elif control.message_type() == MIDI_CC_TYPE:
                 success = Live.MidiMap.forward_midi_cc(self._c_instance.handle(), midi_map_handle, control.message_channel(), control.message_identifier())
-            elif control.message_type() is MIDI_PB_TYPE:
+            elif control.message_type() == MIDI_PB_TYPE:
                 success = Live.MidiMap.forward_midi_pitchbend(self._c_instance.handle(), midi_map_handle, control.message_channel())
             else:
                 raise control.message_type() == MIDI_SYSEX_TYPE or AssertionError
@@ -629,7 +630,7 @@ class ControlSurface(SlotManager):
             forwarding_keys = success and control.identifier_bytes()
             for key in forwarding_keys:
                 registry = self._forwarding_registry if control.message_type() != MIDI_SYSEX_TYPE else self._forwarding_long_identifier_registry
-                raise key not in registry.keys() or AssertionError, 'Registry key %s registered twice. Check Midi messages!' % str(key)
+                raise key not in registry.keys() or AssertionError('Registry key %s registered twice. Check Midi messages!' % str(key))
                 registry[key] = control
 
         return success

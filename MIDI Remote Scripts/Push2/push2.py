@@ -1,20 +1,19 @@
 
-from __future__ import with_statement
+from __future__ import absolute_import, print_function
 from contextlib import contextmanager
 from functools import partial
+import json
 import logging
-import os
-import sys
+import weakref
 import Live
 import MidiRemoteScript
-from ableton.v2.base import const, inject, listens, listens_group, liveobj_valid, Subject, NamedTuple, Disconnectable
+from ableton.v2.base import const, inject, listens, listens_group, Subject, NamedTuple
 from ableton.v2.control_surface import BackgroundLayer, Component, IdentifiableControlSurface, Layer, get_element
-from ableton.v2.control_surface.control import ButtonControl, DoubleClickContext
+from ableton.v2.control_surface.control import ButtonControl
 from ableton.v2.control_surface.elements import ButtonMatrixElement, ComboElement, SysexElement
-from ableton.v2.control_surface.mode import EnablingModesComponent, ModeButtonBehaviour, ModesComponent, LayerMode, LazyComponentMode, ReenterBehaviour, SetAttributeMode
+from ableton.v2.control_surface.mode import EnablingModesComponent, ModesComponent, LayerMode, LazyComponentMode, ReenterBehaviour, SetAttributeMode
 from pushbase.actions import select_clip_and_get_name_from_slot, select_scene_and_get_name
-from pushbase.browser_modes import BrowserHotswapMode
-from pushbase.quantization_component import QuantizationComponent, QuantizationSettingsComponent
+from pushbase.quantization_component import QUANTIZATION_NAMES_UNICODE, QuantizationComponent, QuantizationSettingsComponent
 from pushbase.selection import PushSelection
 from pushbase.percussion_instrument_finder_component import find_drum_group_device
 from pushbase import consts
@@ -25,6 +24,7 @@ from .actions import CaptureAndInsertSceneComponent
 from .automation import AutomationComponent
 from .elements import Elements
 from .browser_component import BrowserComponent, NewTrackBrowserComponent
+from .browser_modes import AddDeviceMode, AddTrackMode, BrowseMode, BrowserComponentMode, BrowserModeBehaviour
 from .device_decoration import DeviceDecoratorFactory
 from .skin_default import make_default_skin
 from .mixer_component import MixerComponent
@@ -58,14 +58,11 @@ from .mode_collector import ModeCollector
 from .setup_component import SetupComponent, Settings
 from .device_enabling import DeviceEnablingComponent
 from .track_selection import MixerTrackListComponent, SessionRingTrackProvider, ViewControlComponent
-from .user_component import UserComponent
+from .user_component import UserButtonBehavior, UserComponent
 from .banking_util import BankingInfo
 from .custom_bank_definitions import BANK_DEFINITIONS
-j = os.path.join
-dn = os.path.dirname
-sys.path.append(j(dn(dn(__file__)), '_Tools'))
-import simplejson as json
 logger = logging.getLogger(__name__)
+VELOCITY_RANGE_THRESHOLDS = [120, 60, 0]
 
 class QmlError(Exception):
     pass
@@ -107,12 +104,12 @@ class Push2(IdentifiableControlSurface, PushBase):
     session_component_type = SessionComponent
     drum_group_note_editor_skin = 'DrumGroupNoteEditor'
     input_target_name_for_auto_arm = 'Push2 Input'
+    note_editor_velocity_range_thresholds = VELOCITY_RANGE_THRESHOLDS
     RESEND_MODEL_DATA_TIMEOUT = 5.0
 
     def __init__(self, c_instance = None, model = None, *a, **k):
         raise model is not None or AssertionError
         self._model = model
-        self._double_click_context = DoubleClickContext()
         self._real_time_mapper = c_instance.real_time_mapper
         self._device_decorator_factory = DeviceDecoratorFactory()
         self._clip_decorator_factory = ClipDecoratorFactory()
@@ -143,7 +140,6 @@ class Push2(IdentifiableControlSurface, PushBase):
             self.__on_selected_track_frozen_changed.subject = self.song.view
             self.__on_selected_track_frozen_changed()
             self._switch_to_live_mode()
-            self._user.defer_sysex_sending = True
             self.update()
         if self._firmware_update.provided_version > self._firmware_version and self._board_revision > 0 and self._identified:
             self._firmware_update.start()
@@ -174,7 +170,6 @@ class Push2(IdentifiableControlSurface, PushBase):
             raise QmlError('\n'.join(qmlerrors))
 
     def disconnect(self):
-        self.__on_before_push_mode_sent.subject = None
         super(Push2, self).disconnect()
         self.__dict__.clear()
         logger.info('Push 2 script unloaded')
@@ -190,7 +185,7 @@ class Push2(IdentifiableControlSurface, PushBase):
         return self.register_disconnectable(make_default_skin())
 
     def _create_injector(self):
-        return inject(double_press_context=const(self._double_press_context), double_click_context=const(self._double_click_context), expect_dialog=const(self.expect_dialog), show_notification=const(self.show_notification), commit_model_changes=const(self._model.commit_changes), register_real_time_data=const(self.register_real_time_data), selection=lambda : PushSelection(application=self.application(), device_component=self._device_component, navigation_component=self._device_navigation))
+        return inject(double_press_context=const(self._double_press_context), expect_dialog=const(self.expect_dialog), show_notification=const(self.show_notification), commit_model_changes=const(self._model.commit_changes), register_real_time_data=const(self.register_real_time_data), selection=lambda : PushSelection(application=self.application(), device_component=self._device_component, navigation_component=self._device_navigation))
 
     def _create_components(self):
         self._init_dialog_modes()
@@ -233,6 +228,7 @@ class Push2(IdentifiableControlSurface, PushBase):
     def _create_convert(self):
         convert = ConvertComponent(decorator_factory=self._device_decorator_factory, name='Convert', tracks_provider=self._session_ring, is_enabled=False, layer=make_dialog_layer(action_buttons='select_buttons', cancel_button='track_state_buttons_raw[0]'))
         self.__on_convert_closed.subject = convert
+        self.__on_convert_suceeded.subject = convert
         self._model.convertView = convert
         return convert
 
@@ -256,9 +252,14 @@ class Push2(IdentifiableControlSurface, PushBase):
     def __on_convert_closed(self):
         self._dialog_modes.selected_mode = None
 
+    @listens('success')
+    def __on_convert_suceeded(self, action_name):
+        if action_name == 'audio_clip_to_simpler':
+            self._main_modes.selected_mode = 'device'
+
     def _init_main_modes(self):
         super(Push2, self)._init_main_modes()
-        self._main_modes.add_mode('user', [self._user_mode_ui_blocker])
+        self._main_modes.add_mode('user', [self._user_mode_ui_blocker, SetAttributeMode(obj=self._user, attribute='mode', value=sysex.USER_MODE)], behaviour=UserButtonBehavior(user_component=self._user))
         self._model.modeState = self.register_disconnectable(ModeCollector(main_modes=self._main_modes, mix_modes=self._mix_modes, global_mix_modes=self._mixer_control, device_modes=self._device_navigation.modes))
         self.__on_main_mode_button_value.replace_subjects([self.elements.vol_mix_mode_button,
          self.elements.pan_send_mix_mode_button,
@@ -360,71 +361,30 @@ class Push2(IdentifiableControlSurface, PushBase):
 
     @listens('drum_pad_selection')
     def __on_drum_pad_selection_changed(self):
-        if self._device_navigation.is_drum_pad_selected:
-            show_pad_parameters = self._device_navigation.is_drum_pad_unfolded
-            new_mode = 'drum_pad' if show_pad_parameters else 'device'
-            selected_pad = show_pad_parameters and self._device_navigation.item_provider.selected_item
+        show_pad_parameters = self._device_navigation.is_drum_pad_selected and self._device_navigation.is_drum_pad_unfolded
+        new_mode = 'drum_pad' if show_pad_parameters else 'device'
+        if show_pad_parameters:
+            selected_pad = self._device_navigation.item_provider.selected_item
             self._drum_pad_parameter_component.drum_pad = selected_pad
         self._device_or_pad_parameter_chooser.selected_mode = new_mode
         self._automation_component.set_drum_pad_selected(self._device_navigation.is_drum_pad_selected)
 
     def _init_browser(self):
-
-        class BrowserMode(LazyComponentMode, Disconnectable):
-
-            def __init__(self, model = None, *a, **k):
-                raise model is not None or AssertionError
-                super(BrowserMode, self).__init__(*a, **k)
-                self._model = model
-
-            def enter_mode(self):
-                self._model.browserView = self.component
-                self._model.browserData = self.component
-                super(BrowserMode, self).enter_mode()
-
-            def disconnect(self):
-                super(BrowserMode, self).disconnect()
-                self._model = None
-
-        self._browser_mode = BrowserMode(self._model, self._create_browser)
-        self._new_track_browser_mode = BrowserMode(self._model, self._create_new_track_browser)
-        self.register_disconnectable(self._browser_mode)
-        self.register_disconnectable(self._new_track_browser_mode)
+        self._browser_component_mode = BrowserComponentMode(weakref.ref(self._model), self._create_browser)
+        self._new_track_browser_component_mode = BrowserComponentMode(weakref.ref(self._model), self._create_new_track_browser)
 
     def _init_browse_mode(self):
-
-        class BrowserModeBehaviour(ModeButtonBehaviour):
-
-            def press_immediate(self, component, mode):
-                if mode == component.selected_mode:
-                    component.selected_mode = component.active_modes[0]
-                else:
-                    component.push_mode(mode)
-
-        browser = Live.Application.get_application().browser
-
-        def clear_hotswap_target():
-            browser.hotswap_target = None
-
-        def select_filter_type_for_track():
-            has_midi_support = self.song.view.selected_track.has_midi_input
-            browser.filter_type = Live.Browser.FilterType.midi_track_devices if has_midi_support else Live.Browser.FilterType.audio_effect_hotswap
-
-        def select_filter_type_for_hotswapping():
-            if liveobj_valid(browser.hotswap_target):
-                browser.filter_type = Live.Browser.FilterType.disabled
-            else:
-                select_filter_type_for_track()
-
-        self._main_modes.add_mode('browse', [BrowserHotswapMode(application=self.application()), select_filter_type_for_hotswapping, self._browser_mode], behaviour=BrowserModeBehaviour())
-        self._main_modes.add_mode('add_device', [clear_hotswap_target, select_filter_type_for_track, self._browser_mode], behaviour=BrowserModeBehaviour())
-        self._main_modes.add_mode('add_track', [clear_hotswap_target, self._new_track_browser_mode], behaviour=BrowserModeBehaviour())
+        application = Live.Application.get_application()
+        browser = application.browser
+        self._main_modes.add_mode('browse', [BrowseMode(application=application, song=self.song, browser=browser, component_mode=self._browser_component_mode)], behaviour=BrowserModeBehaviour())
+        self._main_modes.add_mode('add_device', [AddDeviceMode(song=self.song, browser=browser, component_mode=self._browser_component_mode)], behaviour=BrowserModeBehaviour())
+        self._main_modes.add_mode('add_track', [AddTrackMode(browser=browser, component_mode=self._new_track_browser_component_mode)], behaviour=BrowserModeBehaviour())
 
     def _create_browser_layer(self):
-        return Layer(up_button='nav_up_button', down_button='nav_down_button', right_button='nav_right_button', left_button='nav_left_button', back_button='track_state_buttons_raw[-2]', open_button='track_state_buttons_raw[-1]', load_button='select_buttons_raw[-1]', scroll_encoders=self.elements.global_param_controls.submatrix[:-1, :], scroll_focused_encoder='parameter_controls_raw[-1]', close_button='track_state_buttons_raw[0]', prehear_button='track_state_buttons_raw[1]')
+        return Layer(up_button='nav_up_button', down_button='nav_down_button', right_button='nav_right_button', left_button='nav_left_button', priority=consts.DIALOG_PRIORITY) + Layer(back_button='track_state_buttons_raw[-2]', open_button='track_state_buttons_raw[-1]', load_button='select_buttons_raw[-1]', scroll_encoders=self.elements.global_param_controls.submatrix[:-1, :], scroll_focused_encoder='parameter_controls_raw[-1]', close_button='track_state_buttons_raw[0]', prehear_button='track_state_buttons_raw[1]')
 
     def _create_browser(self):
-        browser = BrowserComponent(name='Browser', is_enabled=False, preferences=self.preferences, layer=self._create_browser_layer())
+        browser = BrowserComponent(name='Browser', is_enabled=False, preferences=self.preferences, main_modes_ref=weakref.ref(self._main_modes), layer=self._create_browser_layer())
         self._on_browser_loaded.add_subject(browser)
         self._on_browser_closed.add_subject(browser)
         return browser
@@ -437,18 +397,23 @@ class Push2(IdentifiableControlSurface, PushBase):
 
     @listens_group('loaded')
     def _on_browser_loaded(self, sender):
-        browser = Live.Application.get_application().browser
-        if browser.hotswap_target is None:
-            self._main_modes.selected_mode = 'device'
-        drum_rack = find_drum_group_device(self.song.view.selected_track)
-        if drum_rack and is_empty_rack(drum_rack):
-            self._device_navigation.request_drum_pad_selection()
-        if drum_rack and self._device_navigation.is_drum_pad_selected and not self._device_navigation.is_drum_pad_unfolded:
-            self._device_navigation.unfold_current_drum_pad()
+        if sender.browse_for_audio_clip:
+            self._main_modes.selected_mode = 'clip'
+        else:
+            browser = Live.Application.get_application().browser
+            if browser.hotswap_target is None:
+                self._main_modes.selected_mode = 'device'
+            drum_rack = find_drum_group_device(self.song.view.selected_track)
+            if drum_rack and is_empty_rack(drum_rack):
+                self._device_navigation.request_drum_pad_selection()
+            if drum_rack and self._device_navigation.is_drum_pad_selected and not self._device_navigation.is_drum_pad_unfolded:
+                self._device_navigation.unfold_current_drum_pad()
 
     @listens_group('close')
     def _on_browser_closed(self, sender):
-        if self._main_modes.selected_mode == 'add_track':
+        if sender.browse_for_audio_clip:
+            self._main_modes.selected_mode = 'clip'
+        elif self._main_modes.selected_mode == 'add_track':
             self._main_modes.selected_mode = self._main_modes.active_modes[0]
         else:
             self._main_modes.selected_mode = 'device'
@@ -523,7 +488,7 @@ class Push2(IdentifiableControlSurface, PushBase):
         return SessionRecordingComponent(fixed_length_setting=self._fixed_length_setting, clip_creator=self._clip_creator, view_controller=self._view_control, name='Session_Recording', is_root=True)
 
     def _init_session_ring(self):
-        self._session_ring = SessionRingTrackProvider(num_tracks=NUM_TRACKS, num_scenes=NUM_SCENES, tracks_to_use=partial(tracks_to_use_from_song, self.song), is_enabled=True, is_root=True)
+        self._session_ring = SessionRingTrackProvider(name='Session_Ring', num_tracks=NUM_TRACKS, num_scenes=NUM_SCENES, tracks_to_use=partial(tracks_to_use_from_song, self.song), is_enabled=True, is_root=True)
 
     def _init_session_ring_selection_linking(self):
         self._sessionring_link = self.register_disconnectable(SessionRingSelectionLinking(session_ring=self._session_ring, selection_changed_notifier=self._view_control))
@@ -616,7 +581,7 @@ class Push2(IdentifiableControlSurface, PushBase):
          self._track_list_component]
 
     def _init_quantize_actions(self):
-        self._quantize_settings = QuantizationSettingsComponent(name='Quantization_Settings', is_enabled=False, layer=make_dialog_layer(swing_amount_encoder='parameter_controls_raw[0]', quantize_to_encoder='parameter_controls_raw[1]', quantize_amount_encoder='parameter_controls_raw[2]', record_quantization_encoder='parameter_controls_raw[4]', record_quantization_toggle_button='track_state_buttons_raw[4]', priority=consts.MOMENTARY_DIALOG_PRIORITY))
+        self._quantize_settings = QuantizationSettingsComponent(name='Quantization_Settings', quantization_names=QUANTIZATION_NAMES_UNICODE, is_enabled=False, layer=make_dialog_layer(swing_amount_encoder='parameter_controls_raw[0]', quantize_to_encoder='parameter_controls_raw[1]', quantize_amount_encoder='parameter_controls_raw[2]', record_quantization_encoder='parameter_controls_raw[4]', record_quantization_toggle_button='track_state_buttons_raw[4]', priority=consts.MOMENTARY_DIALOG_PRIORITY))
         self._model.quantizeSettingsView = self._quantize_settings
         self._quantize = self._for_non_frozen_tracks(QuantizationComponent(name='Selected_Clip_Quantize', settings=self._quantize_settings, is_enabled=False, layer=Layer(action_button='quantize_button')), is_root=True)
 
@@ -634,7 +599,7 @@ class Push2(IdentifiableControlSurface, PushBase):
         self._model.importantGlobals.cueVolume = self._master_cue_vol.display
 
     def _create_main_modes_layer(self):
-        return Layer(mix_button='mix_button', clip_button='clip_mode_button', device_button='device_mode_button', browse_button='browse_mode_button', add_device_button='create_device_button', add_track_button='create_track_button')
+        return Layer(mix_button='mix_button', clip_button='clip_mode_button', device_button='device_mode_button', browse_button='browse_mode_button', add_device_button='create_device_button', add_track_button='create_track_button') + Layer(user_button='user_button', priority=consts.USER_BUTTON_PRIORITY)
 
     def _should_send_palette(self):
         return self._firmware_version <= FirmwareVersion(0, 5, 28)
@@ -656,21 +621,7 @@ class Push2(IdentifiableControlSurface, PushBase):
         self._user_mode_ui_blocker = Component(is_enabled=False, layer=self._create_message_box_background_layer())
         sysex_control = SysexElement(send_message_generator=sysex.make_mode_switch_messsage, sysex_identifier=sysex.make_message_identifier(sysex.MODE_SWITCH_MESSAGE_ID))
         user = UserComponent(value_control=sysex_control, is_enabled=True, is_root=True)
-        user.layer = Layer(user_mode_toggle_button='user_button', priority=consts.USER_BUTTON_PRIORITY)
-        self.__on_before_push_mode_sent.subject = user
-        self.__on_after_push_mode_sent.subject = user
         return user
-
-    @listens('before_mode_sent')
-    def __on_before_push_mode_sent(self, mode):
-        if mode == sysex.USER_MODE and self._main_modes.selected_mode != 'user':
-            self._main_modes.push_mode('user')
-
-    @listens('after_mode_sent')
-    def __on_after_push_mode_sent(self, mode):
-        if mode == sysex.LIVE_MODE and self._main_modes.selected_mode == 'user':
-            self._main_modes.pop_mode('user')
-        self._user.defer_sysex_sending = mode == sysex.LIVE_MODE
 
     def _create_settings(self):
         return create_settings(preferences=self.preferences)

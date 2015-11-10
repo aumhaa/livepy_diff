@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from ableton.v2.base import SlotManager, listens, liveobj_valid
 from ableton.v2.control_surface.control import forward_control
 from .item_lister_component import ItemListerComponent, ItemProvider
@@ -26,7 +26,8 @@ class ChainProvider(SlotManager, ItemProvider):
 
     @property
     def selected_item(self):
-        return self._rack.view.selected_chain if liveobj_valid(self._rack) else None
+        if liveobj_valid(self._rack):
+            return self._rack.view.selected_chain
 
     def select_chain(self, chain):
         self._rack.view.selected_chain = chain

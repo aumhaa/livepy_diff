@@ -296,8 +296,8 @@ class Tranzport:
                         i.mute = False
 
         elif button == TRANZ_SOLO_TRACK:
-            if status > 0:
-                if (list(self.song().visible_tracks) + list(self.song().return_tracks)).count(self.__current_track) > 0 and (self.song().exclusive_solo and not self.__shift_pressed or self.__shift_pressed and not self.song().exclusive_solo):
+            if status > 0 and (list(self.song().visible_tracks) + list(self.song().return_tracks)).count(self.__current_track) > 0:
+                if self.song().exclusive_solo and not self.__shift_pressed or self.__shift_pressed and not self.song().exclusive_solo:
                     for i in chain(self.song().tracks, self.song().return_tracks):
                         if i.solo and not i == self.__current_track:
                             i.solo = False

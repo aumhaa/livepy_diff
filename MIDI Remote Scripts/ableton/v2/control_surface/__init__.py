@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from .clip_creator import ClipCreator
 from .component import Component
 from .compound_component import CompoundComponent

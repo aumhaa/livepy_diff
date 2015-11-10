@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from functools import partial
 from ableton.v2.base import SlotError, const, listenable_property, listens, liveobj_changed, liveobj_valid
 from ableton.v2.control_surface import CompoundComponent
@@ -36,7 +36,9 @@ class DeviceComponentWithBank(ProviderDeviceComponent, CompoundComponent):
         super(DeviceComponentWithBank, self).__init__(*a, **k)
 
     def _get_bank_index(self):
-        return self._bank.index if self._bank is not None else 0
+        if self._bank is not None:
+            return self._bank.index
+        return 0
 
     def _set_bank_index(self, index):
         if self._bank is not None:
@@ -63,10 +65,14 @@ class DeviceComponentWithBank(ProviderDeviceComponent, CompoundComponent):
         self.notify_parameters()
 
     def _current_bank_details(self):
-        return (self._bank.name, self._bank.parameters) if self._bank is not None else ('', [None] * 8)
+        if self._bank is not None:
+            return (self._bank.name, self._bank.parameters)
+        return ('', [None] * 8)
 
     def _number_of_parameter_banks(self):
-        return self._bank.bank_count() if self._bank is not None else 0
+        if self._bank is not None:
+            return self._bank.bank_count()
+        return 0
 
     def _get_provided_parameters(self):
         _, parameters = self._current_bank_details() if self._device else (None, ())
@@ -104,7 +110,7 @@ class DeviceComponent(DeviceComponentWithBank):
             super(DeviceComponent, self).set_device(decorated_device)
             self._zoom_handling.set_parameter_host(decorated_device)
             self._slice_nudging.set_device(decorated_device)
-            self.__on_file_path_changed.subject = decorated_device if is_simpler(decorated_device) else None
+            self.__on_sample_changed.subject = decorated_device if is_simpler(decorated_device) else None
             self._playhead_real_time_data.set_data(device)
             self._waveform_real_time_data.set_data(device)
             self.notify_options()
@@ -147,8 +153,8 @@ class DeviceComponent(DeviceComponentWithBank):
         if changed_parameters:
             self.notify_parameters()
 
-    @listens('sample_file_path')
-    def __on_file_path_changed(self):
+    @listens('sample')
+    def __on_sample_changed(self):
         self._waveform_real_time_data.invalidate()
 
     def _has_simpler_in_multi_sample_mode(self):
@@ -166,11 +172,11 @@ class DeviceComponent(DeviceComponentWithBank):
     def _sensitivity(self, sensitivity_key, parameter):
         device = self.device()
         sensitivity = parameter_sensitivities(device.class_name, parameter)[sensitivity_key]
-        if liveobj_valid(parameter) and is_simpler(device) and device.sample_length > 0:
+        if liveobj_valid(parameter) and is_simpler(device) and liveobj_valid(device.sample):
             if parameter.name in self.ZOOMABLE_PARAMETERS:
                 sensitivity *= self._zoom_handling.zoom_factor
             if parameter.name in self.PARAMETERS_RELATIVE_TO_ACTIVE_AREA:
-                active_area_quotient = device.sample_length / float(device.end_marker - device.start_marker + 1)
+                active_area_quotient = device.sample.length / float(device.sample.end_marker - device.sample.start_marker + 1)
                 sensitivity *= active_area_quotient
         return sensitivity
 

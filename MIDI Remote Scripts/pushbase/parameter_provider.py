@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from ableton.v2.base import liveobj_valid, NamedTuple, Subject
 from . import consts
 DISCRETE_PARAMETERS_DICT = {'GlueCompressor': ('Ratio', 'Attack', 'Release', 'Peak Clip In')}
@@ -14,12 +14,16 @@ def is_parameter_quantized(parameter, parent_device):
 
 def parameter_mapping_sensitivity(parameter):
     is_quantized = is_parameter_quantized(parameter, parameter and parameter.canonical_parent)
-    return consts.QUANTIZED_MAPPING_SENSITIVITY if is_quantized else consts.CONTINUOUS_MAPPING_SENSITIVITY
+    if is_quantized:
+        return consts.QUANTIZED_MAPPING_SENSITIVITY
+    return consts.CONTINUOUS_MAPPING_SENSITIVITY
 
 
 def fine_grain_parameter_mapping_sensitivity(parameter):
     is_quantized = is_parameter_quantized(parameter, parameter and parameter.canonical_parent)
-    return consts.QUANTIZED_MAPPING_SENSITIVITY if is_quantized else consts.FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY
+    if is_quantized:
+        return consts.QUANTIZED_MAPPING_SENSITIVITY
+    return consts.FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY
 
 
 class ParameterInfo(NamedTuple):

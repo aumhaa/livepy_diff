@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from ableton.v2.base import clamp, listens, liveobj_valid
 from ableton.v2.control_surface.control import MappedControl as MappedControlBase
 from ableton.v2.control_surface.control.encoder import ValueStepper

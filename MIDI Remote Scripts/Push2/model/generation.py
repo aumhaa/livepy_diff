@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function
 from operator import attrgetter
 from functools import partial
 from ableton.v2.base import Disconnectable, memoize, SlotManager, Slot, has_event
@@ -19,7 +20,7 @@ class AdapterAwareSlot(Slot):
 class ModelUpdateNotifier(object):
 
     def __init__(self, step = None, parent = None, delegate = None):
-        raise parent is not None or step is None or AssertionError, (parent, step)
+        raise parent is not None or step is None or AssertionError((parent, step))
         self._step = step
         self._delegate = delegate
         self.path = [] if self._step is None else parent.path + [self._step]
@@ -97,8 +98,8 @@ class BoundListWrapper(SlotManager, SimpleWrapper):
         for value in self._value:
             self.register_disconnectable(value)
 
-        if not (self._verify_unique_ids and len(self._value) == len(set((item.values['id'].get() for item in self._value)))):
-            raise AssertionError, 'BoundListWrapper requires unique ids for items'
+        if self._verify_unique_ids:
+            raise len(self._value) == len(set((item.values['id'].get() for item in self._value))) or AssertionError('BoundListWrapper requires unique ids for items')
 
     def to_json(self):
         return [ v.to_json() for v in self._value ]

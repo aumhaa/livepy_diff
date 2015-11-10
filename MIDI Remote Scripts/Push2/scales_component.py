@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function
 from functools import partial
 from ableton.v2.base import clamp, listens, listenable_property
 from ableton.v2.control_surface import Component
@@ -88,6 +89,10 @@ class ScalesEnabler(Component):
     @toggle_button.pressed
     def toggle_button(self, button):
         self._enable_dialog_mode()
+
+    @toggle_button.released_delayed
+    def toggle_button(self, button):
+        self._exit_dialog_mode()
 
     def on_enabled_changed(self):
         super(ScalesEnabler, self).on_enabled_changed()

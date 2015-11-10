@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from functools import partial
 import Live
 from ableton.v2.base import clamp, find_if, listens, liveobj_valid, SlotManager, Subject, listenable_property
@@ -8,12 +8,12 @@ from .decoration import LiveObjectDecorator, DecoratorFactory
 from .internal_parameter import EnumWrappingParameter, InternalParameter, RelativeInternalParameter, WrappingParameter, to_percentage_display
 from .device_options import DeviceTriggerOption, DeviceSwitchOption, DeviceOnOffOption
 
-def from_sample_count(value, simpler):
-    return float(value) / simpler.sample_length
+def from_sample_count(value, sample):
+    return float(value) / sample.length
 
 
-def to_sample_count(value, simpler):
-    return clamp(int(value * simpler.sample_length), 0, simpler.sample_length - 1)
+def to_sample_count(value, sample):
+    return clamp(int(value * sample.length), 0, sample.length - 1)
 
 
 def from_user_range(minv, maxv):
@@ -24,7 +24,7 @@ def to_user_range(minv, maxv):
     return lambda v, s: clamp(v * (maxv - minv) + minv, minv, maxv)
 
 
-BoolWrappingParameter = partial(WrappingParameter, to_property_value=lambda integer, _simpler: bool(integer), from_property_value=lambda boolean, _simpler: int(boolean), value_items=['off', 'on'], display_value_conversion=lambda val: 'on' if val else 'off')
+BoolWrappingParameter = partial(WrappingParameter, to_property_value=lambda integer, _simpler: bool(integer), from_property_value=lambda boolean, _simpler: int(boolean), value_items=['off', 'on'], display_value_conversion=lambda val: ('on' if val else 'off'))
 
 class EnvelopeType(int):
     pass
@@ -95,7 +95,6 @@ class BandTypesList(NotifyingList):
 
 
 class _SimplerDeviceDecorator(Subject, SlotManager, LiveObjectDecorator):
-    __events__ = ('slices',)
     waveform_real_time_channel_id = ''
     playhead_real_time_channel_id = ''
 
@@ -111,36 +110,36 @@ class _SimplerDeviceDecorator(Subject, SlotManager, LiveObjectDecorator):
         self.__on_parameters_changed.subject = self._live_object
         self.__on_sample_changed.subject = self._live_object
         self.__on_playback_mode_changed.subject = self._live_object
-        self.__on_slices_changed.subject = self._live_object
-        self.__on_start_marker_changed.subject = self._live_object
-        self.__on_end_marker_changed.subject = self._live_object
+        self.__on_slices_changed.subject = self._live_object.sample
         self.__on_signature_numerator_changed.subject = song
         self.__on_can_warp_as_changed.subject = self._live_object
         self.__on_can_warp_half_changed.subject = self._live_object
         self.__on_can_warp_double_changed.subject = self._live_object
+        self.__on_start_marker_changed.subject = self._live_object.sample
+        self.__on_end_marker_changed.subject = self._live_object.sample
 
     def setup_parameters(self):
-        self.zoom = InternalParameter(name='Zoom', parent=self._live_object)
-        self.start = WrappingParameter(name='Start', parent=self._live_object, source_property='start_marker', from_property_value=from_sample_count, to_property_value=to_sample_count)
-        self.end = WrappingParameter(name='End', parent=self._live_object, source_property='end_marker', from_property_value=from_sample_count, to_property_value=to_sample_count)
-        self.sensitivity = WrappingParameter(name='Sensitivity', parent=self._live_object, source_property='slicing_sensitivity', display_value_conversion=to_percentage_display)
-        self.mode = EnumWrappingParameter(name='Mode', parent=self, values_property='available_playback_modes', index_property='playback_mode', value_type=Live.SimplerDevice.PlaybackMode)
-        self.envelope = EnumWrappingParameter(name='Env. Type', parent=self._envelope_types_provider, values_property='available_values', index_property='index', value_type=EnvelopeType)
-        self.warp = BoolWrappingParameter(name='Warp', parent=self._live_object, source_property='warping')
-        self.warp_mode_param = EnumWrappingParameter(name='Warp Mode', parent=self, values_property='available_warp_modes', index_property='warp_mode', value_type=Live.Clip.WarpMode, to_index_conversion=lambda i: Live.Clip.WarpMode(SimplerWarpModes.key_by_index(i)), from_index_conversion=lambda i: SimplerWarpModes.index_by_key(i))
-        self.nudge = RelativeInternalParameter(name='Nudge', parent=self._live_object)
-        self.slicing_playback_mode_param = EnumWrappingParameter(name='Playback', parent=self, values_property='available_slicing_playback_modes', index_property='slicing_playback_mode', value_type=Live.SimplerDevice.SlicingPlaybackMode)
-        self.voices_param = EnumWrappingParameter(name='Voices', parent=self, values_property='available_voice_numbers', index_property='voices', to_index_conversion=lambda i: self.available_voice_numbers[i], from_index_conversion=lambda i: self.available_voice_numbers.index(i), value_type=int)
-        self.granulation_resolution = EnumWrappingParameter(name='Preserve', parent=self, values_property='available_resolutions', index_property='beats_granulation_resolution', value_type=int)
-        self.transient_loop_mode = EnumWrappingParameter(name='Loop Mode', parent=self, values_property='available_transient_loop_modes', index_property='beats_transient_loop_mode', value_type=Live.SimplerDevice.TransientLoopMode)
-        self.transient_envelope = WrappingParameter(name='Envelope', parent=self._live_object, source_property='beats_transient_envelope', from_property_value=from_user_range(0.0, 100.0), to_property_value=to_user_range(0.0, 100.0))
-        self.tones_grain_size_param = WrappingParameter(name='Grain Size Tones', parent=self._live_object, source_property='tones_grain_size', from_property_value=from_user_range(12.0, 100.0), to_property_value=to_user_range(12.0, 100.0))
-        self.texture_grain_size_param = WrappingParameter(name='Grain Size Texture', parent=self._live_object, source_property='texture_grain_size', from_property_value=from_user_range(2.0, 263.0), to_property_value=to_user_range(2.0, 263.0))
-        self.flux = WrappingParameter(name='Flux', parent=self._live_object, source_property='texture_flux', from_property_value=from_user_range(0.0, 100.0), to_property_value=to_user_range(0.0, 100.0))
-        self.formants = WrappingParameter(name='Formants', parent=self._live_object, source_property='complex_pro_formants', from_property_value=from_user_range(0.0, 100.0), to_property_value=to_user_range(0.0, 100.0))
-        self.complex_pro_envelope_param = WrappingParameter(name='Envelope Complex Pro', parent=self._live_object, source_property='complex_pro_envelope', from_property_value=from_user_range(8.0, 256.0), to_property_value=to_user_range(8.0, 256.0))
-        self.pad_slicing_param = BoolWrappingParameter(name='Pad Slicing', parent=self._live_object, source_property='pad_slicing')
-        self.gain_param = WrappingParameter(name='Gain', parent=self._live_object, source_property='gain', display_value_conversion=lambda _: self._live_object.gain_display_string() if liveobj_valid(self._live_object) else '')
+        self.zoom = InternalParameter(name='Zoom', parent=self)
+        self.start = WrappingParameter(name='Start', parent=self, property_host=self._live_object.sample, source_property='start_marker', from_property_value=from_sample_count, to_property_value=to_sample_count)
+        self.end = WrappingParameter(name='End', parent=self, property_host=self._live_object.sample, source_property='end_marker', from_property_value=from_sample_count, to_property_value=to_sample_count)
+        self.sensitivity = WrappingParameter(name='Sensitivity', parent=self, property_host=self._live_object.sample, source_property='slicing_sensitivity', display_value_conversion=to_percentage_display)
+        self.mode = EnumWrappingParameter(name='Mode', parent=self, values_property_host=self, index_property_host=self, values_property='available_playback_modes', index_property='playback_mode')
+        self.envelope = EnumWrappingParameter(name='Env. Type', parent=self, values_property_host=self._envelope_types_provider, index_property_host=self._envelope_types_provider, values_property='available_values', index_property='index', value_type=EnvelopeType)
+        self.warp = BoolWrappingParameter(name='Warp', parent=self, property_host=self._live_object.sample, source_property='warping')
+        self.warp_mode_param = EnumWrappingParameter(name='Warp Mode', parent=self, values_property_host=self, index_property_host=self._live_object.sample, values_property='available_warp_modes', index_property='warp_mode', to_index_conversion=lambda i: Live.Clip.WarpMode(SimplerWarpModes.key_by_index(i)), from_index_conversion=lambda i: SimplerWarpModes.index_by_key(i))
+        self.nudge = RelativeInternalParameter(name='Nudge', parent=self)
+        self.slicing_playback_mode_param = EnumWrappingParameter(name='Playback', parent=self, values_property_host=self, index_property_host=self, values_property='available_slicing_playback_modes', index_property='slicing_playback_mode')
+        self.voices_param = EnumWrappingParameter(name='Voices', parent=self, values_property_host=self, index_property_host=self, values_property='available_voice_numbers', index_property='voices', to_index_conversion=lambda i: self.available_voice_numbers[i], from_index_conversion=lambda i: self.available_voice_numbers.index(i))
+        self.granulation_resolution = EnumWrappingParameter(name='Preserve', parent=self, values_property_host=self, index_property_host=self._live_object.sample, values_property='available_resolutions', index_property='beats_granulation_resolution')
+        self.transient_loop_mode = EnumWrappingParameter(name='Loop Mode', parent=self, values_property_host=self, index_property_host=self._live_object.sample, values_property='available_transient_loop_modes', index_property='beats_transient_loop_mode')
+        self.transient_envelope = WrappingParameter(name='Envelope', parent=self, property_host=self._live_object.sample, source_property='beats_transient_envelope', from_property_value=from_user_range(0.0, 100.0), to_property_value=to_user_range(0.0, 100.0))
+        self.tones_grain_size_param = WrappingParameter(name='Grain Size Tones', parent=self, property_host=self._live_object.sample, source_property='tones_grain_size', from_property_value=from_user_range(12.0, 100.0), to_property_value=to_user_range(12.0, 100.0))
+        self.texture_grain_size_param = WrappingParameter(name='Grain Size Texture', parent=self, property_host=self._live_object.sample, source_property='texture_grain_size', from_property_value=from_user_range(2.0, 263.0), to_property_value=to_user_range(2.0, 263.0))
+        self.flux = WrappingParameter(name='Flux', parent=self, property_host=self._live_object.sample, source_property='texture_flux', from_property_value=from_user_range(0.0, 100.0), to_property_value=to_user_range(0.0, 100.0))
+        self.formants = WrappingParameter(name='Formants', parent=self, property_host=self._live_object.sample, source_property='complex_pro_formants', from_property_value=from_user_range(0.0, 100.0), to_property_value=to_user_range(0.0, 100.0))
+        self.complex_pro_envelope_param = WrappingParameter(name='Envelope Complex Pro', parent=self, property_host=self._live_object.sample, source_property='complex_pro_envelope', from_property_value=from_user_range(8.0, 256.0), to_property_value=to_user_range(8.0, 256.0))
+        self.pad_slicing_param = BoolWrappingParameter(name='Pad Slicing', parent=self, property_host=self._live_object, source_property='pad_slicing')
+        self.gain_param = WrappingParameter(name='Gain', parent=self, property_host=self._live_object.sample, source_property='gain', display_value_conversion=lambda _: (self._live_object.sample.gain_display_string() if liveobj_valid(self._live_object) and liveobj_valid(self._live_object.sample) else ''))
         self._additional_parameters = (self.zoom,
          self.end,
          self.start,
@@ -188,7 +187,7 @@ class _SimplerDeviceDecorator(Subject, SlotManager, LiveObjectDecorator):
 
     @property
     def available_resolutions(self):
-        return ('1 Bar', '1/2', '1/4', '1/8', '1/16', '1/32', 'Transients')
+        return (u'1 Bar', u'\xbd', u'\xbc', u'\u215b', u'\ue001', u'\ue002', u'Transients')
 
     @property
     def available_transient_loop_modes(self):
@@ -213,7 +212,13 @@ class _SimplerDeviceDecorator(Subject, SlotManager, LiveObjectDecorator):
 
     @listenable_property
     def current_playback_mode(self):
-        return str(self._live_object.playback_mode)
+        return self._live_object.playback_mode
+
+    @listenable_property
+    def slices(self):
+        if liveobj_valid(self._live_object) and liveobj_valid(self._live_object.sample):
+            return self._live_object.sample.slices
+        return []
 
     @property
     def available_voice_numbers(self):
@@ -236,36 +241,35 @@ class _SimplerDeviceDecorator(Subject, SlotManager, LiveObjectDecorator):
         self.lfo_sync_option.set_parameter(self.get_parameter_by_name('L Sync'))
         self.filter_slope_option.set_parameter(self.get_parameter_by_name('Filter Slope'))
 
-    @listens('sample_file_path')
+    @listens('sample')
     def __on_sample_changed(self):
-        self.start.connect()
-        self.end.connect()
-        self.sensitivity.connect()
-        self.warp.connect()
-        self.warp_mode_param.connect()
-        self.granulation_resolution.connect()
-        self.transient_loop_mode.connect()
-        self.transient_envelope.connect()
-        self.tones_grain_size_param.connect()
-        self.texture_grain_size_param.connect()
-        self.flux.connect()
-        self.formants.connect()
-        self.complex_pro_envelope_param.connect()
-        self.gain_param.connect()
+        for param in (self.start,
+         self.end,
+         self.warp,
+         self.transient_envelope,
+         self.tones_grain_size_param,
+         self.texture_grain_size_param,
+         self.flux,
+         self.formants,
+         self.complex_pro_envelope_param,
+         self.sensitivity,
+         self.gain_param):
+            param.set_property_host(self._live_object.sample)
+
+        for param in (self.warp_mode_param, self.granulation_resolution, self.transient_loop_mode):
+            param.set_index_property_host(self._live_object.sample)
+
         self._reconnect_to_slices()
         self._reconnect_to_markers()
         self._update_warp_as_label()
 
     def _reconnect_to_slices(self):
-        self.__on_slices_changed.subject = None
-        self.__on_slices_changed.subject = self._live_object
+        self.__on_slices_changed.subject = self._live_object.sample
         self.notify_slices()
 
     def _reconnect_to_markers(self):
-        self.__on_start_marker_changed.subject = None
-        self.__on_start_marker_changed.subject = self._live_object
-        self.__on_end_marker_changed.subject = None
-        self.__on_end_marker_changed.subject = self._live_object
+        self.__on_start_marker_changed.subject = self._live_object.sample
+        self.__on_end_marker_changed.subject = self._live_object.sample
 
     @listens('playback_mode')
     def __on_playback_mode_changed(self):
@@ -315,7 +319,7 @@ class _OperatorDeviceDecorator(LiveObjectDecorator):
     def __init__(self, song = None, osc_types_provider = None, *a, **k):
         super(_OperatorDeviceDecorator, self).__init__(*a, **k)
         self._osc_types_provider = osc_types_provider if osc_types_provider is not None else OscillatorTypesList()
-        self.oscillator = EnumWrappingParameter(name='Oscillator', parent=self._osc_types_provider, values_property='available_values', index_property='index', value_type=OscillatorType)
+        self.oscillator = EnumWrappingParameter(name='Oscillator', parent=self, values_property_host=self._osc_types_provider, index_property_host=self._osc_types_provider, values_property='available_values', index_property='index', value_type=OscillatorType)
 
     @property
     def parameters(self):
@@ -327,7 +331,7 @@ class _Eq8DeviceDecorator(LiveObjectDecorator):
     def __init__(self, song = None, band_types_provider = None, *a, **k):
         super(_Eq8DeviceDecorator, self).__init__(*a, **k)
         self._band_types_provider = band_types_provider if band_types_provider is not None else BandTypesList()
-        self.band = EnumWrappingParameter(name='Band', parent=self._band_types_provider, values_property='available_values', index_property='index')
+        self.band = EnumWrappingParameter(name='Band', parent=self, values_property_host=self._band_types_provider, index_property_host=self._band_types_provider, values_property='available_values', index_property='index')
 
     @property
     def parameters(self):

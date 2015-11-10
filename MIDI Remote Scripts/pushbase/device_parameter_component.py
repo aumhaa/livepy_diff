@@ -1,6 +1,6 @@
 
-from __future__ import absolute_import
-from itertools import chain, repeat
+from __future__ import absolute_import, print_function
+from itertools import chain, repeat, izip_longest
 import Live
 from ableton.v2.base import listens_group, listens
 from ableton.v2.control_surface import Component
@@ -12,7 +12,7 @@ AutomationState = Live.DeviceParameter.AutomationState
 def graphic_bar_for_parameter(parameter):
     if parameter.min == -1 * parameter.max:
         return consts.GRAPH_PAN
-    elif parameter.is_quantized:
+    if parameter.is_quantized:
         return consts.GRAPH_SIN
     return consts.GRAPH_VOL
 
@@ -142,28 +142,30 @@ class DeviceParameterComponent(DeviceParameterComponentBase):
         if self.is_enabled():
             params = zip(chain(self.parameter_provider.parameters, repeat(None)), self._parameter_name_data_sources)
             for info, name_data_source in params:
-                if info:
-                    parameter = info.parameter
-                    name = info and info.name or ''
-                    name = parameter and parameter.automation_state != AutomationState.none and consts.CHAR_FULL_BLOCK + name
+                parameter = info and info.parameter
+                name = info and info.name or ''
+                if parameter and parameter.automation_state != AutomationState.none:
+                    name = consts.CHAR_FULL_BLOCK + name
                 name_data_source.set_display_string(name or '')
 
     def _update_parameter_values(self):
         if self.is_enabled():
-            for parameter, data_source in map(None, self.parameters, self._parameter_value_data_sources):
+            for parameter, data_source in izip_longest(self.parameters, self._parameter_value_data_sources):
                 value_string = self.parameter_to_string(parameter)
                 if parameter and parameter.automation_state == AutomationState.overridden:
                     value_string = '[%s]' % value_string
                 if data_source:
                     data_source.set_display_string(value_string)
 
-            for param, data_source in map(None, self.parameters, self._parameter_graphic_data_sources):
+            for param, data_source in izip_longest(self.parameters, self._parameter_graphic_data_sources):
                 graph = convert_parameter_value_to_graphic(param, self.parameter_to_value)
                 if data_source:
                     data_source.set_display_string(graph)
 
     def parameter_to_string(self, parameter):
-        return '' if parameter == None else unicode(parameter)
+        if parameter == None:
+            return ''
+        return unicode(parameter)
 
     def parameter_to_value(self, parameter):
         return parameter.value

@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function
 import Live
 from itertools import imap, chain
 from functools import partial
@@ -25,6 +26,6 @@ def find_instrument_meeting_requirement(requirement, track_or_chain):
     if instrument:
         if requirement(instrument):
             return instrument
-        elif instrument.can_have_chains:
+        if instrument.can_have_chains:
             recursive_call = partial(find_instrument_meeting_requirement, requirement)
             return find_if(bool, imap(recursive_call, instrument.chains))

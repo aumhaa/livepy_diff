@@ -1,3 +1,4 @@
 
-from ordered_dict import OrderedDict
-from indexed_dict import IndexedDict
+from __future__ import absolute_import, print_function
+from .indexed_dict import IndexedDict
+__all__ = IndexedDict

@@ -1,9 +1,9 @@
 
-from __future__ import absolute_import, with_statement
+from __future__ import absolute_import, print_function
 from contextlib import contextmanager
 from itertools import ifilter, imap, chain
 from functools import partial
-from _Tools.multipledispatch import dispatch
+from multipledispatch import dispatch
 import Live
 from ableton.v2.base import find_if, first, index_if, listenable_property, listens, listens_group, liveobj_changed, liveobj_valid, SlotGroup, SlotManager, Subject, task
 from ableton.v2.control_surface.control import control_list, forward_control, StepEncoderControl
@@ -32,7 +32,8 @@ def is_active_element(device):
 
 
 def nested_device_parent(device):
-    return device.view.selected_chain if device.can_have_chains and device.view.is_showing_chain_devices and not device.view.is_collapsed else None
+    if device.can_have_chains and device.view.is_showing_chain_devices and not device.view.is_collapsed:
+        return device.view.selected_chain
 
 
 def collect_devices(track_or_chain, nesting_level = 0):
@@ -311,11 +312,11 @@ class DeviceNavigationComponent(ItemListerComponent):
     @listens('items')
     def __on_items_changed(self):
         new_items = map(lambda x: x.item, self.items)
-        if new_items and is_drum_pad(new_items[-1]):
-            lost_selection_on_empty_pad = self._flattened_chain.selected_item not in new_items
-            if self._should_select_drum_pad() or lost_selection_on_empty_pad:
-                self._select_item(self._current_drum_pad())
-            self.moving and self._show_selected_item()
+        lost_selection_on_empty_pad = new_items and is_drum_pad(new_items[-1]) and self._flattened_chain.selected_item not in new_items
+        if self._should_select_drum_pad() or lost_selection_on_empty_pad:
+            self._select_item(self._current_drum_pad())
+        if self.moving:
+            self._show_selected_item()
         self.notify_drum_pad_selection()
 
     @listenable_property
@@ -505,12 +506,12 @@ class DeviceNavigationComponent(ItemListerComponent):
 
     def _can_update_device_selection(self, new_selection):
         can_update = liveobj_valid(new_selection)
-        if not self.is_drum_pad_selected:
-            drum_pad_selected_or_requested = self._should_select_drum_pad()
-            if can_update and drum_pad_selected_or_requested:
-                if is_empty_rack(new_selection):
-                    can_update = False
-                can_update = can_update and self.is_drum_pad_selected and not is_first_device_on_pad(new_selection, self._flattened_chain.selected_item)
+        drum_pad_selected_or_requested = self.is_drum_pad_selected or self._should_select_drum_pad()
+        if can_update and drum_pad_selected_or_requested:
+            if is_empty_rack(new_selection):
+                can_update = False
+            if can_update and self.is_drum_pad_selected:
+                can_update = not is_first_device_on_pad(new_selection, self._flattened_chain.selected_item)
         elif not can_update and not drum_pad_selected_or_requested:
             can_update = True
         return can_update

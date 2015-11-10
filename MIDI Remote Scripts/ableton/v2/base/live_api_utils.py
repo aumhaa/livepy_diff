@@ -1,5 +1,5 @@
 
-
+from __future__ import absolute_import, print_function
 
 def liveobj_changed(obj, other):
     """

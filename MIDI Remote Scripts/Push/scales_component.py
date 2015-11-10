@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function
 from functools import partial
 from ableton.v2.base import forward_property, listens, listens_group, recursive_map
 from ableton.v2.control_surface import CompoundComponent

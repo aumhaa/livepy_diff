@@ -31,7 +31,8 @@ class M4LInterfaceComponent(ControlSurfaceComponent, ControlElementClient):
         return self._controls.keys()
 
     def get_control(self, control_name):
-        return self._controls[control_name] if control_name in self._controls else None
+        if control_name in self._controls:
+            return self._controls[control_name]
 
     def grab_control(self, control):
         raise control in self._controls.values() or AssertionError

@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from itertools import ifilter
 from ableton.v2.base import liveobj_valid, listenable_property
 from pushbase.automation_component import AutomationComponent as AutomationComponentBase
@@ -82,7 +82,7 @@ class AutomationComponent(AutomationComponentBase):
 
     @property
     def parameters(self):
-        return map(lambda info: info.parameter if info else None, self._parameter_infos)
+        return map(lambda info: (info.parameter if info else None), self._parameter_infos)
 
     @property
     def parameter_infos(self):
@@ -122,4 +122,5 @@ class AutomationComponent(AutomationComponentBase):
         self.notify_parameters()
 
     def _parameter_for_index(self, parameters, index):
-        return parameters[index].original_parameter if parameters[index] else None
+        if parameters[index]:
+            return parameters[index].original_parameter

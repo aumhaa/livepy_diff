@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function
 from pushbase import consts
 DEFAULT_SENSITIVITY_KEY = 'normal_sensitivity'
 FINE_GRAINED_SENSITIVITY_KEY = 'fine_grained_sensitivity'

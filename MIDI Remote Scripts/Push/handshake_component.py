@@ -2,6 +2,7 @@
 """
 Component for handling the initialization process of Push.
 """
+from __future__ import absolute_import, print_function
 from functools import partial
 import Live
 from ableton.v2.base import NamedTuple, listens, task

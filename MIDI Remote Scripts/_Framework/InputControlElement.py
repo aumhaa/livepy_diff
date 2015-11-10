@@ -427,4 +427,6 @@ class InputControlElement(NotifyingControlElement):
 
     @property
     def _last_sent_value(self):
-        return self._last_sent_message[0] if self._last_sent_message else -1
+        if self._last_sent_message:
+            return self._last_sent_message[0]
+        return -1

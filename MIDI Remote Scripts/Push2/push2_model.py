@@ -1,12 +1,8 @@
 
-import os
-import sys
+from __future__ import absolute_import, print_function
 from pprint import pformat
 import logging
-j = os.path.join
-dn = os.path.dirname
-sys.path.append(j(dn(dn(__file__)), '_Tools'))
-import simplejson as json
+import json
 from .model import RootModel
 from .model.generation import generate_mrs_model, ModelUpdateNotifier
 logger = logging.getLogger(__name__)

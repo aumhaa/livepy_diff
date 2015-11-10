@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function
 from ableton.v2.base import const, listens, liveobj_valid
 from ableton.v2.control_surface import Component
 from ableton.v2.control_surface.mode import ModesComponent
@@ -33,7 +34,9 @@ class DeviceViewConnector(Component):
         self.update()
 
     def _value_for_state(self, enabled_value, disabled_value):
-        return enabled_value if self.is_enabled() else disabled_value
+        if self.is_enabled():
+            return enabled_value
+        return disabled_value
 
 
 class SimplerDeviceViewConnector(DeviceViewConnector):
@@ -77,12 +80,16 @@ class DeviceViewComponent(ModesComponent):
 
     def _device_type(self):
         device = self._get_device()
-        return device.class_name if liveobj_valid(device) else ''
+        if liveobj_valid(device):
+            return device.class_name
+        return ''
 
     def _mode_to_select(self):
         device = self._get_device()
         device_type = device and device.class_name
-        return device_type if self.get_mode(device_type) != None else 'default'
+        if self.get_mode(device_type) != None:
+            return device_type
+        return 'default'
 
     @listens('parameters')
     def _on_parameters_changed(self):

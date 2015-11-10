@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 import logging
 from ..base import task
 from .control_surface import ControlSurface, midi

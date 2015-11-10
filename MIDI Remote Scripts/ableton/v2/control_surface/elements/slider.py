@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 import Live
 from ..input_control_element import MIDI_NOTE_TYPE
 from .encoder import EncoderElement

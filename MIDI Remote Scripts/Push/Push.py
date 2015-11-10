@@ -1,5 +1,5 @@
 
-from __future__ import with_statement
+from __future__ import absolute_import, print_function
 from functools import partial
 import logging
 from copy import copy

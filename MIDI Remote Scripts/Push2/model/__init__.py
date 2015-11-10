@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function
 from .declaration import Binding, custom_property, id_property, listmodel, listof, view_property, ViewModel, ModelVisitor
 from .repr import BrowserItemAdapter, BrowserListWrapper, ClipAdapter, DeviceAdapter, DeviceParameterAdapter, EditModeOptionAdapter, ItemListAdapter, ItemSlotAdapter, LiveDialogAdapter, OptionsListAdapter, SimplerDeviceAdapter, TrackAdapter, TrackControlAdapter, TrackListAdapter, VisibleAdapter
 __all__ = (ModelVisitor,)
@@ -20,6 +21,7 @@ class Track(Binding):
     parentColorIndex = view_property(int, -1)
     arm = view_property(bool, False)
     isMaster = view_property(bool, False)
+    isAudio = view_property(bool, False)
     id = id_property()
 
 
@@ -142,7 +144,6 @@ class Slice(Binding):
 
 class SimplerProperties(Binding):
     ADAPTER = SimplerDeviceAdapter
-    sample_file_path = view_property(unicode, '')
     sample_start = view_property(DeviceParameter)
     sample_length = view_property(DeviceParameter)
     loop_length = view_property(DeviceParameter)
@@ -152,7 +153,7 @@ class SimplerProperties(Binding):
     start_marker = view_property(int, 0)
     end_marker = view_property(int, 0)
     multi_sample_mode = view_property(bool, False)
-    current_playback_mode = view_property(unicode, '')
+    current_playback_mode = view_property(int, 0)
     slices = view_property(listmodel(Slice))
     selected_slice = view_property(Slice)
     playhead_real_time_channel_id = view_property(unicode, '')

@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function
 from itertools import count
 from ableton.v2.base import listens_group
 from ableton.v2.control_surface.control import ButtonControl
@@ -42,9 +43,9 @@ class StopClipComponent(StopClipComponentBase):
         elif track.playing_slot_index >= 0:
             if track.solo:
                 return 'StopClips.SoloedTrack'
-            elif track.mute:
+            if track.mute:
                 return 'StopClips.MutedTrack'
-            elif track.clip_slots[track.playing_slot_index].is_recording:
+            if track.clip_slots[track.playing_slot_index].is_recording:
                 pulse_to = RECORDING_COLOR
             else:
                 pulse_to = UNLIT_COLOR

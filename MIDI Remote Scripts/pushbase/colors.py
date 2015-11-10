@@ -3,6 +3,7 @@
 Module for the color interfaces defining all posible ways of turning
 on buttons on Push.
 """
+from __future__ import absolute_import, print_function
 from itertools import izip, repeat
 from ableton.v2.control_surface.elements import Color, to_midi_value
 

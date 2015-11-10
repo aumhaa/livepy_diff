@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from itertools import ifilter, izip
 from ableton.v2.base import flatten, liveobj_valid
 from pushbase.device_chain_utils import find_instrument_devices

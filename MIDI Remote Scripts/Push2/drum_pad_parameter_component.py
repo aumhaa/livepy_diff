@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from ableton.v2.base import clamp, listenable_property, listens, liveobj_valid, SlotManager
 from ableton.v2.control_surface import CompoundComponent
 from ableton.v2.control_surface.control import StepEncoderControl
@@ -28,7 +28,9 @@ class ChokeParameter(SlotManager, InternalParameterBase):
 
     @listenable_property
     def value(self):
-        return self._pad.choke_group if len(self._pad.chains) > 0 else 0
+        if len(self._pad.chains) > 0:
+            return self._pad.choke_group
+        return 0
 
     @value.setter
     def value(self, value):

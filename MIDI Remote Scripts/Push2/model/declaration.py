@@ -1,5 +1,5 @@
 
-
+from __future__ import absolute_import, print_function
 
 class ModelDeclarationException(Exception):
     pass
@@ -88,7 +88,7 @@ class id_property(property_declaration):
     def id_attribute_getter(obj):
         if hasattr(obj, '__id__'):
             return unicode(obj.__id__)
-        elif hasattr(obj, '_live_ptr'):
+        if hasattr(obj, '_live_ptr'):
             return unicode(obj._live_ptr)
         return unicode(id(obj))
 

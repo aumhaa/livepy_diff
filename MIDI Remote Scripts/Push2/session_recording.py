@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from pushbase.session_recording_component import FixedLengthSessionRecordingComponent
 
 class SessionRecordingComponent(FixedLengthSessionRecordingComponent):

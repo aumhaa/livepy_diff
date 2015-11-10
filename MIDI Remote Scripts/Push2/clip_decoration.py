@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function
 from ableton.v2.base import liveobj_valid, SlotManager, Subject
 from .decoration import DecoratorFactory, find_decorated_object, LiveObjectDecorator
 from .internal_parameter import InternalParameter

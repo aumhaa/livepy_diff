@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function
 from ableton.v2.base import CompoundDisconnectable, SerializableListenableProperties, Subject, clamp, listenable_property
 from ableton.v2.control_surface import Component
 from ableton.v2.control_surface.control import RadioButtonControl, StepEncoderControl, ToggleButtonControl, control_list
@@ -79,7 +80,7 @@ class GeneralSettingsComponent(Component):
         super(GeneralSettingsComponent, self).__init__(*a, **k)
         self._settings = settings
         self._hardware_settings = hardware_settings
-        self.workflow_encoder.connect_property(settings, 'workflow', lambda v: 'clip' if v > 0 else 'scene')
+        self.workflow_encoder.connect_property(settings, 'workflow', lambda v: ('clip' if v > 0 else 'scene'))
 
     @led_brightness_encoder.value
     def led_brightness_encoder(self, value, encoder):

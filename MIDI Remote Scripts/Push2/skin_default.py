@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function
 from functools import partial
 from ableton.v2.control_surface import Skin
 from ableton.v2.control_surface.elements import SelectedTrackColorFactory, SelectedClipColorFactory
@@ -152,6 +153,7 @@ class Colors(ColorsBase):
         On = RECORDING_COLOR
         Off = Rgb.WHITE
         Transition = Blink(RECORDING_COLOR, Rgb.BLACK, 48)
+        ArrangementRecordingOn = Pulse(RECORDING_COLOR, Rgb.BLACK, 48)
         FixedLengthRecordingOn = Rgb.WHITE
         FixedLengthRecordingOff = Rgb.DARK_GREY
 

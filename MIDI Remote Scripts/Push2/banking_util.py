@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from math import ceil
 from copy import deepcopy
 from ableton.v2.base import liveobj_valid
@@ -43,13 +43,15 @@ def has_bank_names(device, definitions = BANK_DEFINITIONS):
 
 
 def all_parameters(device):
-    return list(device.parameters[1:]) if liveobj_valid(device) else []
+    if liveobj_valid(device):
+        return list(device.parameters[1:])
+    return []
 
 
 def device_bank_count(device, bank_size = 8, definition = None, definitions = BANK_DEFINITIONS):
     count = 0
-    if not (liveobj_valid(device) and definition):
-        definition = definitions.get(device.class_name, {})
+    if liveobj_valid(device):
+        definition = definition or definitions.get(device.class_name, {})
         if has_bank_count(device):
             count = device.get_bank_count() + int(has_main_bank(device))
         elif definition.keys():

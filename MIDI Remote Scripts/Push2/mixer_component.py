@@ -1,12 +1,29 @@
 
-from itertools import izip
-from ableton.v2.base import find_if, listenable_property, listens, listens_group, liveobj_valid, Subject, task
+from __future__ import absolute_import, print_function
+from itertools import izip, izip_longest
+from ableton.v2.base import listenable_property, listens, listens_group, liveobj_valid, Subject, task
 from ableton.v2.control_surface import Component
 from ableton.v2.control_surface.components import MixerComponent as MixerComponentBase
 from ableton.v2.control_surface.components import ChannelStripComponent as ChannelStripComponentBase
 from ableton.v2.control_surface.control import ButtonControl
 from ableton.v2.control_surface.mode import AddLayerMode, ModesComponent
 from .track_selection import get_all_mixer_tracks, mixable_button_color
+
+def toggle_mixable_mute(mixable, song):
+    if mixable != song.master_track:
+        mixable.mute = not mixable.mute
+
+
+def toggle_mixable_solo(mixable, song):
+    if mixable != song.master_track:
+        tracks = get_all_mixer_tracks(song)
+        other_solos = any([ track.solo for track in tracks ])
+        if other_solos and song.exclusive_solo and not mixable.solo:
+            for track in tracks:
+                track.solo = False
+
+        mixable.solo = not mixable.solo
+
 
 class MixerDeviceMuteSoloComponent(Component):
     mute_button = ButtonControl()
@@ -30,28 +47,15 @@ class MixerDeviceMuteSoloComponent(Component):
 
     @mute_button.pressed
     def mute_button(self, button):
-        self.toggle_mute()
-        self.notify_mute_or_solo_pressed()
-
-    def toggle_mute(self):
         if self._track:
-            self._track.mute = not self._track.mute
+            toggle_mixable_mute(self._track, self.song)
+        self.notify_mute_or_solo_pressed()
 
     @solo_button.pressed
     def solo_button(self, button):
-        self.toggle_solo()
+        if self._track:
+            toggle_mixable_solo(self._track, self.song)
         self.notify_mute_or_solo_pressed()
-
-    def toggle_solo(self):
-        if self._track and self._track != self.song.master_track:
-            song = self.song
-            tracks = get_all_mixer_tracks(song)
-            other_solos = any([ track.solo for track in tracks ])
-            if other_solos and song.exclusive_solo and not self._track.solo:
-                for track in tracks:
-                    track.solo = False
-
-            self._track.solo = not self._track.solo
 
 
 class MixerButtonStateManager(Subject):
@@ -94,17 +98,23 @@ class MixerComponent(MixerComponentBase, ModesComponent):
         for track, channel_strip in izip(mixer_tracks, self._channel_strips):
             channel_strip.set_track(track)
 
-        self._on_solo_changed.replace_subjects(mixer_tracks)
-        self._on_mute_changed.replace_subjects(mixer_tracks)
+        self._update_mixable_state_listeners()
         self._update_button_state_colors()
         self._update_channel_strip_button_colors()
 
+    def _update_mixable_state_listeners(self):
+        mixer_tracks = self._provider.items
+        if self._provider.selected_item not in self._provider.items:
+            mixer_tracks.append(self._provider.selected_item)
+        self._on_solo_changed.replace_subjects(mixer_tracks)
+        self._on_mute_changed.replace_subjects(mixer_tracks)
+
     def set_mute_buttons(self, buttons):
-        for strip, button in map(None, self._channel_strips, buttons or []):
+        for strip, button in izip_longest(self._channel_strips, buttons or []):
             strip.mute_button.set_control_element(button)
 
     def set_solo_buttons(self, buttons):
-        for strip, button in map(None, self._channel_strips, buttons or []):
+        for strip, button in izip_longest(self._channel_strips, buttons or []):
             strip.solo_button.set_control_element(button)
 
     def _reassign_tracks(self):
@@ -133,6 +143,7 @@ class MixerComponent(MixerComponentBase, ModesComponent):
 
     @listens('selected_item')
     def _on_selected_item_changed(self):
+        self._update_mixable_state_listeners()
         self._update_button_state_colors()
         self._update_channel_strip_button_colors()
 
@@ -149,7 +160,7 @@ class MixerComponent(MixerComponentBase, ModesComponent):
     @solo_track_button.released_immediately
     def solo_track_button(self, button):
         if self._allow_released_immediately_action:
-            self._toggle_channel_strip_property(lambda channel_strip: channel_strip.toggle_solo())
+            toggle_mixable_solo(self._provider.selected_item, self.song)
 
     @solo_track_button.pressed
     def solo_track_button(self, button):
@@ -166,7 +177,7 @@ class MixerComponent(MixerComponentBase, ModesComponent):
     @mute_track_button.released_immediately
     def mute_track_button(self, button):
         if self._allow_released_immediately_action:
-            self._toggle_channel_strip_property(lambda channel_strip: channel_strip.toggle_mute())
+            toggle_mixable_mute(self._provider.selected_item, self.song)
 
     @mute_track_button.pressed
     def mute_track_button(self, button):
@@ -179,15 +190,6 @@ class MixerComponent(MixerComponentBase, ModesComponent):
         self.pop_mode('mute')
         self.mixer_button_state.is_pressed = self._mute_or_solo_is_pressed()
         self._update_button_state_colors()
-
-    def _toggle_channel_strip_property(self, toggle_function):
-        channel_strip = self._get_selected_track_channel_strip()
-        if channel_strip:
-            toggle_function(channel_strip)
-
-    def _get_selected_track_channel_strip(self):
-        selected_track = self._provider.selected_item
-        return find_if(lambda strip: strip.track == selected_track, self._channel_strips)
 
     def _update_channel_strip_button_colors(self):
         song = self.song
@@ -204,4 +206,6 @@ class MixerComponent(MixerComponentBase, ModesComponent):
             self.solo_track_button.color = self._get_track_state_mode_state('solo', selected_track.solo if liveobj_valid(selected_track) else False, 'Mixer.SoloOn')
 
     def _get_track_state_mode_state(self, mode, track_state_parameter, on_color):
-        return on_color if track_state_parameter or self.selected_mode == mode else 'DefaultButton.On'
+        if track_state_parameter or self.selected_mode == mode:
+            return on_color
+        return 'DefaultButton.On'
