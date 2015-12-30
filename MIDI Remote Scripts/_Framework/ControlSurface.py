@@ -178,15 +178,6 @@ class ControlSurface(SlotManager):
         with self.component_guard():
             self._device_component.restore_bank(bank_index)
 
-    @_scheduled_method
-    def set_appointed_device(self, device):
-        """
-        Live -> Script
-        Live tells the script to unlock from a certain device
-        """
-        with self.component_guard():
-            self._device_component.set_device(device)
-
     def suggest_input_port(self):
         """ Live -> Script: Live can ask for the name of the script's
         prefered input port"""

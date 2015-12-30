@@ -323,7 +323,10 @@ class StopClipComponent(Component):
 
     @stop_track_clips_buttons.pressed
     def stop_track_clips_buttons(self, button):
-        button.track.stop_all_clips()
+        self._stop_clips_in_track(button.track)
+
+    def _stop_clips_in_track(self, track):
+        track.stop_all_clips()
 
     @listens('tracks')
     def _on_tracks_changed(self):

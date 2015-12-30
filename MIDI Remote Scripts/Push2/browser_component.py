@@ -213,6 +213,7 @@ class BrowserComponent(Component, Messenger):
             try:
                 if self._focus_list_with_index(list_index, crop=False):
                     self._unexpand_with_scroll_encoder = True
+                    self._prehear_selected_item()
                 if self.focused_list.selected_item.is_loadable and encoder.index == self.scroll_encoders.control_count - 1:
                     self._update_list_offset()
                 self._on_encoder_touched()

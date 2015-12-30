@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function
 from .background import BackgroundComponent, ModifierBackgroundComponent
 from .channel_strip import ChannelStripComponent
 from .clip_slot import ClipSlotComponent, find_nearest_color
-from .device import DeviceComponent
+from .device import DeviceComponent, device_to_appoint, select_and_appoint_device
 from .drum_group import DrumGroupComponent
 from .m4l_interface import M4LInterfaceComponent
 from .mixer import MixerComponent, right_align_return_tracks_track_assigner
@@ -24,6 +24,7 @@ __all__ = (BackgroundComponent,
  ChannelStripComponent,
  ClipSlotComponent,
  find_nearest_color,
+ device_to_appoint,
  DeviceComponent,
  DrumGroupComponent,
  M4LInterfaceComponent,
@@ -33,6 +34,7 @@ __all__ = (BackgroundComponent,
  SceneComponent,
  Scrollable,
  ScrollComponent,
+ select_and_appoint_device,
  SessionComponent,
  SessionNavigationComponent,
  SessionRecordingComponent,

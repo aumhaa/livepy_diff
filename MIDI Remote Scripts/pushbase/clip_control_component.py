@@ -69,6 +69,7 @@ class LoopSettingsModel(Subject, SlotManager):
 
     def _set_clip(self, clip):
         self._clip = clip
+        self._loop_length = self._get_loop_length()
         self._on_looping_changed.subject = clip
         self._on_start_marker_changed.subject = clip
         self._on_loop_start_changed.subject = clip
@@ -92,13 +93,13 @@ class LoopSettingsModel(Subject, SlotManager):
 
     @listens('loop_start')
     def _on_loop_start_changed(self):
+        self._update_loop_length()
         self.notify_loop_start()
-        self.notify_loop_length()
 
     @listens('loop_end')
     def _on_loop_end_changed(self):
+        self._update_loop_length()
         self.notify_loop_end()
-        self.notify_loop_length()
 
     @listens('position')
     def _on_position_changed(self):
@@ -106,7 +107,18 @@ class LoopSettingsModel(Subject, SlotManager):
 
     @property
     def loop_length(self):
-        return self.loop_end - self.loop_start
+        return self._loop_length
+
+    def _get_loop_length(self):
+        if liveobj_valid(self._clip):
+            return self.loop_end - self.loop_start
+        return 0
+
+    def _update_loop_length(self):
+        loop_length = self._get_loop_length()
+        if self._loop_length != loop_length:
+            self._loop_length = loop_length
+            self.notify_loop_length()
 
     @property
     def can_loop(self):
@@ -160,6 +172,22 @@ class LoopSettingsControllerComponent(Component):
          self._on_clip_end_value,
          nop,
          self._on_clip_looping_value]
+        self._touched_encoder_callbacks_looped = [self._on_clip_position_touched,
+         self._on_clip_end_touched,
+         self._on_clip_start_marker_touched,
+         self._on_clip_looping_touched]
+        self._touched_encoder_callbacks_unlooped = [self._on_clip_start_marker_touched,
+         self._on_clip_end_touched,
+         nop,
+         self._on_clip_looping_touched]
+        self._released_encoder_callbacks_looped = [self._on_clip_position_released,
+         self._on_clip_end_released,
+         self._on_clip_start_marker_released,
+         self._on_clip_looping_released]
+        self._released_encoder_callbacks_unlooped = [self._on_clip_start_marker_released,
+         self._on_clip_end_released,
+         nop,
+         self._on_clip_looping_released]
         self._loop_model = self.register_disconnectable(LoopSettingsModel(self.song))
         self._update_encoder_state()
 
@@ -182,6 +210,16 @@ class LoopSettingsControllerComponent(Component):
         callback_set = self._encoder_callbacks_looped if self._loop_model.looping else self._encoder_callbacks_unlooped
         callback_set[encoder.index](value)
 
+    @encoders.touched
+    def encoders(self, encoder):
+        callback_set = self._touched_encoder_callbacks_looped if self._loop_model.looping else self._touched_encoder_callbacks_unlooped
+        callback_set[encoder.index]()
+
+    @encoders.released
+    def encoders(self, encoder):
+        callback_set = self._released_encoder_callbacks_looped if self._loop_model.looping else self._released_encoder_callbacks_unlooped
+        callback_set[encoder.index]()
+
     def _update_encoder_state(self):
         enable_encoders = liveobj_valid(self.clip)
         for encoder in self.encoders:
@@ -201,6 +239,30 @@ class LoopSettingsControllerComponent(Component):
             currently_looping = self._loop_model.looping
             if value >= 0 and not currently_looping or value < 0 and currently_looping:
                 self._loop_model.looping = not currently_looping
+
+    def _on_clip_start_marker_touched(self):
+        pass
+
+    def _on_clip_end_touched(self):
+        pass
+
+    def _on_clip_position_touched(self):
+        pass
+
+    def _on_clip_looping_touched(self):
+        pass
+
+    def _on_clip_start_marker_released(self):
+        pass
+
+    def _on_clip_end_released(self):
+        pass
+
+    def _on_clip_position_released(self):
+        pass
+
+    def _on_clip_looping_released(self):
+        pass
 
 
 class LoopSettingsComponent(LoopSettingsControllerComponent):

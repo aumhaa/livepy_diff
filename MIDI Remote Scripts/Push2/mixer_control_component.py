@@ -7,7 +7,7 @@ from math import ceil
 from ableton.v2.base import clamp, depends, listens, liveobj_valid, NamedTuple
 from ableton.v2.control_surface.control import control_list, ButtonControl
 from ableton.v2.control_surface.mode import ModesComponent
-from .mapped_control import MappedControl
+from pushbase.mapped_control import MappedControl
 from .real_time_channel import RealTimeDataComponent
 from .item_lister_component import SimpleItemSlot
 MIXER_SECTIONS = ('Volumes', 'Pans')

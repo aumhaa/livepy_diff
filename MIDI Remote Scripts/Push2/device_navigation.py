@@ -6,10 +6,11 @@ from functools import partial
 from multipledispatch import dispatch
 import Live
 from ableton.v2.base import find_if, first, index_if, listenable_property, listens, listens_group, liveobj_changed, liveobj_valid, SlotGroup, SlotManager, Subject, task
-from ableton.v2.control_surface.control import control_list, forward_control, StepEncoderControl
+from ableton.v2.control_surface.components import device_to_appoint
+from ableton.v2.control_surface.control import control_list, StepEncoderControl
 from ableton.v2.control_surface.mode import Component, ModesComponent
+from pushbase.decoration import DecoratorFactory
 from pushbase.device_chain_utils import is_first_device_on_pad
-from .decoration import DecoratorFactory
 from .item_lister_component import ItemListerComponent, ItemProvider
 
 def find_drum_pad(items):
@@ -29,6 +30,14 @@ def is_active_element(drum_pad):
 @dispatch(object)
 def is_active_element(device):
     return device.is_active
+
+
+def set_enabled(device, is_on):
+    device.parameters[0].value = int(is_on)
+
+
+def is_on(device):
+    return bool(device.parameters[0].value)
 
 
 def nested_device_parent(device):
@@ -236,15 +245,15 @@ class MoveDeviceComponent(Component):
 
 
 class DeviceNavigationComponent(ItemListerComponent):
-    __events__ = ('drum_pad_selection',)
-    select_buttons = forward_control(ItemListerComponent.select_buttons)
+    __events__ = ('drum_pad_selection', 'device_toggled')
 
-    def __init__(self, device_bank_registry = None, device_component = None, delete_handler = None, chain_selection = None, bank_selection = None, move_device = None, track_selection = None, *a, **k):
+    def __init__(self, device_bank_registry = None, banking_info = None, device_component = None, delete_handler = None, chain_selection = None, bank_selection = None, move_device = None, track_list_component = None, *a, **k):
         raise device_bank_registry is not None or AssertionError
         raise device_component is not None or AssertionError
         raise chain_selection is not None or AssertionError
         raise bank_selection is not None or AssertionError
         raise move_device is not None or AssertionError
+        raise track_list_component is not None or AssertionError
         self._flattened_chain = FlattenedDeviceChain()
         super(DeviceNavigationComponent, self).__init__(item_provider=self._flattened_chain, *a, **k)
         self._track_decorator = DecoratorFactory()
@@ -259,7 +268,7 @@ class DeviceNavigationComponent(ItemListerComponent):
         self._last_pressed_button_index = -1
         self._selected_on_previous_press = None
         self._modes = self.register_component(ModesComponent())
-        self._modes.add_mode('default', [track_selection, partial(self._chain_selection.set_parent, None), partial(self._bank_selection.set_device, None)])
+        self._modes.add_mode('default', [partial(self._chain_selection.set_parent, None), partial(self._bank_selection.set_device, None)])
         self._modes.add_mode('chain_selection', [self._chain_selection])
         self._modes.add_mode('bank_selection', [self._bank_selection])
         self._modes.selected_mode = 'default'
@@ -268,6 +277,7 @@ class DeviceNavigationComponent(ItemListerComponent):
         self.__on_bank_selection_closed.subject = self._bank_selection
         self._on_selected_track_changed()
         self._on_selected_track_changed.subject = self.song.view
+        self._track_list = track_list_component
         watcher = self.register_disconnectable(DeviceChainEnabledStateWatcher(device_navigation=self))
         self.__on_enabled_state_changed.subject = watcher
         self._update_button_colors()
@@ -276,34 +286,49 @@ class DeviceNavigationComponent(ItemListerComponent):
     def modes(self):
         return self._modes
 
-    @select_buttons.pressed
-    def select_buttons(self, button):
-        self._last_pressed_button_index = button.index
+    def _in_device_enabling_mode(self):
+        return self._track_list.selected_mode == 'mute'
+
+    def _on_select_button_pressed(self, button):
         device_or_pad = self.items[button.index].item
-        if not self._delete_handler or not self._delete_handler.is_deleting:
-            self._selected_on_previous_press = device_or_pad if self.selected_object != device_or_pad else None
-            self._select_item(device_or_pad)
+        if self._in_device_enabling_mode():
+            self._toggle_device(device_or_pad)
+            self.notify_device_toggled()
+        else:
+            self._last_pressed_button_index = button.index
+            if not self._delete_handler or not self._delete_handler.is_deleting:
+                self._selected_on_previous_press = device_or_pad if self.selected_object != device_or_pad else None
+                self._select_item(device_or_pad)
 
-    @select_buttons.released_immediately
-    def select_buttons(self, button):
-        self._last_pressed_button_index = -1
-        device_or_pad = self.items[button.index].item
-        if self._delete_handler and self._delete_handler.is_deleting:
-            self._delete_item(device_or_pad)
-        elif self.selected_object == device_or_pad and device_or_pad != self._selected_on_previous_press:
-            self._on_reselecting_object(device_or_pad)
-        self._selected_on_previous_press = None
+    def _on_select_button_released_immediately(self, button):
+        if not self._in_device_enabling_mode():
+            self._last_pressed_button_index = -1
+            device_or_pad = self.items[button.index].item
+            if self._delete_handler and self._delete_handler.is_deleting:
+                self._delete_item(device_or_pad)
+            elif self.selected_object == device_or_pad and device_or_pad != self._selected_on_previous_press:
+                self._on_reselecting_object(device_or_pad)
+            self._selected_on_previous_press = None
 
-    @select_buttons.pressed_delayed
-    def select_buttons(self, button):
-        self._on_pressed_delayed(self.items[button.index].item)
+    def _on_select_button_pressed_delayed(self, button):
+        if not self._in_device_enabling_mode():
+            self._on_pressed_delayed(self.items[button.index].item)
 
-    @select_buttons.released
-    def select_buttons(self, button):
+    def _on_select_button_released(self, button):
         if button.index == self._last_pressed_button_index:
             self._modes.selected_mode = 'default'
             self._last_pressed_button_index = -1
             self._end_move_device()
+
+    @dispatch(Live.DrumPad.DrumPad)
+    def _toggle_device(self, drum_pad):
+        if liveobj_valid(drum_pad):
+            drum_pad.mute = not drum_pad.mute
+
+    @dispatch(object)
+    def _toggle_device(self, device):
+        if liveobj_valid(device) and device.parameters[0].is_enabled:
+            set_enabled(device, not is_on(device))
 
     @listens('enabled_state')
     def __on_enabled_state_changed(self):
@@ -327,12 +352,13 @@ class DeviceNavigationComponent(ItemListerComponent):
     def device_selection_update_allowed(self):
         return not self._should_select_drum_pad()
 
-    def _update_button_colors(self):
-        for button in self.select_buttons:
-            item = self.items[button.index]
-            device_or_pad = item.item
-            is_active = liveobj_valid(device_or_pad) and is_active_element(device_or_pad)
-            button.unchecked_color = 'ItemNavigation.ItemNotSelected' if is_active else 'DefaultButton.Off'
+    def _color_for_button(self, button_index, is_selected):
+        item = self.items[button_index]
+        device_or_pad = item.item
+        is_active = liveobj_valid(device_or_pad) and is_active_element(device_or_pad)
+        if not is_active:
+            return 'DefaultButton.Off'
+        return super(DeviceNavigationComponent, self)._color_for_button(button_index, is_selected)
 
     def _begin_move_device(self, device):
         if not self._move_device.is_enabled() and device.type != Live.Device.DeviceType.instrument:
@@ -435,9 +461,10 @@ class DeviceNavigationComponent(ItemListerComponent):
     @dispatch(object)
     def _do_select_item(self, device):
         self._current_track().drum_pad_selected = False
-        self.song.view.select_device(device)
-        if device.can_be_appointed:
-            self._appoint_device(device)
+        appointed_device = device_to_appoint(device)
+        self._appoint_device(appointed_device)
+        self.song.view.select_device(device, False)
+        self.song.appointed_device = appointed_device
 
     @dispatch(Live.DrumPad.DrumPad)
     def _on_reselecting_object(self, drum_pad):

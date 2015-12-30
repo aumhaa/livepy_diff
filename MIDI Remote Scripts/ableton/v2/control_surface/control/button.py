@@ -33,7 +33,7 @@ class ButtonControlBase(InputControl):
         disabled_color = control_color('DefaultButton.Disabled')
         pressed_color = control_color(None)
 
-        def __init__(self, pressed_color = None, disabled_color = None, repeat = False, enabled = True, double_click_context = None, *a, **k):
+        def __init__(self, pressed_color = None, disabled_color = None, repeat = False, enabled = True, double_click_context = None, delay_time = None, *a, **k):
             super(ButtonControlBase.State, self).__init__(*a, **k)
             if disabled_color is not None:
                 self.disabled_color = disabled_color
@@ -42,6 +42,7 @@ class ButtonControlBase(InputControl):
             self._is_pressed = False
             self._enabled = enabled
             self._double_click_context = double_click_context or DoubleClickContext()
+            self._delay_time = delay_time if delay_time is not None else ButtonControlBase.DELAY_TIME
 
         @property
         def enabled(self):
@@ -148,12 +149,12 @@ class ButtonControlBase(InputControl):
 
         @lazy_attribute
         def _delay_task(self):
-            return self.tasks.add(task.sequence(task.wait(ButtonControlBase.DELAY_TIME), task.run(self._on_pressed_delayed)))
+            return self.tasks.add(task.sequence(task.wait(self._delay_time), task.run(self._on_pressed_delayed)))
 
         @lazy_attribute
         def _repeat_task(self):
             notify_pressed = partial(self._call_listener, 'pressed')
-            return self.tasks.add(task.sequence(task.wait(ButtonControlBase.DELAY_TIME), task.loop(task.wait(ButtonControlBase.REPEAT_RATE), task.run(notify_pressed))))
+            return self.tasks.add(task.sequence(task.wait(self._delay_time), task.loop(task.wait(ButtonControlBase.REPEAT_RATE), task.run(notify_pressed))))
 
         def _kill_all_tasks(self):
             if self._repeat:

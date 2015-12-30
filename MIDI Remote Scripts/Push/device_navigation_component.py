@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function
 from functools import partial
 from contextlib import contextmanager
 import Live.DrumPad
-from ableton.v2.base import const, depends, disconnectable, find_if, inject, in_range, listens, liveobj_valid, NamedTuple
+from ableton.v2.base import const, depends, disconnectable, inject, in_range, listens, liveobj_valid, NamedTuple
 from ableton.v2.control_surface import CompoundComponent
 from pushbase import consts
 from pushbase.device_chain_utils import is_first_device_on_pad
@@ -17,9 +17,9 @@ class DeviceNavigationComponent(CompoundComponent):
     track and navigates in its hierarchy.
     """
 
-    def __init__(self, device_bank_registry = None, info_layer = None, delete_handler = None, session_ring = None, *a, **k):
+    def __init__(self, device_bank_registry = None, banking_info = None, info_layer = None, delete_handler = None, session_ring = None, *a, **k):
         super(DeviceNavigationComponent, self).__init__(*a, **k)
-        self._make_navigation_node = partial(make_navigation_node, session_ring=session_ring, device_bank_registry=device_bank_registry)
+        self._make_navigation_node = partial(make_navigation_node, session_ring=session_ring, device_bank_registry=device_bank_registry, banking_info=banking_info)
         self._delete_handler = delete_handler
         self._device_list = self.register_component(ScrollableListWithTogglesComponent())
         self._on_selection_clicked_in_controller.subject = self._device_list

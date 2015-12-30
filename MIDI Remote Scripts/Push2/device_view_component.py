@@ -13,6 +13,7 @@ class DeviceViewConnector(Component):
         self._parameter_provider = parameter_provider
         self._view = view
         self._parameters = None
+        self._parameter_names = []
         self._device_type_provider = device_type_provider
 
     def update(self):
@@ -20,9 +21,10 @@ class DeviceViewConnector(Component):
         if self.is_enabled():
             self._view.deviceType = self._device_type_provider()
         parameters = self._value_for_state(map(lambda p: p and p.parameter, self._parameter_provider.parameters), [])
-        if parameters != self._parameters:
+        if self._parameters_changed(parameters):
             self._view.parameters = parameters
             self._parameters = parameters
+            self._parameter_names = self._extract_names(parameters)
 
     def on_enabled_changed(self):
         self._view.visible = self.is_enabled()
@@ -32,6 +34,12 @@ class DeviceViewConnector(Component):
     @listens('parameters')
     def _on_parameters_changed(self):
         self.update()
+
+    def _extract_names(self, parameters):
+        return [ (p.name if p else None) for p in parameters ]
+
+    def _parameters_changed(self, new_parameters):
+        return new_parameters != self._parameters or self._extract_names(new_parameters) != self._parameter_names
 
     def _value_for_state(self, enabled_value, disabled_value):
         if self.is_enabled():
@@ -75,8 +83,8 @@ class DeviceViewComponent(ModesComponent):
 
         self.add_mode('default', DeviceViewConnector(parameter_provider=device_component, device_type_provider=self._device_type, view=view_model.deviceParameterView, is_enabled=False))
         self.add_mode('OriginalSimpler', SimplerDeviceViewConnector(parameter_provider=device_component, device_component=device_component, device_type_provider=self._device_type, view=view_model.simplerDeviceView, is_enabled=False))
-        self.selected_mode = 'default'
         self._on_parameters_changed.subject = device_component
+        self._on_parameters_changed()
 
     def _device_type(self):
         device = self._get_device()

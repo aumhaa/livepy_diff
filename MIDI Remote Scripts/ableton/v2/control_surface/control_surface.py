@@ -13,7 +13,9 @@ import Live
 from ..base import BooleanContext, const, find_if, first, in_range, inject, lazy_attribute, liveobj_valid, SlotManager, task
 from . import defaults
 from . import midi
+from .components.device import DeviceProvider
 from .control_element import OptimizedOwnershipHandler
+from .device_bank_registry import DeviceBankRegistry
 from .elements import PhysicalDisplayElement
 from .input_control_element import InputControlElement, MIDI_CC_TYPE, MIDI_NOTE_TYPE, MIDI_PB_TYPE, MIDI_SYSEX_TYPE
 from .profile import profile
@@ -35,16 +37,19 @@ def get_control_surfaces():
         return getattr(__builtins__, CS_LIST_KEY)
 
 
-class ControlSurface(SlotManager):
+class SimpleControlSurface(SlotManager):
     """
     Central base class for scripts based on the new Framework. New
     scripts need to subclass this class and add special behavior.
+    
+    This class does not support device control/locking etc. Use ControlSurface if
+    you need device support.
     """
     preferences_key = None
 
     def __init__(self, c_instance = None, publish_self = True, *a, **k):
         """ Define and Initialize standard behavior """
-        super(ControlSurface, self).__init__(*a, **k)
+        super(SimpleControlSurface, self).__init__(*a, **k)
         if not c_instance:
             raise AssertionError
             self.canonical_parent = None
@@ -56,7 +61,6 @@ class ControlSurface(SlotManager):
         self._components = []
         self._displays = []
         self.controls = []
-        self._device_component = None
         self._forwarding_long_identifier_registry = {}
         self._forwarding_registry = {}
         self._is_sending_scheduled_messages = BooleanContext()
@@ -110,13 +114,12 @@ class ControlSurface(SlotManager):
         self._forwarding_registry = None
         self.controls = None
         self._displays = None
-        self._device_component = None
         self._pad_translations = None
         cs_list = self._control_surfaces()
         if self in cs_list:
             cs_list.remove(self)
         self._task_group.clear()
-        super(ControlSurface, self).disconnect()
+        super(SimpleControlSurface, self).disconnect()
 
     def _control_surfaces(self):
         """ Returns list of registered control surfaces """
@@ -126,42 +129,7 @@ class ControlSurface(SlotManager):
         """
         Live -> Script
         """
-        return self._device_component is not None
-
-    def lock_to_device(self, device):
-        """
-        Live -> Script
-        Live tells the script which device to control
-        """
-        raise self._device_component is not None or AssertionError
-        with self.component_guard():
-            self._device_component.set_lock_to_device(True, device)
-
-    def unlock_from_device(self, device):
-        """
-        Live -> Script
-        Live tells the script to unlock from a certain device
-        """
-        raise self._device_component is not None or AssertionError
-        with self.component_guard():
-            self._device_component.set_lock_to_device(False, device)
-
-    def restore_bank(self, bank_index):
-        """
-        Live -> Script
-        Live tells the script which bank to use.
-        """
-        raise self._device_component is not None or AssertionError
-        with self.component_guard():
-            self._device_component.restore_bank(bank_index)
-
-    def set_appointed_device(self, device):
-        """
-        Live -> Script
-        Live tells the script to unlock from a certain device
-        """
-        with self.component_guard():
-            self._device_component.set_device(device)
+        return False
 
     def suggest_input_port(self):
         """ Live -> Script: Live can ask for the name of the script's
@@ -246,12 +214,6 @@ class ControlSurface(SlotManager):
 
             if self._pad_translations is not None:
                 self._c_instance.set_pad_translation(self._pad_translations)
-
-    def toggle_lock(self):
-        """ Script -> Live
-            Use this function to toggle the script's lock on devices
-        """
-        self._c_instance.toggle_lock()
 
     def port_settings_changed(self):
         """ Live -> Script
@@ -370,16 +332,6 @@ class ControlSurface(SlotManager):
     def get_registry_entry_for_sysex_midi_message(self, midi_bytes):
         return find_if(lambda (identifier, _): midi_bytes[:len(identifier)] == identifier, self._forwarding_long_identifier_registry.iteritems())
 
-    def set_device_component(self, device_component):
-        if self._device_component is not None:
-            self._device_component.set_lock_callback(None)
-        self._device_component = device_component
-        self._c_instance.update_locks()
-        if device_component is not None:
-            device_component.set_lock_callback(self._toggle_lock)
-            if self._device_component.device_selection_follows_track_selection:
-                self.schedule_message(1, self._device_component.update_device_selection)
-
     @contextmanager
     def suppressing_rebuild_requests(self):
         """
@@ -489,7 +441,6 @@ class ControlSurface(SlotManager):
                 component.disconnect()
 
         self._components = []
-        self.set_device_component(None)
 
     @contextmanager
     def component_guard(self):
@@ -648,10 +599,6 @@ class ControlSurface(SlotManager):
         else:
             raise False or AssertionError
 
-    def _toggle_lock(self):
-        raise self._device_component is not None or AssertionError
-        self._c_instance.toggle_lock()
-
     def _refresh_displays(self):
         """
         Make sure the displays of the control surface display current
@@ -689,3 +636,82 @@ class ControlSurface(SlotManager):
             preferences = self._c_instance.preferences(self.preferences_key)
             dump = dumps(self.preferences)
             preferences.set_serializer(lambda : dump)
+
+
+class ControlSurface(SimpleControlSurface):
+    """
+    Central base class for scripts based on the new Framework. New
+    scripts need to subclass this class and add special behavior.
+    
+    This class supports device control, i.e. it supports locking to a device, and
+    appoints devices when the selected track/device changes etc. The appointing behavior
+    can be customized by overriding device_provider_class.
+    """
+    device_provider_class = DeviceProvider
+
+    def __init__(self, *a, **k):
+        super(ControlSurface, self).__init__(*a, **k)
+        self._device_provider = None
+        self._device_bank_registry = None
+        if self.device_provider_class:
+            self._init_device_provider()
+        self._device_support_injector = inject(device_provider=const(self.device_provider), device_bank_registry=const(self._device_bank_registry)).everywhere()
+
+    def _init_device_provider(self):
+        self._device_provider = self.register_disconnectable(self.device_provider_class(song=self.song))
+        self._device_bank_registry = self.register_disconnectable(DeviceBankRegistry())
+        self._c_instance.update_locks()
+        self._device_provider.update_device_selection()
+
+    @property
+    def device_provider(self):
+        return self._device_provider
+
+    def disconnect(self):
+        self._device_provider = None
+        self._device_bank_registry = None
+        super(ControlSurface, self).disconnect()
+
+    def can_lock_to_devices(self):
+        return True
+
+    def lock_to_device(self, device):
+        """
+        Live -> Script
+        Live tells the script which device to control
+        """
+        raise self._device_provider is not None or AssertionError
+        with self.component_guard():
+            self._device_provider.locked_device = device
+
+    def unlock_from_device(self, device):
+        """
+        Live -> Script
+        Live tells the script to unlock from a certain device
+        """
+        raise self._device_provider is not None or AssertionError
+        with self.component_guard():
+            self._device_provider.locked_device = None
+
+    def restore_bank(self, bank_index):
+        """
+        Live -> Script
+        Live tells the script which bank to use.
+        """
+        if not self._device_provider is not None:
+            raise AssertionError
+            device = self._device_provider.device
+            with self._device_provider.is_locked_to_device and liveobj_valid(device) and self.component_guard():
+                self._device_bank_registry.set_device_bank(device, bank_index)
+
+    def toggle_lock(self):
+        """ Script -> Live
+            Use this function to toggle the script's lock on devices
+        """
+        self._c_instance.toggle_lock()
+
+    @contextmanager
+    def _component_guard(self):
+        with super(ControlSurface, self)._component_guard():
+            with self._device_support_injector:
+                yield

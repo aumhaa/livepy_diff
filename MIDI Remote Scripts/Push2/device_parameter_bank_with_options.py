@@ -1,8 +1,8 @@
 
 from __future__ import absolute_import, print_function
 from ableton.v2.base import listenable_property, liveobj_valid, find_if
+from pushbase.device_parameter_bank import create_device_bank, DescribedDeviceParameterBank
 from .custom_bank_definitions import OPTIONS_KEY, SHOW_WAVEFORM_KEY
-from .device_parameter_bank import create_device_bank, DescribedDeviceParameterBank
 OPTIONS_PER_BANK = 7
 
 class DescribedDeviceParameterBankWithOptions(DescribedDeviceParameterBank):

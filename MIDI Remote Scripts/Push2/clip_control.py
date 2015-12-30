@@ -2,12 +2,12 @@
 from __future__ import absolute_import, print_function
 from ableton.v2.base import listens, liveobj_valid, listenable_property
 from ableton.v2.control_surface import CompoundComponent
-from ableton.v2.control_surface.control import ToggleButtonControl
+from ableton.v2.control_surface.control import EncoderControl, ToggleButtonControl
 from pushbase.clip_control_component import convert_length_to_bars_beats_sixteenths, convert_time_to_bars_beats_sixteenths, LoopSettingsControllerComponent as LoopSettingsControllerComponentBase, AudioClipSettingsControllerComponent as AudioClipSettingsControllerComponentBase, ONE_YEAR_AT_120BPM_IN_BEATS, WARP_MODE_NAMES
+from pushbase.internal_parameter import WrappingParameter
+from pushbase.mapped_control import MappedControl
 from .clip_decoration import ClipDecoratorFactory
 from .decoration import find_decorated_object
-from .internal_parameter import WrappingParameter
-from .mapped_control import MappedControl
 from .real_time_channel import RealTimeDataComponent
 from .simpler_zoom import ZoomHandling
 PARAMETERS_LOOPED = ('Loop position', 'Loop length', 'Start offset')
@@ -53,6 +53,7 @@ class ClipZoomHandling(ZoomHandling):
 class LoopSettingsControllerComponent(LoopSettingsControllerComponentBase):
     __events__ = ('looping', 'loop_parameters', 'zoom')
     zoom_encoder = MappedControl()
+    zoom_touch_encoder = EncoderControl()
     loop_button = ToggleButtonControl(toggled_color='Clip.Option', untoggled_color='Clip.OptionDisabled')
 
     def __init__(self, zoom_handler = None, *a, **k):
@@ -66,6 +67,11 @@ class LoopSettingsControllerComponent(LoopSettingsControllerComponentBase):
         self._processed_zoom_requests = 0
         self.__on_looping_changed.subject = self._loop_model
         self.__on_looping_changed()
+        self.__on_loop_position_value_changed.subject = self._looping_settings[0]
+        self.__on_loop_length_value_changed.subject = self._looping_settings[1]
+        self.__on_start_offset_value_changed.subject = self._looping_settings[2]
+        self.__on_start_value_changed.subject = self._non_looping_settings[0]
+        self.__on_end_value_changed.subject = self._non_looping_settings[1]
 
     @loop_button.toggled
     def loop_button(self, toggled, button):
@@ -95,6 +101,11 @@ class LoopSettingsControllerComponent(LoopSettingsControllerComponentBase):
     def processed_zoom_requests(self):
         return self._processed_zoom_requests
 
+    @listenable_property
+    def waveform_navigation(self):
+        if liveobj_valid(self.clip):
+            return getattr(self.clip, 'waveform_navigation', None)
+
     @listens('is_recording')
     def __on_is_recording_changed(self):
         recording = False
@@ -113,11 +124,73 @@ class LoopSettingsControllerComponent(LoopSettingsControllerComponentBase):
             self.loop_button.is_toggled = self._loop_model.looping
 
     def _on_clip_changed(self):
+        if self.waveform_navigation is not None:
+            self.waveform_navigation.reset_focus_and_animation()
         self._update_and_notify()
         self.__on_is_recording_changed.subject = self._loop_model.clip
         self.__on_is_recording_changed()
         self._zoom_handler.set_parameter_host(self._loop_model.clip)
         self._connect_encoder()
+        self.notify_waveform_navigation()
+
+    @listens('value')
+    def __on_loop_position_value_changed(self):
+        if self.waveform_navigation is not None and self._loop_model.looping:
+            self.waveform_navigation.change_object(self.waveform_navigation.loop_start_focus)
+
+    @listens('value')
+    def __on_loop_length_value_changed(self):
+        if self.waveform_navigation is not None and self._loop_model.looping:
+            self.waveform_navigation.change_object(self.waveform_navigation.loop_end_focus)
+
+    @listens('value')
+    def __on_start_offset_value_changed(self):
+        if self.waveform_navigation is not None and self._loop_model.looping:
+            self.waveform_navigation.change_object(self.waveform_navigation.start_marker_focus)
+
+    @listens('value')
+    def __on_start_value_changed(self):
+        if self.waveform_navigation is not None and not self._loop_model.looping:
+            self.waveform_navigation.change_object(self.waveform_navigation.start_marker_focus)
+
+    @listens('value')
+    def __on_end_value_changed(self):
+        if self.waveform_navigation is not None and not self._loop_model.looping:
+            self.waveform_navigation.change_object(self.waveform_navigation.loop_end_focus)
+
+    def _on_clip_start_marker_touched(self):
+        if self.waveform_navigation is not None:
+            self.waveform_navigation.touch_object(self.waveform_navigation.start_marker_focus)
+
+    def _on_clip_position_touched(self):
+        if self.waveform_navigation is not None:
+            self.waveform_navigation.touch_object(self.waveform_navigation.loop_start_focus)
+
+    def _on_clip_end_touched(self):
+        if self.waveform_navigation is not None:
+            self.waveform_navigation.touch_object(self.waveform_navigation.loop_end_focus)
+
+    def _on_clip_start_marker_released(self):
+        if self.waveform_navigation is not None:
+            self.waveform_navigation.release_object(self.waveform_navigation.start_marker_focus)
+
+    def _on_clip_position_released(self):
+        if self.waveform_navigation is not None:
+            self.waveform_navigation.release_object(self.waveform_navigation.loop_start_focus)
+
+    def _on_clip_end_released(self):
+        if self.waveform_navigation is not None:
+            self.waveform_navigation.release_object(self.waveform_navigation.loop_end_focus)
+
+    @zoom_touch_encoder.touched
+    def zoom_touch_encoder(self, encoder):
+        if self.waveform_navigation is not None:
+            self.waveform_navigation.touch_object(self.waveform_navigation.zoom_focus)
+
+    @zoom_touch_encoder.released
+    def zoom_touch_encoder(self, encoder):
+        if self.waveform_navigation is not None:
+            self.waveform_navigation.release_object(self.waveform_navigation.zoom_focus)
 
     def _update_and_notify(self):
         self._update_loop_button()
@@ -130,6 +203,7 @@ class LoopSettingsControllerComponent(LoopSettingsControllerComponentBase):
 
     def set_zoom_encoder(self, encoder):
         self.zoom_encoder.set_control_element(encoder)
+        self.zoom_touch_encoder.set_control_element(encoder)
         self._connect_encoder()
 
     def request_zoom(self, zoom_factor):

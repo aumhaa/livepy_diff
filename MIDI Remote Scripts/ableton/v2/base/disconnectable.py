@@ -23,6 +23,12 @@ class CompoundDisconnectable(Disconnectable):
         super(CompoundDisconnectable, self).__init__(*a, **k)
         self._registered_disconnectables = []
 
+    def register_disconnectables(self, disconnectables):
+        for disconnectable in disconnectables:
+            self.register_disconnectable(disconnectable)
+
+        return disconnectables
+
     def register_disconnectable(self, slot):
         if slot not in self._registered_disconnectables:
             self._registered_disconnectables.append(slot)

@@ -383,7 +383,7 @@ class MultiSlot(SlotManager, Slot, CallableSlotMixin):
         self._nested_slot = None
         super(MultiSlot, self).__init__(event=event[0], listener=self._event_fired, subject=subject, function=function, extra_kws=extra_kws, extra_args=extra_args)
         if len(event) > 1:
-            self._nested_slot = self.register_disconnectable(MultiSlot(event=event[1:], listener=listener, subject=subject, function=function, extra_kws=extra_kws, extra_args=extra_args))
+            self._nested_slot = self.register_disconnectable(MultiSlot(event=event[1:], listener=listener, function=function, extra_kws=extra_kws, extra_args=extra_args))
             self._update_nested_subject()
 
     @property

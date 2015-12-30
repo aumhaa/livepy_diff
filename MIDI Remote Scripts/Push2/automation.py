@@ -3,8 +3,8 @@ from __future__ import absolute_import, print_function
 from itertools import ifilter
 from ableton.v2.base import liveobj_valid, listenable_property
 from pushbase.automation_component import AutomationComponent as AutomationComponentBase
+from pushbase.internal_parameter import InternalParameterBase
 from pushbase.parameter_provider import ParameterInfo
-from .internal_parameter import InternalParameterBase
 
 class StepAutomationParameter(InternalParameterBase):
 

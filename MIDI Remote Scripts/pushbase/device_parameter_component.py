@@ -4,8 +4,10 @@ from itertools import chain, repeat, izip_longest
 import Live
 from ableton.v2.base import listens_group, listens
 from ableton.v2.control_surface import Component
+from ableton.v2.control_surface.control import ControlList
 from ableton.v2.control_surface.elements import DisplayDataSource
 from . import consts
+from .mapped_control import MappedControl
 from .parameter_provider import ParameterProvider
 AutomationState = Live.DeviceParameter.AutomationState
 
@@ -37,6 +39,7 @@ def update_encoder_sensitivity(encoder, parameter_info):
 
 
 class DeviceParameterComponentBase(Component):
+    controls = ControlList(MappedControl, 8)
 
     def __init__(self, parameter_provider = None, *a, **k):
         super(DeviceParameterComponentBase, self).__init__(*a, **k)
@@ -54,9 +57,16 @@ class DeviceParameterComponentBase(Component):
     parameter_provider = property(_get_parameter_provider, _set_parameter_provider)
 
     def set_parameter_controls(self, encoders):
-        self._release_parameters()
-        self._parameter_controls = encoders or []
+        self.controls.set_control_element(encoders)
         self._connect_parameters()
+
+    def _connect_parameters(self):
+        parameters = self._parameter_provider.parameters[:self.controls.control_count]
+        for control, parameter_info in map(None, self.controls, parameters):
+            parameter = parameter_info.parameter if parameter_info else None
+            control.mapped_parameter = parameter
+            if parameter:
+                control.update_sensitivities(parameter_info.default_encoder_sensitivity, parameter_info.fine_grain_encoder_sensitivity)
 
     @property
     def parameters(self):
@@ -69,16 +79,6 @@ class DeviceParameterComponentBase(Component):
     def _update_parameters(self):
         if self.is_enabled():
             self._connect_parameters()
-
-    def _release_parameters(self):
-        for encoder in self._parameter_controls or []:
-            encoder.release_parameter()
-
-    def _connect_parameters(self):
-        for info, encoder in zip(self._parameter_provider.parameters, self._parameter_controls):
-            if encoder:
-                encoder.connect_to(info.parameter)
-                update_encoder_sensitivity(encoder, info)
 
     @listens('parameters')
     def _on_parameters_changed(self):

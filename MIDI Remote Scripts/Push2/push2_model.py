@@ -30,6 +30,8 @@ class Sender(object):
     def send(self, root_model, send_all = False):
 
         def send_data(data):
+            if data['command'] == 'full-model-update':
+                data['fingerprint'] = root_model.__fingerprint__
             raw = json.dumps(data)
             self._message_sink(raw)
             if logger.isEnabledFor(logging.DEBUG):

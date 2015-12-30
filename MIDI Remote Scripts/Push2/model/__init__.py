@@ -123,11 +123,6 @@ class DeviceParameter(Binding):
     isActive = view_property(bool, True)
 
 
-class MixerButtonState(Binding):
-    id = id_property()
-    is_pressed = view_property(bool, False)
-
-
 class Encoder(Binding):
     id = id_property()
     touched = view_property(bool, False)
@@ -140,6 +135,35 @@ class Controls(ViewModel):
 class Slice(Binding):
     id = id_property()
     time = view_property(int, -1)
+
+
+class Sample(Binding):
+    start_marker = view_property(int, 0)
+    end_marker = view_property(int, 0)
+    length = view_property(int, 0)
+
+
+class SimplerView(Binding):
+    sample_start = view_property(int, 0)
+    sample_end = view_property(int, 0)
+    sample_loop_start = view_property(int, 0)
+    sample_loop_end = view_property(int, 0)
+    sample_loop_fade = view_property(int, 0)
+    sample_env_fade_in = view_property(int, 0)
+    sample_env_fade_out = view_property(int, 0)
+
+
+class WaveformNavigationFocusMarker(Binding):
+    name = view_property(unicode, u'')
+    position = view_property(int, -1)
+
+
+class WaveformNavigation(Binding):
+    animate_visible_region = view_property(bool, False)
+    visible_start = view_property(float, 0.0, depends=animate_visible_region)
+    visible_end = view_property(float, 0.0, depends=animate_visible_region)
+    show_focus = view_property(bool, False)
+    focus_marker = view_property(WaveformNavigationFocusMarker)
 
 
 class SimplerProperties(Binding):
@@ -158,6 +182,9 @@ class SimplerProperties(Binding):
     selected_slice = view_property(Slice)
     playhead_real_time_channel_id = view_property(unicode, '')
     waveform_real_time_channel_id = view_property(unicode, '')
+    sample = view_property(Sample)
+    view = view_property(SimplerView)
+    waveform_navigation = view_property(WaveformNavigation)
 
 
 class DeviceParameterListModel(ViewModel):
@@ -259,6 +286,7 @@ class ScalesModel(Binding):
     root_note_names = view_property(listof(unicode), '')
     selected_root_note_index = view_property(int, -1)
     note_layout = view_property(NoteLayout)
+    horizontal_navigation = view_property(bool, False)
 
 
 class QuantizeSettingsModel(Binding):
@@ -316,6 +344,7 @@ class LoopSettingsModel(Binding):
     loop_parameters = view_property(listof(DeviceParameter))
     zoom = view_property(DeviceParameter)
     processed_zoom_requests = view_property(int, 0)
+    waveform_navigation = view_property(WaveformNavigation)
 
 
 class AudioClipSettingsModel(Binding):
@@ -326,11 +355,21 @@ class AudioClipSettingsModel(Binding):
     playhead_real_time_channel_id = view_property(unicode, '')
 
 
+class ClipViewModel(Binding):
+    sample_length = view_property(int, -1)
+    sample_start_marker = view_property(int, -1)
+    sample_end_marker = view_property(int, -1)
+    sample_loop_start = view_property(int, -1)
+    sample_loop_end = view_property(int, -1)
+
+
 class ClipModel(Binding):
     ADAPTER = ClipAdapter
     id = id_property()
     name = view_property(unicode, '')
     color_index = view_property(int, -1)
+    is_recording = view_property(bool, False)
+    view = view_property(ClipViewModel)
 
 
 class ClipControlModel(Binding):
@@ -396,12 +435,17 @@ class ProfilingSettingsModel(Binding):
     show_realtime_ipc_stats = view_property(bool, False)
 
 
+class ExperimentalSettingsModel(Binding):
+    new_waveform_navigation = view_property(bool, False)
+
+
 class SettingsModel(Binding):
     general = view_property(GeneralSettingsModel)
     pad_settings = view_property(PadSettingsModel)
     hardware = view_property(HardwareSettingsModel)
     display_debug = view_property(DisplayDebugSettingsModel)
     profiling = view_property(ProfilingSettingsModel)
+    experimental = view_property(ExperimentalSettingsModel)
 
 
 class VelocityCurveModel(Binding):
@@ -457,7 +501,6 @@ class RootModel(ViewModel):
     realTimeClient = view_property(RealTimeClient)
     modeState = view_property(ModeState)
     controls = view_property(Controls)
-    mixerButtonState = view_property(MixerButtonState)
     liveDialogView = view_property(LiveDialogViewModel)
     mixerSelectView = view_property(MixerSelectionListModel)
     trackMixerSelectView = view_property(TrackMixerSelectionListModel)

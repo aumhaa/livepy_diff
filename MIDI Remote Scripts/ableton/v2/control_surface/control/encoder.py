@@ -30,12 +30,15 @@ class EncoderControl(InputControl):
                 self._release_encoder()
                 self._kill_all_tasks()
             super(EncoderControl.State, self).set_control_element(control_element)
-            self._touch_value_slot.subject = control_element.touch_element if control_element is not None else None
+            self._touch_value_slot.subject = self._get_touch_element(control_element) if control_element is not None else None
             if control_element and hasattr(control_element, 'is_pressed') and control_element.is_pressed():
                 self._touch_encoder()
 
+        def _get_touch_element(self, control_element):
+            return getattr(control_element, 'touch_element', None)
+
         def _lost_touch_element(self, control_element):
-            return control_element is not None and control_element.touch_element is None
+            return control_element is not None and self._get_touch_element(control_element) is None
 
         def _touch_encoder(self):
             is_touched = self._is_touched

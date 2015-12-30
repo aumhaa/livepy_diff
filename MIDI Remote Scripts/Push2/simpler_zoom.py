@@ -2,10 +2,7 @@
 from __future__ import absolute_import, print_function
 from contextlib import contextmanager
 from ableton.v2.base import clamp, linear, SlotManager, Subject, listens, liveobj_valid, liveobj_changed
-
-def is_simpler(device):
-    return device and device.class_name == 'OriginalSimpler'
-
+from pushbase.device_chain_utils import is_simpler
 
 def get_zoom_parameter(parameter_host):
     parameters = parameter_host.parameters if liveobj_valid(parameter_host) else []

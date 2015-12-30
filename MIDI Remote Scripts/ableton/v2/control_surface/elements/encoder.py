@@ -13,7 +13,8 @@ def _not_implemented(value):
 
 
 ENCODER_VALUE_NORMALIZER = {_map_modes.relative_smooth_two_compliment: lambda v: (v if v <= 64 else v - 128),
- _map_modes.relative_smooth_signed_bit: lambda v: (v if v <= 64 else 64 - v)}
+ _map_modes.relative_smooth_signed_bit: lambda v: (v if v <= 64 else 64 - v),
+ _map_modes.relative_smooth_binary_offset: lambda v: v - 64}
 
 def accumulate_relative_two_compliment_chunk(chunk):
     right = 0

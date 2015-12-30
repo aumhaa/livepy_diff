@@ -29,3 +29,7 @@ def find_instrument_meeting_requirement(requirement, track_or_chain):
         if instrument.can_have_chains:
             recursive_call = partial(find_instrument_meeting_requirement, requirement)
             return find_if(bool, imap(recursive_call, instrument.chains))
+
+
+def is_simpler(device):
+    return device and device.class_name == 'OriginalSimpler'

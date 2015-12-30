@@ -2,9 +2,9 @@
 from __future__ import absolute_import, print_function
 from ableton.v2.base import NamedTuple, listenable_property, listens, listens_group, liveobj_valid, SlotManager, nop
 from ableton.v2.control_surface import Component
-from ableton.v2.control_surface.control import control_list, forward_control, ButtonControl
+from ableton.v2.control_surface.control import control_list, ButtonControl
+from pushbase.banking_util import MAIN_KEY
 from .item_lister_component import ItemListerComponent, ItemProvider
-from .bank_definitions import MAIN_KEY
 
 class BankProvider(ItemProvider, SlotManager):
 
@@ -140,7 +140,6 @@ class EditModeOptionsComponent(Component):
 
 class BankSelectionComponent(ItemListerComponent):
     __events__ = ('back',)
-    select_buttons = forward_control(ItemListerComponent.select_buttons)
 
     def __init__(self, bank_registry = None, banking_info = None, device_options_provider = None, *a, **k):
         self._bank_provider = BankProvider(bank_registry=bank_registry, banking_info=banking_info)
@@ -148,8 +147,7 @@ class BankSelectionComponent(ItemListerComponent):
         self._options = self.register_component(EditModeOptionsComponent(back_callback=self.notify_back, device_options_provider=device_options_provider))
         self.register_disconnectable(self._bank_provider)
 
-    @select_buttons.checked
-    def select_buttons(self, button):
+    def _on_select_button_pressed(self, button):
         self._bank_provider.select_item(self.items[button.index].item)
 
     def set_option_buttons(self, buttons):

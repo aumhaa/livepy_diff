@@ -7,12 +7,13 @@ import logging
 import weakref
 import Live
 import MidiRemoteScript
-from ableton.v2.base import const, inject, listens, listens_group, Subject, NamedTuple
+from ableton.v2.base import const, inject, listens, listens_group, task, Subject, NamedTuple
 from ableton.v2.control_surface import BackgroundLayer, Component, IdentifiableControlSurface, Layer, get_element
 from ableton.v2.control_surface.control import ButtonControl
 from ableton.v2.control_surface.elements import ButtonMatrixElement, ComboElement, SysexElement
 from ableton.v2.control_surface.mode import EnablingModesComponent, ModesComponent, LayerMode, LazyComponentMode, ReenterBehaviour, SetAttributeMode
 from pushbase.actions import select_clip_and_get_name_from_slot, select_scene_and_get_name
+from pushbase.device_parameter_component import DeviceParameterComponentBase as DeviceParameterComponent
 from pushbase.quantization_component import QUANTIZATION_NAMES_UNICODE, QuantizationComponent, QuantizationSettingsComponent
 from pushbase.selection import PushSelection
 from pushbase.percussion_instrument_finder_component import find_drum_group_device
@@ -27,9 +28,8 @@ from .browser_component import BrowserComponent, NewTrackBrowserComponent
 from .browser_modes import AddDeviceMode, AddTrackMode, BrowseMode, BrowserComponentMode, BrowserModeBehaviour
 from .device_decoration import DeviceDecoratorFactory
 from .skin_default import make_default_skin
-from .mixer_component import MixerComponent
-from .device_component import DeviceComponent
-from .device_parameter_component import DeviceParameterComponent
+from .mute_solo_stop import MuteSoloStopClipComponent
+from .device_component import Push2DeviceProvider, DeviceComponent
 from .device_view_component import DeviceViewComponent
 from .device_navigation import is_empty_rack, DeviceNavigationComponent, MoveDeviceComponent
 from .drum_group_component import DrumGroupComponent
@@ -52,14 +52,12 @@ from .session_component import SessionComponent
 from .session_recording import SessionRecordingComponent
 from .session_ring_selection_linking import SessionRingSelectionLinking
 from .settings import create_settings
-from .stop_clip_component import StopClipComponent
 from .track_mixer_control_component import TrackMixerControlComponent
 from .mode_collector import ModeCollector
 from .setup_component import SetupComponent, Settings
-from .device_enabling import DeviceEnablingComponent
-from .track_selection import MixerTrackListComponent, SessionRingTrackProvider, ViewControlComponent
+from .track_list import TrackListComponent
+from .track_selection import SessionRingTrackProvider, ViewControlComponent
 from .user_component import UserButtonBehavior, UserComponent
-from .banking_util import BankingInfo
 from .custom_bank_definitions import BANK_DEFINITIONS
 logger = logging.getLogger(__name__)
 VELOCITY_RANGE_THRESHOLDS = [120, 60, 0]
@@ -105,15 +103,20 @@ class Push2(IdentifiableControlSurface, PushBase):
     drum_group_note_editor_skin = 'DrumGroupNoteEditor'
     input_target_name_for_auto_arm = 'Push2 Input'
     note_editor_velocity_range_thresholds = VELOCITY_RANGE_THRESHOLDS
+    device_component_class = DeviceComponent
+    device_provider_class = Push2DeviceProvider
+    bank_definitions = BANK_DEFINITIONS
     RESEND_MODEL_DATA_TIMEOUT = 5.0
+    DEFUNCT_EXTERNAL_PROCESS_RELAUNCH_TIMEOUT = 2.0
 
-    def __init__(self, c_instance = None, model = None, *a, **k):
-        raise model is not None or AssertionError
-        self._model = model
-        self._real_time_mapper = c_instance.real_time_mapper
-        self._device_decorator_factory = DeviceDecoratorFactory()
-        self._clip_decorator_factory = ClipDecoratorFactory()
-        self._real_time_data_list = []
+    def __init__(self, c_instance = None, model = None, bank_definitions = None, *a, **k):
+        if not model is not None:
+            raise AssertionError
+            self._model = model
+            self._real_time_mapper = c_instance.real_time_mapper
+            self._clip_decorator_factory = ClipDecoratorFactory()
+            self._real_time_data_list = []
+            self.bank_definitions = bank_definitions is not None and bank_definitions
         super(Push2, self).__init__(c_instance=c_instance, product_id_bytes=sysex.IDENTITY_RESPONSE_PRODUCT_ID_BYTES, *a, **k)
         self._board_revision = 0
         self._firmware_version = FirmwareVersion(0, 0, 0)
@@ -122,7 +125,7 @@ class Push2(IdentifiableControlSurface, PushBase):
         self._identified = False
         self._initialized = False
         self.register_disconnectable(model)
-        self.register_disconnectable(self._device_decorator_factory)
+        self.register_disconnectable(self._clip_decorator_factory)
         with self.component_guard():
             self._model.realTimeClient = self._real_time_client
             self._real_time_client.clientId = self._real_time_mapper.client_id
@@ -153,10 +156,12 @@ class Push2(IdentifiableControlSurface, PushBase):
         self._connected = state == StateEnum.connected
         if state == StateEnum.died:
             self._c_instance.launch_external_process()
-        if state == StateEnum.connected:
+        elif state == StateEnum.connected:
             with self.component_guard():
                 self._try_initialize()
             self._model.commit_changes(send_all=True)
+        elif state in (StateEnum.defunct_process_terminated, StateEnum.defunct_process_killed):
+            self._tasks.add(task.sequence(task.wait(self.DEFUNCT_EXTERNAL_PROCESS_RELAUNCH_TIMEOUT), task.run(self._c_instance.launch_external_process)))
 
     def on_user_data_arrived(self, message):
         if self._initialized:
@@ -181,6 +186,9 @@ class Push2(IdentifiableControlSurface, PushBase):
         for d in self._real_time_data_list:
             d.update_attachment()
 
+    def _create_device_decorator_factory(self):
+        return DeviceDecoratorFactory()
+
     def _create_skin(self):
         return self.register_disconnectable(make_default_skin())
 
@@ -195,6 +203,7 @@ class Push2(IdentifiableControlSurface, PushBase):
         self._init_setup_component()
         self._init_firmware_update()
         self._init_convert_enabler()
+        self._init_mute_solo_stop()
 
     @contextmanager
     def _component_guard(self):
@@ -221,9 +230,6 @@ class Push2(IdentifiableControlSurface, PushBase):
     def _init_message_box(self):
         super(Push2, self)._init_message_box()
         self._model.liveDialogView = self._dialog._message_box
-
-    def _create_mixer(self):
-        return MixerComponent(is_root=True, tracks_provider=self._session_ring, solo_layer=Layer(solo_buttons='select_buttons'), mute_layer=Layer(mute_buttons='select_buttons'))
 
     def _create_convert(self):
         convert = ConvertComponent(decorator_factory=self._device_decorator_factory, name='Convert', tracks_provider=self._session_ring, is_enabled=False, layer=make_dialog_layer(action_buttons='select_buttons', cancel_button='track_state_buttons_raw[0]'))
@@ -282,23 +288,11 @@ class Push2(IdentifiableControlSurface, PushBase):
     def _create_capture_and_insert_scene_component(self):
         return CaptureAndInsertSceneComponent(name='Capture_And_Insert_Scene', decorator_factory=self._clip_decorator_factory, is_root=True)
 
-    def _init_stop_clips_action(self):
-        stop_clips_buttons = ButtonMatrixElement(rows=[wrap_button('select_buttons_raw', 'global_track_stop_button')])
-        self._stop_clips = StopClipComponent(session_ring=self._session_ring, name='Stop_Clip', is_root=True)
-        self._stop_clips.layer = Layer(stop_all_clips_button=self._with_shift('global_track_stop_button'), stop_selected_track_clip_button='global_track_stop_button', stop_track_clips_buttons=stop_clips_buttons)
-
-    def _init_mixer(self):
-        self._mixer = self._create_mixer()
-        self._mixer.add_mode('stop', self._stop_clips)
-        self._mixer.stop_button.mode_unselected_color = 'DefaultButton.On'
-        self._mixer.layer = Layer(solo_track_button='global_solo_button', mute_track_button='global_mute_button', stop_button='global_track_stop_button')
-        self._mixer_solo_layer = self._create_mixer_solo_layer()
-        self._mixer_mute_layer = self._create_mixer_mute_layer()
-        self._mixer.master_strip().name = 'Master_Channel_strip'
+    def _init_mute_solo_stop(self):
+        self._mute_solo_stop = MuteSoloStopClipComponent(is_root=True, item_provider=self._session_ring, track_list_component=self._track_list_component, device_navigation_component=self._device_navigation, solo_track_button='global_solo_button', mute_track_button='global_mute_button', stop_clips_button='global_track_stop_button')
+        self._mute_solo_stop.layer = Layer(stop_all_clips_button=self._with_shift('global_track_stop_button'))
         self._master_selector = MasterTrackComponent(tracks_provider=self._session_ring, is_enabled=False, layer=Layer(toggle_button='master_select_button'))
         self._master_selector.set_enabled(True)
-        self._model.mixerButtonState = self._mixer.mixer_button_state
-        self._mixer.set_enabled(True)
 
     def _create_instrument_layer(self):
         return super(Push2, self)._create_instrument_layer() + Layer(prev_loop_page_button='page_left_button', next_loop_page_button='page_right_button')
@@ -347,7 +341,6 @@ class Push2(IdentifiableControlSurface, PushBase):
         self._device_or_pad_parameter_chooser.selected_mode = 'device'
         return [partial(self._view_control.show_view, 'Detail/DeviceChain'),
          self._device_or_pad_parameter_chooser,
-         make_freeze_aware(self._device_enabling, self._device_enabling.layer),
          self._setup_freeze_aware_device_navigation(),
          self._device_note_editor_mode,
          SetAttributeMode(obj=self._note_editor_settings_component, attribute='parameter_provider', value=self._device_component)]
@@ -381,7 +374,7 @@ class Push2(IdentifiableControlSurface, PushBase):
         self._main_modes.add_mode('add_track', [AddTrackMode(browser=browser, component_mode=self._new_track_browser_component_mode)], behaviour=BrowserModeBehaviour())
 
     def _create_browser_layer(self):
-        return Layer(up_button='nav_up_button', down_button='nav_down_button', right_button='nav_right_button', left_button='nav_left_button', priority=consts.DIALOG_PRIORITY) + Layer(back_button='track_state_buttons_raw[-2]', open_button='track_state_buttons_raw[-1]', load_button='select_buttons_raw[-1]', scroll_encoders=self.elements.global_param_controls.submatrix[:-1, :], scroll_focused_encoder='parameter_controls_raw[-1]', close_button='track_state_buttons_raw[0]', prehear_button='track_state_buttons_raw[1]')
+        return (BackgroundLayer('select_buttons', 'track_state_buttons', priority=consts.DIALOG_PRIORITY), Layer(up_button='nav_up_button', down_button='nav_down_button', right_button='nav_right_button', left_button='nav_left_button', back_button='track_state_buttons_raw[-2]', open_button='track_state_buttons_raw[-1]', load_button='select_buttons_raw[-1]', scroll_encoders=self.elements.global_param_controls.submatrix[:-1, :], scroll_focused_encoder='parameter_controls_raw[-1]', close_button='track_state_buttons_raw[0]', prehear_button='track_state_buttons_raw[1]', priority=consts.DIALOG_PRIORITY))
 
     def _create_browser(self):
         browser = BrowserComponent(name='Browser', is_enabled=False, preferences=self.preferences, main_modes_ref=weakref.ref(self._main_modes), layer=self._create_browser_layer())
@@ -448,30 +441,27 @@ class Push2(IdentifiableControlSurface, PushBase):
         self._main_modes.browse_button.enabled = self._main_modes.add_track_button.enabled = self._main_modes.add_device_button.enabled = not frozen
         self._close_browse_mode()
 
-    def _create_device_component(self):
-        return DeviceComponent(device_decorator_factory=self._device_decorator_factory, device_bank_registry=self._device_bank_registry, banking_info=BankingInfo(bank_definitions=BANK_DEFINITIONS), name='DeviceComponent', is_enabled=True, is_root=True)
-
     def _create_device_parameter_component(self):
         return DeviceParameterComponent(parameter_provider=self._device_component, is_enabled=False, layer=Layer(parameter_controls='fine_grain_param_controls'))
 
     def _create_device_navigation(self):
-        self._chain_selection = ChainSelectionComponent(is_enabled=False, layer=Layer(select_buttons='select_buttons'))
-        self._chain_selection.scroll_left_layer = Layer(button='select_buttons_raw[0]')
-        self._chain_selection.scroll_right_layer = Layer(button='select_buttons_raw[-1]')
-        self._bank_selection = BankSelectionComponent(bank_registry=self._device_bank_registry, banking_info=BankingInfo(bank_definitions=BANK_DEFINITIONS), device_options_provider=self._device_component, is_enabled=False, layer=Layer(option_buttons='track_state_buttons', select_buttons='select_buttons', priority=consts.DIALOG_PRIORITY))
+        self._chain_selection = ChainSelectionComponent(is_enabled=False, layer=Layer(select_buttons='select_buttons', priority=consts.DIALOG_PRIORITY))
+        self._chain_selection.scroll_left_layer = Layer(button='select_buttons_raw[0]', priority=consts.DIALOG_PRIORITY)
+        self._chain_selection.scroll_right_layer = Layer(button='select_buttons_raw[-1]', priority=consts.DIALOG_PRIORITY)
+        self._bank_selection = BankSelectionComponent(bank_registry=self._device_bank_registry, banking_info=self._banking_info, device_options_provider=self._device_component, is_enabled=False, layer=Layer(option_buttons='track_state_buttons', select_buttons='select_buttons', priority=consts.DIALOG_PRIORITY))
         self._bank_selection.scroll_left_layer = Layer(button='select_buttons_raw[0]', priority=consts.DIALOG_PRIORITY)
         self._bank_selection.scroll_right_layer = Layer(button='select_buttons_raw[-1]', priority=consts.DIALOG_PRIORITY)
         move_device = MoveDeviceComponent(is_enabled=False, layer=Layer(move_encoders='global_param_controls'))
-        device_navigation = DeviceNavigationComponent(name='DeviceNavigation', device_bank_registry=self._device_bank_registry, device_component=self._device_component, delete_handler=self._delete_component, chain_selection=self._chain_selection, bank_selection=self._bank_selection, move_device=move_device, track_selection=self._track_list_component, is_enabled=False, layer=Layer(select_buttons='track_state_buttons'))
+        device_navigation = DeviceNavigationComponent(name='DeviceNavigation', device_bank_registry=self._device_bank_registry, banking_info=self._banking_info, device_component=self._device_component, delete_handler=self._delete_component, chain_selection=self._chain_selection, bank_selection=self._bank_selection, move_device=move_device, track_list_component=self._track_list_component, is_enabled=False, layer=Layer(select_buttons='track_state_buttons'))
         device_navigation.scroll_left_layer = Layer(button='track_state_buttons_raw[0]')
         device_navigation.scroll_right_layer = Layer(button='track_state_buttons_raw[-1]')
-        self._device_enabling = DeviceEnablingComponent(device_navigation=device_navigation, is_enabled=False, layer=Layer(toggle_buttons=ButtonMatrixElement(rows=[wrap_button('track_state_buttons_raw', 'global_mute_button')])))
         self.__on_drum_pad_selection_changed.subject = device_navigation
-        self._device_component.allow_update_callback = lambda : device_navigation.device_selection_update_allowed
+        self.device_provider.allow_update_callback = lambda : device_navigation.device_selection_update_allowed
         return device_navigation
 
     def _init_device(self):
         super(Push2, self)._init_device()
+        self._device_component.layer = Layer(parameter_touch_buttons=ButtonMatrixElement(rows=[self.elements.global_param_touch_buttons_raw]))
         self._device_view = DeviceViewComponent(name='DeviceView', device_component=self._device_component, view_model=self._model, is_enabled=False)
         self._model.devicelistView = self._device_navigation
         self._model.chainListView = self._chain_selection
@@ -494,10 +484,8 @@ class Push2(IdentifiableControlSurface, PushBase):
         self._sessionring_link = self.register_disconnectable(SessionRingSelectionLinking(session_ring=self._session_ring, selection_changed_notifier=self._view_control))
 
     def _init_track_list(self):
-        track_delete_buttons = ButtonMatrixElement(rows=[wrap_button('select_buttons_raw', 'delete_button')])
-        track_duplicate_buttons = ButtonMatrixElement(rows=[wrap_button('select_buttons_raw', 'duplicate_button')])
-        track_arm_buttons = ButtonMatrixElement(rows=[wrap_button('select_buttons_raw', 'record_button')])
-        self._track_list_component = MixerTrackListComponent(tracks_provider=self._session_ring, trigger_recording_on_release_callback=self._session_recording.set_trigger_recording_on_release, is_enabled=False, layer=Layer(select_buttons='select_buttons', delete_buttons=track_delete_buttons, duplicate_buttons=track_duplicate_buttons, arm_buttons=track_arm_buttons))
+        self._track_list_component = TrackListComponent(tracks_provider=self._session_ring, trigger_recording_on_release_callback=self._session_recording.set_trigger_recording_on_release, is_enabled=False, is_root=True, layer=Layer(track_action_buttons='select_buttons', delete_button='delete_button', duplicate_button='duplicate_button', arm_button='record_button'))
+        self._track_list_component.set_enabled(True)
         self._model.tracklistView = self._track_list_component
 
     def _create_main_mixer_modes(self):
@@ -523,7 +511,7 @@ class Push2(IdentifiableControlSurface, PushBase):
                 if not self._is_on_master():
                     self._mix_modes.cycle_mode()
 
-        self._main_modes.add_mode('mix', [self._mix_modes, SetAttributeMode(obj=self._note_editor_settings_component, attribute='parameter_provider', value=self._track_parameter_provider), self._track_list_component], behaviour=MixModeBehaviour())
+        self._main_modes.add_mode('mix', [self._mix_modes, SetAttributeMode(obj=self._note_editor_settings_component, attribute='parameter_provider', value=self._track_parameter_provider)], behaviour=MixModeBehaviour())
 
     def _init_dialog_modes(self):
         self._dialog_modes = ModesComponent(is_root=True)
@@ -544,7 +532,7 @@ class Push2(IdentifiableControlSurface, PushBase):
 
     def _create_scales(self):
         root_note_buttons = ButtonMatrixElement(rows=[self.elements.track_state_buttons_raw[1:-1], self.elements.select_buttons_raw[1:-1]])
-        scales = ScalesComponent(note_layout=self._note_layout, is_enabled=False, layer=make_dialog_layer(root_note_buttons=root_note_buttons, in_key_toggle_button='select_buttons_raw[0]', fixed_toggle_button='select_buttons_raw[-1]', scale_encoders=self.elements.global_param_controls.submatrix[1:-1, :], close_button='track_state_buttons_raw[0]'))
+        scales = ScalesComponent(note_layout=self._note_layout, is_enabled=False, layer=make_dialog_layer(root_note_buttons=root_note_buttons, in_key_toggle_button='select_buttons_raw[0]', fixed_toggle_button='select_buttons_raw[-1]', scale_encoders=self.elements.global_param_controls.submatrix[1:-1, :], close_button='track_state_buttons_raw[0]', up_button='nav_up_button', down_button='nav_down_button', right_button='nav_right_button', left_button='nav_left_button'))
         self.__on_scales_closed.subject = scales
         self._model.scalesView = scales
         return scales
@@ -577,8 +565,7 @@ class Push2(IdentifiableControlSurface, PushBase):
         return [clip_control_mode_selector,
          make_freeze_aware(self._loop_controller, base_loop_layer),
          make_freeze_aware(audio_clip_controller, audio_clip_layer),
-         clip_control,
-         self._track_list_component]
+         clip_control]
 
     def _init_quantize_actions(self):
         self._quantize_settings = QuantizationSettingsComponent(name='Quantization_Settings', quantization_names=QUANTIZATION_NAMES_UNICODE, is_enabled=False, layer=make_dialog_layer(swing_amount_encoder='parameter_controls_raw[0]', quantize_to_encoder='parameter_controls_raw[1]', quantize_amount_encoder='parameter_controls_raw[2]', record_quantization_encoder='parameter_controls_raw[4]', record_quantization_toggle_button='track_state_buttons_raw[4]', priority=consts.MOMENTARY_DIALOG_PRIORITY))
@@ -633,11 +620,14 @@ class Push2(IdentifiableControlSurface, PushBase):
     def _init_setup_component(self):
         self._setup_settings.general.workflow = 'scene' if self._settings['workflow'].value else 'clip'
         self.__on_workflow_setting_changed.subject = self._setup_settings.general
+        self.__on_new_waveform_navigation_setting_changed.subject = self._setup_settings.experimental
+        self.__on_new_waveform_navigation_setting_changed(self._setup_settings.experimental.new_waveform_navigation)
         setup = SetupComponent(name='Setup', settings=self._setup_settings, pad_curve_sender=self._pad_curve_sender, in_developer_mode=self._c_instance.in_developer_mode, is_enabled=False, layer=make_dialog_layer(category_radio_buttons='select_buttons', priority=consts.SETUP_DIALOG_PRIORITY))
         setup.general.layer = Layer(workflow_encoder='parameter_controls_raw[0]', display_brightness_encoder='parameter_controls_raw[1]', led_brightness_encoder='parameter_controls_raw[2]', priority=consts.SETUP_DIALOG_PRIORITY)
         setup.pad_settings.layer = Layer(sensitivity_encoder='parameter_controls_raw[4]', gain_encoder='parameter_controls_raw[5]', dynamics_encoder='parameter_controls_raw[6]', priority=consts.SETUP_DIALOG_PRIORITY)
         setup.display_debug.layer = Layer(show_row_spaces_button='track_state_buttons_raw[0]', show_row_margins_button='track_state_buttons_raw[1]', show_row_middle_button='track_state_buttons_raw[2]', show_button_spaces_button='track_state_buttons_raw[3]', show_unlit_button_button='track_state_buttons_raw[4]', show_lit_button_button='track_state_buttons_raw[5]', priority=consts.SETUP_DIALOG_PRIORITY)
         setup.profiling.layer = Layer(show_qml_stats_button='track_state_buttons_raw[0]', show_usb_stats_button='track_state_buttons_raw[1]', show_realtime_ipc_stats_button='track_state_buttons_raw[2]', priority=consts.SETUP_DIALOG_PRIORITY)
+        setup.experimental.layer = Layer(new_waveform_navigation_button='track_state_buttons_raw[0]', priority=consts.SETUP_DIALOG_PRIORITY)
         self._model.setupView = setup
         self._setup_enabler = EnablingModesComponent(component=setup, enabled_color='DefaultButton.On', disabled_color='DefaultButton.On')
         self._setup_enabler.layer = Layer(cycle_mode_button='setup_button')
@@ -649,6 +639,10 @@ class Push2(IdentifiableControlSurface, PushBase):
     @listens('workflow')
     def __on_workflow_setting_changed(self, value):
         self._settings['workflow'].value = value == 'scene'
+
+    @listens('new_waveform_navigation')
+    def __on_new_waveform_navigation_setting_changed(self, value):
+        self._device_component.use_waveform_navigation = value
 
     def _create_note_mode(self):
 
