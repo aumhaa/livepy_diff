@@ -4,6 +4,7 @@ from ableton.v2.control_surface.elements import SysexElement
 from pushbase.control_element_factory import create_button, create_note_button
 from pushbase.elements import Elements as ElementsBase
 from pushbase.touch_strip_element import TouchStripElement
+from .parameter_mapping_sensitivities import CONTINUOUS_MAPPING_SENSITIVITY, FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY
 from . import sysex
 
 class Elements(ElementsBase):
@@ -11,7 +12,7 @@ class Elements(ElementsBase):
     def __init__(self, model = None, *a, **k):
         raise model is not None or AssertionError
         self._model = model
-        super(Elements, self).__init__(*a, **k)
+        super(Elements, self).__init__(continuous_mapping_sensitivity=CONTINUOUS_MAPPING_SENSITIVITY, fine_grained_continuous_mapping_sensitivity=FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY, *a, **k)
         for button in self.select_buttons_raw:
             button.is_rgb = True
 

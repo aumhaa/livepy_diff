@@ -24,7 +24,7 @@ def convert_parameter_value_to_graphic(param, param_to_value = lambda p: p.value
         param_range = param.max - param.min
         param_bar = graphic_bar_for_parameter(param)
         graph_range = len(param_bar) - 1
-        value = int((param_to_value(param) - param.min) / param_range * graph_range)
+        value = int(float(param_to_value(param) - param.min) / param_range * graph_range)
         graphic_display_string = param_bar[value]
     else:
         graphic_display_string = ' '
@@ -124,10 +124,15 @@ class DeviceParameterComponent(DeviceParameterComponentBase):
         super(DeviceParameterComponent, self)._update_parameters()
         if self.is_enabled():
             parameters = self.parameters
+            self._on_parameter_name_changed.replace_subjects(parameters)
             self._on_parameter_value_changed.replace_subjects(parameters)
             self._on_parameter_automation_state_changed.replace_subjects(parameters)
             self._update_parameter_names()
             self._update_parameter_values()
+
+    @listens_group('name')
+    def _on_parameter_name_changed(self, parameter):
+        self._update_parameter_names()
 
     @listens_group('value')
     def _on_parameter_value_changed(self, parameter):

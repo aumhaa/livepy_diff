@@ -16,12 +16,12 @@ NUM_NOTE_EDITORS = 7
 
 class MelodicComponent(ModesComponent, Messenger):
 
-    def __init__(self, clip_creator = None, parameter_provider = None, grid_resolution = None, note_layout = None, note_editor_settings = None, velocity_range_thresholds = None, skin = None, instrument_play_layer = None, instrument_sequence_layer = None, pitch_mod_touch_strip_mode = None, layer = None, *a, **k):
+    def __init__(self, clip_creator = None, parameter_provider = None, grid_resolution = None, note_layout = None, note_editor_settings = None, note_editor_class = NoteEditorComponent, velocity_range_thresholds = None, skin = None, instrument_play_layer = None, instrument_sequence_layer = None, pitch_mod_touch_strip_mode = None, layer = None, *a, **k):
         super(MelodicComponent, self).__init__(*a, **k)
         self._matrices = None
         self._grid_resolution = grid_resolution
         self._instrument = self.register_component(InstrumentComponent(note_layout=note_layout))
-        self._note_editors = self.register_components(*[ NoteEditorComponent(clip_creator=clip_creator, grid_resolution=self._grid_resolution, velocity_range_thresholds=velocity_range_thresholds, is_enabled=False) for _ in xrange(NUM_NOTE_EDITORS) ])
+        self._note_editors = self.register_components(*[ note_editor_class(clip_creator=clip_creator, grid_resolution=self._grid_resolution, velocity_range_thresholds=velocity_range_thresholds, is_enabled=False) for _ in xrange(NUM_NOTE_EDITORS) ])
         for editor in self._note_editors:
             note_editor_settings.add_editor(editor)
 

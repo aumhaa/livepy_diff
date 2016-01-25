@@ -245,7 +245,7 @@ class MoveDeviceComponent(Component):
 
 
 class DeviceNavigationComponent(ItemListerComponent):
-    __events__ = ('drum_pad_selection', 'device_toggled')
+    __events__ = ('drum_pad_selection', 'mute_solo_stop_cancel_action_performed')
 
     def __init__(self, device_bank_registry = None, banking_info = None, device_component = None, delete_handler = None, chain_selection = None, bank_selection = None, move_device = None, track_list_component = None, *a, **k):
         raise device_bank_registry is not None or AssertionError
@@ -293,7 +293,7 @@ class DeviceNavigationComponent(ItemListerComponent):
         device_or_pad = self.items[button.index].item
         if self._in_device_enabling_mode():
             self._toggle_device(device_or_pad)
-            self.notify_device_toggled()
+            self.notify_mute_solo_stop_cancel_action_performed()
         else:
             self._last_pressed_button_index = button.index
             if not self._delete_handler or not self._delete_handler.is_deleting:
@@ -391,6 +391,9 @@ class DeviceNavigationComponent(ItemListerComponent):
     def unfold_current_drum_pad(self):
         self._current_track().drum_pad_selected = False
         self._current_drum_pad().canonical_parent.view.is_showing_chain_devices = True
+
+    def sync_selection_to_selected_device(self):
+        self._update_item_provider(self.song.view.selected_track.view.selected_device)
 
     @property
     def is_drum_pad_selected(self):

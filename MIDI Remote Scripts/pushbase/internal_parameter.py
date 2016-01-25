@@ -49,7 +49,7 @@ class InternalParameterBase(Subject):
     def value(self):
         raise NotImplementedError
 
-    @property
+    @listenable_property
     def name(self):
         return self._name
 
@@ -168,10 +168,11 @@ class WrappingParameter(InternalParameter, SlotManager):
 
     def _set_value(self, new_value):
         raise self.min <= new_value <= self.max or AssertionError('Invalid value %f' % new_value)
-        try:
-            setattr(self._property_host, self._source_property, self._to_internal(new_value, self._property_host))
-        except RuntimeError:
-            pass
+        if liveobj_valid(self._property_host):
+            try:
+                setattr(self._property_host, self._source_property, self._to_internal(new_value, self._property_host))
+            except RuntimeError:
+                pass
 
     linear_value = property(_get_value, _set_value)
     value = property(_get_value, _set_value)

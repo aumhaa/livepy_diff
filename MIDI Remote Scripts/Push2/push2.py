@@ -44,6 +44,7 @@ from .firmware import FirmwareUpdateComponent, FirmwareVersion
 from .hardware_settings_component import HardwareSettingsComponent
 from .master_track import MasterTrackComponent
 from .mixer_control_component import MixerControlComponent
+from .note_editor import Push2NoteEditorComponent
 from .note_settings import NoteSettingsComponent
 from .notification_component import NotificationComponent
 from .pad_velocity_curve import PadVelocityCurveSender
@@ -54,6 +55,7 @@ from .session_ring_selection_linking import SessionRingSelectionLinking
 from .settings import create_settings
 from .track_mixer_control_component import TrackMixerControlComponent
 from .mode_collector import ModeCollector
+from .real_time_channel import update_real_time_attachments
 from .setup_component import SetupComponent, Settings
 from .track_list import TrackListComponent
 from .track_selection import SessionRingTrackProvider, ViewControlComponent
@@ -106,6 +108,7 @@ class Push2(IdentifiableControlSurface, PushBase):
     device_component_class = DeviceComponent
     device_provider_class = Push2DeviceProvider
     bank_definitions = BANK_DEFINITIONS
+    note_editor_class = Push2NoteEditorComponent
     RESEND_MODEL_DATA_TIMEOUT = 5.0
     DEFUNCT_EXTERNAL_PROCESS_RELAUNCH_TIMEOUT = 2.0
 
@@ -183,8 +186,7 @@ class Push2(IdentifiableControlSurface, PushBase):
         self._real_time_data_list.append(real_time_data)
 
     def _commit_real_time_data_changes(self):
-        for d in self._real_time_data_list:
-            d.update_attachment()
+        update_real_time_attachments(self._real_time_data_list)
 
     def _create_device_decorator_factory(self):
         return DeviceDecoratorFactory()
@@ -289,7 +291,7 @@ class Push2(IdentifiableControlSurface, PushBase):
         return CaptureAndInsertSceneComponent(name='Capture_And_Insert_Scene', decorator_factory=self._clip_decorator_factory, is_root=True)
 
     def _init_mute_solo_stop(self):
-        self._mute_solo_stop = MuteSoloStopClipComponent(is_root=True, item_provider=self._session_ring, track_list_component=self._track_list_component, device_navigation_component=self._device_navigation, solo_track_button='global_solo_button', mute_track_button='global_mute_button', stop_clips_button='global_track_stop_button')
+        self._mute_solo_stop = MuteSoloStopClipComponent(is_root=True, item_provider=self._session_ring, track_list_component=self._track_list_component, cancellation_action_performers=[self._device_navigation, self._drum_component] + self._note_editor_settings_component.editors, solo_track_button='global_solo_button', mute_track_button='global_mute_button', stop_clips_button='global_track_stop_button')
         self._mute_solo_stop.layer = Layer(stop_all_clips_button=self._with_shift('global_track_stop_button'))
         self._master_selector = MasterTrackComponent(tracks_provider=self._session_ring, is_enabled=False, layer=Layer(toggle_button='master_select_button'))
         self._master_selector.set_enabled(True)
@@ -370,7 +372,7 @@ class Push2(IdentifiableControlSurface, PushBase):
         application = Live.Application.get_application()
         browser = application.browser
         self._main_modes.add_mode('browse', [BrowseMode(application=application, song=self.song, browser=browser, component_mode=self._browser_component_mode)], behaviour=BrowserModeBehaviour())
-        self._main_modes.add_mode('add_device', [AddDeviceMode(song=self.song, browser=browser, component_mode=self._browser_component_mode)], behaviour=BrowserModeBehaviour())
+        self._main_modes.add_mode('add_device', [AddDeviceMode(application=application, song=self.song, browser=browser, component_mode=self._browser_component_mode)], behaviour=BrowserModeBehaviour())
         self._main_modes.add_mode('add_track', [AddTrackMode(browser=browser, component_mode=self._new_track_browser_component_mode)], behaviour=BrowserModeBehaviour())
 
     def _create_browser_layer(self):
@@ -399,8 +401,10 @@ class Push2(IdentifiableControlSurface, PushBase):
             drum_rack = find_drum_group_device(self.song.view.selected_track)
             if drum_rack and is_empty_rack(drum_rack):
                 self._device_navigation.request_drum_pad_selection()
-            if drum_rack and self._device_navigation.is_drum_pad_selected and not self._device_navigation.is_drum_pad_unfolded:
-                self._device_navigation.unfold_current_drum_pad()
+            if drum_rack and self._device_navigation.is_drum_pad_selected:
+                if not self._device_navigation.is_drum_pad_unfolded:
+                    self._device_navigation.unfold_current_drum_pad()
+                self._device_navigation.sync_selection_to_selected_device()
 
     @listens_group('close')
     def _on_browser_closed(self, sender):
@@ -484,7 +488,7 @@ class Push2(IdentifiableControlSurface, PushBase):
         self._sessionring_link = self.register_disconnectable(SessionRingSelectionLinking(session_ring=self._session_ring, selection_changed_notifier=self._view_control))
 
     def _init_track_list(self):
-        self._track_list_component = TrackListComponent(tracks_provider=self._session_ring, trigger_recording_on_release_callback=self._session_recording.set_trigger_recording_on_release, is_enabled=False, is_root=True, layer=Layer(track_action_buttons='select_buttons', delete_button='delete_button', duplicate_button='duplicate_button', arm_button='record_button'))
+        self._track_list_component = TrackListComponent(tracks_provider=self._session_ring, trigger_recording_on_release_callback=self._session_recording.set_trigger_recording_on_release, is_enabled=False, is_root=True, layer=Layer(track_action_buttons='select_buttons', lock_override_button='select_button', delete_button='delete_button', duplicate_button='duplicate_button', arm_button='record_button'))
         self._track_list_component.set_enabled(True)
         self._model.tracklistView = self._track_list_component
 

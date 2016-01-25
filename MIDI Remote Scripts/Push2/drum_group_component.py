@@ -44,6 +44,7 @@ class DrumPadCopyHandler(DrumPadCopyHandlerBase):
 
 
 class DrumGroupComponent(DrumGroupComponentBase):
+    __events__ = ('mute_solo_stop_cancel_action_performed',)
 
     def __init__(self, tracks_provider = None, device_decorator_factory = None, *a, **k):
         raise tracks_provider is not None or AssertionError
@@ -56,6 +57,10 @@ class DrumGroupComponent(DrumGroupComponentBase):
     def select_drum_pad(self, drum_pad):
         if len(drum_pad.chains) > 0 and self.song.view.selected_track.is_showing_chains:
             self._tracks_provider.scroll_into_view(drum_pad.chains[0])
+
+    def _on_matrix_pressed(self, pad):
+        super(DrumGroupComponent, self)._on_matrix_pressed(pad)
+        self.notify_mute_solo_stop_cancel_action_performed()
 
     def _on_selected_drum_pad_changed(self):
         super(DrumGroupComponent, self)._on_selected_drum_pad_changed()

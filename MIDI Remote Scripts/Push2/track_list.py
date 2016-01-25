@@ -89,7 +89,7 @@ class TrackListComponent(ModesComponent, Messenger):
     Notifies whenever a track action is executed, e.g. deleting or duplicating. But
     selection does *not* count as an action.
     """
-    __events__ = ('track_action_performed',)
+    __events__ = ('mute_solo_stop_cancel_action_performed',)
     track_action_buttons = control_list(ButtonControl, control_count=8)
 
     def __init__(self, tracks_provider = None, trigger_recording_on_release_callback = nop, *a, **k):
@@ -99,6 +99,7 @@ class TrackListComponent(ModesComponent, Messenger):
         self._button_handler = self._select_mixable
         self._button_feedback_provider = mixable_button_color
         self._setup_action_mode('select', handler=self._select_mixable)
+        self._setup_action_mode('lock_override', handler=self._select_mixable)
         self._setup_action_mode('delete', handler=self._delete_mixable)
         self._setup_action_mode('duplicate', handler=self._duplicate_mixable)
         self._setup_action_mode('arm', handler=self._arm_track)
@@ -213,7 +214,7 @@ class TrackListComponent(ModesComponent, Messenger):
     def track_action_buttons(self, button):
         self._button_handler(self.tracks[button.index])
         if self.selected_mode != 'select':
-            self.notify_track_action_performed()
+            self.notify_mute_solo_stop_cancel_action_performed()
 
     def _select_mixable(self, track):
         if track:

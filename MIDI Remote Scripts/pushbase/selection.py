@@ -80,7 +80,7 @@ class PushSelection(Selection):
         if isinstance(lom_object, Live.Chain.Chain):
             lom_object.canonical_parent.view.selected_chain = lom_object
         else:
-            self._application.get_document().view.select_device(lom_object)
+            self._application.get_document().view.select_device(lom_object, False)
 
     selected_object = property(_get_selected_object, _set_selected_object)
 

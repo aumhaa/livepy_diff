@@ -127,7 +127,7 @@ class MuteSoloStopClipComponent(CompoundComponent, Messenger):
      'stop': 'Stop Clips: %s'}
     stop_all_clips_button = ButtonControl()
 
-    def __init__(self, item_provider = None, solo_track_button = None, mute_track_button = None, stop_clips_button = None, track_list_component = None, device_navigation_component = None, *a, **k):
+    def __init__(self, item_provider = None, solo_track_button = None, mute_track_button = None, stop_clips_button = None, track_list_component = None, cancellation_action_performers = [], *a, **k):
         super(MuteSoloStopClipComponent, self).__init__(*a, **k)
         self._currently_locked_button_handler = None
         self._track_list = track_list_component
@@ -137,8 +137,7 @@ class MuteSoloStopClipComponent(CompoundComponent, Messenger):
         self._mute_button_handler.layer = Layer(action_button=mute_track_button)
         self._stop_button_handler = self.register_component(GlobalMixerActionComponent(track_list_component=track_list_component, mode='stop', immediate_action=partial(stop_clip_in_selected_track, self.song), mode_locked_color='StopClips.LockedStopMode'))
         self._stop_button_handler.layer = Layer(action_button=stop_clips_button)
-        self.__on_track_action_performed.subject = track_list_component
-        self.__on_device_toggled.subject = device_navigation_component
+        self.__on_mute_solo_stop_cancel_action_performed.replace_subjects([track_list_component] + cancellation_action_performers)
         button_handlers = (self._mute_button_handler, self._solo_button_handler, self._stop_button_handler)
         self.__on_mode_locked_changed.replace_subjects(button_handlers, button_handlers)
         self.__on_selected_item_changed.subject = item_provider
@@ -147,12 +146,8 @@ class MuteSoloStopClipComponent(CompoundComponent, Messenger):
     def stop_all_clips_button(self, button):
         self.song.stop_all_clips()
 
-    @listens('track_action_performed')
-    def __on_track_action_performed(self):
-        self.cancel_release_actions()
-
-    @listens('device_toggled')
-    def __on_device_toggled(self):
+    @listens_group('mute_solo_stop_cancel_action_performed')
+    def __on_mute_solo_stop_cancel_action_performed(self, _):
         self.cancel_release_actions()
 
     @listens_group('mode_locked')

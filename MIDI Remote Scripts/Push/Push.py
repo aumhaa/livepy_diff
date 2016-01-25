@@ -14,6 +14,7 @@ from pushbase.colors import CLIP_COLOR_TABLE, RGB_COLOR_TABLE
 from pushbase.browser_modes import BrowserHotswapMode
 from pushbase.control_element_factory import create_sysex_element
 from pushbase.device_component import DeviceComponent
+from pushbase.note_editor_component import NoteEditorComponent
 from pushbase.note_settings_component import NoteSettingsComponent
 from pushbase.playhead_element import NullPlayhead
 from pushbase.push_base import PushBase
@@ -59,6 +60,7 @@ class Push(PushBase):
     input_target_name_for_auto_arm = 'Push Input'
     device_component_class = DeviceComponent
     bank_definitions = BANK_DEFINITIONS
+    note_editor_class = NoteEditorComponent
 
     def __init__(self, *a, **k):
         super(Push, self).__init__(*a, **k)

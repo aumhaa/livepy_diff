@@ -95,14 +95,9 @@ class DeviceComponent(ParameterProvider, CompoundComponent):
         self.notify_device()
         self._update_parameters()
         self.__on_parameters_changed_in_device.subject = device
-        self.__on_macro_mappings_changed.subject = device if liveobj_valid(device) and device.can_have_chains else None
 
     @listens('parameters')
     def _on_bank_parameters_changed(self):
-        self._update_parameters()
-
-    @listens('has_macro_mappings')
-    def __on_macro_mappings_changed(self):
         self._update_parameters()
 
     def _current_bank_details(self):

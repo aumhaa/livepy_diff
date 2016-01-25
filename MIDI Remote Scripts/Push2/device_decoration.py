@@ -197,6 +197,10 @@ class _SimplerDeviceDecorator(SimplerDeviceDecoratorBase):
     def waveform_navigation(self):
         return self.zoom.waveform_navigation
 
+    @property
+    def available_resolutions(self):
+        return (u'1 Bar', u'\xbd', u'\xbc', u'\u215b', u'\ue001', u'\ue002', u'Transients')
+
     @listens('parameters')
     def __on_parameters_changed(self):
         self.lfo_sync_option.set_parameter(get_parameter_by_name(self, 'L Sync'))

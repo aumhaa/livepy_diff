@@ -110,7 +110,7 @@ class SimplerDeviceDecorator(Subject, SlotManager, LiveObjectDecorator):
 
     @property
     def available_resolutions(self):
-        return (u'1 Bar', u'\xbd', u'\xbc', u'\u215b', u'\ue001', u'\ue002', u'Transients')
+        return (u'1 Bar', u'1/2', u'1/4', u'1/8', u'1/16', u'1/32', u'Transients')
 
     @property
     def available_transient_loop_modes(self):

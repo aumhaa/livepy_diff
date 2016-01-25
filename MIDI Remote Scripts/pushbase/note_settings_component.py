@@ -315,6 +315,10 @@ class NoteEditorSettingsComponent(ModesComponent):
     def step_settings(self):
         return self._settings_modes
 
+    @property
+    def editors(self):
+        return self._editors
+
     def add_editor(self, editor):
         raise editor != None or AssertionError
         self._editors.append(editor)

@@ -28,14 +28,18 @@ def fine_grain_parameter_mapping_sensitivity(parameter):
 
 class ParameterInfo(NamedTuple):
     parameter = None
-    name = None
-    default_encoder_sensitivity = consts.CONTINUOUS_MAPPING_SENSITIVITY
-    fine_grain_encoder_sensitivity = consts.FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY
+    default_encoder_sensitivity = (None,)
+    fine_grain_encoder_sensitivity = (None,)
+
+    def __init__(self, name = None, *a, **k):
+        super(ParameterInfo, self).__init__(_overriden_name=name, *a, **k)
+
+    @property
+    def name(self):
+        return self._overriden_name or getattr(self.parameter, 'name', '')
 
 
 def generate_info(parameter, name = None, default_sens_factory = parameter_mapping_sensitivity, fine_sens_factory = fine_grain_parameter_mapping_sensitivity):
-    if name is None:
-        name = parameter.name if parameter else ''
     return ParameterInfo(name=name, parameter=parameter, default_encoder_sensitivity=default_sens_factory(parameter), fine_grain_encoder_sensitivity=fine_sens_factory(parameter))
 
 

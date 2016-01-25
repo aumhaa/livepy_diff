@@ -6,7 +6,7 @@ from _Framework.Disconnectable import Disconnectable
 from _Framework.Debug import debug_print
 from MxDUtils import TupleWrapper, StringHandler
 from LomUtils import LomInformation, LomIntrospection, LomPathCalculator, LomPathResolver
-from LomTypes import ENUM_TYPES, EXPOSED_TYPE_PROPERTIES, CONTROL_SURFACES, PROPERTY_TYPES, ROOT_KEYS, get_root_prop, is_lom_object, is_cplusplus_lom_object, is_object_iterable, LomNoteOperationWarning, LomNoteOperationError, LomAttributeError, LomObjectError, verify_object_property
+from LomTypes import ENUM_TYPES, EXPOSED_TYPE_PROPERTIES, CONTROL_SURFACES, PROPERTY_TYPES, ROOT_KEYS, get_root_prop, is_lom_object, is_cplusplus_lom_object, is_object_iterable, LomNoteOperationWarning, LomNoteOperationError, LomAttributeError, LomObjectError, verify_object_property, is_property_hidden
 
 def get_current_max_device(device_id):
     raise MxDCore.instance != None and MxDCore.instance.manager != None or AssertionError
@@ -28,6 +28,7 @@ NOTE_SET_KEY = 'NOTE_SET'
 CONTAINS_CS_ID_KEY = 'CONTAINS_CS_ID_KEY'
 LAST_SENT_ID_KEY = 'LAST_SENT_ID'
 PRIVATE_PROP_WARNING = 'Warning: Calling private property. This property might change or be removed in the future.'
+HIDDEN_PROP_WARNING = 'Warning: Calling hidden property. This property might change or be removed in the future.'
 
 def concatenate_strings(string_list, string_format = '%s %s'):
     return unicode(reduce(lambda s1, s2: string_format % (s1, s2), string_list) if len(string_list) > 0 else '')
@@ -405,6 +406,9 @@ class MxDCore(object):
     def _warn_if_using_private_property(self, device_id, object_id, property_name):
         if property_name.startswith('_'):
             self._warn(device_id, object_id, PRIVATE_PROP_WARNING)
+        lom_object = self._get_current_lom_object(device_id, object_id)
+        if is_property_hidden(lom_object, property_name):
+            self._warn(device_id, object_id, HIDDEN_PROP_WARNING)
 
     def obj_set(self, device_id, object_id, parameters):
         if not isinstance(parameters, (str, unicode)):
@@ -764,6 +768,7 @@ class MxDCore(object):
             raise AssertionError
             current_object = self._get_current_lom_object(device_id, object_id)
             property_name = self._get_current_property(device_id, object_id)
+            self._warn_if_using_private_property(device_id, object_id, property_name)
             property_name == u'id' and self._observer_id_callback(device_id, object_id)
         else:
             object_context = current_object != None and property_name != '' and self.device_contexts[device_id][object_id]

@@ -340,6 +340,9 @@ class NoteEditorComponent(CompoundComponent, Subject):
 
     @listens('value')
     def _on_matrix_value(self, value, x, y, is_momentary):
+        self._on_pad_pressed(value, x, y, is_momentary)
+
+    def _on_pad_pressed(self, value, x, y, is_momentary):
         if self.is_enabled():
             if self._sequencer_clip == None and value or not is_momentary:
                 clip = create_clip_in_selected_slot(self._clip_creator, self.song)

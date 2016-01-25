@@ -22,7 +22,7 @@ from .loop_selector_component import LoopSelectorComponent
 from .matrix_maps import FEEDBACK_CHANNELS
 from .melodic_component import MelodicComponent
 from .message_box_component import DialogComponent, InfoComponent
-from .note_editor_component import DEFAULT_VELOCITY_RANGE_THRESHOLDS, NoteEditorComponent
+from .note_editor_component import DEFAULT_VELOCITY_RANGE_THRESHOLDS
 from .note_repeat_component import NoteRepeatComponent
 from .note_settings_component import NoteEditorSettingsComponent
 from .selected_track_parameter_provider import SelectedTrackParameterProvider
@@ -54,6 +54,7 @@ class PushBase(ControlSurface):
     note_editor_velocity_range_thresholds = DEFAULT_VELOCITY_RANGE_THRESHOLDS
     device_component_class = None
     bank_definitions = None
+    note_editor_class = None
 
     def __init__(self, *a, **k):
         super(PushBase, self).__init__(*a, **k)
@@ -502,7 +503,7 @@ class PushBase(ControlSurface):
     def _init_instrument(self):
         self._note_layout = NoteLayout(song=self.song, preferences=self.preferences)
         instrument_basic_layer = Layer(octave_strip=self._with_shift('touch_strip_control'), octave_up_button='octave_up_button', octave_down_button='octave_down_button', scale_up_button=self._with_shift('octave_up_button'), scale_down_button=self._with_shift('octave_down_button'))
-        self._instrument = MelodicComponent(skin=self._skin, is_enabled=False, clip_creator=self._clip_creator, name='Melodic_Component', grid_resolution=self._grid_resolution, note_layout=self._note_layout, note_editor_settings=self._note_editor_settings_component, velocity_range_thresholds=self.note_editor_velocity_range_thresholds, layer=self._create_instrument_layer(), instrument_play_layer=instrument_basic_layer + Layer(matrix='matrix', aftertouch_control='aftertouch_control', delete_button='delete_button'), instrument_sequence_layer=instrument_basic_layer + Layer(note_strip='touch_strip_control'), pitch_mod_touch_strip_mode=LayerMode(self._pitch_mod_touch_strip, self._pitch_mod_touch_strip_layer))
+        self._instrument = MelodicComponent(skin=self._skin, is_enabled=False, clip_creator=self._clip_creator, name='Melodic_Component', grid_resolution=self._grid_resolution, note_layout=self._note_layout, note_editor_settings=self._note_editor_settings_component, note_editor_class=self.note_editor_class, velocity_range_thresholds=self.note_editor_velocity_range_thresholds, layer=self._create_instrument_layer(), instrument_play_layer=instrument_basic_layer + Layer(matrix='matrix', aftertouch_control='aftertouch_control', delete_button='delete_button'), instrument_sequence_layer=instrument_basic_layer + Layer(note_strip='touch_strip_control'), pitch_mod_touch_strip_mode=LayerMode(self._pitch_mod_touch_strip, self._pitch_mod_touch_strip_layer))
         self.__on_note_editor_layout_changed.subject = self._instrument
 
     def _create_scales_enabler(self):
@@ -515,7 +516,7 @@ class PushBase(ControlSurface):
         return Layer(playhead='playhead_element', button_matrix=self.elements.matrix.submatrix[:8, :4], loop_selector_matrix=self.elements.double_press_matrix.submatrix[4:8, 4:8], short_loop_selector_matrix=self.elements.double_press_event_matrix.submatrix[4:8, 4:8], quantization_buttons='side_buttons', solo_button='global_solo_button', select_button='select_button', delete_button='delete_button', shift_button='shift_button', mute_button='global_mute_button')
 
     def _init_step_sequencer(self):
-        drum_note_editor = NoteEditorComponent(clip_creator=self._clip_creator, grid_resolution=self._grid_resolution, skin_base_key=self.drum_group_note_editor_skin, velocity_range_thresholds=self.note_editor_velocity_range_thresholds)
+        drum_note_editor = self.note_editor_class(clip_creator=self._clip_creator, grid_resolution=self._grid_resolution, skin_base_key=self.drum_group_note_editor_skin, velocity_range_thresholds=self.note_editor_velocity_range_thresholds)
         self._note_editor_settings_component.add_editor(drum_note_editor)
         self._drum_step_sequencer = StepSeqComponent(self._clip_creator, self._skin, name='Drum_Step_Sequencer', grid_resolution=self._grid_resolution, note_editor_component=drum_note_editor, instrument_component=self._drum_component)
         self._drum_step_sequencer.set_enabled(False)
@@ -523,7 +524,7 @@ class PushBase(ControlSurface):
         self._audio_loop = LoopSelectorComponent(follow_detail_clip=True, measure_length=1.0, name='Loop_Selector')
         self._audio_loop.set_enabled(False)
         self._audio_loop.layer = Layer(loop_selector_matrix='matrix')
-        slice_note_editor = NoteEditorComponent(clip_creator=self._clip_creator, grid_resolution=self._grid_resolution, skin_base_key=self.drum_group_note_editor_skin, velocity_range_thresholds=self.note_editor_velocity_range_thresholds)
+        slice_note_editor = self.note_editor_class(clip_creator=self._clip_creator, grid_resolution=self._grid_resolution, skin_base_key=self.drum_group_note_editor_skin, velocity_range_thresholds=self.note_editor_velocity_range_thresholds)
         self._note_editor_settings_component.add_editor(slice_note_editor)
         self._slice_step_sequencer = StepSeqComponent(self._clip_creator, self._skin, name='Slice_Step_Sequencer', grid_resolution=self._grid_resolution, note_editor_component=slice_note_editor, instrument_component=self._slicing_component, is_enabled=False)
         self._slice_step_sequencer.layer = Layer(playhead='playhead_element', button_matrix=self.elements.matrix.submatrix[:8, :4], loop_selector_matrix=self.elements.double_press_matrix.submatrix[4:8, 4:8], short_loop_selector_matrix=self.elements.double_press_event_matrix.submatrix[4:8, 4:8], quantization_buttons='side_buttons', select_button='select_button')

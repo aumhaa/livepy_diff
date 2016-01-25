@@ -322,6 +322,7 @@ class AudioClipSettingsControllerComponent(AudioClipSettingsControllerComponentB
     def _on_clip_changed(self):
         self._playhead_real_time_data.set_data(self.clip)
         self._waveform_real_time_data.set_data(self.clip)
+        self.__on_file_path_changed.subject = self.clip
         self.notify_audio_parameters()
         self.notify_warping()
         self.notify_gain()
@@ -339,6 +340,10 @@ class AudioClipSettingsControllerComponent(AudioClipSettingsControllerComponentB
     @listens('gain')
     def __on_gain_changed(self):
         self.notify_gain()
+
+    @listens('file_path')
+    def __on_file_path_changed(self):
+        self._waveform_real_time_data.invalidate()
 
 
 class ClipControlComponent(CompoundComponent):

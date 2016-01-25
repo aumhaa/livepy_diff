@@ -42,7 +42,7 @@ EXPOSED_TYPE_PROPERTIES = {Live.Application.Application: ('view', 'current_dialo
                                    'is_showing_chain_devices',
                                    'selected_drum_pad',
                                    'drum_pads_scroll_position']),
- Live.Sample.Sample: ('canonical_parent', 'beats_granulation_resolution', 'beats_transient_envelope', 'beats_transient_loop_mode', 'complex_pro_envelope', 'complex_pro_formants', 'end_marker', 'file_path', 'gain', 'length', 'slices', 'slicing_sensitivity', 'start_marker', 'texture_flux', 'texture_grain_size', 'tones_grain_size', 'warp_mode', 'warping', 'gain_display_string', 'insert_slice', 'move_slice', 'remove_slice'),
+ Live.Sample.Sample: ('canonical_parent', 'beats_granulation_resolution', 'beats_transient_envelope', 'beats_transient_loop_mode', 'complex_pro_envelope', 'complex_pro_formants', 'end_marker', 'file_path', 'gain', 'length', 'slicing_sensitivity', 'start_marker', 'texture_flux', 'texture_grain_size', 'tones_grain_size', 'warp_mode', 'warping', 'gain_display_string', 'insert_slice', 'move_slice', 'remove_slice'),
  Live.Scene.Scene: ('canonical_parent', 'clip_slots', 'color', 'color_index', 'is_empty', 'is_triggered', 'name', 'tempo', 'fire', 'fire_as_selected', 'set_fire_button_state'),
  Live.SimplerDevice.SimplerDevice: tuple(_DEVICE_BASE_PROPS + ['sample',
                                     'can_warp_as',
@@ -68,6 +68,7 @@ EXPOSED_TYPE_PROPERTIES = {Live.Application.Application: ('view', 'current_dialo
  Live.Song.CuePoint: ('canonical_parent', 'name', 'time', 'jump'),
  Live.Track.Track: ('clip_slots', 'devices', 'canonical_parent', 'mixer_device', 'view', 'arm', 'can_be_armed', 'can_be_frozen', 'can_show_chains', 'color', 'color_index', 'current_input_routing', 'current_input_sub_routing', 'current_monitoring_state', 'current_output_routing', 'current_output_sub_routing', 'fired_slot_index', 'has_audio_input', 'has_audio_output', 'has_midi_input', 'has_midi_output', 'implicit_arm', 'input_meter_level', 'input_routings', 'input_sub_routings', 'input_meter_left', 'input_meter_right', 'is_foldable', 'is_frozen', 'is_grouped', 'is_part_of_selection', 'is_showing_chains', 'is_visible', 'mute', 'muted_via_solo', 'name', 'output_meter_left', 'output_meter_level', 'output_meter_right', 'output_routings', 'output_sub_routings', 'playing_slot_index', 'solo', 'delete_device', 'duplicate_clip_slot', 'jump_in_running_session_clip', 'stop_all_clips'),
  Live.Track.Track.View: ('canonical_parent', 'selected_device', 'device_insert_mode', 'is_collapsed', 'select_instrument')}
+HIDDEN_TYPE_PROPERTIES = {Live.Sample.Sample: ('slices',)}
 ENUM_TYPES = (Live.Song.Quantization,
  Live.Song.RecordingQuantization,
  Live.Song.CaptureMode,
@@ -191,12 +192,20 @@ def is_object_iterable(obj):
     return not isinstance(obj, basestring) and is_iterable(obj) and not isinstance(obj, cs_base_classes())
 
 
+def is_property_exposed(lom_object, property_name):
+    return property_name in EXPOSED_TYPE_PROPERTIES.get(type(lom_object), [])
+
+
+def is_property_hidden(lom_object, property_name):
+    return property_name in HIDDEN_TYPE_PROPERTIES.get(type(lom_object), [])
+
+
 def verify_object_property(lom_object, property_name):
     raise_error = False
     if isinstance(lom_object, cs_base_classes()):
         if not hasattr(lom_object, property_name):
             raise_error = True
-    elif property_name not in EXPOSED_TYPE_PROPERTIES.get(type(lom_object), []):
+    elif not (is_property_exposed(lom_object, property_name) or is_property_hidden(lom_object, property_name)):
         raise_error = True
     if raise_error:
         raise LomAttributeError("'%s' object has no attribute '%s'" % (lom_object.__class__.__name__, property_name))
