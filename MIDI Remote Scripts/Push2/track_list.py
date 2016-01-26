@@ -135,8 +135,8 @@ class TrackListComponent(ModesComponent, Messenger):
 
     def _setup_action_mode(self, name, handler, feedback_provider = mixable_button_color):
         self.add_mode(name, partial(self._enter_action_mode, handler=handler, feedback_provider=feedback_provider), behaviour=TrackListBehaviour())
-        self.get_mode_button(name).mode_selected_color = 'Transparent'
-        self.get_mode_button(name).mode_unselected_color = 'Transparent'
+        self.get_mode_button(name).mode_selected_color = 'DefaultButton.Transparent'
+        self.get_mode_button(name).mode_unselected_color = 'DefaultButton.Transparent'
 
     def _enter_action_mode(self, handler, feedback_provider):
         self._button_handler = handler
