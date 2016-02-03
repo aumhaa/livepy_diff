@@ -13,6 +13,7 @@ def duplicate_clip(song, slot, should_launch = False):
             track = slot.canonical_parent
             view = song.view
             try:
+<<<<<<< HEAD
                 if should_launch:
                     start_duplicate = clip.is_playing
                     target_index = list(track.clip_slots).index(slot)
@@ -20,6 +21,15 @@ def duplicate_clip(song, slot, should_launch = False):
                     view.highlighted_clip_slot = track.clip_slots[destination_index]
                     view.detail_clip = view.highlighted_clip_slot.clip
                     start_duplicate and view.highlighted_clip_slot.fire(force_legato=True, launch_quantization=_Q.q_no_q)
+=======
+                start_duplicate = should_launch and clip.is_playing
+                target_index = list(track.clip_slots).index(slot)
+                destination_index = track.duplicate_clip_slot(target_index)
+                view.highlighted_clip_slot = track.clip_slots[destination_index]
+                view.detail_clip = view.highlighted_clip_slot.clip
+                if start_duplicate:
+                    view.highlighted_clip_slot.fire(force_legato=True, launch_quantization=_Q.q_no_q)
+>>>>>>> beta
             except Live.Base.LimitationError:
                 pass
             except RuntimeError:

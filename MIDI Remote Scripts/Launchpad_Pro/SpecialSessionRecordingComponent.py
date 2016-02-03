@@ -31,9 +31,15 @@ class SpecialSessionRecordingComponent(SessionRecordingComponent):
 
     def _handle_note_mode_record_behavior(self):
         track = self._target_track_component.target_track
+<<<<<<< HEAD
         playing_slot = self._track_can_record(track) and track_playing_slot(track)
         if not track_is_recording(track):
             should_overdub = playing_slot != None
+=======
+        if self._track_can_record(track):
+            playing_slot = track_playing_slot(track)
+            should_overdub = not track_is_recording(track) and playing_slot != None
+>>>>>>> beta
             if should_overdub:
                 self.song().overdub = not self.song().overdub
                 if not self.song().is_playing:

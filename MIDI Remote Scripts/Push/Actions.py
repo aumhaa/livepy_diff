@@ -1,6 +1,7 @@
 
-from itertools import izip, count
+from __future__ import absolute_import, print_function
 import Live
+<<<<<<< HEAD
 AutomationState = Live.DeviceParameter.AutomationState
 _Q = Live.Song.Quantization
 from _Framework.Control import ButtonControl, control_list
@@ -283,6 +284,16 @@ class DeleteComponent(ControlSurfaceComponent, Messenger):
         if playing_slot_index >= 0:
             return selected_track.clip_slots[playing_slot_index].clip
 
+=======
+from ableton.v2.base import depends, listens, task
+from ableton.v2.control_surface import CompoundComponent
+from ableton.v2.control_surface.mode import SetAttributeMode, ModesComponent
+from pushbase.consts import MessageBoxText
+from pushbase.device_chain_utils import is_empty_drum_pad
+from pushbase.browser_modes import BrowserAddEffectMode
+from pushbase.action_with_options_component import OptionsComponent
+from pushbase.message_box_component import Messenger
+>>>>>>> beta
 
 class DeleteAndReturnToDefaultComponent(DeleteComponent):
 
@@ -307,7 +318,7 @@ class CreateDefaultTrackComponent(CompoundComponent, Messenger):
         self._on_option_selected.subject = self.options
         self._selection = selection
 
-    @subject_slot('selected_option')
+    @listens('selected_option')
     def _on_option_selected(self, option):
         if option is not None:
             self.create_track()
@@ -315,7 +326,7 @@ class CreateDefaultTrackComponent(CompoundComponent, Messenger):
 
     def create_track(self):
         try:
-            song = self.song()
+            song = self.song
             selected_track = self._selection.selected_track
             idx = list(song.tracks).index(selected_track) + 1 if selected_track in song.tracks else -1
             selected_option = self.options.selected_option
@@ -347,7 +358,7 @@ class CreateInstrumentTrackComponent(CompoundComponent, Messenger):
          browser_mode,
          browser_component.reset_load_memory])
         self._with_browser_modes.add_mode('hotswap', [browser_hotswap_mode, browser_mode])
-        self._go_to_hotswap_task = self._tasks.add(Task.sequence(Task.delay(1), Task.run(self._go_to_hotswap)))
+        self._go_to_hotswap_task = self._tasks.add(task.sequence(task.delay(1), task.run(self._go_to_hotswap)))
         self._go_to_hotswap_task.kill()
 
     def on_enabled_changed(self):
@@ -358,7 +369,7 @@ class CreateInstrumentTrackComponent(CompoundComponent, Messenger):
         self.application().browser.hotswap_target = None
 
     def _do_browser_load_item(self, item):
-        song = self.song()
+        song = self.song
         selected_track = self._selection.selected_track
         idx = list(song.tracks).index(selected_track) + 1 if selected_track in song.tracks else -1
         try:
@@ -386,14 +397,13 @@ class CreateDeviceComponent(CompoundComponent):
          browser_mode,
          browser_component.reset_load_memory])
         self._create_device_modes.add_mode('hotswap', [browser_hotswap_mode, browser_mode])
-        self._go_to_hotswap_task = self._tasks.add(Task.sequence(Task.delay(1), Task.run(self._go_to_hotswap)))
+        self._go_to_hotswap_task = self._tasks.add(task.sequence(task.delay(1), task.run(self._go_to_hotswap)))
         self._go_to_hotswap_task.kill()
 
     def on_enabled_changed(self):
         self._go_to_hotswap_task.kill()
         if self.is_enabled():
-            selected = self._selection.selected_object
-            if isinstance(selected, Live.DrumPad.DrumPad) and (not selected.chains or not selected.chains[0].devices):
+            if is_empty_drum_pad(self._selection.selected_object):
                 self._create_device_modes.selected_mode = 'hotswap'
             else:
                 self._create_device_modes.selected_mode = 'create'
@@ -406,6 +416,7 @@ class CreateDeviceComponent(CompoundComponent):
         if selection:
             self._selection.selected_object = selection
         item.action()
+<<<<<<< HEAD
         self._go_to_hotswap_task.restart()
 
 
@@ -492,3 +503,6 @@ class UndoRedoComponent(ControlSurfaceComponent, Messenger):
         if self.song().can_redo:
             self.song().redo()
             self.show_notification(MessageBoxText.REDO)
+=======
+        self._go_to_hotswap_task.restart()
+>>>>>>> beta

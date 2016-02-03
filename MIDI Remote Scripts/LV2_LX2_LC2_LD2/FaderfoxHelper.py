@@ -40,12 +40,11 @@ class FaderfoxHelper:
                 slot = track.clip_slots[clip_idx]
                 if slot.has_clip:
                     clip = slot.clip
-                    if not clip.is_playing:
-                        clip.is_triggered or clip.fire()
+                    if not (clip.is_playing or clip.is_triggered):
+                        clip.fire()
                         return 1
-                    else:
-                        clip.stop()
-                        return 0
+                    clip.stop()
+                    return 0
                     self.song().view.selected_scene = self.song().scenes[clip_idx]
                 else:
                     self.stop_track(track_idx)

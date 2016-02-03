@@ -423,7 +423,7 @@ except ImportError as err:
     pass
 
 def run(func, *a, **k):
-    return FuncTask(lambda t: None if func(*a, **k) else None)
+    return FuncTask(lambda t: (None if func(*a, **k) else None))
 
 
 def repeat(task):

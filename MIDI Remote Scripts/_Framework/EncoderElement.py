@@ -4,16 +4,22 @@ import Live
 from .ComboElement import WrapperElement
 from .CompoundElement import CompoundElement
 from .InputControlElement import InputControlElement, MIDI_CC_TYPE, InputSignal
+<<<<<<< HEAD
 from .SubjectSlot import SubjectEvent
 from .Util import nop, const, forward_property
+=======
+from .SubjectSlot import SubjectEvent, subject_slot
+from .Util import nop, const
+>>>>>>> beta
 
 def _not_implemented(value):
     raise NotImplementedError
 
 
 _map_modes = map_modes = Live.MidiMap.MapMode
-ENCODER_VALUE_NORMALIZER = {_map_modes.relative_smooth_two_compliment: lambda v: v if v <= 64 else v - 128,
- _map_modes.relative_smooth_signed_bit: lambda v: v if v <= 64 else 64 - v}
+ENCODER_VALUE_NORMALIZER = {_map_modes.relative_smooth_two_compliment: lambda v: (v if v <= 64 else v - 128),
+ _map_modes.relative_smooth_signed_bit: lambda v: (v if v <= 64 else 64 - v),
+ _map_modes.relative_smooth_binary_offset: lambda v: v - 64}
 
 class EncoderElement(InputControlElement):
     """
@@ -115,10 +121,15 @@ class FineGrainWithModifierEncoderElement(WrapperElement):
         raise modifier is not None or AssertionError
         self._modified_sensitivity = modified_sensitivity
         self._default_sensitivity = default_sensitivity or self.wrapped_control.mapping_sensitivity
+<<<<<<< HEAD
+=======
+        self._normalized_value_listeners = []
+>>>>>>> beta
         self._modifier = modifier
         self.register_control_elements(modifier, encoder)
         self._on_nested_control_element_value.add_subject(self._modifier)
 
+<<<<<<< HEAD
     @forward_property('wrapped_control')
     def add_normalized_value_listener(self):
         pass
@@ -130,6 +141,25 @@ class FineGrainWithModifierEncoderElement(WrapperElement):
     @forward_property('wrapped_control')
     def normalized_value_has_listener(self):
         pass
+=======
+    def add_normalized_value_listener(self, listener):
+        self._normalized_value_listeners.append(listener)
+        if len(self._normalized_value_listeners) == 1:
+            self._enforce_control_invariant()
+
+    def remove_normalized_value_listener(self, listener):
+        self._normalized_value_listeners.remove(listener)
+        if len(self._normalized_value_listeners) == 0:
+            self._enforce_control_invariant()
+
+    def normalized_value_has_listener(self, listener):
+        return listener in self._normalized_value_listeners
+
+    @subject_slot('normalized_value')
+    def __on_normalized_value(self, value):
+        for listener in self._normalized_value_listeners:
+            listener(value)
+>>>>>>> beta
 
     def on_nested_control_element_received(self, control):
         super(FineGrainWithModifierEncoderElement, self).on_nested_control_element_received(control)
@@ -151,6 +181,11 @@ class FineGrainWithModifierEncoderElement(WrapperElement):
                 self.wrapped_control.mapping_sensitivity = self._modified_sensitivity
             else:
                 self.wrapped_control.mapping_sensitivity = self._default_sensitivity
+<<<<<<< HEAD
+=======
+        should_listen = self.owns_control_element(self._wrapped_control) and len(self._normalized_value_listeners) > 0
+        self.__on_normalized_value.subject = self._wrapped_control if should_listen else None
+>>>>>>> beta
 
     def set_sensitivities(self, default, modified):
         self._default_sensitivity = default

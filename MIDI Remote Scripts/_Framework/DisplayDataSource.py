@@ -16,9 +16,9 @@ def adjust_string(original, length):
         raise AssertionError
         resulting_string = original
         if len(resulting_string) > length:
-            if resulting_string.endswith('dB'):
-                unit_db = resulting_string.find('.') != -1
-                resulting_string = len(resulting_string.strip()) > length and unit_db and resulting_string[:-2]
+            unit_db = resulting_string.endswith('dB') and resulting_string.find('.') != -1
+            if len(resulting_string.strip()) > length and unit_db:
+                resulting_string = resulting_string[:-2]
             if len(resulting_string) > length:
                 for char in (' ', '_', 'i', 'o', 'u', 'e', 'a'):
                     offset = 0 if char == ' ' else 1

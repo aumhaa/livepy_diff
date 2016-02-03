@@ -107,7 +107,9 @@ class APC_Key_25(APC, OptimizedControlSurface):
     def _create_transport(self):
 
         def play_toggle_model_transform(value):
-            return False if self._shift_button.is_pressed() else value
+            if self._shift_button.is_pressed():
+                return False
+            return value
 
         return TransportComponent(name='Transport', is_enabled=False, play_toggle_model_transform=play_toggle_model_transform, layer=Layer(play_button=self._play_button, record_button=self._record_button))
 

@@ -3,7 +3,11 @@ from .Launchpad_MK2 import Launchpad_MK2
 from _Framework.Capabilities import controller_id, inport, outport, CONTROLLER_ID_KEY, PORTS_KEY, NOTES_CC, SCRIPT, SYNC, REMOTE
 
 def get_capabilities():
+<<<<<<< HEAD
     return {CONTROLLER_ID_KEY: controller_id(vendor_id=4661, product_ids=[105,
+=======
+    return {CONTROLLER_ID_KEY: controller_id(vendor_id=5042, product_ids=[105,
+>>>>>>> beta
                          106,
                          107,
                          108,

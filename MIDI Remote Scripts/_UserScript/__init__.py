@@ -1,7 +1,11 @@
 
+from ConfigParser import ConfigParser
 from _Generic.GenericScript import GenericScript
 import Live
+<<<<<<< HEAD
 from _Tools.ConfigParser import ConfigParser
+=======
+>>>>>>> beta
 HIDE_SCRIPT = True
 
 def interpret_map_mode(map_mode_name):

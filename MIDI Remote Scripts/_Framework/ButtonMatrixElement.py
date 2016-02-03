@@ -88,7 +88,7 @@ class ButtonMatrixElement(CompoundElement):
             return self._do_get_item(index)
 
     def _do_get_item(self, index):
-        raise in_range(index, 0, len(self)) or AssertionError, 'Index out of range'
+        raise in_range(index, 0, len(self)) or AssertionError('Index out of range')
         row, col = divmod(index, self.width())
         return self.get_button(col, row)
 

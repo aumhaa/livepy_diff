@@ -11,7 +11,9 @@ class TransportComponent(TransportComponentBase):
     def __init__(self, *a, **k):
 
         def play_toggle_model_transform(val):
-            return False if self.shift_button.is_pressed else val
+            if self.shift_button.is_pressed:
+                return False
+            return val
 
         k['play_toggle_model_transform'] = play_toggle_model_transform
         super(TransportComponent, self).__init__(*a, **k)

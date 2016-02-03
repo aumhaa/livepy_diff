@@ -470,31 +470,30 @@ def parameter_bank_names(device, bank_name_dict = BANK_NAME_DICT):
     if device != None:
         if device.class_name in bank_name_dict.keys():
             return bank_name_dict[device.class_name]
+        banks = number_of_parameter_banks(device)
+
+        def _default_bank_name(bank_index):
+            return 'Bank ' + str(bank_index + 1)
+
+        if device.class_name in MAX_DEVICES and banks != 0:
+
+            def _is_ascii(c):
+                return ord(c) < 128
+
+            def _bank_name(bank_index):
+                try:
+                    name = device.get_bank_name(bank_index)
+                except:
+                    name = None
+
+                if name:
+                    return str(filter(_is_ascii, name))
+                else:
+                    return _default_bank_name(bank_index)
+
+            return map(_bank_name, range(0, banks))
         else:
-            banks = number_of_parameter_banks(device)
-
-            def _default_bank_name(bank_index):
-                return 'Bank ' + str(bank_index + 1)
-
-            if device.class_name in MAX_DEVICES and banks != 0:
-
-                def _is_ascii(c):
-                    return ord(c) < 128
-
-                def _bank_name(bank_index):
-                    try:
-                        name = device.get_bank_name(bank_index)
-                    except:
-                        name = None
-
-                    if name:
-                        return str(filter(_is_ascii, name))
-                    else:
-                        return _default_bank_name(bank_index)
-
-                return map(_bank_name, range(0, banks))
-            else:
-                return map(_default_bank_name, range(0, banks))
+            return map(_default_bank_name, range(0, banks))
     return []
 
 

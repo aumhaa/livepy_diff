@@ -42,7 +42,8 @@ class ToggleComponent(ControlSurfaceComponent):
     subject = property(_get_subject, _set_subject)
 
     def _get_value(self):
-        return getattr(self.subject, self._property_name) if self.subject else None
+        if self.subject:
+            return getattr(self.subject, self._property_name)
 
     def _set_value(self, value):
         setattr(self.subject, self._property_name, value)

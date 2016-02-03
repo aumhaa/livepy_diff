@@ -22,7 +22,9 @@ class DeviceComponent(DeviceComponentBase, CompoundComponent):
 
     def _number_of_parameter_banks(self):
         num = super(DeviceComponent, self)._number_of_parameter_banks()
-        return max(num, 8) if self._use_fake_banks else num
+        if self._use_fake_banks:
+            return max(num, 8)
+        return num
 
     def _on_device_bank_changed(self, device, bank):
         super(DeviceComponent, self)._on_device_bank_changed(device, bank)

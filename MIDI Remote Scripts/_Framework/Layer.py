@@ -47,9 +47,9 @@ class LayerClient(ControlElementClient):
     def set_control_element(self, control_element, grabbed):
         layer = self.layer
         owner = self.layer_client
-        raise owner or AssertionError
-        if not control_element in layer._control_to_names:
-            raise AssertionError, 'Control not in layer: %s' % (control_element,)
+        if not owner:
+            raise AssertionError
+            raise control_element in layer._control_to_names or AssertionError('Control not in layer: %s' % (control_element,))
             names = layer._control_to_names[control_element]
             control_element = grabbed or None
         for name in names:

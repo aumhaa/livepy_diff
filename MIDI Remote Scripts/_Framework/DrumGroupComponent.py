@@ -59,11 +59,23 @@ class DrumGroupComponent(SlideComponent, Slideable):
 
     @property
     def width(self):
+<<<<<<< HEAD
         return self.drum_matrix.width if self.drum_matrix.width else 4
 
     @property
     def height(self):
         return self.drum_matrix.height if self.drum_matrix.height else 4
+=======
+        if self.drum_matrix.width:
+            return self.drum_matrix.width
+        return 4
+
+    @property
+    def height(self):
+        if self.drum_matrix.height:
+            return self.drum_matrix.height
+        return 4
+>>>>>>> beta
 
     @property
     def pressed_pads(self):
