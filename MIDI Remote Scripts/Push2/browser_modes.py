@@ -51,19 +51,27 @@ class BrowseModeBase(Mode):
 
 class HotswapBrowseMode(BrowseModeBase):
 
-    def __init__(self, application, *a, **k):
+    def __init__(self, application, drum_group_component, *a, **k):
         super(HotswapBrowseMode, self).__init__(*a, **k)
         self._hotswap_mode = BrowserHotswapMode(application=application)
         self._in_hotswap_mode = False
+        self._drum_group_component = drum_group_component
 
     def leave_mode(self):
         super(HotswapBrowseMode, self).leave_mode()
         if self._in_hotswap_mode:
             self._hotswap_mode.leave_mode()
+            self._drum_group_component.hotswap_indication_mode = None
 
     def _enter_hotswap_mode(self):
         self._hotswap_mode.enter_mode()
         self._in_hotswap_mode = True
+        hotswap_target = self._browser.hotswap_target
+        if liveobj_valid(hotswap_target):
+            if isinstance(hotswap_target, Live.DrumPad.DrumPad):
+                self._drum_group_component.hotswap_indication_mode = 'current_pad'
+            elif isinstance(hotswap_target, Live.RackDevice.RackDevice) and hotswap_target.can_have_drum_pads and hotswap_target == self._drum_group_component.drum_group_device:
+                self._drum_group_component.hotswap_indication_mode = 'all_pads'
 
 
 class AddDeviceMode(HotswapBrowseMode):

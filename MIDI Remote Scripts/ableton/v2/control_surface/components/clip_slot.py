@@ -1,8 +1,9 @@
 
 from __future__ import absolute_import, print_function
 import Live
-from ...base import in_range, listens, liveobj_valid
+from ...base import listens, liveobj_valid
 from ..component import Component
+from ..control import ButtonControl
 
 def find_nearest_color(rgb_table, src_hex_color):
 
@@ -15,29 +16,34 @@ def find_nearest_color(rgb_table, src_hex_color):
     return min(rgb_table, key=squared_distance)[0]
 
 
+def is_button_pressed(button):
+    if button:
+        return button.is_pressed()
+    return False
+
+
 class ClipSlotComponent(Component):
     """
     Component representing a ClipSlot within Live.
     """
+    launch_button = ButtonControl()
 
     def __init__(self, *a, **k):
         super(ClipSlotComponent, self).__init__(*a, **k)
         self._clip_slot = None
-        self._triggered_to_play_value = 126
-        self._triggered_to_record_value = 121
-        self._started_value = 127
-        self._recording_value = 120
-        self._stopped_value = 0
+        self._triggered_to_play_color = 'Session.ClipTriggeredPlay'
+        self._triggered_to_record_color = 'Session.ClipTriggeredRecord'
+        self._started_value = 'Session.ClipStarted'
+        self._recording_color = 'Session.ClipRecording'
+        self._stopped_value = 'Session.ClipStopped'
         self._clip_palette = []
         self._clip_rgb_table = None
-        self._record_button_value = None
+        self._record_button_color = 'Session.RecordButton'
+        self._empty_slot_color = 'Session.ClipEmpty'
         self._has_fired_slot = False
         self._delete_button = None
         self._select_button = None
         self._duplicate_button = None
-
-    def on_enabled_changed(self):
-        self.update()
 
     def set_clip_slot(self, clip_slot):
         self._clip_slot = clip_slot
@@ -55,7 +61,7 @@ class ClipSlotComponent(Component):
         self.update()
 
     def set_launch_button(self, button):
-        self.__launch_button_value.subject = button
+        self.launch_button.set_control_element(button)
         self.update()
 
     def set_delete_button(self, button):
@@ -67,28 +73,8 @@ class ClipSlotComponent(Component):
     def set_duplicate_button(self, button):
         self._duplicate_button = button
 
-    def set_triggered_to_play_value(self, value):
-        self._triggered_to_play_value = value
-
-    def set_triggered_to_record_value(self, value):
-        self._triggered_to_record_value = value
-
-    def set_started_value(self, value):
-        self._started_value = value
-
-    def set_recording_value(self, value):
-        self._recording_value = value
-
-    def set_stopped_value(self, value):
-        self._stopped_value = value
-        self._clip_palette = []
-
-    def set_record_button_value(self, value):
-        self._record_button_value = value
-
     def set_clip_palette(self, palette):
         raise palette != None or AssertionError
-        self._stopped_value = None
         self._clip_palette = palette
 
     def set_clip_rgb_table(self, rgb_table):
@@ -103,18 +89,16 @@ class ClipSlotComponent(Component):
     def update(self):
         super(ClipSlotComponent, self).update()
         self._has_fired_slot = False
-        button = self.__launch_button_value.subject
-        if self._allow_updates:
-            if self.is_enabled() and button != None:
-                value_to_send = self._feedback_value()
-                if value_to_send in (None, -1):
-                    button.turn_off()
-                elif in_range(value_to_send, 0, 128):
-                    button.send_value(value_to_send)
-                else:
-                    button.set_light(value_to_send)
-        else:
-            self._update_requests += 1
+        self._update_launch_button_color()
+
+    def _update_launch_button_color(self):
+        if self.is_enabled():
+            value_to_send = self._empty_slot_color
+            if liveobj_valid(self._clip_slot):
+                track = self._clip_slot.canonical_parent
+                slot_or_clip = self._clip_slot.clip if self.has_clip() else self._clip_slot
+                value_to_send = self._feedback_value(track, slot_or_clip)
+            self.launch_button.color = value_to_send
 
     def _color_value(self, slot_or_clip):
         color = slot_or_clip.color
@@ -129,24 +113,22 @@ class ClipSlotComponent(Component):
     def _track_is_armed(self, track):
         return liveobj_valid(track) and track.can_be_armed and any([track.arm, track.implicit_arm])
 
-    def _feedback_value(self):
-        if liveobj_valid(self._clip_slot):
-            track = self._clip_slot.canonical_parent
-            slot_or_clip = self._clip_slot.clip if self.has_clip() else self._clip_slot
-            if slot_or_clip.is_triggered:
-                if slot_or_clip.will_record_on_start:
-                    return self._triggered_to_record_value
-                return self._triggered_to_play_value
-            if slot_or_clip.is_playing:
-                if slot_or_clip.is_recording:
-                    return self._recording_value
-                return self._started_value
-            if slot_or_clip.color != None:
-                return self._color_value(slot_or_clip)
-            if getattr(slot_or_clip, 'controls_other_clips', True) and self._stopped_value != None:
-                return self._stopped_value
-            if self._track_is_armed(track) and self._clip_slot.has_stop_button and self._record_button_value != None:
-                return self._record_button_value
+    def _feedback_value(self, track, slot_or_clip):
+        if slot_or_clip.is_triggered:
+            if slot_or_clip.will_record_on_start:
+                return self._triggered_to_record_color
+            return self._triggered_to_play_color
+        if slot_or_clip.is_playing:
+            if slot_or_clip.is_recording:
+                return self._recording_color
+            return self._started_value
+        if slot_or_clip.color != None:
+            return self._color_value(slot_or_clip)
+        if getattr(slot_or_clip, 'controls_other_clips', True):
+            return self._stopped_value
+        if self._track_is_armed(track) and self._clip_slot.has_stop_button and self._record_button_color != None:
+            return self._record_button_color
+        return self._empty_slot_color
 
     def _update_clip_property_slots(self):
         clip = self._clip_slot.clip if self._clip_slot else None
@@ -157,44 +139,44 @@ class ClipSlotComponent(Component):
     @listens('has_clip')
     def __on_clip_state_changed(self):
         self._update_clip_property_slots()
-        self.update()
+        self._update_launch_button_color()
 
     @listens('controls_other_clips')
     def __on_controls_other_clips_changed(self):
         self._update_clip_property_slots()
-        self.update()
+        self._update_launch_button_color()
 
     @listens('color')
     def __on_clip_color_changed(self):
-        self.update()
+        self._update_launch_button_color()
 
     @listens('color')
     def __on_clip_slot_color_changed(self):
-        self.update()
+        self._update_launch_button_color()
 
     @listens('playing_status')
     def __on_slot_playing_state_changed(self):
-        self.update()
+        self._update_launch_button_color()
 
     @listens('playing_status')
     def __on_clip_playing_state_changed(self):
-        self.update()
+        self._update_launch_button_color()
 
     @listens('is_recording')
     def __on_recording_state_changed(self):
-        self.update()
+        self._update_launch_button_color()
 
     @listens('arm')
     def __on_arm_value_changed(self):
-        self.update()
+        self._update_launch_button_color()
 
     @listens('implicit_arm')
     def __on_implicit_arm_value_changed(self):
-        self.update()
+        self._update_launch_button_color()
 
     @listens('has_stop_button')
     def __on_has_stop_button_changed(self):
-        self.update()
+        self._update_launch_button_color()
 
     @listens('is_triggered')
     def __on_slot_triggered_changed(self):
@@ -203,22 +185,31 @@ class ClipSlotComponent(Component):
             view = song.view
             if song.select_on_launch and self._clip_slot.is_triggered and self._has_fired_slot and self._clip_slot.will_record_on_start and self._clip_slot != view.highlighted_clip_slot:
                 view.highlighted_clip_slot = self._clip_slot
-            self.update()
+            self._update_launch_button_color()
 
-    @listens('value')
-    def __launch_button_value(self, value):
-        if self.is_enabled():
-            if self._select_button and self._select_button.is_pressed() and value:
-                self._do_select_clip(self._clip_slot)
-            elif liveobj_valid(self._clip_slot):
-                if self._duplicate_button and self._duplicate_button.is_pressed():
-                    if value:
-                        self._do_duplicate_clip()
-                elif self._delete_button and self._delete_button.is_pressed():
-                    if value:
-                        self._do_delete_clip()
-                else:
-                    self._do_launch_clip(value)
+    @launch_button.pressed
+    def launch_button(self, button):
+        self._on_launch_button_pressed()
+
+    def _on_launch_button_pressed(self):
+        if is_button_pressed(self._select_button):
+            self._do_select_clip(self._clip_slot)
+        elif liveobj_valid(self._clip_slot):
+            if is_button_pressed(self._duplicate_button):
+                self._do_duplicate_clip()
+            elif is_button_pressed(self._delete_button):
+                self._do_delete_clip()
+            else:
+                self._do_launch_clip(True)
+                self._show_launched_clip_as_highlighted_clip()
+
+    @launch_button.released
+    def launch_button(self, button):
+        self._on_launch_button_released()
+
+    def _on_launch_button_released(self):
+        if self.launch_button.is_momentary and not is_button_pressed(self._select_button) and liveobj_valid(self._clip_slot) and not is_button_pressed(self._duplicate_button) and not is_button_pressed(self._delete_button):
+            self._do_launch_clip(False)
 
     def _do_delete_clip(self):
         if self._clip_slot and self._clip_slot.has_clip:
@@ -239,17 +230,14 @@ class ClipSlotComponent(Component):
             except RuntimeError:
                 pass
 
-    def _do_launch_clip(self, value):
-        button = self.__launch_button_value.subject
+    def _do_launch_clip(self, fire_state):
         object_to_launch = self._clip_slot
-        launch_pressed = value or not button.is_momentary()
         if self.has_clip():
             object_to_launch = self._clip_slot.clip
         else:
             self._has_fired_slot = True
-        if button.is_momentary():
-            object_to_launch.set_fire_button_state(value != 0)
-        elif launch_pressed:
-            object_to_launch.fire()
-        if launch_pressed and self.has_clip() and self.song.select_on_launch:
+        object_to_launch.set_fire_button_state(fire_state)
+
+    def _show_launched_clip_as_highlighted_clip(self):
+        if self.has_clip() and self.song.select_on_launch:
             self.song.view.highlighted_clip_slot = self._clip_slot

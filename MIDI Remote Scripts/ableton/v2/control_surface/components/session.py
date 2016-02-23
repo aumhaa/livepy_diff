@@ -14,7 +14,7 @@ class SessionComponent(CompoundComponent):
     _session_component_ends_initialisation = True
     scene_component_type = SceneComponent
 
-    def __init__(self, session_ring = None, auto_name = False, enable_skinning = False, *a, **k):
+    def __init__(self, session_ring = None, auto_name = False, *a, **k):
         super(SessionComponent, self).__init__(*a, **k)
         if not session_ring is not None:
             raise AssertionError
@@ -22,16 +22,14 @@ class SessionComponent(CompoundComponent):
             self.__on_offsets_changed.subject = self._session_ring
             self._stop_all_button = None
             self._stop_track_clip_buttons = None
-            self._stop_clip_triggered_value = 127
-            self._stop_clip_value = None
+            self._stop_clip_triggered_value = 'Session.StopClipTriggered'
+            self._stop_clip_value = 'Session.StopClip'
             self._track_slots = self.register_slot_manager()
             self._selected_scene = self.register_component(self._create_scene())
             self._scenes = self.register_components(*[ self._create_scene() for _ in xrange(self._session_ring.num_scenes) ])
             if self._session_component_ends_initialisation:
                 self._end_initialisation()
-            if auto_name:
-                self._auto_name()
-            enable_skinning and self._enable_skinning()
+            auto_name and self._auto_name()
         self.__on_track_list_changed.subject = self.song
         self.__on_scene_list_changed.subject = self.song
         self.__on_selected_scene_changed.subject = self.song.view
@@ -49,23 +47,6 @@ class SessionComponent(CompoundComponent):
 
     def selected_scene(self):
         return self._selected_scene
-
-    def _enable_skinning(self):
-        self.set_stop_clip_triggered_value('Session.StopClipTriggered')
-        self.set_stop_clip_value('Session.StopClip')
-        for scene_index in xrange(self._session_ring.num_scenes):
-            scene = self.scene(scene_index)
-            scene.set_scene_value('Session.Scene')
-            scene.set_no_scene_value('Session.NoScene')
-            scene.set_triggered_value('Session.SceneTriggered')
-            for track_index in xrange(self._session_ring.num_tracks):
-                clip_slot = scene.clip_slot(track_index)
-                clip_slot.set_triggered_to_play_value('Session.ClipTriggeredPlay')
-                clip_slot.set_triggered_to_record_value('Session.ClipTriggeredRecord')
-                clip_slot.set_record_button_value('Session.RecordButton')
-                clip_slot.set_stopped_value('Session.ClipStopped')
-                clip_slot.set_started_value('Session.ClipStarted')
-                clip_slot.set_recording_value('Session.ClipRecording')
 
     def _auto_name(self):
         self.name = 'Session_Control'
@@ -90,12 +71,6 @@ class SessionComponent(CompoundComponent):
         self._stop_track_clip_buttons = buttons
         self.__on_stop_track_value.replace_subjects(buttons or [])
         self._update_stop_track_clip_buttons()
-
-    def set_stop_clip_triggered_value(self, value):
-        self._stop_clip_triggered_value = value
-
-    def set_stop_clip_value(self, value):
-        self._stop_clip_value = value
 
     def set_clip_launch_buttons(self, buttons):
         raise not buttons or buttons.width() == self._session_ring.num_tracks and buttons.height() == self._session_ring.num_scenes or AssertionError

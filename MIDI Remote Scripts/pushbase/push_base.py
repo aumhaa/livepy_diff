@@ -6,7 +6,7 @@ from itertools import imap
 from ableton.v2.base import inject, clamp, nop, const, NamedTuple, listens, listens_group
 from ableton.v2.control_surface import BackgroundLayer, ClipCreator, ControlSurface, DeviceBankRegistry, Layer, midi
 from ableton.v2.control_surface.components import BackgroundComponent, M4LInterfaceComponent, ModifierBackgroundComponent, SessionNavigationComponent, SessionRingComponent, SessionOverviewComponent, ViewControlComponent
-from ableton.v2.control_surface.elements import adjust_string, ButtonElement, ButtonMatrixElement, ChoosingElement, ComboElement, DoublePressContext, MultiElement, OptionalElement, to_midi_value
+from ableton.v2.control_surface.elements import ButtonElement, ButtonMatrixElement, ChoosingElement, ComboElement, DoublePressContext, MultiElement, OptionalElement, to_midi_value
 from ableton.v2.control_surface.mode import AddLayerMode, LayerMode, LazyComponentMode, ReenterBehaviour, ModesComponent, EnablingModesComponent
 from .accent_component import AccentComponent
 from .actions import CaptureAndInsertSceneComponent, DeleteAndReturnToDefaultComponent, DeleteComponent, DeleteSelectedClipComponent, DeleteSelectedSceneComponent, DuplicateDetailClipComponent, DuplicateLoopComponent, UndoRedoComponent
@@ -25,7 +25,6 @@ from .message_box_component import DialogComponent, InfoComponent
 from .note_editor_component import DEFAULT_VELOCITY_RANGE_THRESHOLDS
 from .note_repeat_component import NoteRepeatComponent
 from .note_settings_component import NoteEditorSettingsComponent
-from .selected_track_parameter_provider import SelectedTrackParameterProvider
 from .selection import PushSelection
 from .select_playing_clip_component import SelectPlayingClipComponent
 from .skin_default import make_default_skin
@@ -49,10 +48,10 @@ def tracks_to_use_from_song(song):
 
 class PushBase(ControlSurface):
     preferences_key = 'Push'
-    session_component_type = SpecialSessionComponent
     drum_group_note_editor_skin = 'NoteEditor'
     note_editor_velocity_range_thresholds = DEFAULT_VELOCITY_RANGE_THRESHOLDS
     device_component_class = None
+    selected_track_parameter_provider_class = None
     bank_definitions = None
     note_editor_class = None
 
@@ -305,8 +304,11 @@ class PushBase(ControlSurface):
     def _set_session_skin(self, session):
         pass
 
+    def _instantiate_session(self):
+        return SpecialSessionComponent(session_ring=self._session_ring, is_enabled=False, auto_name=True, layer=self._create_session_layer())
+
     def _create_session(self):
-        session = self.session_component_type(session_ring=self._session_ring, enable_skinning=True, is_enabled=False, auto_name=True, layer=self._create_session_layer())
+        session = self._instantiate_session()
         self._set_session_skin(session)
         for scene_index in xrange(8):
             scene = session.scene(scene_index)
@@ -411,7 +413,7 @@ class PushBase(ControlSurface):
         pass
 
     def _init_track_mixer(self):
-        self._track_parameter_provider = self.register_disconnectable(SelectedTrackParameterProvider())
+        self._track_parameter_provider = self.register_disconnectable(self.selected_track_parameter_provider_class())
         self._track_mixer = DeviceParameterComponent(parameter_provider=self._track_parameter_provider, is_enabled=False, layer=self._create_track_mixer_layer())
 
     def _create_track_mixer_layer(self):
@@ -528,9 +530,6 @@ class PushBase(ControlSurface):
         self._note_editor_settings_component.add_editor(slice_note_editor)
         self._slice_step_sequencer = StepSeqComponent(self._clip_creator, self._skin, name='Slice_Step_Sequencer', grid_resolution=self._grid_resolution, note_editor_component=slice_note_editor, instrument_component=self._slicing_component, is_enabled=False)
         self._slice_step_sequencer.layer = Layer(playhead='playhead_element', button_matrix=self.elements.matrix.submatrix[:8, :4], loop_selector_matrix=self.elements.double_press_matrix.submatrix[4:8, 4:8], short_loop_selector_matrix=self.elements.double_press_event_matrix.submatrix[4:8, 4:8], quantization_buttons='side_buttons', select_button='select_button')
-
-    def _drum_pad_notification_formatter(self):
-        return lambda x: adjust_string(x, 8)
 
     def _create_drum_component(self):
         raise NotImplementedError

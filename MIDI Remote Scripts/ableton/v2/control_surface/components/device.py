@@ -81,6 +81,7 @@ class DeviceProvider(Subject, SlotManager):
     def unlock_from_device(self):
         self._locked_to_device = False
         self.notify_is_locked_to_device()
+        self.update_device_selection()
 
     def update_device_selection(self):
         view = self.song.view
@@ -354,7 +355,8 @@ class DeviceComponent(Component):
         if self.is_enabled():
             for index, button in enumerate(self._bank_buttons or []):
                 if button:
-                    button.set_light(index == self._bank_index and self._get_device())
+                    turn_on = index == self._bank_index and liveobj_valid(self._get_device())
+                    button.set_light(turn_on)
 
     def _update_device_bank_nav_buttons(self):
         if self.is_enabled():

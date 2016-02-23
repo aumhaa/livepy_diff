@@ -18,10 +18,6 @@ SETUP_DIALOG_PRIORITY = DEFAULT_PRIORITY + 3
 DIALOG_PRIORITY = DEFAULT_PRIORITY + 2
 NOTIFICATION_PRIORITY = DEFAULT_PRIORITY + 1
 BACKGROUND_PRIORITY = DEFAULT_PRIORITY - 3
-ENCODER_SENSITIVITY = 0.5
-CONTINUOUS_MAPPING_SENSITIVITY = 2.0
-FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY = 0.01
-QUANTIZED_MAPPING_SENSITIVITY = 1.0 / 15.0
 GLOBAL_MAP_MODE = Live.MidiMap.MapMode.relative_smooth_two_compliment
 CHAR_ARROW_UP = '\x00'
 CHAR_ARROW_DOWN = '\x01'
@@ -76,10 +72,18 @@ class MessageBoxText:
     PLAYING_CLIP_BELOW_SELECTED_CLIP = ' Press Down Arrow to edit playing   clip'
     TOUCHSTRIP_PITCHBEND_MODE = '                  Touchstrip Mode:  Pitchbend'
     TOUCHSTRIP_MODWHEEL_MODE = '                  Touchstrip Mode:  Modwheel'
-    COPIED_DRUM_PAD = '     Pad %s copied.           Press destination pad to paste'
-    PASTED_DRUM_PAD = '     Pad %s duplicated to     %s'
+    COPIED_DRUM_PAD = '     Pad %len=8,s copied.           Press destination pad to paste'
+    PASTED_DRUM_PAD = '     Pad %len=8,s duplicated to     %len=8,s'
     CANNOT_COPY_EMPTY_DRUM_PAD = '                  Cannot copy empty drum pad'
     CANNOT_PASTE_TO_SOURCE_DRUM_PAD = '                    Cannot paste to source drum pad'
+    COPIED_CLIP = '         %len=8,s copied.     Press destination clip  slot to paste'
+    PASTED_CLIP = '         %len=8,s duplicated to:    %len=17,s'
+    CANNOT_COPY_EMPTY_CLIP = ' Cannot copy from empty clip slot'
+    CANNOT_COPY_GROUP_SLOT = '      Group clips cannot be copied'
+    CANNOT_COPY_RECORDING_CLIP = '      Cannot copy recording clip'
+    CANNOT_COPY_AUDIO_CLIP_TO_MIDI_TRACK = '     Please paste this audio clip       into an audio track'
+    CANNOT_COPY_MIDI_CLIP_TO_AUDIO_TRACK = '     Please paste this MIDI clip    into a MIDI track'
+    CANNOT_PASTE_INTO_GROUP_SLOT = '    A clip cannot be pasted into a  group track'
 
 
 _test_mode = __builtins__.get('TEST_MODE', False)

@@ -29,7 +29,7 @@ SLIDER_MSG_IDS = (73, 75, 79, 72, 80, 81, 82, 83, 85)
 PAD_MSG_IDS = xrange(36, 52)
 BUTTON_HARDWARE_AND_MESSAGE_IDS = {'session_record_button': (91, 5),
  'stop_all_clips_button': (92, 4),
- 'stop_button': (89, 1),
+ 'stop_button': (89, 102),
  'play_button': (88, 2),
  'record_button': (90, 6),
  'loop_button': (93, 55),

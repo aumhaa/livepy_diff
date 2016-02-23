@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function
 from ableton.v2.base import depends, listens, liveobj_valid, liveobj_changed
 from ableton.v2.control_surface import CompoundComponent
 from .device_parameter_bank import create_device_bank
-from .parameter_provider import ParameterProvider, generate_info
+from .parameter_provider import ParameterProvider, ParameterInfo
 from .simpler_slice_nudging import SimplerSliceNudging
 
 class DeviceComponent(ParameterProvider, CompoundComponent):
@@ -112,4 +112,7 @@ class DeviceComponent(ParameterProvider, CompoundComponent):
 
     def _get_provided_parameters(self):
         _, parameters = self._current_bank_details() if self.device() else (None, ())
-        return [ generate_info(p) for p in parameters ]
+        return [ self._create_parameter_info(p) for p in parameters ]
+
+    def _create_parameter_info(self, parameter, name):
+        raise NotImplementedError()

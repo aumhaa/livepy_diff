@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function
 import Live
 from ...base import BooleanContext, const, has_event, listens, SlotManager
 from ..input_control_element import InputControlElement, MIDI_CC_TYPE
-from ..skin import Skin, SkinColorMissingError
+from ..skin import Skin
 
 class ButtonValue(object):
     """
@@ -94,19 +94,21 @@ class ButtonElement(InputControlElement, ButtonElementMixin, SlotManager):
     def set_light(self, value):
         if hasattr(value, 'draw'):
             value.draw(self)
+        elif isinstance(value, bool):
+            super(ButtonElement, self).set_light(value)
         else:
             self._set_skin_light(value)
 
     def _set_skin_light(self, value):
+        color = None
         try:
             color = self._skin[value]
             self._do_draw(color)
+        finally:
             if has_event(color, 'midi_value'):
                 self.__on_midi_value_changed.subject = color
             else:
                 self._disconnect_color_listener()
-        except SkinColorMissingError:
-            super(ButtonElement, self).set_light(value)
 
     def _do_draw(self, color):
         with self._drawing_via_skin():

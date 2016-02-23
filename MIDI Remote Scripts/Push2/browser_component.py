@@ -5,13 +5,46 @@ from itertools import imap
 from math import ceil
 import Live
 from ableton.v2.base import BooleanContext, depends, index_if, lazy_attribute, listenable_property, listens, liveobj_changed, liveobj_valid, nop, task
-from ableton.v2.control_surface import Component
+from ableton.v2.control_surface import Component, CompoundComponent
 from ableton.v2.control_surface.control import control_list, ButtonControl, StepEncoderControl, ToggleButtonControl
 from pushbase.browser_util import filter_type_for_hotswap_target, get_selection_for_new_device
 from pushbase.message_box_component import Messenger
 from .colors import translate_color_index
 from .browser_list import BrowserList
 from .browser_item import BrowserItem, ProxyBrowserItem
+NAVIGATION_COLORS = dict(color='Browser.Navigation', disabled_color='Browser.NavigationDisabled')
+
+class LoadNeighbourOverlayComponent(Component):
+    __events__ = ('load_next', 'load_previous')
+    load_next_button = ButtonControl(repeat=False, **NAVIGATION_COLORS)
+    load_previous_button = ButtonControl(repeat=False, **NAVIGATION_COLORS)
+
+    @load_next_button.pressed
+    def button(self, button):
+        self.notify_load_next()
+
+    @load_previous_button.pressed
+    def button(self, button):
+        self.notify_load_previous()
+
+    @listenable_property
+    def can_load_next(self):
+        return self.load_next_button.enabled
+
+    @can_load_next.setter
+    def can_load_next(self, can_load_next):
+        self.load_next_button.enabled = can_load_next
+        self.notify_can_load_next()
+
+    @listenable_property
+    def can_load_previous(self):
+        return self.load_previous_button.enabled
+
+    @can_load_previous.setter
+    def can_load_previous(self, can_load_previous):
+        self.load_previous_button.enabled = can_load_previous
+        self.notify_can_load_previous()
+
 
 class WrappedLoadableBrowserItem(BrowserItem):
 
@@ -81,21 +114,24 @@ class CannotFocusListError(Exception):
     pass
 
 
-class BrowserComponent(Component, Messenger):
+class BrowserComponent(CompoundComponent, Messenger):
     __events__ = ('loaded', 'close')
     NUM_ITEMS_PER_COLUMN = 6
     NUM_VISIBLE_BROWSER_LISTS = 7
     NUM_COLUMNS_IN_EXPANDED_LIST = 3
     EXPAND_LIST_TIME = 1.5
     REVEAL_PREVIEW_LIST_TIME = 0.2
-    navigation_colors = dict(color='Browser.Navigation', disabled_color='Browser.NavigationDisabled')
+    MIN_TIME = 0.6
+    MAX_TIME = 1.4
+    MIN_TIME_TEXT_LENGTH = 30
+    MAX_TIME_TEXT_LENGTH = 70
     up_button = ButtonControl(repeat=True)
     down_button = ButtonControl(repeat=True)
-    right_button = ButtonControl(repeat=True, **navigation_colors)
-    left_button = ButtonControl(repeat=True, **navigation_colors)
-    back_button = ButtonControl(**navigation_colors)
-    open_button = ButtonControl(**navigation_colors)
-    load_button = ButtonControl(**navigation_colors)
+    right_button = ButtonControl(repeat=True, **NAVIGATION_COLORS)
+    left_button = ButtonControl(repeat=True, **NAVIGATION_COLORS)
+    back_button = ButtonControl(**NAVIGATION_COLORS)
+    open_button = ButtonControl(**NAVIGATION_COLORS)
+    load_button = ButtonControl(**NAVIGATION_COLORS)
     close_button = ButtonControl()
     prehear_button = ToggleButtonControl(toggled_color='Browser.Option', untoggled_color='Browser.OptionDisabled')
     scroll_encoders = control_list(StepEncoderControl, num_steps=10, control_count=NUM_VISIBLE_BROWSER_LISTS)
@@ -107,7 +143,6 @@ class BrowserComponent(Component, Messenger):
     can_exit = listenable_property.managed(False)
     context_color_index = listenable_property.managed(-1)
     context_text = listenable_property.managed('')
-    load_text = listenable_property.managed('')
 
     @depends(commit_model_changes=None, selection=None)
     def __init__(self, preferences = dict(), commit_model_changes = None, selection = None, main_modes_ref = None, *a, **k):
@@ -124,20 +159,22 @@ class BrowserComponent(Component, Messenger):
         self._unexpand_with_scroll_encoder = False
         self._delay_preview_list = BooleanContext()
         self._selection = selection
-        self._load_next = False
         self._main_modes_ref = main_modes_ref if main_modes_ref is not None else nop
+        self._load_neighbour_overlay = self.register_component(LoadNeighbourOverlayComponent(is_enabled=False))
         self._content_filter_type = None
         self._content_hotswap_target = None
         self._preview_list_task = self._tasks.add(task.sequence(task.wait(self.REVEAL_PREVIEW_LIST_TIME), task.run(self._replace_preview_list_by_task))).kill()
         self._update_root_items()
         self._update_navigation_buttons()
-        self._update_load_text()
         self._update_context()
         self.prehear_button.is_toggled = preferences.setdefault('browser_prehear', True)
         self._on_selected_track_color_index_changed.subject = self.song.view
         self._on_selected_track_name_changed.subject = self.song.view
         self._on_detail_clip_name_changed.subject = self.song.view
         self._on_hotswap_target_changed.subject = self._browser
+        self._on_load_next.subject = self._load_neighbour_overlay
+        self._on_load_previous.subject = self._load_neighbour_overlay
+        self._on_focused_item_changed.subject = self
         self.register_slot(self, self.notify_focused_item, 'focused_list_index')
 
         def auto_unexpand():
@@ -277,7 +314,7 @@ class BrowserComponent(Component, Messenger):
                 return self.list_offset
             return self.list_offset + 1
         index = self.list_offset + encoder.index
-        if self.focused_list_index + 1 == index and self.focused_list.selected_item.is_loadable:
+        if self.focused_list_index + 1 == index and self.should_widen_focused_item:
             index = self.focused_list_index
         if 0 <= index < len(self._lists):
             return index
@@ -325,6 +362,14 @@ class BrowserComponent(Component, Messenger):
     def expanded(self):
         return self._expanded
 
+    @property
+    def load_neighbour_overlay(self):
+        return self._load_neighbour_overlay
+
+    @listenable_property
+    def should_widen_focused_item(self):
+        return self.focused_item.is_loadable and not self.focused_item.is_device
+
     def disconnect(self):
         super(BrowserComponent, self).disconnect()
         self._lists = []
@@ -363,7 +408,14 @@ class BrowserComponent(Component, Messenger):
                 self._update_root_items()
                 self._update_context()
                 self._update_list_offset()
+                self._update_load_neighbour_overlay_visibility()
+            else:
+                self._load_neighbour_overlay.set_enabled(False)
         self._current_hotswap_target = self._browser.hotswap_target
+
+    @listens('focused_item')
+    def _on_focused_item_changed(self):
+        self.notify_should_widen_focused_item()
 
     @property
     def browse_for_audio_clip(self):
@@ -405,7 +457,7 @@ class BrowserComponent(Component, Messenger):
                 self._crop_browser_lists(self._focused_list_index + 2)
             if self._focused_list_index == len(self._lists) - 1:
                 self._replace_preview_list()
-            self._reset_load_next()
+            self._load_neighbour_overlay.set_enabled(False)
             self._update_navigation_buttons()
             return True
         return False
@@ -418,7 +470,7 @@ class BrowserComponent(Component, Messenger):
             self._replace_preview_list()
         self._update_navigation_buttons()
         self._prehear_selected_item()
-        self._reset_load_next()
+        self._load_neighbour_overlay.set_enabled(False)
         self.notify_focused_item()
 
     def _get_actual_item(self, item):
@@ -427,20 +479,43 @@ class BrowserComponent(Component, Messenger):
             return contained_item
         return item
 
+    def _previous_can_be_loaded(self):
+        return self.focused_list.selected_index > 0 and self.focused_list.items[self.focused_list.selected_index - 1].is_loadable
+
+    def _next_can_be_loaded(self):
+        items = self.focused_list.items
+        return self.focused_list.selected_index < len(items) - 1 and items[self.focused_list.selected_index + 1].is_loadable
+
+    @listens('load_next')
+    def _on_load_next(self):
+        self.focused_list.selected_index += 1
+        self._load_selected_item()
+
+    @listens('load_previous')
+    def _on_load_previous(self):
+        self.focused_list.selected_index -= 1
+        self._load_selected_item()
+
+    def _update_load_neighbour_overlay_visibility(self):
+        self._load_neighbour_overlay.set_enabled(liveobj_valid(self._browser.hotswap_target) and (self._next_can_be_loaded() or self._previous_can_be_loaded()) and not self.focused_list.selected_item.is_device)
+
     def _load_selected_item(self):
         focused_list = self.focused_list
-        if self._load_next:
-            focused_list.selected_index += 1
-        self._load_next = focused_list.selected_index < len(focused_list.items) - 1 and liveobj_valid(self._browser.hotswap_target)
-        self._update_load_text()
+        self._update_load_neighbour_overlay_visibility()
+        self._update_navigation_buttons()
         item = self._get_actual_item(focused_list.selected_item)
-        notification_ref = self.show_notification(self._make_notification_text(item))
+        notification_text = self._make_notification_text(item)
+        text_length = len(notification_text)
+        notification_time = self.MIN_TIME
+        if text_length > self.MIN_TIME_TEXT_LENGTH:
+            if text_length > self.MAX_TIME_TEXT_LENGTH:
+                notification_time = self.MAX_TIME
+            else:
+                notification_time = self.MIN_TIME + (self.MAX_TIME - self.MIN_TIME) * float(text_length - self.MIN_TIME_TEXT_LENGTH) / (self.MAX_TIME_TEXT_LENGTH - self.MIN_TIME_TEXT_LENGTH)
+        self.show_notification(notification_text, notification_time=notification_time)
         self._commit_model_changes()
         self._load_item(item)
         self.notify_loaded()
-        notification = notification_ref()
-        if notification is not None:
-            notification.reschedule_after_slow_operation()
 
     def _make_notification_text(self, browser_item):
         return 'Loading %s' % browser_item.name
@@ -455,10 +530,6 @@ class BrowserComponent(Component, Messenger):
         else:
             with self._insert_right_of_selected():
                 self._browser.load_item(item)
-
-    def _reset_load_next(self):
-        self._load_next = False
-        self._update_load_text()
 
     @contextmanager
     def _insert_right_of_selected(self):
@@ -482,23 +553,24 @@ class BrowserComponent(Component, Messenger):
         if self.prehear_button.is_toggled and not self._updating_root_items:
             self._browser.stop_preview()
 
-    def _update_load_text(self):
-        self.load_text = 'Load Next' if self._load_next else 'Load'
-
     def _update_navigation_buttons(self):
         focused_list = self.focused_list
         self.up_button.enabled = focused_list.selected_index > 0
         self.down_button.enabled = focused_list.selected_index < len(focused_list.items) - 1
         selected_item_loadable = self.focused_list.selected_item.is_loadable
-        assume_can_enter = self._preview_list_task.is_running and not selected_item_loadable
         can_exit = self._focused_list_index > 0
+        assume_can_enter = self._preview_list_task.is_running and not selected_item_loadable
         can_enter = self._focused_list_index < len(self._lists) - 1 or assume_can_enter
         self.back_button.enabled = can_exit
         self.open_button.enabled = can_enter
         self.load_button.enabled = selected_item_loadable
+        self._load_neighbour_overlay.can_load_previous = self._previous_can_be_loaded()
+        self._load_neighbour_overlay.can_load_next = self._next_can_be_loaded()
         context_button_color = translate_color_index(self.context_color_index) if self.context_color_index > -1 else 'Browser.Navigation'
         self.load_button.color = context_button_color
         self.close_button.color = context_button_color
+        self._load_neighbour_overlay.load_next_button.color = context_button_color
+        self._load_neighbour_overlay.load_previous_button.color = context_button_color
         if not self._expanded:
             self.left_button.enabled = self.back_button.enabled
             self.right_button.enabled = can_enter or self._can_auto_expand()
@@ -661,6 +733,7 @@ class BrowserComponent(Component, Messenger):
             self._update_root_items()
             self._update_context()
             self._update_list_offset()
+            self._update_load_neighbour_overlay_visibility()
             self._update_navigation_buttons()
             self.expanded = False
             self._update_list_offset()
@@ -681,7 +754,7 @@ class BrowserComponent(Component, Messenger):
         having two actions on an item (open and load).
         """
         wrapped_loadable = WrappedLoadableBrowserItem(name=item.name, is_loadable=True, contained_item=item)
-        return FolderBrowserItem(name=item.name, contained_item=item, wrapped_loadable=wrapped_loadable)
+        return FolderBrowserItem(name=item.name, is_loadable=True, is_device=True, contained_item=item, wrapped_loadable=wrapped_loadable)
 
     def _is_hotswap_target_plugin(self, item):
         return isinstance(self._browser.hotswap_target, Live.PluginDevice.PluginDevice) and isinstance(item, Live.Browser.BrowserItem) and self._browser.relation_to_hotswap_target(item) == Live.Browser.Relation.equal

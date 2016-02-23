@@ -59,7 +59,7 @@ class MappedControl(MappedControlBase):
         @listens('normalized_value')
         def _control_value(self, value):
             if is_zoom_parameter(self.mapped_parameter):
-                self.mapped_parameter.zoom(value)
+                self.mapped_parameter.zoom(value * self._control_element.mapping_sensitivity)
             if self.mapped_parameter.is_quantized:
                 steps = self._quantized_stepper.advance(value)
                 if steps != 0:

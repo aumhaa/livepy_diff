@@ -1,9 +1,10 @@
 
 from __future__ import absolute_import, print_function
+from itertools import chain
 from ableton.v2.base import listens, liveobj_valid, listenable_property
 from ableton.v2.control_surface import CompoundComponent
 from ableton.v2.control_surface.control import EncoderControl, ToggleButtonControl
-from pushbase.clip_control_component import convert_length_to_bars_beats_sixteenths, convert_time_to_bars_beats_sixteenths, LoopSettingsControllerComponent as LoopSettingsControllerComponentBase, AudioClipSettingsControllerComponent as AudioClipSettingsControllerComponentBase, ONE_YEAR_AT_120BPM_IN_BEATS, WARP_MODE_NAMES
+from pushbase.clip_control_component import convert_beat_length_to_bars_beats_sixteenths, convert_beat_time_to_bars_beats_sixteenths, LoopSettingsControllerComponent as LoopSettingsControllerComponentBase, AudioClipSettingsControllerComponent as AudioClipSettingsControllerComponentBase, ONE_YEAR_AT_120BPM_IN_BEATS, WARP_MODE_NAMES
 from pushbase.internal_parameter import WrappingParameter
 from pushbase.mapped_control import MappedControl
 from .clip_decoration import ClipDecoratorFactory
@@ -20,15 +21,33 @@ class LoopSetting(WrappingParameter):
 
     def __init__(self, use_length_conversion = False, *a, **k):
         super(LoopSetting, self).__init__(*a, **k)
-        self._conversion = convert_length_to_bars_beats_sixteenths if use_length_conversion else convert_time_to_bars_beats_sixteenths
+        raise self.canonical_parent is not None or AssertionError
+        self._conversion = convert_beat_length_to_bars_beats_sixteenths if use_length_conversion else convert_beat_time_to_bars_beats_sixteenths
         self.recording = False
         self.set_property_host(self._parent)
+        self.__on_clip_changed.subject = self.canonical_parent
+        self.__on_clip_changed()
+
+    @listens('clip')
+    def __on_clip_changed(self):
+        self.__on_signature_numerator_changed.subject = self.canonical_parent.clip
+        self.__on_signature_denominator_changed.subject = self.canonical_parent.clip
+
+    @listens('signature_numerator')
+    def __on_signature_numerator_changed(self):
+        self.notify_value()
+
+    @listens('signature_denominator')
+    def __on_signature_denominator_changed(self):
+        self.notify_value()
 
     @property
     def display_value(self):
-        if not self.recording:
-            return unicode(self._conversion(self._get_property_value()))
-        return unicode('...')
+        if not liveobj_valid(self.canonical_parent.clip):
+            return unicode('-')
+        if self.recording:
+            return unicode('...')
+        return unicode(self._conversion((self.canonical_parent.clip.signature_numerator, self.canonical_parent.clip.signature_denominator), self._get_property_value()))
 
 
 class ClipZoomHandling(ZoomHandling):

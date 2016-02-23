@@ -10,6 +10,7 @@ from _Framework.IdentifiableControlSurface import IdentifiableControlSurface
 from _Framework.ModesComponent import ImmediateBehaviour, LayerMode, AddLayerMode
 from _Framework.InputControlElement import MIDI_CC_TYPE
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
+from _Framework.M4LInterfaceComponent import M4LInterfaceComponent
 from .Skin import make_default_skin
 from .Colors import CLIP_COLOR_TABLE, RGB_COLOR_TABLE
 from .ModeUtils import NotifyingModesComponent, SkinableBehaviourMixin, EnablingReenterBehaviour
@@ -20,6 +21,72 @@ from .SessionComponent import SessionComponent
 from .SessionZoomingComponent import SessionZoomingComponent
 from .MixerComponent import MixerComponent
 import consts
+USER_1_MATRIX_IDENTIFIERS = [[64,
+  65,
+  66,
+  67,
+  96,
+  97,
+  98,
+  99],
+ [60,
+  61,
+  62,
+  63,
+  92,
+  93,
+  94,
+  95],
+ [56,
+  57,
+  58,
+  59,
+  88,
+  89,
+  90,
+  91],
+ [52,
+  53,
+  54,
+  55,
+  84,
+  85,
+  86,
+  87],
+ [48,
+  49,
+  50,
+  51,
+  80,
+  81,
+  82,
+  83],
+ [44,
+  45,
+  46,
+  47,
+  76,
+  77,
+  78,
+  79],
+ [40,
+  41,
+  42,
+  43,
+  72,
+  73,
+  74,
+  75],
+ [36,
+  37,
+  38,
+  39,
+  68,
+  69,
+  70,
+  71]]
+USER_1_CHANNEL = 5
+USER_2_CHANNEL = 13
 
 class Launchpad_MK2(IdentifiableControlSurface, OptimizedControlSurface):
 
@@ -35,6 +102,7 @@ class Launchpad_MK2(IdentifiableControlSurface, OptimizedControlSurface):
             self._last_sent_layout_byte = None
             with inject(switch_layout=const(self._switch_layout)).everywhere():
                 self._create_modes()
+            self._create_m4l_interface()
 
     def _create_controls(self):
         multi_button_channels = consts.USER_MODE_CHANNELS
@@ -75,6 +143,20 @@ class Launchpad_MK2(IdentifiableControlSurface, OptimizedControlSurface):
         self._solo_button = self._scene_launch_matrix_raw[6]
         self._record_arm_button = self._scene_launch_matrix_raw[7]
         self._sliders = ButtonMatrixElement(rows=[[ SliderElement(MIDI_CC_TYPE, 0, identifier) for identifier in xrange(21, 29) ]])
+        self._create_user_controls()
+
+    def _create_user_controls(self):
+        """
+        These control elements are not used anywhere in the script;
+        instead, they are created so users can access them via
+        Max for Live.
+        """
+        self._user_1_matrix = ButtonMatrixElement(rows=[ [ make_button(identifier, USER_1_CHANNEL, name='User_1_Button_%d_%d' % (row_index, col_index)) for col_index, identifier in enumerate(row) ] for row_index, row in enumerate(USER_1_MATRIX_IDENTIFIERS) ], name='User_1_Matrix')
+        self._user_1_arrow_buttons = ButtonMatrixElement(rows=[[ make_button(identifier, USER_1_CHANNEL, msg_type=MIDI_CC_TYPE, name='User_1_Arrow_Button_%d' % (index,)) for index, identifier in enumerate(xrange(104, 108)) ]], name='User_1_Arrow_Buttons')
+        self._user_1_side_buttons = ButtonMatrixElement(rows=[ [make_button(identifier, USER_1_CHANNEL, name='User_1_Side_Button_%d' % (index,))] for index, identifier in enumerate(xrange(100, 108)) ], name='User_1_Side_Buttons')
+        self._user_2_matrix = ButtonMatrixElement(rows=[ [ make_button(offset + col_index, USER_2_CHANNEL, name='User_2_Button_%d_%d' % (col_index, row_index)) for col_index in xrange(8) ] for row_index, offset in enumerate(xrange(81, 10, -10)) ], name='User_2_Matrix')
+        self._user_2_arrow_buttons = ButtonMatrixElement(rows=[[ make_button(identifier, USER_2_CHANNEL, msg_type=MIDI_CC_TYPE, name='User_2_Arrow_Button_%d' % (index,)) for index, identifier in enumerate(xrange(104, 108)) ]], name='User_2_Arrow_Buttons')
+        self._user_2_side_buttons = ButtonMatrixElement(rows=[ [make_button(identifier, USER_2_CHANNEL, name='User_2_Side_Button_%d' % (index,))] for index, identifier in enumerate(xrange(89, 18, -10)) ], name='User_2_Side_Buttons')
 
     def _create_session(self):
         self._session = SessionComponent(is_enabled=False, num_tracks=self._session_matrix.width(), num_scenes=self._session_matrix.height(), enable_skinning=True, name='Session', is_root=True, layer=Layer(track_bank_left_button=self._left_button, track_bank_right_button=self._right_button, scene_bank_up_button=self._up_button, scene_bank_down_button=self._down_button))
@@ -113,6 +195,13 @@ class Launchpad_MK2(IdentifiableControlSurface, OptimizedControlSurface):
         self._modes.add_mode('mixer_mode', [self._session, self._stop_clip_layer_mode, self._mixer_home_page_layer], layout_byte=3, groups=set('mixer'))
         self._modes.layer = Layer(session_mode_button=self._session_button, user_1_mode_button=self._user_1_button, user_2_mode_button=self._user_2_button, mixer_mode_button=self._mixer_button, volume_mode_button=self._volume_button, pan_mode_button=self._pan_button, send_a_mode_button=self._send_a_button, send_b_mode_button=self._send_b_button)
         self._modes.selected_mode = 'session_mode'
+
+    def _create_m4l_interface(self):
+        self._m4l_interface = M4LInterfaceComponent(controls=self.controls, component_guard=self.component_guard, priority=1)
+        self.get_control_names = self._m4l_interface.get_control_names
+        self.get_control = self._m4l_interface.get_control
+        self.grab_control = self._m4l_interface.grab_control
+        self.release_control = self._m4l_interface.release_control
 
     def _set_send_index(self, index):
         self._mixer.send_index = index

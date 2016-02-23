@@ -1,13 +1,66 @@
 
 from __future__ import absolute_import, print_function
+import re
 from functools import partial
 from weakref import ref
 from ableton.v2.base import forward_property, maybe, task
 from ableton.v2.control_surface import CompoundComponent, CompoundElement, ControlElement, Layer, get_element
+from ableton.v2.control_surface.elements import adjust_string
 from pushbase.consts import DISPLAY_LENGTH, MESSAGE_BOX_PRIORITY
-from pushbase.message_box_component import MessageBoxComponent, Notification
+from pushbase.message_box_component import FORMAT_SPECIFIER_WITH_MARKUP_PATTERN, MessageBoxComponent, Notification
 from .special_physical_display import DISPLAY_BLOCK_LENGTH
 BLANK_BLOCK = ' ' * DISPLAY_BLOCK_LENGTH
+
+def adjust_arguments(format_string, original_arguments):
+    adjusted_arguments = list(original_arguments)
+    matches = re.finditer(FORMAT_SPECIFIER_WITH_MARKUP_PATTERN, format_string)
+    for index, match in enumerate(matches):
+        has_markup = match.group(1)
+        original_format_specifier = match.group(3)
+        if has_markup is not None:
+            desired_length = int(match.group(2))
+            original_argument = original_arguments[index]
+            if original_format_specifier != 's':
+                if original_format_specifier.find('*') != -1:
+                    raise ValueError('Format specifiers using * for field width/precision are not supported')
+                original_argument = ('%' + original_format_specifier) % original_argument
+            adjusted_arguments[index] = adjust_string(original_argument, desired_length)
+
+    return tuple(adjusted_arguments)
+
+
+def apply_formatting(text_spec):
+    """
+    Take a format string with arguments and format it. If given a plain string, just
+    returns it.
+    
+    In addition to the normal format specifiers offered by the % operator, this function
+    also supports special markup to specify a desired length for a sub string.
+    The markup is basically an extended format specifier:
+    
+        %len=DESIRED_LENGTH,FORMAT_SPECIFIER
+    
+    FORMAT_SPECIFIER is everything you would normally specify after the % sign
+    when using format strings. It can be as complicated as a normal format specifier,
+    e.g. `-08d` or similar. If FORMAT_SPECIFIER is anything except `s`, the argument
+    will first be converted to a string using FORMAT_SPECIFIER, and then the length
+    adjustment is applied.
+    
+    NOTE: The * versions of field width and precision, e.g. %.*f, are not supported with
+    the extended markup, and the function will raise a ValueError when trying to use them.
+    
+    DESIRED_LENGTH is used as argument to `adjust_string` when applying the length
+    adjustment.
+    """
+    if isinstance(text_spec, tuple):
+        format_string = text_spec[0]
+        original_arguments = text_spec[1:]
+        adjusted_arguments = adjust_arguments(format_string, original_arguments)
+        format_string = re.sub(FORMAT_SPECIFIER_WITH_MARKUP_PATTERN, '%s', format_string)
+        return format_string % adjusted_arguments
+    else:
+        return text_spec
+
 
 def align_none(width, text):
     return text
@@ -83,8 +136,10 @@ class NotificationComponent(CompoundComponent):
     def show_notification(self, text, blink_text = None, notification_time = None):
         """
         Triggers a notification with the given text.
+        If text is a tuple, it will treat it as a format string + arguments.
         """
         self._create_tasks(notification_time)
+        text = apply_formatting(text)
         text = self._align_text_fn(text)
         blink_text = self._align_text_fn(blink_text)
         if blink_text is not None:

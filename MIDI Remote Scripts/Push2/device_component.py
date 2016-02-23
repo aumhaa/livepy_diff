@@ -6,25 +6,11 @@ from ableton.v2.control_surface.control import control_list, ButtonControl
 from ableton.v2.control_surface.components.device import DeviceProvider as DeviceProviderBase
 from pushbase.device_chain_utils import is_simpler
 from pushbase.device_component import DeviceComponent as DeviceComponentBase
-from pushbase.parameter_provider import generate_info, is_parameter_quantized
+from pushbase.parameter_provider import ParameterInfo
 from .simpler_zoom import SimplerZoomHandling
 from .device_parameter_bank_with_options import create_device_bank_with_options, OPTIONS_PER_BANK
 from .real_time_channel import RealTimeDataComponent
-from .parameter_mapping_sensitivities import PARAMETER_SENSITIVITIES, DEFAULT_SENSITIVITY_KEY, FINE_GRAINED_SENSITIVITY_KEY, CONTINUOUS_MAPPING_SENSITIVITY, FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY, QUANTIZED_MAPPING_SENSITIVITY
-
-def parameter_mapping_sensitivity(parameter):
-    is_quantized = is_parameter_quantized(parameter, parameter and parameter.canonical_parent)
-    if is_quantized:
-        return QUANTIZED_MAPPING_SENSITIVITY
-    return CONTINUOUS_MAPPING_SENSITIVITY
-
-
-def fine_grain_parameter_mapping_sensitivity(parameter):
-    is_quantized = is_parameter_quantized(parameter, parameter and parameter.canonical_parent)
-    if is_quantized:
-        return QUANTIZED_MAPPING_SENSITIVITY
-    return FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY
-
+from .parameter_mapping_sensitivities import PARAMETER_SENSITIVITIES, DEFAULT_SENSITIVITY_KEY, FINE_GRAINED_SENSITIVITY_KEY, parameter_mapping_sensitivity, fine_grain_parameter_mapping_sensitivity
 
 def parameter_sensitivities(device_class, parameter):
     sensitivities = {}
@@ -88,8 +74,7 @@ class DeviceComponent(DeviceComponentBase):
             simpler.zoom.reset_focus_and_animation()
         self._zoom_handling.set_parameter_host(simpler)
         self.__on_sample_or_file_path_changed.subject = simpler
-        self.__on_waveform_visible_start_changed.subject = simpler
-        self.__on_waveform_visible_end_changed.subject = simpler
+        self.__on_waveform_visible_region_changed.subject = simpler
         self._playhead_real_time_data.set_data(device)
         self._waveform_real_time_data.set_data(device)
         self.notify_options()
@@ -136,13 +121,8 @@ class DeviceComponent(DeviceComponentBase):
         if not self.use_waveform_navigation:
             self._update_parameter_sensitivity()
 
-    @listens('waveform_navigation.visible_start')
-    def __on_waveform_visible_start_changed(self, *a):
-        if self.use_waveform_navigation:
-            self._update_parameter_sensitivity()
-
-    @listens('waveform_navigation.visible_end')
-    def __on_waveform_visible_end_changed(self, *a):
+    @listens('waveform_navigation.visible_region')
+    def __on_waveform_visible_region_changed(self, *a):
         if self.use_waveform_navigation:
             self._update_parameter_sensitivity()
 
@@ -160,10 +140,6 @@ class DeviceComponent(DeviceComponentBase):
     def __on_sample_or_file_path_changed(self):
         self._waveform_real_time_data.invalidate()
 
-    def _get_provided_parameters(self):
-        _, parameters = self._current_bank_details() if self.device() else (None, ())
-        return [ self._create_parameter_info(p) for p in parameters ]
-
     def _has_simpler_in_multi_sample_mode(self):
         device = self.device()
         return is_simpler(device) and device.multi_sample_mode
@@ -174,7 +150,7 @@ class DeviceComponent(DeviceComponentBase):
             name = param.name if param != None else ''
             return not self._has_simpler_in_multi_sample_mode() or name not in self.ZOOM_SENSITIVE_PARAMETERS + ('Zoom',)
 
-        return generate_info(parameter if is_available(parameter) else None, default_sens_factory=self.default_sensitivity, fine_sens_factory=self.fine_sensitivity)
+        return ParameterInfo(parameter=parameter if is_available(parameter) else None, default_encoder_sensitivity=self.default_sensitivity(parameter), fine_grain_encoder_sensitivity=self.fine_sensitivity(parameter))
 
     def _sensitivity(self, sensitivity_key, parameter):
         device = self.device()
@@ -182,7 +158,8 @@ class DeviceComponent(DeviceComponentBase):
         if liveobj_valid(parameter) and is_simpler(device) and liveobj_valid(device.sample):
             if parameter.name in self.ZOOM_SENSITIVE_PARAMETERS:
                 if self.use_waveform_navigation:
-                    sensitivity *= device.waveform_navigation.visible_proportion
+                    if device.waveform_navigation is not None:
+                        sensitivity *= device.waveform_navigation.visible_proportion
                 else:
                     sensitivity *= self._zoom_handling.zoom_factor
             if parameter.name in self.PARAMETERS_RELATIVE_TO_ACTIVE_AREA:

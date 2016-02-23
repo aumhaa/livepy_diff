@@ -682,7 +682,7 @@ class ControlSurface(SimpleControlSurface):
         """
         raise self._device_provider is not None or AssertionError
         with self.component_guard():
-            self._device_provider.locked_device = device
+            self._device_provider.lock_to_device(device)
 
     def unlock_from_device(self, device):
         """
@@ -690,8 +690,9 @@ class ControlSurface(SimpleControlSurface):
         Live tells the script to unlock from a certain device
         """
         raise self._device_provider is not None or AssertionError
+        raise self._device_provider.is_locked_to_device or AssertionError
         with self.component_guard():
-            self._device_provider.locked_device = None
+            self._device_provider.unlock_from_device()
 
     def restore_bank(self, bank_index):
         """

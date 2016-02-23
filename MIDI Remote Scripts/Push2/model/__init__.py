@@ -22,6 +22,7 @@ class Track(Binding):
     arm = view_property(bool, False)
     isMaster = view_property(bool, False)
     isAudio = view_property(bool, False)
+    isReturn = view_property(bool, False)
     id = id_property()
 
 
@@ -134,34 +135,39 @@ class Controls(ViewModel):
 
 class Slice(Binding):
     id = id_property()
-    time = view_property(int, -1)
+    time = view_property(float, -1)
 
 
-class Sample(Binding):
-    start_marker = view_property(int, 0)
-    end_marker = view_property(int, 0)
-    length = view_property(int, 0)
-
-
-class SimplerView(Binding):
-    sample_start = view_property(int, 0)
-    sample_end = view_property(int, 0)
-    sample_loop_start = view_property(int, 0)
-    sample_loop_end = view_property(int, 0)
-    sample_loop_fade = view_property(int, 0)
-    sample_env_fade_in = view_property(int, 0)
-    sample_env_fade_out = view_property(int, 0)
+class SimplerPositions(Binding):
+    start = view_property(float, 0)
+    end = view_property(float, 0)
+    start_marker = view_property(float, 0)
+    end_marker = view_property(float, 0)
+    active_start = view_property(float, 0)
+    active_end = view_property(float, 0)
+    loop_start = view_property(float, 0)
+    loop_end = view_property(float, 0)
+    loop_fade_in_samples = view_property(float, 0)
+    env_fade_in = view_property(float, 0)
+    env_fade_out = view_property(float, 0)
+    slices = view_property(listmodel(Slice))
+    selected_slice = view_property(Slice)
 
 
 class WaveformNavigationFocusMarker(Binding):
     name = view_property(unicode, u'')
-    position = view_property(int, -1)
+    position = view_property(float, -1)
+
+
+class WaveformRegion(Binding):
+    start = view_property(float, 0.0)
+    end = view_property(float, 0.0)
 
 
 class WaveformNavigation(Binding):
     animate_visible_region = view_property(bool, False)
-    visible_start = view_property(float, 0.0, depends=animate_visible_region)
-    visible_end = view_property(float, 0.0, depends=animate_visible_region)
+    visible_region = view_property(WaveformRegion, depends=animate_visible_region)
+    visible_region_in_samples = view_property(WaveformRegion, depends=animate_visible_region)
     show_focus = view_property(bool, False)
     focus_marker = view_property(WaveformNavigationFocusMarker)
 
@@ -182,8 +188,8 @@ class SimplerProperties(Binding):
     selected_slice = view_property(Slice)
     playhead_real_time_channel_id = view_property(unicode, '')
     waveform_real_time_channel_id = view_property(unicode, '')
-    sample = view_property(Sample)
-    view = view_property(SimplerView)
+    warping = view_property(bool, False)
+    positions = view_property(SimplerPositions)
     waveform_navigation = view_property(WaveformNavigation)
 
 
@@ -227,6 +233,14 @@ class BrowserItem(Binding):
     name = view_property(unicode, '')
     icon = view_property(unicode, '')
     is_loadable = view_property(bool, False)
+    is_device = view_property(bool, False)
+
+
+class BrowserLoadNeighbourOverlay(Binding):
+    ADAPTER = VisibleAdapter
+    visible = view_property(bool, False)
+    can_load_next = view_property(bool, False)
+    can_load_previous = view_property(bool, False)
 
 
 class BrowserModel(Binding):
@@ -241,10 +255,11 @@ class BrowserModel(Binding):
     can_enter = view_property(bool, False)
     can_exit = view_property(bool, False)
     expanded = view_property(bool, False)
-    load_text = view_property(unicode, u'')
     prehear_enabled = view_property(bool, False)
     context_text = view_property(unicode, u'')
     context_color_index = view_property(int, -1)
+    load_neighbour_overlay = view_property(BrowserLoadNeighbourOverlay)
+    should_widen_focused_item = view_property(bool, False)
 
 
 class BrowserList(Binding):
@@ -355,12 +370,13 @@ class AudioClipSettingsModel(Binding):
     playhead_real_time_channel_id = view_property(unicode, '')
 
 
-class ClipViewModel(Binding):
-    sample_length = view_property(int, -1)
-    sample_start_marker = view_property(int, -1)
-    sample_end_marker = view_property(int, -1)
-    sample_loop_start = view_property(int, -1)
-    sample_loop_end = view_property(int, -1)
+class ClipPositions(Binding):
+    start = view_property(float, -1)
+    end = view_property(float, -1)
+    start_marker = view_property(float, -1)
+    end_marker = view_property(float, -1)
+    loop_start = view_property(float, -1)
+    loop_end = view_property(float, -1)
 
 
 class ClipModel(Binding):
@@ -369,7 +385,10 @@ class ClipModel(Binding):
     name = view_property(unicode, '')
     color_index = view_property(int, -1)
     is_recording = view_property(bool, False)
-    view = view_property(ClipViewModel)
+    warping = view_property(bool, False)
+    positions = view_property(ClipPositions)
+    signature_numerator = view_property(int, 4)
+    signature_denominator = view_property(int, 4)
 
 
 class ClipControlModel(Binding):

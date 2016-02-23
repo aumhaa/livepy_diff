@@ -21,4 +21,4 @@ class CaptureAndInsertSceneComponent(CaptureAndInsertSceneComponentBase):
         new_slots = self.song.view.selected_scene.clip_slots
         for ix, clip in enumerate(played_clips):
             if clip:
-                ClipDecoratedPropertiesCopier(target_clip=clip, destination_clip=new_slots[ix].clip, decorator_factory=self._decorator_factory).post_duplication_action()
+                ClipDecoratedPropertiesCopier(source_clip=clip, destination_clip=new_slots[ix].clip, decorator_factory=self._decorator_factory).post_duplication_action()

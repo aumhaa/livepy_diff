@@ -7,7 +7,7 @@ from ableton.v2.control_surface import Component, CompoundComponent
 from ableton.v2.control_surface.control import control_list, ButtonControl
 from ableton.v2.control_surface.elements import DisplayDataSource
 from .action_with_options_component import ActionWithSettingsComponent
-from .clip_control_component import convert_length_to_bars_beats_sixteenths
+from .clip_control_component import convert_beat_length_to_bars_beats_sixteenths
 from .consts import MessageBoxText, SIDE_BUTTON_COLORS
 from .message_box_component import Messenger
 AutomationState = Live.DeviceParameter.AutomationState
@@ -83,7 +83,7 @@ class DuplicateLoopComponent(ActionWithSettingsComponent, Messenger):
             if liveobj_valid(clip):
                 try:
                     clip.duplicate_loop()
-                    self.show_notification(MessageBoxText.DUPLICATE_LOOP % dict(length=convert_length_to_bars_beats_sixteenths(clip.loop_end - clip.loop_start)))
+                    self.show_notification(MessageBoxText.DUPLICATE_LOOP % dict(length=convert_beat_length_to_bars_beats_sixteenths((clip.signature_numerator, clip.signature_denominator), clip.loop_end - clip.loop_start)))
                 except RuntimeError:
                     pass
 
@@ -151,10 +151,15 @@ class SelectionDisplayComponent(Component):
 
 
 def select_clip_and_get_name_from_slot(clip_slot, song):
-    clip_name = '[none]'
     if liveobj_valid(clip_slot):
         if song.view.highlighted_clip_slot != clip_slot:
             song.view.highlighted_clip_slot = clip_slot
+    return clip_name_from_clip_slot(clip_slot)
+
+
+def clip_name_from_clip_slot(clip_slot):
+    clip_name = '[none]'
+    if liveobj_valid(clip_slot):
         clip = clip_slot.clip
         clip_name = '[empty slot]'
         if liveobj_valid(clip):
@@ -208,7 +213,7 @@ class SelectComponent(CompoundComponent):
             if clip.is_recording:
                 label = 'Record Count:'
                 length = (clip.playing_position - clip.loop_start) * clip.signature_denominator / clip.signature_numerator
-                time = convert_length_to_bars_beats_sixteenths(length)
+                time = convert_beat_length_to_bars_beats_sixteenths((clip.signature_numerator, clip.signature_denominator), length)
             else:
                 label = 'Time Remaining:'
                 length = clip.loop_end - clip.playing_position

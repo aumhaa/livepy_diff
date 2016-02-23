@@ -17,9 +17,12 @@ def make_blinking_track_color(track, blink_to_color):
 
 
 def determine_shaded_color_index(color_index, shade_level):
-    raise in_range(color_index, 1, 27) or AssertionError
-    raise shade_level in (1, 2) or AssertionError
-    return (color_index - 1) * 2 + 64 + shade_level
+    if not (in_range(color_index, 1, 27) or color_index == WHITE_MIDI_VALUE):
+        raise AssertionError
+        raise shade_level in (1, 2) or AssertionError
+        return color_index == WHITE_MIDI_VALUE and color_index + shade_level
+    else:
+        return (color_index - 1) * 2 + 64 + shade_level
 
 
 class TransparentColor(object):

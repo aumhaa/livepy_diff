@@ -13,7 +13,6 @@ from pushbase.actions import SelectComponent, StopClipComponent
 from pushbase.colors import CLIP_COLOR_TABLE, RGB_COLOR_TABLE
 from pushbase.browser_modes import BrowserHotswapMode
 from pushbase.control_element_factory import create_sysex_element
-from pushbase.device_component import DeviceComponent
 from pushbase.note_editor_component import NoteEditorComponent
 from pushbase.note_settings_component import NoteSettingsComponent
 from pushbase.playhead_element import NullPlayhead
@@ -21,12 +20,12 @@ from pushbase.push_base import PushBase
 from pushbase.quantization_component import QuantizationComponent
 from pushbase.sysex import LIVE_MODE
 from pushbase.session_recording_component import FixedLengthSessionRecordingComponent
-from pushbase.special_mixer_component import SpecialMixerComponent
 from pushbase.simpler_decoration import SimplerDecoratorFactory
 from .actions import CreateDeviceComponent, CreateDefaultTrackComponent, CreateInstrumentTrackComponent
 from .browser_component import BrowserComponent
 from .browser_model_factory import make_browser_model
 from .custom_bank_definitions import BANK_DEFINITIONS
+from .device_component import DeviceComponent
 from .device_navigation_component import DeviceNavigationComponent
 from .drum_group_component import DrumGroupComponent
 from .elements import Elements
@@ -38,7 +37,9 @@ from .multi_entry_mode import MultiEntryMode
 from .notification_component import NotificationComponent, align_right
 from .pad_sensitivity import PadUpdateComponent, pad_parameter_sender
 from .scales_component import InstrumentScalesComponent
+from .selected_track_parameter_provider import SelectedTrackParameterProvider
 from .settings import CRITICAL_THRESHOLD_LIMIT, action_pad_sensitivity, create_settings, make_pad_parameters
+from .special_mixer_component import SpecialMixerComponent
 from .user_settings_component import UserComponent
 from .with_priority import WithPriority
 from . import sysex
@@ -59,6 +60,7 @@ class Push(PushBase):
     """
     input_target_name_for_auto_arm = 'Push Input'
     device_component_class = DeviceComponent
+    selected_track_parameter_provider_class = SelectedTrackParameterProvider
     bank_definitions = BANK_DEFINITIONS
     note_editor_class = NoteEditorComponent
 
@@ -300,7 +302,7 @@ class Push(PushBase):
         return EnablingModesComponent(component=self._create_scales(), enabled_color='DefaultButton.On', is_enabled=False, layer=Layer(cycle_mode_button='scale_presets_button'))
 
     def _create_drum_component(self):
-        return DrumGroupComponent(name='Drum_Group', is_enabled=False, notification_formatter=self._drum_pad_notification_formatter(), quantizer=self._quantize, selector=self._selector)
+        return DrumGroupComponent(name='Drum_Group', is_enabled=False, quantizer=self._quantize, selector=self._selector)
 
     def _init_note_settings_component(self):
         self._note_settings_component = NoteSettingsComponent(grid_resolution=self._grid_resolution, is_enabled=False, layer=Layer(top_display_line='display_line1', bottom_display_line='display_line2', info_display_line='display_line3', clear_display_line='display_line4', full_velocity_button='accent_button', priority=consts.MOMENTARY_DIALOG_PRIORITY))

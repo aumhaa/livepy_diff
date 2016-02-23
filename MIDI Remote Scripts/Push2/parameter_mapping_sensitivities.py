@@ -1,10 +1,26 @@
 
 from __future__ import absolute_import, print_function
+from pushbase.parameter_provider import is_parameter_quantized
 DEFAULT_SENSITIVITY_KEY = 'normal_sensitivity'
 FINE_GRAINED_SENSITIVITY_KEY = 'fine_grained_sensitivity'
 CONTINUOUS_MAPPING_SENSITIVITY = 1.0
 FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY = 0.01
 QUANTIZED_MAPPING_SENSITIVITY = 1.0 / 15.0
+
+def parameter_mapping_sensitivity(parameter):
+    is_quantized = is_parameter_quantized(parameter, parameter and parameter.canonical_parent)
+    if is_quantized:
+        return QUANTIZED_MAPPING_SENSITIVITY
+    return CONTINUOUS_MAPPING_SENSITIVITY
+
+
+def fine_grain_parameter_mapping_sensitivity(parameter):
+    is_quantized = is_parameter_quantized(parameter, parameter and parameter.canonical_parent)
+    if is_quantized:
+        return QUANTIZED_MAPPING_SENSITIVITY
+    return FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY
+
+
 PARAMETER_SENSITIVITIES = {'Analog': {'OSC1 Octave': {DEFAULT_SENSITIVITY_KEY: 0.1},
             'OSC2 Octave': {DEFAULT_SENSITIVITY_KEY: 0.1},
             'OSC1 Semi': {DEFAULT_SENSITIVITY_KEY: 0.5},

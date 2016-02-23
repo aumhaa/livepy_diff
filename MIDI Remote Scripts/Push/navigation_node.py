@@ -258,7 +258,6 @@ class ChainNode(ModelNode):
         if selected and isinstance(selected, Live.DrumPad.DrumPad):
             if selected.chains and selected.chains[0].devices:
                 select_and_appoint_device(song, selected.chains[0].devices[0])
-            selected.canonical_parent.view.selected_drum_pad = selected
         elif selected and isinstance(selected, Live.Device.Device):
             select_and_appoint_device(song, selected)
             self._device_bank_registry.set_device_bank(selected, 0)

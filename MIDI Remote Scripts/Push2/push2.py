@@ -49,7 +49,8 @@ from .note_settings import NoteSettingsComponent
 from .notification_component import NotificationComponent
 from .pad_velocity_curve import PadVelocityCurveSender
 from .scales_component import ScalesComponent, ScalesEnabler
-from .session_component import SessionComponent
+from .selected_track_parameter_provider import SelectedTrackParameterProvider
+from .session_component import DecoratingCopyHandler, SessionComponent
 from .session_recording import SessionRecordingComponent
 from .session_ring_selection_linking import SessionRingSelectionLinking
 from .settings import create_settings
@@ -101,12 +102,12 @@ class RealTimeClientModel(Subject):
 
 
 class Push2(IdentifiableControlSurface, PushBase):
-    session_component_type = SessionComponent
     drum_group_note_editor_skin = 'DrumGroupNoteEditor'
     input_target_name_for_auto_arm = 'Push2 Input'
     note_editor_velocity_range_thresholds = VELOCITY_RANGE_THRESHOLDS
     device_component_class = DeviceComponent
     device_provider_class = Push2DeviceProvider
+    selected_track_parameter_provider_class = SelectedTrackParameterProvider
     bank_definitions = BANK_DEFINITIONS
     note_editor_class = Push2NoteEditorComponent
     RESEND_MODEL_DATA_TIMEOUT = 5.0
@@ -332,8 +333,11 @@ class Push2(IdentifiableControlSurface, PushBase):
     def _create_session_overview_layer(self):
         return Layer(button_matrix='matrix')
 
+    def _instantiate_session(self):
+        return SessionComponent(session_ring=self._session_ring, is_enabled=False, auto_name=True, clip_slot_copy_handler=DecoratingCopyHandler(decorator_factory=self._clip_decorator_factory), layer=self._create_session_layer())
+
     def _create_drum_component(self):
-        return DrumGroupComponent(name='Drum_Group', is_enabled=False, notification_formatter=self._drum_pad_notification_formatter(), tracks_provider=self._session_ring, device_decorator_factory=self._device_decorator_factory, quantizer=self._quantize)
+        return DrumGroupComponent(name='Drum_Group', is_enabled=False, tracks_provider=self._session_ring, device_decorator_factory=self._device_decorator_factory, quantizer=self._quantize)
 
     def _create_device_mode(self):
         self._drum_pad_parameter_component = DrumPadParameterComponent(view_model=self._model, is_enabled=False, layer=Layer(choke_encoder='parameter_controls_raw[0]'))
@@ -371,8 +375,8 @@ class Push2(IdentifiableControlSurface, PushBase):
     def _init_browse_mode(self):
         application = Live.Application.get_application()
         browser = application.browser
-        self._main_modes.add_mode('browse', [BrowseMode(application=application, song=self.song, browser=browser, component_mode=self._browser_component_mode)], behaviour=BrowserModeBehaviour())
-        self._main_modes.add_mode('add_device', [AddDeviceMode(application=application, song=self.song, browser=browser, component_mode=self._browser_component_mode)], behaviour=BrowserModeBehaviour())
+        self._main_modes.add_mode('browse', [BrowseMode(application=application, song=self.song, browser=browser, drum_group_component=self._drum_component, component_mode=self._browser_component_mode)], behaviour=BrowserModeBehaviour())
+        self._main_modes.add_mode('add_device', [AddDeviceMode(application=application, song=self.song, browser=browser, drum_group_component=self._drum_component, component_mode=self._browser_component_mode)], behaviour=BrowserModeBehaviour())
         self._main_modes.add_mode('add_track', [AddTrackMode(browser=browser, component_mode=self._new_track_browser_component_mode)], behaviour=BrowserModeBehaviour())
 
     def _create_browser_layer(self):
@@ -382,6 +386,7 @@ class Push2(IdentifiableControlSurface, PushBase):
         browser = BrowserComponent(name='Browser', is_enabled=False, preferences=self.preferences, main_modes_ref=weakref.ref(self._main_modes), layer=self._create_browser_layer())
         self._on_browser_loaded.add_subject(browser)
         self._on_browser_closed.add_subject(browser)
+        browser.load_neighbour_overlay.layer = Layer(load_previous_button='track_state_buttons_raw[7]', load_next_button='select_buttons_raw[7]', priority=consts.DIALOG_PRIORITY)
         return browser
 
     def _create_new_track_browser(self):
@@ -471,9 +476,6 @@ class Push2(IdentifiableControlSurface, PushBase):
         self._model.chainListView = self._chain_selection
         self._model.parameterBankListView = self._bank_selection
         self._model.editModeOptionsView = self._bank_selection.options
-
-    def _drum_pad_notification_formatter(self):
-        return None
 
     def _create_view_control_component(self):
         return ViewControlComponent(name='View_Control', tracks_provider=self._session_ring)
@@ -566,7 +568,8 @@ class Push2(IdentifiableControlSurface, PushBase):
         clip_control_mode_selector.selected_mode = 'no_clip'
         clip_control = ClipControlComponent(loop_controller=self._loop_controller, audio_clip_controller=audio_clip_controller, mode_selector=clip_control_mode_selector, decorator_factory=self._clip_decorator_factory, is_enabled=False)
         self._model.clipView = clip_control
-        return [clip_control_mode_selector,
+        return [partial(self._view_control.show_view, 'Detail/Clip'),
+         clip_control_mode_selector,
          make_freeze_aware(self._loop_controller, base_loop_layer),
          make_freeze_aware(audio_clip_controller, audio_clip_layer),
          clip_control]
@@ -626,7 +629,8 @@ class Push2(IdentifiableControlSurface, PushBase):
         self.__on_workflow_setting_changed.subject = self._setup_settings.general
         self.__on_new_waveform_navigation_setting_changed.subject = self._setup_settings.experimental
         self.__on_new_waveform_navigation_setting_changed(self._setup_settings.experimental.new_waveform_navigation)
-        setup = SetupComponent(name='Setup', settings=self._setup_settings, pad_curve_sender=self._pad_curve_sender, in_developer_mode=self._c_instance.in_developer_mode, is_enabled=False, layer=make_dialog_layer(category_radio_buttons='select_buttons', priority=consts.SETUP_DIALOG_PRIORITY))
+        in_developer_mode = self.application().has_option('_Push2DeveloperMode')
+        setup = SetupComponent(name='Setup', settings=self._setup_settings, pad_curve_sender=self._pad_curve_sender, in_developer_mode=in_developer_mode, is_enabled=False, layer=make_dialog_layer(category_radio_buttons='select_buttons', priority=consts.SETUP_DIALOG_PRIORITY))
         setup.general.layer = Layer(workflow_encoder='parameter_controls_raw[0]', display_brightness_encoder='parameter_controls_raw[1]', led_brightness_encoder='parameter_controls_raw[2]', priority=consts.SETUP_DIALOG_PRIORITY)
         setup.pad_settings.layer = Layer(sensitivity_encoder='parameter_controls_raw[4]', gain_encoder='parameter_controls_raw[5]', dynamics_encoder='parameter_controls_raw[6]', priority=consts.SETUP_DIALOG_PRIORITY)
         setup.display_debug.layer = Layer(show_row_spaces_button='track_state_buttons_raw[0]', show_row_margins_button='track_state_buttons_raw[1]', show_row_middle_button='track_state_buttons_raw[2]', show_button_spaces_button='track_state_buttons_raw[3]', show_unlit_button_button='track_state_buttons_raw[4]', show_lit_button_button='track_state_buttons_raw[5]', priority=consts.SETUP_DIALOG_PRIORITY)

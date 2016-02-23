@@ -1,8 +1,17 @@
 
 from __future__ import absolute_import, print_function
 from ableton.v2.base import depends, listens, SlotManager
-from .special_chan_strip_component import TRACK_PARAMETER_NAMES
-from .parameter_provider import ParameterProvider, generate_info
+from .parameter_provider import ParameterProvider
+TRACK_PARAMETER_NAMES = ('Volume', 'Pan', 'Send A', 'Send B', 'Send C', 'Send D', 'Send E', 'Send F', 'Send G', 'Send H', 'Send I', 'Send J', 'Send K', 'Send L')
+
+def toggle_arm(track_to_arm, song, exclusive = False):
+    if track_to_arm.can_be_armed:
+        track_to_arm.arm = not track_to_arm.arm
+        if exclusive and (track_to_arm.implicit_arm or track_to_arm.arm):
+            for track in song.tracks:
+                if track.can_be_armed and track != track_to_arm:
+                    track.arm = False
+
 
 class SelectedTrackParameterProvider(ParameterProvider, SlotManager):
 
@@ -18,8 +27,11 @@ class SelectedTrackParameterProvider(ParameterProvider, SlotManager):
     def parameters(self):
         if self._track:
             params = [self._track.mixer_device.volume, self._track.mixer_device.panning] + list(self._track.mixer_device.sends)
-            return [ generate_info(p, name=n) for n, p in zip(TRACK_PARAMETER_NAMES, params) ]
+            return [ self._create_parameter_info(p, n) for n, p in zip(TRACK_PARAMETER_NAMES, params) ]
         return []
+
+    def _create_parameter_info(self, parameter, name):
+        raise NotImplementedError()
 
     @listens('visible_tracks')
     def _on_visible_tracks(self):

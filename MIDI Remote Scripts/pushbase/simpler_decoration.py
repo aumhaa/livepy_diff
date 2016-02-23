@@ -64,6 +64,8 @@ class SimplerDeviceDecorator(Subject, SlotManager, LiveObjectDecorator):
         self.formants = WrappingParameter(name='Formants', parent=self, property_host=self._live_object.sample, source_property='complex_pro_formants', from_property_value=from_user_range(0.0, 100.0), to_property_value=to_user_range(0.0, 100.0))
         self.complex_pro_envelope_param = WrappingParameter(name='Envelope Complex Pro', parent=self, property_host=self._live_object.sample, source_property='complex_pro_envelope', from_property_value=from_user_range(8.0, 256.0), to_property_value=to_user_range(8.0, 256.0))
         self.gain_param = WrappingParameter(name='Gain', parent=self, property_host=self._live_object.sample, source_property='gain', display_value_conversion=lambda _: (self._live_object.sample.gain_display_string() if liveobj_valid(self._live_object) and liveobj_valid(self._live_object.sample) else ''))
+        self.slicing_style_param = EnumWrappingParameter(name='Slice Style', parent=self, values_property_host=self, index_property_host=self._live_object.sample, values_property='available_slice_styles', index_property='slicing_style')
+        self.secret_slicing_param = BoolWrappingParameter(name='Secret Slicing', parent=self, property_host=self, source_property='show_slicing_style')
         self._sample_based_parameters.extend([self.start,
          self.end,
          self.sensitivity,
@@ -83,7 +85,9 @@ class SimplerDeviceDecorator(Subject, SlotManager, LiveObjectDecorator):
          self.warp_mode_param,
          self.voices_param,
          self.granulation_resolution,
-         self.transient_loop_mode])
+         self.transient_loop_mode,
+         self.slicing_style_param,
+         self.secret_slicing_param])
 
     def _decorated_parameters(self):
         return tuple(self._sample_based_parameters) + tuple(self._additional_parameters)
@@ -112,6 +116,14 @@ class SimplerDeviceDecorator(Subject, SlotManager, LiveObjectDecorator):
     def available_resolutions(self):
         return (u'1 Bar', u'1/2', u'1/4', u'1/8', u'1/16', u'1/32', u'Transients')
 
+    @listenable_property
+    def show_slicing_style(self):
+        return Live.Application.get_application().has_option('_ShowSlicingStyle')
+
+    @property
+    def available_slice_styles(self):
+        return (u'Transient', u'Manual')
+
     @property
     def available_transient_loop_modes(self):
         return ('Off', 'Forward', 'Alternate')
@@ -128,13 +140,19 @@ class SimplerDeviceDecorator(Subject, SlotManager, LiveObjectDecorator):
 
     @listens('sample')
     def __on_sample_changed(self):
+        self._on_sample_changed()
+
+    def _on_sample_changed(self):
         self._reconnect_sample_listeners()
 
     def _reconnect_sample_listeners(self):
         for param in self._sample_based_parameters:
             param.set_property_host(self._live_object.sample)
 
-        for param in (self.warp_mode_param, self.granulation_resolution, self.transient_loop_mode):
+        for param in (self.warp_mode_param,
+         self.granulation_resolution,
+         self.transient_loop_mode,
+         self.slicing_style_param):
             param.set_index_property_host(self._live_object.sample)
 
         self._reconnect_to_slices()
@@ -145,6 +163,9 @@ class SimplerDeviceDecorator(Subject, SlotManager, LiveObjectDecorator):
 
     @listens('slices')
     def __on_slices_changed(self):
+        self._on_slices_changed()
+
+    def _on_slices_changed(self):
         self.notify_slices()
 
     @listens('playback_mode')

@@ -1,5 +1,6 @@
 
 from __future__ import absolute_import, print_function
+from .isclose import isclose
 from .live_api_utils import liveobj_changed, liveobj_valid
 from .proxy import Proxy, ProxyBase
 from .slot import Event, has_event, listenable_property, listens, listens_group, MultiSlot, SerializableListenableProperties, Slot, SlotError, SlotGroup, SlotManager, Subject
@@ -38,6 +39,7 @@ __all__ = (Bindable,
  is_contextmanager,
  is_iterable,
  is_matrix,
+ isclose,
  lazy_attribute,
  linear,
  listenable_property,

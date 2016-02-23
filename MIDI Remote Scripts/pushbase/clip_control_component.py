@@ -1,7 +1,7 @@
 
 from __future__ import absolute_import, print_function
 import Live
-from ableton.v2.base import clamp, listens, liveobj_valid, nop, Subject, SlotManager, forward_property
+from ableton.v2.base import clamp, listens, liveobj_valid, nop, Subject, SlotManager, forward_property, listenable_property
 from ableton.v2.control_surface import Component
 from ableton.v2.control_surface.control import ButtonControl, control_list, EncoderControl, StepEncoderControl
 from ableton.v2.control_surface.mode import ModesComponent
@@ -27,33 +27,37 @@ WARP_MODE_NAMES = {Live.Clip.WarpMode.beats: 'Beats',
  Live.Clip.WarpMode.complex_pro: 'Pro',
  Live.Clip.WarpMode.rex: 'Rex'}
 
-def convert_time_to_bars_beats_sixteenths(time):
-    if time is None:
+def convert_beat_time_to_bars_beats_sixteenths((numerator, denominator), beat_time):
+    if beat_time is None:
         return '-'
-    if time >= 0:
-        bars = 1 + int(time / 4.0)
+    beats_per_bar = one_bar_in_note_values((numerator, denominator), 4.0)
+    musical_beats_per_beat = denominator / 4.0
+    if beat_time >= 0:
+        bars = 1 + int(beat_time / beats_per_bar)
     else:
-        bars = int(time / 4.0) if time % 4.0 == 0 else int(time / 4.0) - 1
-    beats = 1 + int(time % 4.0)
-    sixteenths = 1 + int(time % 1.0 * 4)
-    return str(bars) + '.' + str(beats) + '.' + str(sixteenths)
+        bars = int(beat_time / beats_per_bar) if beat_time % beats_per_bar == 0 else int(beat_time / beats_per_bar) - 1
+    beats = 1 + int(beat_time % beats_per_bar * musical_beats_per_beat)
+    sixteenths = 1 + int(beat_time % (1.0 / musical_beats_per_beat) * 4.0)
+    return '%i.%i.%i' % (bars, beats, sixteenths)
 
 
-def convert_length_to_bars_beats_sixteenths(length):
-    if length is None:
+def convert_beat_length_to_bars_beats_sixteenths((numerator, denominator), beat_length):
+    if beat_length is None:
         return '-'
-    bars = int(length / 4.0)
-    beats = int(length % 4.0)
-    sixteenths = int(length % 1.0 * 4)
-    return str(bars) + '.' + str(beats) + '.' + str(sixteenths)
+    beats_per_bar = one_bar_in_note_values((numerator, denominator), 4.0)
+    musical_beats_per_beat = denominator / 4.0
+    bars = int(beat_length / beats_per_bar)
+    beats = int(beat_length % beats_per_bar * musical_beats_per_beat)
+    sixteenths = int(beat_length % (1.0 / musical_beats_per_beat) * 4.0)
+    return '%i.%i.%i' % (bars, beats, sixteenths)
 
 
 def is_new_recording(clip):
     return clip.is_recording and not clip.is_overdubbing
 
 
-def one_measure_in_note_values(clip, note_value = 4.0):
-    return note_value * clip.signature_numerator / clip.signature_denominator
+def one_bar_in_note_values((numerator, denominator), note_value = 4.0):
+    return note_value * numerator / denominator
 
 
 class LoopSettingsModel(Subject, SlotManager):
@@ -64,10 +68,12 @@ class LoopSettingsModel(Subject, SlotManager):
         self.clip = None
         self._song = song
 
-    def _get_clip(self):
+    @listenable_property
+    def clip(self):
         return self._clip
 
-    def _set_clip(self, clip):
+    @clip.setter
+    def clip(self, clip):
         self._clip = clip
         self._loop_length = self._get_loop_length()
         self._on_looping_changed.subject = clip
@@ -75,8 +81,8 @@ class LoopSettingsModel(Subject, SlotManager):
         self._on_loop_start_changed.subject = clip
         self._on_loop_end_changed.subject = clip
         self._on_position_changed.subject = clip
+        self.notify_clip()
 
-    clip = property(_get_clip, _set_clip)
     loop_start = forward_property('clip')('loop_start')
     start_marker = forward_property('clip')('start_marker')
     loop_end = forward_property('clip')('loop_end')
@@ -127,8 +133,9 @@ class LoopSettingsModel(Subject, SlotManager):
     def move_start_marker(self, value, fine_grained):
         marker = self.clip.start_marker if self.looping else self.clip.loop_start
         new_value = marker + self._adjusted_offset(value, fine_grained)
-        measure_in_beats = one_measure_in_note_values(self.clip)
-        measure_in_sixteenths = one_measure_in_note_values(self.clip, 16.0)
+        signature = (self.clip.signature_numerator, self.clip.signature_denominator)
+        measure_in_beats = one_bar_in_note_values(signature)
+        measure_in_sixteenths = one_bar_in_note_values(signature, 16.0)
         additional_offset = measure_in_beats / measure_in_sixteenths * (measure_in_sixteenths - 1) if fine_grained else 0.0
         new_value = min(new_value, self.clip.loop_end - measure_in_beats + additional_offset)
         if self.looping:
@@ -150,11 +157,11 @@ class LoopSettingsModel(Subject, SlotManager):
                 self.clip.loop_end = new_end
 
     def _adjusted_offset(self, value, fine_grained):
-        return value * self._encoder_factor(fine_grained) * one_measure_in_note_values(self.clip)
+        return value * self._encoder_factor(fine_grained) * one_bar_in_note_values((self.clip.signature_numerator, self.clip.signature_denominator))
 
     def _encoder_factor(self, fine_grained):
         if fine_grained:
-            return 1.0 / one_measure_in_note_values(self.clip, 16.0)
+            return 1.0 / one_bar_in_note_values((self.clip.signature_numerator, self.clip.signature_denominator), 16.0)
         return 1.0
 
 
@@ -287,6 +294,32 @@ class LoopSettingsComponent(LoopSettingsControllerComponent):
         if display:
             display.set_data_sources(self._value_sources)
 
+    def convert_beat_time_to_bars_beats_sixteenths(self, clip, beat_time):
+        return convert_beat_time_to_bars_beats_sixteenths((clip.signature_numerator, clip.signature_denominator), beat_time)
+
+    def convert_beat_length_to_bars_beats_sixteenths(self, clip, beat_length):
+        return convert_beat_length_to_bars_beats_sixteenths((clip.signature_numerator, clip.signature_denominator), beat_length)
+
+    def _on_clip_changed(self):
+        self.__on_signature_denominator_changed.subject = self._loop_model.clip
+        self.__on_signature_denominator_changed()
+        self.__on_signature_numerator_changed.subject = self._loop_model.clip
+        self.__on_signature_numerator_changed()
+
+    @listens('signature_denominator')
+    def __on_signature_denominator_changed(self):
+        self.__update_position_sources()
+
+    @listens('signature_numerator')
+    def __on_signature_numerator_changed(self):
+        self.__update_position_sources()
+
+    def __update_position_sources(self):
+        self._update_start_marker_source()
+        self._update_loop_start_source()
+        self._update_loop_end_source()
+        self._update_position_source()
+
     @listens('looping')
     def __on_looping_changed(self):
         if self.is_enabled():
@@ -311,7 +344,7 @@ class LoopSettingsComponent(LoopSettingsControllerComponent):
 
     def _update_start_marker_source(self):
         looping = self._loop_model.looping if liveobj_valid(self.clip) else False
-        self._value_sources[2].set_display_string(convert_time_to_bars_beats_sixteenths(self._loop_model.start_marker) if looping else '')
+        self._value_sources[2].set_display_string(self.convert_beat_time_to_bars_beats_sixteenths(self.clip, self._loop_model.start_marker) if looping else '')
 
     def _update_is_looping_source(self):
         looping = self._loop_model.looping if liveobj_valid(self.clip) else False
@@ -320,19 +353,19 @@ class LoopSettingsComponent(LoopSettingsControllerComponent):
         self._name_sources[2].set_display_string('Offset' if looping else '')
 
     def _update_loop_start_source(self):
-        self._value_sources[0].set_display_string(convert_time_to_bars_beats_sixteenths(self._loop_model.loop_start) if self.clip else '-')
+        self._value_sources[0].set_display_string(self.convert_beat_time_to_bars_beats_sixteenths(self.clip, self._loop_model.loop_start) if self.clip else '-')
 
     def _update_loop_end_source(self):
         if liveobj_valid(self.clip) and not is_new_recording(self.clip):
             looping = self._loop_model.looping
-            self._value_sources[1].set_display_string(convert_length_to_bars_beats_sixteenths(self._loop_model.loop_length) if looping else convert_time_to_bars_beats_sixteenths(self._loop_model.loop_end))
+            self._value_sources[1].set_display_string(self.convert_beat_length_to_bars_beats_sixteenths(self.clip, self._loop_model.loop_length) if looping else self.convert_beat_time_to_bars_beats_sixteenths(self.clip, self._loop_model.loop_end))
             self._value_sources[3].set_display_string('On' if looping else 'Off')
         else:
             self._value_sources[1].set_display_string('-')
             self._value_sources[3].set_display_string('-')
 
     def _update_position_source(self):
-        self._value_sources[0].set_display_string(convert_time_to_bars_beats_sixteenths(self._loop_model.position) if liveobj_valid(self.clip) else '-')
+        self._value_sources[0].set_display_string(self.convert_beat_time_to_bars_beats_sixteenths(self.clip, self._loop_model.position) if liveobj_valid(self.clip) else '-')
 
     def update(self):
         super(LoopSettingsComponent, self).update()

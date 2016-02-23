@@ -516,8 +516,16 @@ class DeviceNavigationComponent(ItemListerComponent):
 
     @listens('device')
     def __on_device_changed(self):
-        if not self._should_select_drum_pad() and self._flattened_chain.has_invalid_selection:
+        if not self._should_select_drum_pad() and not self._is_drum_rack_selected():
             self._update_item_provider(self._device_component.device())
+
+    def _is_drum_rack_selected(self):
+        selected_item = self._flattened_chain.selected_item
+        instrument = self._find_top_level_instrument()
+        return liveobj_valid(selected_item) and isinstance(selected_item, Live.RackDevice.RackDevice) and selected_item.can_have_drum_pads and not liveobj_changed(selected_item, instrument)
+
+    def _find_top_level_instrument(self):
+        return find_if(lambda device: device.type == Live.Device.DeviceType.instrument, self._current_track().devices)
 
     @listens('selected_device')
     def _device_selection_in_track_changed(self):

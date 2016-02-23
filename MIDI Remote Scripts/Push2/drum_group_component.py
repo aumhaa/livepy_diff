@@ -53,6 +53,11 @@ class DrumGroupComponent(DrumGroupComponentBase):
         self.mute_button.color = 'DefaultButton.Transparent'
         self.solo_button.color = 'DefaultButton.Transparent'
         self._tracks_provider = tracks_provider
+        self._hotswap_indication_mode = None
+
+    @property
+    def drum_group_device(self):
+        return self._drum_group_device
 
     def select_drum_pad(self, drum_pad):
         if len(drum_pad.chains) > 0 and self.song.view.selected_track.is_showing_chains:
@@ -68,9 +73,30 @@ class DrumGroupComponent(DrumGroupComponentBase):
         if self.song.view.selected_track.is_showing_chains and liveobj_valid(chain):
             self._tracks_provider.set_selected_item_without_updating_view(self._selected_drum_pad.chains[0])
 
+    @property
+    def hotswap_indication_mode(self):
+        return self._hotswap_indication_mode
+
+    @hotswap_indication_mode.setter
+    def hotswap_indication_mode(self, mode):
+        self._hotswap_indication_mode = mode
+        self._update_led_feedback()
+
+    def _color_for_pad(self, pad):
+        if self._is_hotswapping(pad):
+            return 'DrumGroup.PadHotswapping'
+        return super(DrumGroupComponent, self)._color_for_pad(pad)
+
+    def _is_hotswapping(self, pad):
+        if self._hotswap_indication_mode == 'current_pad':
+            return pad == self._selected_drum_pad
+        if self._hotswap_indication_mode == 'all_pads':
+            return True
+        return False
+
     def delete_drum_pad_content(self, drum_pad):
         self._tracks_provider.synchronize_selection_with_live_view()
         super(DrumGroupComponent, self).delete_drum_pad_content(drum_pad)
 
-    def _make_copy_handler(self, notification_formatter):
-        return DrumPadCopyHandler(show_notification=self.show_notification, notification_formatter=notification_formatter, decorator_factory=self._decorator_factory, song=self.song)
+    def _make_copy_handler(self):
+        return DrumPadCopyHandler(show_notification=self.show_notification, decorator_factory=self._decorator_factory, song=self.song)

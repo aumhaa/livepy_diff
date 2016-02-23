@@ -108,6 +108,14 @@ class ClipAdapter(ModelAdapter):
             name = 'MIDI clip' if self._adaptee.is_midi_clip else 'Audio clip'
         return name
 
+    @property
+    def positions(self):
+        return getattr(self._adaptee, 'positions', None)
+
+    @property
+    def warping(self):
+        return self._adaptee.is_audio_clip and self._adaptee.warping
+
 
 class DeviceParameterAdapter(ModelAdapter):
     __events__ = ('hasAutomation',)
@@ -256,6 +264,12 @@ class SimplerDeviceAdapter(ModelAdapter):
         if liveobj_valid(self._adaptee) and liveobj_valid(self._adaptee.sample):
             return self._adaptee.sample.gain
         return 0.0
+
+    @listenable_property
+    def warping(self):
+        if liveobj_valid(self._adaptee) and liveobj_valid(self._adaptee.sample):
+            return self._adaptee.sample.warping
+        return False
 
 
 class VisibleAdapter(ModelAdapter):
@@ -492,6 +506,13 @@ class TrackAdapter(ModelAdapter):
         except AttributeError:
             return False
 
+    @property
+    def isReturn(self):
+        try:
+            return self._adaptee in list(self._adaptee.canonical_parent.return_tracks)
+        except AttributeError:
+            return False
+
 
 class TrackListAdapter(VisibleAdapter):
     __events__ = ('selectedTrack',)
@@ -528,6 +549,7 @@ class BrowserListWrapper(SlotManager):
         return {'id': item.uri,
          'name': item.name,
          'is_loadable': item.is_loadable,
+         'is_device': item.is_device,
          'icon': getattr(item, 'icon', '')}
 
     def to_json(self):

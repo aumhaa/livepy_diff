@@ -4,7 +4,8 @@ from ableton.v2.base import clamp, listenable_property, listens, liveobj_valid, 
 from ableton.v2.control_surface import CompoundComponent
 from ableton.v2.control_surface.control import StepEncoderControl
 from pushbase.internal_parameter import InternalParameterBase
-from pushbase.parameter_provider import generate_info, ParameterProvider
+from pushbase.parameter_provider import ParameterInfo, ParameterProvider
+from .parameter_mapping_sensitivities import parameter_mapping_sensitivity, fine_grain_parameter_mapping_sensitivity
 from .device_view_component import DeviceViewConnector
 NO_CHOKE_GROUP = u'None'
 MAX_CHOKE_GROUP = 16
@@ -49,7 +50,8 @@ class ChokeParameter(SlotManager, InternalParameterBase):
 def parameters_for_pad(pad):
     if not pad or len(pad.chains) == 0:
         return []
-    return [generate_info(ChokeParameter(drum_pad=pad))]
+    parameter = ChokeParameter(drum_pad=pad)
+    return [ParameterInfo(parameter=parameter, default_encoder_sensitivity=parameter_mapping_sensitivity(parameter), fine_grain_encoder_sensitivity=fine_grain_parameter_mapping_sensitivity(parameter))]
 
 
 class DrumPadParameterComponent(CompoundComponent, ParameterProvider):

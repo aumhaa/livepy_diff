@@ -12,18 +12,17 @@ from .slideable_touch_strip_component import SlideableTouchStripComponent
 
 class DrumPadCopyHandler(object):
 
-    def __init__(self, show_notification = None, notification_formatter = None, *a, **k):
+    def __init__(self, show_notification = None, *a, **k):
         super(DrumPadCopyHandler, self).__init__(*a, **k)
         self.is_copying = False
         self._source_pad = None
         self._show_notification = show_notification
-        self._format_notification_string = notification_formatter if notification_formatter is not None else nop
 
     def _start_copying(self, source_pad):
         if len(source_pad.chains) > 0:
             self._source_pad = source_pad
             self.is_copying = True
-            message = MessageBoxText.COPIED_DRUM_PAD % self._format_notification_string(source_pad.name)
+            message = (MessageBoxText.COPIED_DRUM_PAD, source_pad.name)
         else:
             message = MessageBoxText.CANNOT_COPY_EMPTY_DRUM_PAD
         return self._show_notification(message)
@@ -35,7 +34,7 @@ class DrumPadCopyHandler(object):
                 destination_pad.delete_all_chains()
             drum_group_device.copy_pad(self._source_pad.note, destination_pad.note)
             self.is_copying = False
-            message = MessageBoxText.PASTED_DRUM_PAD % (self._format_notification_string(self._source_pad.name), self._format_notification_string(destination_pad_name))
+            message = (MessageBoxText.PASTED_DRUM_PAD, self._source_pad.name, destination_pad_name)
         else:
             message = MessageBoxText.CANNOT_PASTE_TO_SOURCE_DRUM_PAD
         return self._show_notification(message)
@@ -56,9 +55,9 @@ class DrumGroupComponent(SlideableTouchStripComponent, DrumGroupComponent, Messe
     matrix = control_matrix(PadControl)
     duplicate_button = ButtonControl()
 
-    def __init__(self, notification_formatter = None, quantizer = None, *a, **k):
+    def __init__(self, quantizer = None, *a, **k):
         super(DrumGroupComponent, self).__init__(touch_slideable=self, translation_channel=PAD_FEEDBACK_CHANNEL, dragging_enabled=True, *a, **k)
-        self._copy_handler = self._make_copy_handler(notification_formatter)
+        self._copy_handler = self._make_copy_handler()
         self._notification_reference = partial(nop, None)
         self._quantizer = quantizer
 
@@ -83,8 +82,8 @@ class DrumGroupComponent(SlideableTouchStripComponent, DrumGroupComponent, Messe
         super(DrumGroupComponent, self)._update_selected_drum_pad()
         self.notify_selected_note()
 
-    def _make_copy_handler(self, notification_formatter):
-        return DrumPadCopyHandler(self.show_notification, notification_formatter)
+    def _make_copy_handler(self):
+        return DrumPadCopyHandler(self.show_notification)
 
     @matrix.pressed
     def matrix(self, pad):

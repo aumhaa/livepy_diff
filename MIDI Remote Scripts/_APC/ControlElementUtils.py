@@ -28,7 +28,6 @@ def make_ring_encoder(encoder_identifer, button_identifier, name = '', *a, **k):
     button = ButtonElement(False, MIDI_CC_TYPE, 0, button_identifier, name=button_name)
     encoder = RingedEncoderElement(MIDI_CC_TYPE, 0, encoder_identifer, MapMode.absolute, name=name, *a, **k)
     encoder.set_ring_mode_button(button)
-    encoder.set_feedback_delay(-1)
     return encoder
 
 

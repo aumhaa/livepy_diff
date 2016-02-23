@@ -9,7 +9,8 @@ from ableton.v2.control_surface.mode import ModeButtonBehaviour, ModesComponent
 from pushbase.actions import is_clip_stop_pending
 from pushbase.consts import MessageBoxText
 from pushbase.message_box_component import Messenger
-from pushbase.special_chan_strip_component import toggle_arm
+from pushbase.selected_track_parameter_provider import toggle_arm
+from pushbase.song_utils import delete_track_or_return_track
 from .colors import make_blinking_track_color, make_pulsing_track_color, translate_color_index
 from .mixable_utilities import can_play_clips, is_chain
 from .skin_default import RECORDING_COLOR, UNLIT_COLOR
@@ -227,22 +228,21 @@ class TrackListComponent(ModesComponent, Messenger):
                     track.is_showing_chains = not track.is_showing_chains
 
     @staticmethod
-    def can_duplicate_or_delete(track_or_chain, return_tracks):
+    def can_duplicate(track_or_chain, return_tracks):
         unwrapped = track_or_chain.proxied_object
         return isinstance(unwrapped, Live.Track.Track) and unwrapped not in list(return_tracks)
 
     def _delete_mixable(self, track_or_chain):
-        if self.can_duplicate_or_delete(track_or_chain, self.song.return_tracks):
+        if not is_chain(track_or_chain):
             try:
-                track_index = list(self.song.tracks).index(track_or_chain)
                 name = track_or_chain.name
-                self.song.delete_track(track_index)
+                delete_track_or_return_track(self.song, track_or_chain)
                 self.show_notification(MessageBoxText.DELETE_TRACK % name)
             except RuntimeError:
                 self.show_notification(MessageBoxText.TRACK_DELETE_FAILED)
 
     def _duplicate_mixable(self, track_or_chain):
-        if self.can_duplicate_or_delete(track_or_chain, self.song.return_tracks):
+        if self.can_duplicate(track_or_chain, self.song.return_tracks):
             try:
                 track_index = list(self.song.tracks).index(track_or_chain)
                 self.song.duplicate_track(track_index)

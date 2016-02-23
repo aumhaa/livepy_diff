@@ -126,6 +126,22 @@ class MidiMap(SpecialMidiMap):
         for index, slider in enumerate(self['Slider_Button_Matrix_Raw'][0]):
             slider.set_index(index)
 
+        self.create_user_mode_controls()
+
+    def create_user_mode_controls(self):
+        """
+        Creates control elements that aren't used in the script
+        but need to exist so they can be grabbed and observed
+        via Max for Live.
+        """
+        for channel in consts.USER_MODE_CHANNELS:
+            channel_name = channel + 1
+            self.add_matrix('User_Button_Matrix_Ch_%d' % (channel_name,), make_button, channel, consts.USER_MATRIX_IDENTIFIERS, MIDI_NOTE_TYPE)
+            self.add_matrix('User_Left_Side_Button_Matrix_Ch_%d' % (channel_name,), make_button, channel, [ [identifier] for identifier in xrange(108, 116) ], MIDI_NOTE_TYPE)
+            self.add_matrix('User_Right_Side_Button_Matrix_Ch_%d' % (channel_name,), make_button, channel, [ [identifier] for identifier in xrange(100, 108) ], MIDI_NOTE_TYPE)
+            self.add_matrix('User_Bottom_Button_Matrix_Ch_%d' % (channel_name,), make_button, channel, [[ identifier for identifier in xrange(116, 124) ]], MIDI_NOTE_TYPE)
+            self.add_matrix('User_Arrow_Button_Matrix_Ch_%d' % (channel_name,), make_button, channel, [[ identifier for identifier in xrange(91, 95) ]], MIDI_CC_TYPE)
+
     def with_shift(self, button_name):
         return ComboElement(self[button_name], modifiers=[self['Shift_Button']], name='Shifted_' + button_name)
 
@@ -542,7 +558,7 @@ class Launchpad_Pro(IdentifiableControlSurface, OptimizedControlSurface):
     def handle_sysex(self, midi_bytes):
         if len(midi_bytes) < 7:
             pass
-        if self._is_challenge_response(midi_bytes) and self._is_response_valid(midi_bytes):
+        elif self._is_challenge_response(midi_bytes) and self._is_response_valid(midi_bytes):
             self._on_handshake_successful()
         elif midi_bytes[6] in (consts.SYSEX_STATUS_BYTE_MODE, consts.SYSEX_STATUS_BYTE_LAYOUT):
             pass

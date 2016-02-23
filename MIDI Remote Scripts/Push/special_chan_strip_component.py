@@ -4,11 +4,13 @@ import Live
 from ableton.v2.base import flatten, listens, listens_group, liveobj_valid, task
 from ableton.v2.control_surface import components, ParameterSlot
 from ableton.v2.control_surface.elements import DisplayDataSource
-from . import consts
-from .consts import MessageBoxText
-from .message_box_component import Messenger
+from pushbase import consts
+from pushbase.consts import MessageBoxText
+from pushbase.message_box_component import Messenger
+from pushbase.selected_track_parameter_provider import TRACK_PARAMETER_NAMES, toggle_arm
+from pushbase.song_utils import delete_track_or_return_track
+from .parameter_mapping_sensitivities import CONTINUOUS_MAPPING_SENSITIVITY, FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY
 TRACK_FOLD_DELAY = 0.5
-TRACK_PARAMETER_NAMES = ('Volume', 'Pan', 'Send A', 'Send B', 'Send C', 'Send D', 'Send E', 'Send F', 'Send G', 'Send H', 'Send I', 'Send J', 'Send K', 'Send L')
 
 def param_value_to_graphic(param, graphic):
     if param != None:
@@ -19,15 +21,6 @@ def param_value_to_graphic(param, graphic):
     else:
         graphic_display_string = ' '
     return graphic_display_string
-
-
-def toggle_arm(track_to_arm, song, exclusive = False):
-    if track_to_arm.can_be_armed:
-        track_to_arm.arm = not track_to_arm.arm
-        if exclusive and (track_to_arm.implicit_arm or track_to_arm.arm):
-            for track in song.tracks:
-                if track.can_be_armed and track != track_to_arm:
-                    track.arm = False
 
 
 class SpecialChanStripComponent(components.ChannelStripComponent, Messenger):
@@ -57,9 +50,9 @@ class SpecialChanStripComponent(components.ChannelStripComponent, Messenger):
     def _update_control_sensitivities(self, control):
         if control:
             if hasattr(control, 'set_sensitivities'):
-                control.set_sensitivities(consts.CONTINUOUS_MAPPING_SENSITIVITY, consts.FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY)
+                control.set_sensitivities(CONTINUOUS_MAPPING_SENSITIVITY, FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY)
             else:
-                control.mapping_sensitivity = consts.CONTINUOUS_MAPPING_SENSITIVITY
+                control.mapping_sensitivity = CONTINUOUS_MAPPING_SENSITIVITY
 
     def set_volume_control(self, control):
         self._update_control_sensitivities(control)
@@ -205,9 +198,8 @@ class SpecialChanStripComponent(components.ChannelStripComponent, Messenger):
 
     def _do_delete_track(self, track):
         try:
-            track_index = list(self.song.tracks).index(track)
             name = track.name
-            self.song.delete_track(track_index)
+            delete_track_or_return_track(self.song, track)
             self.show_notification(MessageBoxText.DELETE_TRACK % name)
         except RuntimeError:
             self.expect_dialog(MessageBoxText.TRACK_DELETE_FAILED)

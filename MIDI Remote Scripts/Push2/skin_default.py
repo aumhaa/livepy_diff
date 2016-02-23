@@ -21,6 +21,7 @@ SelectedClipColorShade = SelectedClipColorFactory(transformation=shade_transform
 SelectedClipColorShade2 = SelectedClipColorFactory(transformation=shade_transform2)
 TRACK_SOLOED_COLOR = Rgb.OCEAN
 RECORDING_COLOR = Rgb.RED
+CLIP_PLAYING_COLOR = Rgb.GREEN
 UNLIT_COLOR = Rgb.BLACK
 
 class Colors(ColorsBase):
@@ -52,6 +53,7 @@ class Colors(ColorsBase):
         PadSoloedSelected = Rgb.WHITE
         PadInvisible = Rgb.BLACK
         PadAction = Rgb.WHITE
+        PadHotswapping = Pulse(Rgb.WHITE, Rgb.LIGHT_GREY, 48)
 
     class SlicedSimpler:
         SliceSelected = Rgb.WHITE
@@ -170,11 +172,9 @@ class Colors(ColorsBase):
         SceneTriggered = FallbackColor(Blink(Rgb.GREEN, Rgb.BLACK, 24), 24)
         NoScene = Rgb.BLACK
         ClipStopped = Rgb.AMBER
-        ClipStarted = Pulse(Rgb.GREEN_SHADE, Rgb.GREEN, 48)
-        ClipRecording = Pulse(Rgb.BLACK, Rgb.RED, 48)
-        ClipTriggeredPlay = Blink(Rgb.GREEN, Rgb.BLACK, 24)
         ClipTriggeredRecord = Blink(Rgb.RED, Rgb.BLACK, 24)
         ClipEmpty = Rgb.BLACK
+        EmptySlotTriggeredPlay = Blink(Rgb.GREEN, Rgb.BLACK, 24)
         RecordButton = Rgb.RED_SHADE
         StopClip = Rgb.RED
         StopClipTriggered = Blink(Rgb.RED, Rgb.BLACK, 24)
