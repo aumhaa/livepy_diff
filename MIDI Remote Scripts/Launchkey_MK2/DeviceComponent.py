@@ -18,15 +18,9 @@ class DeviceComponent(DeviceComponentBase):
         self._device_bank_names = BANK_NAME_DICT
         self._device_best_banks = DEVICE_BOB_DICT
         for device_name, current_banks in self._device_banks.iteritems():
-<<<<<<< HEAD
-            raise len(current_banks) > 1 and (device_name in self._device_best_banks.keys() or AssertionError), "Could not find best-of-banks for '%s'" % device_name
-            if not device_name in self._device_bank_names.keys():
-                raise AssertionError, "Could not find bank names for '%s'" % device_name
-=======
             if len(current_banks) > 1:
                 raise device_name in self._device_best_banks.keys() or AssertionError("Could not find best-of-banks for '%s'" % device_name)
                 raise device_name in self._device_bank_names.keys() or AssertionError("Could not find bank names for '%s'" % device_name)
->>>>>>> beta
                 current_banks = self._device_best_banks[device_name] + current_banks
                 new_bank_names[device_name] = (BOB_BANK_NAME,) + self._device_bank_names[device_name]
             new_banks[device_name] = current_banks

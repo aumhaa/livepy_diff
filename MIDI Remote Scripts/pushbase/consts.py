@@ -4,216 +4,7 @@ import sys
 import Live
 from ableton.v2.control_surface import DEFAULT_PRIORITY
 DISPLAY_LENGTH = 72
-<<<<<<< HEAD:MIDI Remote Scripts/Push/consts.py
-DISPLAY_BLOCK_LENGTH = 18
-HANDSHAKE_TIMEOUT = 1.0
-SCROLL_SIDE_BUTTON_STATES = {'Pressed': 'DefaultButton.On',
- 'Enabled': 'DefaultButton.On',
- True: 'DefaultButton.On',
- False: 'DefaultButton.Disabled'}
 SIDE_BUTTON_COLORS = dict(color='DefaultButton.On', disabled_color='DefaultButton.Disabled')
-MUSICAL_MODES = ['Major',
- [0,
-  2,
-  4,
-  5,
-  7,
-  9,
-  11],
- 'Minor',
- [0,
-  2,
-  3,
-  5,
-  7,
-  8,
-  10],
- 'Dorian',
- [0,
-  2,
-  3,
-  5,
-  7,
-  9,
-  10],
- 'Mixolydian',
- [0,
-  2,
-  4,
-  5,
-  7,
-  9,
-  10],
- 'Lydian',
- [0,
-  2,
-  4,
-  6,
-  7,
-  9,
-  11],
- 'Phrygian',
- [0,
-  1,
-  3,
-  5,
-  7,
-  8,
-  10],
- 'Locrian',
- [0,
-  1,
-  3,
-  5,
-  6,
-  8,
-  10],
- 'Diminished',
- [0,
-  1,
-  3,
-  4,
-  6,
-  7,
-  9,
-  10],
- 'Whole-half',
- [0,
-  2,
-  3,
-  5,
-  6,
-  8,
-  9,
-  11],
- 'Whole Tone',
- [0,
-  2,
-  4,
-  6,
-  8,
-  10],
- 'Minor Blues',
- [0,
-  3,
-  5,
-  6,
-  7,
-  10],
- 'Minor Pentatonic',
- [0,
-  3,
-  5,
-  7,
-  10],
- 'Major Pentatonic',
- [0,
-  2,
-  4,
-  7,
-  9],
- 'Harmonic Minor',
- [0,
-  2,
-  3,
-  5,
-  7,
-  8,
-  11],
- 'Melodic Minor',
- [0,
-  2,
-  3,
-  5,
-  7,
-  9,
-  11],
- 'Super Locrian',
- [0,
-  1,
-  3,
-  4,
-  6,
-  8,
-  10],
- 'Bhairav',
- [0,
-  1,
-  4,
-  5,
-  7,
-  8,
-  11],
- 'Hungarian Minor',
- [0,
-  2,
-  3,
-  6,
-  7,
-  8,
-  11],
- 'Minor Gypsy',
- [0,
-  1,
-  4,
-  5,
-  7,
-  8,
-  10],
- 'Hirojoshi',
- [0,
-  2,
-  3,
-  7,
-  8],
- 'In-Sen',
- [0,
-  1,
-  5,
-  7,
-  10],
- 'Iwato',
- [0,
-  1,
-  5,
-  6,
-  10],
- 'Kumoi',
- [0,
-  2,
-  3,
-  7,
-  9],
- 'Pelog',
- [0,
-  1,
-  3,
-  4,
-  7,
-  8],
- 'Spanish',
- [0,
-  1,
-  3,
-  4,
-  5,
-  6,
-  8,
-  10]]
-MIN_OFF_THRESHOLD = 10
-MAX_OFF_THRESHOLD = 370
-MIN_ON_THRESHOLD = 10
-MAX_ON_THRESHOLD = 410
-MIN_THRESHOLD_STEP = -20
-MAX_THRESHOLD_STEP = 20
-CRITICAL_THRESHOLD_LIMIT = 0
-DEFAULT_PEAK_SAMPLING_TIME = 50
-DEFAULT_AFTERTOUCH_THRESHOLD = 0
-DEFAULT_AFTERTOUCH_GATE_TIME = 500
-INSTRUMENT_AFTERTOUCH_THRESHOLD = 80
-=======
-SIDE_BUTTON_COLORS = dict(color='DefaultButton.On', disabled_color='DefaultButton.Disabled')
->>>>>>> beta:MIDI Remote Scripts/pushbase/consts.py
 PROTO_FAST_DEVICE_NAVIGATION = False
 PROTO_AUDIO_NOTE_MODE = False
 PROTO_SONG_IS_ROOT = False
@@ -273,11 +64,8 @@ class MessageBoxText:
     DUPLICATE_SCENE = '                  Scene duplicated: %s'
     DELETE_ENVELOPE = '                  Delete automation %(automation)s'
     DEFAULT_PARAMETER_VALUE = '                  Reset to default: %(automation)s'
-<<<<<<< HEAD:MIDI Remote Scripts/Push/consts.py
-=======
     DELETE_DRUM_RACK_PAD = '                  Drum Pad deleted: %s'
     FIXED_LENGTH = '                      Fixed Length: %s'
->>>>>>> beta:MIDI Remote Scripts/pushbase/consts.py
     EMPTY_DEVICE_CHAIN = '\n\n               No Devices.    Press [Browse] to add a device.'
     STUCK_PAD_WARNING = '         Warning: Low threshold may cause stuck pads'
     UNDO = '            Undo:     Reverted last action'
@@ -288,13 +76,10 @@ class MessageBoxText:
     PLAYING_CLIP_BELOW_SELECTED_CLIP = ' Press Down Arrow to edit playing   clip'
     TOUCHSTRIP_PITCHBEND_MODE = '                  Touchstrip Mode:  Pitchbend'
     TOUCHSTRIP_MODWHEEL_MODE = '                  Touchstrip Mode:  Modwheel'
-<<<<<<< HEAD:MIDI Remote Scripts/Push/consts.py
-=======
     COPIED_DRUM_PAD = '     Pad %s copied.           Press destination pad to paste'
     PASTED_DRUM_PAD = '     Pad %s duplicated to     %s'
     CANNOT_COPY_EMPTY_DRUM_PAD = '                  Cannot copy empty drum pad'
     CANNOT_PASTE_TO_SOURCE_DRUM_PAD = '                    Cannot paste to source drum pad'
->>>>>>> beta:MIDI Remote Scripts/pushbase/consts.py
 
 
 _test_mode = __builtins__.get('TEST_MODE', False)

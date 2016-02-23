@@ -31,48 +31,11 @@ def convert_parameter_value_to_graphic(param, param_to_value = lambda p: p.value
     return graphic_display_string
 
 
-<<<<<<< HEAD:MIDI Remote Scripts/Push/DeviceParameterComponent.py
-DISCRETE_PARAMETERS_DICT = {'GlueCompressor': ('Ratio', 'Attack', 'Release', 'Peak Clip In')}
-
-def is_parameter_quantized(parameter, parent_device):
-    is_quantized = False
-    if parameter != None:
-        device_class = getattr(parent_device, 'class_name', None)
-        is_quantized = parameter.is_quantized or device_class in DISCRETE_PARAMETERS_DICT and parameter.name in DISCRETE_PARAMETERS_DICT[device_class]
-    return is_quantized
-
-
-def parameter_mapping_sensitivity(parameter):
-    is_quantized = is_parameter_quantized(parameter, parameter and parameter.canonical_parent)
-    return consts.QUANTIZED_MAPPING_SENSITIVITY if is_quantized else consts.CONTINUOUS_MAPPING_SENSITIVITY
-
-
-def fine_grain_parameter_mapping_sensitivity(parameter):
-    is_quantized = is_parameter_quantized(parameter, parameter and parameter.canonical_parent)
-    return consts.QUANTIZED_MAPPING_SENSITIVITY if is_quantized else consts.FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY
-
-
-def _update_encoder_sensitivity(encoder, parameter):
-    default = parameter_mapping_sensitivity(parameter)
-    if hasattr(encoder, 'set_sensitivities'):
-        encoder.set_sensitivities(default, fine_grain_parameter_mapping_sensitivity(parameter))
-    else:
-        encoder.mapping_sensitivity = default
-
-
-class ParameterProvider(Subject):
-    __subject_events__ = ('parameters',)
-
-    @property
-    def parameters(self):
-        return []
-=======
 def update_encoder_sensitivity(encoder, parameter_info):
     if hasattr(encoder, 'set_sensitivities'):
         encoder.set_sensitivities(parameter_info.default_encoder_sensitivity, parameter_info.fine_grain_encoder_sensitivity)
     else:
         encoder.mapping_sensitivity = parameter_info.default_encoder_sensitivity
->>>>>>> beta:MIDI Remote Scripts/pushbase/device_parameter_component.py
 
 
 class DeviceParameterComponentBase(Component):
@@ -157,19 +120,6 @@ class DeviceParameterComponent(DeviceParameterComponentBase):
         for source in chain(self._parameter_name_data_sources, self._parameter_value_data_sources, self._parameter_graphic_data_sources):
             source.set_display_string('')
 
-<<<<<<< HEAD:MIDI Remote Scripts/Push/DeviceParameterComponent.py
-    def _release_parameters(self):
-        for encoder in ifilter(None, self._parameter_controls or []):
-            encoder.release_parameter()
-
-    def _connect_parameters(self):
-        for parameter, encoder in zip(self.parameters, self._parameter_controls):
-            if encoder:
-                encoder.connect_to(parameter)
-                _update_encoder_sensitivity(encoder, parameter)
-
-=======
->>>>>>> beta:MIDI Remote Scripts/pushbase/device_parameter_component.py
     def _update_parameters(self):
         super(DeviceParameterComponent, self)._update_parameters()
         if self.is_enabled():

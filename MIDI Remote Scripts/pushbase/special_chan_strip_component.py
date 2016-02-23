@@ -62,42 +62,22 @@ class SpecialChanStripComponent(components.ChannelStripComponent, Messenger):
                 control.mapping_sensitivity = consts.CONTINUOUS_MAPPING_SENSITIVITY
 
     def set_volume_control(self, control):
-<<<<<<< HEAD:MIDI Remote Scripts/Push/SpecialChanStripComponent.py
-        if control:
-            control.mapping_sensitivity = consts.CONTINUOUS_MAPPING_SENSITIVITY
-        super(SpecialChanStripComponent, self).set_volume_control(control)
-
-    def set_pan_control(self, control):
-        if control:
-            control.mapping_sensitivity = consts.CONTINUOUS_MAPPING_SENSITIVITY
-=======
         self._update_control_sensitivities(control)
         super(SpecialChanStripComponent, self).set_volume_control(control)
 
     def set_pan_control(self, control):
         self._update_control_sensitivities(control)
->>>>>>> beta:MIDI Remote Scripts/pushbase/special_chan_strip_component.py
         super(SpecialChanStripComponent, self).set_pan_control(control)
 
     def set_send_controls(self, controls):
         if controls != None:
             for control in controls:
-<<<<<<< HEAD:MIDI Remote Scripts/Push/SpecialChanStripComponent.py
-                if control:
-                    control.mapping_sensitivity = consts.CONTINUOUS_MAPPING_SENSITIVITY
-=======
                 self._update_control_sensitivities(control)
->>>>>>> beta:MIDI Remote Scripts/pushbase/special_chan_strip_component.py
 
         super(SpecialChanStripComponent, self).set_send_controls(controls)
 
     def set_cue_volume_control(self, control):
-<<<<<<< HEAD:MIDI Remote Scripts/Push/SpecialChanStripComponent.py
-        if control:
-            control.mapping_sensitivity = consts.CONTINUOUS_MAPPING_SENSITIVITY
-=======
         self._update_control_sensitivities(control)
->>>>>>> beta:MIDI Remote Scripts/pushbase/special_chan_strip_component.py
         self._cue_volume_slot.control = control
 
     def set_duplicate_button(self, duplicate_button):

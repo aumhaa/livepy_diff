@@ -7,13 +7,10 @@ MAX_PITCHBEND = 16384.0
 
 class TouchStripModes:
     CUSTOM_PITCHBEND, CUSTOM_VOLUME, CUSTOM_PAN, CUSTOM_DISCRETE, CUSTOM_FREE, PITCHBEND, VOLUME, PAN, DISCRETE, MODWHEEL, COUNT = range(11)
-<<<<<<< HEAD:MIDI Remote Scripts/Push/TouchStripElement.py
-=======
 
 
 class TouchStripStates:
     STATE_OFF, STATE_HALF, STATE_FULL = range(3)
->>>>>>> beta:MIDI Remote Scripts/pushbase/touch_strip_element.py
 
 
 class TouchStripBehaviour(object):
@@ -134,26 +131,11 @@ class TouchStripElement(InputControlElement, SlotManager):
     mode = property(_get_mode, set_mode)
 
     def _set_behaviour(self, behaviour):
-<<<<<<< HEAD:MIDI Remote Scripts/Push/TouchStripElement.py
-        if not behaviour:
-            behaviour = DEFAULT_BEHAVIOUR
-            if behaviour != self._behaviour:
-                self._behaviour = behaviour
-                self._touch_slot.listener = behaviour.handle_touch
-                behaviour.mode == TouchStripModes.MODWHEEL and self._send_midi(Sysex.TOUCHSTRIP_MODWHEEL_MODE)
-            else:
-                self._send_midi(Sysex.START + (99,
-                 0,
-                 1,
-                 behaviour.mode,
-                 247))
-=======
         behaviour = behaviour or DEFAULT_BEHAVIOUR
         if behaviour != self._behaviour:
             self._behaviour = behaviour
             self._touch_slot.listener = behaviour.handle_touch
             self._mode_element.send_value(behaviour.mode)
->>>>>>> beta:MIDI Remote Scripts/pushbase/touch_strip_element.py
 
     def _get_behaviour(self):
         return self._behaviour

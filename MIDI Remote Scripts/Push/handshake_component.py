@@ -2,17 +2,7 @@
 """
 Component for handling the initialization process of Push.
 """
-<<<<<<< HEAD:MIDI Remote Scripts/Push/HandshakeComponent.py
-import Live
-from _Framework import Task
-from _Framework.ComboElement import ToggleElement
-from _Framework.SubjectSlot import subject_slot
-from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
-from _Framework.Util import NamedTuple
-from FirmwareHandling import get_version_number_from_string
-=======
 from __future__ import absolute_import, print_function
->>>>>>> beta:MIDI Remote Scripts/Push/handshake_component.py
 from functools import partial
 import Live
 from ableton.v2.base import NamedTuple, listens, task
@@ -158,18 +148,10 @@ class MinimumFirmwareVersionElement(ToggleElement):
         self._on_handshake_success.subject = handshake_component
         self._on_handshake_failure.subject = handshake_component
 
-<<<<<<< HEAD:MIDI Remote Scripts/Push/HandshakeComponent.py
-    @subject_slot('success')
-    def _on_handshake_success(self):
-        self.set_toggled(self._handshake_component.has_version_requirements(self._major_version, self._minor_version))
-
-    @subject_slot('failure')
-=======
     @listens('success')
     def _on_handshake_success(self):
         self.set_toggled(self._handshake_component.has_version_requirements(self._major_version, self._minor_version))
 
     @listens('failure')
->>>>>>> beta:MIDI Remote Scripts/Push/handshake_component.py
     def _on_handshake_failure(self, _):
         self.set_toggled(False)

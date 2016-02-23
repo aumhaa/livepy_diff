@@ -1,16 +1,9 @@
 
 from __future__ import absolute_import, print_function
 from itertools import repeat
-<<<<<<< HEAD:MIDI Remote Scripts/Push/PadSensitivity.py
-from _Framework import Task
-from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
-from _Framework.Util import find_if, second, lazy_attribute, nop, NamedTuple
-from .Sysex import to_bytes
-=======
 from ableton.v2.base import find_if, second, lazy_attribute, nop, NamedTuple, task
 from ableton.v2.control_surface import Component
 from .sysex import to_bytes
->>>>>>> beta:MIDI Remote Scripts/Push/pad_sensitivity.py
 
 class PadParameters(NamedTuple):
     """

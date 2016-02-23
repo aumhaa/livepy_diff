@@ -73,14 +73,8 @@ def find_instrument_devices(track_or_chain):
     or chain.
     """
     instrument = find_if(lambda d: d.type == Live.Device.DeviceType.instrument, track_or_chain.devices)
-<<<<<<< HEAD
-    if instrument and not instrument.can_have_drum_pads:
-        if instrument.can_have_chains:
-            return chain([instrument], *imap(find_instrument_devices, instrument.chains))
-=======
     if instrument and not instrument.can_have_drum_pads and instrument.can_have_chains:
         return chain([instrument], *imap(find_instrument_devices, instrument.chains))
->>>>>>> beta
     return []
 
 
@@ -92,9 +86,5 @@ def find_drum_group_device(track_or_chain):
     if instrument:
         if instrument.can_have_drum_pads:
             return instrument
-<<<<<<< HEAD
-        elif instrument.can_have_chains:
-=======
         if instrument.can_have_chains:
->>>>>>> beta
             return find_if(bool, imap(find_drum_group_device, instrument.chains))

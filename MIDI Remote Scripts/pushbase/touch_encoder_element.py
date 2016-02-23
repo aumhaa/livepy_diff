@@ -1,12 +1,7 @@
 
-<<<<<<< HEAD:MIDI Remote Scripts/Push/TouchEncoderElement.py
-from _Framework.EncoderElement import TouchEncoderElementBase
-from _Framework.SubjectSlot import subject_slot, SlotManager
-=======
 from __future__ import absolute_import, print_function
 from ableton.v2.base import SlotManager
 from ableton.v2.control_surface.elements import TouchEncoderElement as TouchEncoderElementBase
->>>>>>> beta:MIDI Remote Scripts/pushbase/touch_encoder_element.py
 
 class TouchEncoderObserver(object):
     """ Interface for observing the state of one or more TouchEncoderElements """

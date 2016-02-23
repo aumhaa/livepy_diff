@@ -1,18 +1,5 @@
 
-<<<<<<< HEAD:MIDI Remote Scripts/Push/SpecialSessionComponent.py
-from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
-from _Framework.SessionComponent import SessionComponent
-from _Framework.ClipSlotComponent import ClipSlotComponent
-from _Framework.SceneComponent import SceneComponent
-from _Framework.SubjectSlot import subject_slot
-from _Framework.Util import forward_property
-from _Framework.ModesComponent import EnablingModesComponent
-from MessageBoxComponent import Messenger
-from TouchStripElement import TouchStripElement, TouchStripModes
-from consts import MessageBoxText
-=======
 from __future__ import absolute_import, print_function
->>>>>>> beta:MIDI Remote Scripts/pushbase/special_session_component.py
 import Live
 from ableton.v2.base import forward_property, listens, liveobj_valid
 from ableton.v2.control_surface import Component
@@ -129,16 +116,6 @@ class SpecialSessionComponent(SessionComponent):
     def set_touch_strip(self, touch_strip):
         if touch_strip:
             touch_strip.set_mode(TouchStripModes.CUSTOM_FREE)
-<<<<<<< HEAD:MIDI Remote Scripts/Push/SpecialSessionComponent.py
-            touch_strip.send_state([ TouchStripElement.STATE_OFF for _ in xrange(TouchStripElement.STATE_COUNT) ])
-        self._on_touch_strip_value.subject = touch_strip
-
-    @subject_slot('value')
-    def _on_touch_strip_value(self, value):
-        pass
-
-    @subject_slot('value')
-=======
             touch_strip.send_state([ TouchStripStates.STATE_OFF for _ in xrange(touch_strip.state_count) ])
         self._on_touch_strip_value.subject = touch_strip
 
@@ -147,7 +124,6 @@ class SpecialSessionComponent(SessionComponent):
         pass
 
     @listens('value')
->>>>>>> beta:MIDI Remote Scripts/pushbase/special_session_component.py
     def _on_slot_launch_value(self, value):
         if self.is_enabled():
             if value != 0 or not self._slot_launch_button.is_momentary():

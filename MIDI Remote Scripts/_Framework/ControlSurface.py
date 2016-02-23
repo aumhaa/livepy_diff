@@ -506,26 +506,10 @@ class ControlSurface(SlotManager):
 
     @contextmanager
     def _component_guard(self):
-<<<<<<< HEAD
-        with self.setting_listener_caller():
-            with self._control_surface_injector:
-                with self.suppressing_rebuild_requests():
-                    with self.accumulating_midi_messages():
-                        yield
-
-    @contextmanager
-    def setting_listener_caller(self):
-        try:
-            self._c_instance.set_listener_caller(self._call_guarded_listener)
-            yield
-        finally:
-            self._c_instance.set_listener_caller(None)
-=======
         with self._control_surface_injector:
             with self.suppressing_rebuild_requests():
                 with self.accumulating_midi_messages():
                     yield
->>>>>>> beta
 
     @profile
     def call_listeners(self, listeners):

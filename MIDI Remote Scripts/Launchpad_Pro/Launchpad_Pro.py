@@ -95,18 +95,11 @@ class MidiMap(SpecialMidiMap):
         self['Main_Button_Matrix_With_Session_Button'] = ButtonMatrixElement(rows=matrix_rows_with_session_button_raw, name='Main_Button_Matrix_With_Session_Button')
         note_buttons_raw = []
         for identifier in xrange(128):
-<<<<<<< HEAD
-            button = identifier not in self['Main_Button_Matrix_Ids'] and make_button('Note_Button_' + str(identifier), 0, identifier, MIDI_NOTE_TYPE)
-            button.set_enabled(False)
-            button.set_channel(consts.CHROM_MAP_CHANNEL)
-            note_buttons_raw.append(button)
-=======
             if identifier not in self['Main_Button_Matrix_Ids']:
                 button = make_button('Note_Button_' + str(identifier), 0, identifier, MIDI_NOTE_TYPE)
                 button.set_enabled(False)
                 button.set_channel(consts.CHROM_MAP_CHANNEL)
                 note_buttons_raw.append(button)
->>>>>>> beta
 
         self['Note_Button_Matrix'] = ButtonMatrixElement(rows=[note_buttons_raw], name='Note_Button_Matrix')
 
