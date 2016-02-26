@@ -1,7 +1,7 @@
 
 from __future__ import absolute_import, print_function
 from .declaration import Binding, custom_property, id_property, listmodel, listof, view_property, ViewModel, ModelVisitor
-from .repr import BrowserItemAdapter, BrowserListWrapper, ClipAdapter, DeviceAdapter, DeviceParameterAdapter, EditModeOptionAdapter, ItemListAdapter, ItemSlotAdapter, LiveDialogAdapter, OptionsListAdapter, SimplerDeviceAdapter, TrackAdapter, TrackControlAdapter, TrackListAdapter, VisibleAdapter
+from .repr import BrowserItemAdapter, BrowserListWrapper, ClipAdapter, DeviceAdapter, DeviceParameterAdapter, EditModeOptionAdapter, ItemListAdapter, ItemSlotAdapter, LiveDialogAdapter, OptionsListAdapter, SimplerDeviceAdapter, TrackAdapter, TrackControlAdapter, TrackListAdapter, TrackMixAdapter, VisibleAdapter
 __all__ = (ModelVisitor,)
 
 class VisibleModel(ViewModel):
@@ -214,12 +214,25 @@ class RealTimeChannel(Binding):
     object_id = view_property(unicode, '')
 
 
-class TrackControlModel(Binding):
-    ADAPTER = TrackControlAdapter
+class TrackMixModel(Binding):
+    ADAPTER = TrackMixAdapter
     visible = view_property(bool, False)
     parameters = view_property(listof(DeviceParameter))
     scrollOffset = view_property(int, 0)
     real_time_meter_channel = view_property(RealTimeChannel)
+
+
+class RoutingControlModel(Binding):
+    monitoring_state_index = view_property(int, 0)
+    can_monitor = view_property(bool, False)
+
+
+class TrackControlModel(Binding):
+    ADAPTER = TrackControlAdapter
+    track_control_mode = view_property(unicode, '')
+    routing_mode_available = view_property(bool, False)
+    track_mix = view_property(TrackMixModel)
+    routing = view_property(RoutingControlModel)
 
 
 class BrowserListView(Binding):
@@ -291,6 +304,7 @@ class ConvertModel(Binding):
 class NoteLayout(Binding):
     is_in_key = view_property(bool, False)
     is_fixed = view_property(bool, False)
+    is_horizontal = view_property(bool, False)
 
 
 class ScalesModel(Binding):
@@ -298,6 +312,8 @@ class ScalesModel(Binding):
     visible = view_property(bool, False)
     scale_names = view_property(listof(unicode), '')
     selected_scale_index = view_property(int, -1)
+    layout_names = view_property(listof(unicode), '')
+    selected_layout_index = view_property(int, 0)
     root_note_names = view_property(listof(unicode), '')
     selected_root_note_index = view_property(int, -1)
     note_layout = view_property(NoteLayout)

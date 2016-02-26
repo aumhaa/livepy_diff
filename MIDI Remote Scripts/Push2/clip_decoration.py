@@ -7,13 +7,14 @@ from .decoration import find_decorated_object
 from .waveform_navigation import AudioClipWaveformNavigation
 
 class ClipPositions(Subject, SlotManager):
-    __events__ = ('is_recording', 'warp_markers')
+    __events__ = ('is_recording', 'warp_markers', 'before_update_all', 'after_update_all')
     start = listenable_property.managed(0.0)
     end = listenable_property.managed(0.0)
     start_marker = listenable_property.managed(0.0)
     end_marker = listenable_property.managed(0.0)
     loop_start = listenable_property.managed(0.0)
     loop_end = listenable_property.managed(0.0)
+    loop_length = listenable_property.managed(0.0)
     use_beat_time = listenable_property.managed(False)
 
     def __init__(self, clip = None, *a, **k):
@@ -21,9 +22,11 @@ class ClipPositions(Subject, SlotManager):
         raise clip.is_audio_clip or AssertionError
         super(ClipPositions, self).__init__(*a, **k)
         self._clip = clip
+        self._looping = self._clip.looping
         self.__on_is_recording_changed.subject = clip
         self.__on_warping_changed.subject = clip
         self.__on_warp_markers_changed.subject = clip
+        self.__on_looping_changed.subject = clip
         self.__on_start_marker_changed.subject = clip
         self.__on_end_marker_changed.subject = clip
         self.__on_loop_start_changed.subject = clip
@@ -44,19 +47,25 @@ class ClipPositions(Subject, SlotManager):
 
     @listens('start_marker')
     def __on_start_marker_changed(self):
-        self.start_marker = self._convert_to_desired_unit(self._clip.start_marker)
+        if not self._process_looping_update():
+            self.start_marker = self._convert_to_desired_unit(self._clip.start_marker)
 
     @listens('end_marker')
     def __on_end_marker_changed(self):
-        self.end_marker = self._convert_to_desired_unit(self._clip.end_marker)
+        if not self._process_looping_update():
+            self.end_marker = self._convert_to_desired_unit(self._clip.end_marker)
 
     @listens('loop_start')
     def __on_loop_start_changed(self):
-        self.loop_start = self._convert_to_desired_unit(self._clip.loop_start)
+        if not self._process_looping_update():
+            self.loop_start = self._convert_to_desired_unit(self._clip.loop_start)
+        self._update_loop_length()
 
     @listens('loop_end')
     def __on_loop_end_changed(self):
-        self.loop_end = self._convert_to_desired_unit(self._clip.loop_end)
+        if not self._process_looping_update():
+            self.loop_end = self._convert_to_desired_unit(self._clip.loop_end)
+        self._update_loop_length()
 
     @listens('is_recording')
     def __on_is_recording_changed(self):
@@ -68,9 +77,30 @@ class ClipPositions(Subject, SlotManager):
         self.update_all()
         self.notify_warp_markers()
 
+    @listens('looping')
+    def __on_looping_changed(self):
+        self.update_all()
+
     @listens('warping')
     def __on_warping_changed(self):
         self.update_all()
+
+    def _process_looping_update(self):
+        """
+        Changing the looping setting is considered a transaction and will update
+        all parameters.
+        This method should be called, before updating any position parameter.
+        Returns True, in case a looping change has been processed.
+        """
+        looping = self._clip.looping
+        if looping != self._looping:
+            self._looping = looping
+            self.update_all()
+            return True
+        return False
+
+    def _update_loop_length(self):
+        self.loop_length = self._convert_to_desired_unit(self._clip.loop_end) - self._convert_to_desired_unit(self._clip.loop_start)
 
     def _update_start_end(self):
         if self._clip.warping:
@@ -81,12 +111,14 @@ class ClipPositions(Subject, SlotManager):
             self.end = self._clip.sample_length
 
     def update_all(self):
+        self.notify_before_update_all()
         self._update_start_end()
         self.__on_start_marker_changed()
         self.__on_end_marker_changed()
         self.__on_loop_start_changed()
         self.__on_loop_end_changed()
         self.use_beat_time = self._clip.warping
+        self.notify_after_update_all()
 
 
 class ZoomParameter(AudioClipWaveformNavigation, InternalParameter):

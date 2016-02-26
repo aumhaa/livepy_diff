@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function
 from functools import partial
 from contextlib import contextmanager
 import Live.DrumPad
-from ableton.v2.base import const, depends, disconnectable, inject, in_range, listens, liveobj_valid, NamedTuple
+from ableton.v2.base import BooleanContext, const, depends, disconnectable, inject, in_range, listens, liveobj_valid, NamedTuple
 from ableton.v2.control_surface import CompoundComponent
 from pushbase import consts
 from pushbase.device_chain_utils import is_first_device_on_pad
@@ -21,6 +21,7 @@ class DeviceNavigationComponent(CompoundComponent):
         super(DeviceNavigationComponent, self).__init__(*a, **k)
         self._make_navigation_node = partial(make_navigation_node, session_ring=session_ring, device_bank_registry=device_bank_registry, banking_info=banking_info)
         self._delete_handler = delete_handler
+        self._updating_children = BooleanContext()
         self._device_list = self.register_component(ScrollableListWithTogglesComponent())
         self._on_selection_clicked_in_controller.subject = self._device_list
         self._on_selection_changed_in_controller.subject = self._device_list
@@ -32,6 +33,7 @@ class DeviceNavigationComponent(CompoundComponent):
         self._on_selected_track_changed.subject = self.song.view
         with inject(selection=const(NamedTuple(selected_device=None))).everywhere():
             self._on_selected_track_changed()
+        self._on_device_parameters_changed.subject = self._selected_track.view.selected_device
 
     @property
     def current_node(self):
@@ -100,6 +102,12 @@ class DeviceNavigationComponent(CompoundComponent):
             if not self._current_node or self._current_node.object != target:
                 node = self._make_navigation_node(target, is_entering=False)
                 self._set_current_node(node)
+        self._on_device_parameters_changed.subject = selected_device
+
+    @listens('parameters')
+    def _on_device_parameters_changed(self):
+        self._update_enter_button()
+        self._update_exit_button()
 
     def _set_current_node(self, node):
         if node is None:
@@ -144,11 +152,16 @@ class DeviceNavigationComponent(CompoundComponent):
 
     @listens('children')
     def _on_children_changed_in_node(self):
-        names = map(lambda x: x[0], self._current_node.children)
-        self._device_list.option_names = names
-        self._device_list.selected_option = self._current_node.selected_child
-        self._update_enter_button()
-        self._update_exit_button()
+        if self._updating_children:
+            return
+        with self._updating_children():
+            if not self._current_node.children:
+                self.back_to_top()
+            names = map(lambda x: x[0], self._current_node.children)
+            self._device_list.option_names = names
+            self._device_list.selected_option = self._current_node.selected_child
+            self._update_enter_button()
+            self._update_exit_button()
 
     @listens('selected_child')
     def _on_selected_child_changed_in_node(self, index):

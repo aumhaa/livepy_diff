@@ -57,7 +57,7 @@ class FirmwareUpdateComponent(Component):
 
     def process_firmware_response(self, data):
         if not self.state == 'start':
-            raise AssertionError
+            raise AssertionError("'%s' != 'start'" % self.state)
             entry = find_if(lambda entry: entry['type'] == 'firmware', data)
             self.state = entry and ('success' if entry['success'] else 'failure')
 

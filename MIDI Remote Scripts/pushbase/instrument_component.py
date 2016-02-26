@@ -292,10 +292,19 @@ class InstrumentComponent(PlayableComponent, CompoundComponent, Slideable, Messe
             first_note = int(round(self._first_note))
         interval = self._note_layout.interval
         notes = self._note_layout.notes
+        width = None
+        height = None
         octave = first_note / self.page_length
         offset = first_note % self.page_length - self._first_scale_note_offset()
         if interval == None:
-            interval = 8
+            if self._note_layout.is_in_key:
+                interval = len(self._note_layout.notes)
+                if self._note_layout.is_horizontal:
+                    width = interval + 1
+                else:
+                    height = interval + 1
+            else:
+                interval = 8
         elif not self._note_layout.is_in_key:
             interval = [0,
              2,
@@ -311,7 +320,7 @@ class InstrumentComponent(PlayableComponent, CompoundComponent, Slideable, Messe
         else:
             steps = [interval, 1]
             origin = [0, offset]
-        return MelodicPattern(steps=steps, scale=notes, origin=origin, root_note=octave * 12, chromatic_mode=not self._note_layout.is_in_key)
+        return MelodicPattern(steps=steps, scale=notes, origin=origin, root_note=octave * 12, chromatic_mode=not self._note_layout.is_in_key, width=width, height=height)
 
     def _update_aftertouch(self):
         if self.is_enabled() and self._aftertouch_control != None:

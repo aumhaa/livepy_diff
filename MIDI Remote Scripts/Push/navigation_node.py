@@ -376,12 +376,20 @@ class SimpleDeviceNode(ModelNode):
         self._device_bank_registry = device_bank_registry
         self._banking_info = banking_info
         self._on_device_bank_changed.subject = self._device_bank_registry
+        self._on_device_parameters_changed.subject = self._object
         self._update_children()
         self._update_selected_child()
 
     @listens('device_bank')
     def _on_device_bank_changed(self, device, bank):
         self._update_selected_child()
+
+    @listens('parameters')
+    def _on_device_parameters_changed(self):
+        if self._children != self._get_children_from_model():
+            self._update_children()
+            selected_child = len(self._children) - 1 if self._children else None
+            self.set_selected_child(selected_child)
 
     def _get_selected_child_from_model(self):
         if self.children:

@@ -139,22 +139,13 @@ class SlicePoint(object):
         self.__id__ = identifier
         self.time = time
 
+    def __eq__(self, other):
+        if isinstance(other, SlicePoint):
+            return self.__id__ == other.__id__ and self.time == other.time
+        return False
 
-class UniqueSliceIdGenerator(object):
-
-    def __init__(self, *a, **k):
-        super(UniqueSliceIdGenerator, self).__init__(*a, **k)
-        self._slice_times = set()
-        self._counter = 0
-
-    def make_unique_id(self, slice_time):
-        if slice_time in self._slice_times:
-            identifier = '%d_%i' % (slice_time, self._counter)
-            self._counter += 1
-        else:
-            identifier = str(slice_time)
-        self._slice_times.add(slice_time)
-        return identifier
+    def __ne__(self, other):
+        return not self == other
 
 
 class SimplerPositions(SlotManager, Subject):
@@ -247,8 +238,7 @@ class SimplerPositions(SlotManager, Subject):
 
     @listens('slices')
     def __on_slices_changed(self):
-        id_generator = UniqueSliceIdGenerator()
-        self.slices = [ SlicePoint(id_generator.make_unique_id(s), self._convert_sample_time(s)) for s in self._simpler.sample.slices ]
+        self.slices = [ SlicePoint(s, self._convert_sample_time(s)) for s in self._simpler.sample.slices ]
 
     @listens('selected_slice')
     def __on_selected_slice_changed(self):

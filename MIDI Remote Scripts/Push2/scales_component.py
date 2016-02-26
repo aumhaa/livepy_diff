@@ -1,11 +1,13 @@
 
 from __future__ import absolute_import, print_function
+from collections import namedtuple
 from math import ceil
 from functools import partial
 from ableton.v2.base import clamp, listens, listenable_property
 from ableton.v2.control_surface import Component
 from ableton.v2.control_surface.control import ButtonControl, RadioButtonControl, StepEncoderControl, ToggleButtonControl, control_list
 from pushbase.melodic_pattern import ROOT_NOTES, SCALES, NOTE_NAMES
+Layout = namedtuple('Layout', ('name', 'interval'))
 
 class ScalesComponent(Component):
     __events__ = ('close',)
@@ -19,6 +21,8 @@ class ScalesComponent(Component):
     fixed_toggle_button = ToggleButtonControl(toggled_color='Scales.OptionOn', untoggled_color='Scales.OptionOff')
     scale_encoders = control_list(StepEncoderControl)
     close_button = ButtonControl(color='Scales.Close')
+    layout_encoder = StepEncoderControl()
+    direction_encoder = StepEncoderControl()
     horizontal_navigation = listenable_property.managed(False)
     NUM_DISPLAY_ROWS = 4
     NUM_DISPLAY_COLUMNS = int(ceil(float(len(SCALES)) / NUM_DISPLAY_ROWS))
@@ -31,6 +35,8 @@ class ScalesComponent(Component):
         self._scale_name_list = map(lambda m: m.name, self._scale_list)
         self._selected_scale_index = -1
         self._selected_root_note_index = -1
+        self._layouts = (Layout('4ths', 3), Layout('3rds', 2), Layout('Sequential', None))
+        self._selected_layout_index = 0
         self.in_key_toggle_button.connect_property(note_layout, 'is_in_key')
         self.fixed_toggle_button.connect_property(note_layout, 'is_fixed')
         self.__on_root_note_changed.subject = self._note_layout
@@ -103,6 +109,27 @@ class ScalesComponent(Component):
             self.down_button.enabled = index < len(self._scale_list) - 1
             self.right_button.enabled = index < len(self._scale_list) - 1
             self.notify_selected_scale_index()
+
+    @layout_encoder.value
+    def layout_encoder(self, value, encoder):
+        index = clamp(self._selected_layout_index + value, 0, len(self._layouts) - 1)
+        if index != self._selected_layout_index:
+            self._selected_layout_index = index
+            interval = self._layouts[index].interval
+            self._note_layout.interval = interval
+            self.notify_selected_layout_index()
+
+    @property
+    def layout_names(self):
+        return [ layout.name for layout in self._layouts ]
+
+    @listenable_property
+    def selected_layout_index(self):
+        return self._selected_layout_index
+
+    @direction_encoder.value
+    def direction_encoder(self, value, encoder):
+        self._note_layout.is_horizontal = value < 0
 
     @close_button.pressed
     def close_button(self, button):

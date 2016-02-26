@@ -211,6 +211,8 @@ class MelodicPattern(NamedTuple):
     root_note = 0
     origin = [0, 0]
     chromatic_mode = False
+    width = None
+    height = None
 
     @lazy_attribute
     def extended_scale(self):
@@ -225,13 +227,18 @@ class MelodicPattern(NamedTuple):
         return not self.origin[0] and not self.origin[1] and abs(self.root_note) % 12 == self.extended_scale[0]
 
     def note(self, x, y):
-        return self._get_note_info(self._octave_and_note(x, y), self.root_note, x + FEEDBACK_CHANNELS[0])
+        if not self._boundary_reached(x, y):
+            return self._get_note_info(self._octave_and_note(x, y), self.root_note, x + FEEDBACK_CHANNELS[0])
+        return NoteInfo()
 
     def __getitem__(self, i):
         root_note = self.root_note
         if root_note <= -12:
             root_note = 0 if self.is_aligned else -12
         return self._get_note_info(self._octave_and_note_linear(i), root_note)
+
+    def _boundary_reached(self, x, y):
+        return self.width is not None and x >= self.width or self.height is not None and y >= self.height
 
     def _octave_and_note_by_index(self, index):
         scale = self.extended_scale

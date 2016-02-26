@@ -15,13 +15,20 @@ class BankProvider(ItemProvider, SlotManager):
         self._bank_registry = bank_registry
         self._banking_info = banking_info
         self._device = None
+        self._items = []
         self._on_device_bank_changed.subject = bank_registry
 
     def set_device(self, device):
         if self._device != device:
             self._device = device
+            self._on_device_parameters_changed.subject = self._device
+            self._items = self._create_items()
             self.notify_items()
             self.notify_selected_item()
+
+    def _create_items(self):
+        bank_names = self.internal_bank_names(self._banking_info.device_bank_names(self._device))
+        return [ (NamedTuple(name=b), 0) for b in bank_names ]
 
     @property
     def device(self):
@@ -29,9 +36,7 @@ class BankProvider(ItemProvider, SlotManager):
 
     @property
     def items(self):
-        nesting_level = 0
-        bank_names = self.internal_bank_names(self._banking_info.device_bank_names(self._device))
-        return [ (NamedTuple(name=b), nesting_level) for b in bank_names ]
+        return self._items
 
     @property
     def selected_item(self):
@@ -50,6 +55,14 @@ class BankProvider(ItemProvider, SlotManager):
     def _on_device_bank_changed(self, device, _):
         if device == self._device:
             self.notify_selected_item()
+
+    @listens('parameters')
+    def _on_device_parameters_changed(self):
+        items = self._create_items()
+        if self._items != items:
+            self._items = items
+            self.select_item(items[-1][0] if items else 0)
+            self.notify_items()
 
     def internal_bank_names(self, original_bank_names):
         num_banks = len(original_bank_names)

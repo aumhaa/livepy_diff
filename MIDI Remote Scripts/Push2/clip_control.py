@@ -86,11 +86,6 @@ class LoopSettingsControllerComponent(LoopSettingsControllerComponentBase):
         self._processed_zoom_requests = 0
         self.__on_looping_changed.subject = self._loop_model
         self.__on_looping_changed()
-        self.__on_loop_position_value_changed.subject = self._looping_settings[0]
-        self.__on_loop_length_value_changed.subject = self._looping_settings[1]
-        self.__on_start_offset_value_changed.subject = self._looping_settings[2]
-        self.__on_start_value_changed.subject = self._non_looping_settings[0]
-        self.__on_end_value_changed.subject = self._non_looping_settings[1]
 
     @loop_button.toggled
     def loop_button(self, toggled, button):
@@ -151,31 +146,6 @@ class LoopSettingsControllerComponent(LoopSettingsControllerComponentBase):
         self._zoom_handler.set_parameter_host(self._loop_model.clip)
         self._connect_encoder()
         self.notify_waveform_navigation()
-
-    @listens('value')
-    def __on_loop_position_value_changed(self):
-        if self.waveform_navigation is not None and self._loop_model.looping:
-            self.waveform_navigation.change_object(self.waveform_navigation.loop_start_focus)
-
-    @listens('value')
-    def __on_loop_length_value_changed(self):
-        if self.waveform_navigation is not None and self._loop_model.looping:
-            self.waveform_navigation.change_object(self.waveform_navigation.loop_end_focus)
-
-    @listens('value')
-    def __on_start_offset_value_changed(self):
-        if self.waveform_navigation is not None and self._loop_model.looping:
-            self.waveform_navigation.change_object(self.waveform_navigation.start_marker_focus)
-
-    @listens('value')
-    def __on_start_value_changed(self):
-        if self.waveform_navigation is not None and not self._loop_model.looping:
-            self.waveform_navigation.change_object(self.waveform_navigation.start_marker_focus)
-
-    @listens('value')
-    def __on_end_value_changed(self):
-        if self.waveform_navigation is not None and not self._loop_model.looping:
-            self.waveform_navigation.change_object(self.waveform_navigation.loop_end_focus)
 
     def _on_clip_start_marker_touched(self):
         if self.waveform_navigation is not None:

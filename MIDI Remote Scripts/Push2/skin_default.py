@@ -128,6 +128,10 @@ class Colors(ColorsBase):
         ButtonOff = Rgb.DARK_GREY
         ButtonDisabled = Rgb.BLACK
 
+    class MixOrRoutingChooser:
+        ModeActive = Rgb.WHITE
+        ModeInactive = SelectedTrackColor
+
     class ItemNavigation:
         ItemSelected = Rgb.WHITE
         NoItem = Rgb.BLACK

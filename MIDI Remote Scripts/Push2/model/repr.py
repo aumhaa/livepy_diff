@@ -222,20 +222,13 @@ class SimplerDeviceAdapter(ModelAdapter):
     @listenable_property
     def slices(self):
 
-        def unique_id(id_, existing = set()):
-            while id_ in existing:
-                id_ += 0.01
-
-            existing.add(id_)
-            return id_
-
         class SlicePoint(object):
 
             def __init__(self, __id__, time):
                 self.__id__ = __id__
                 self.time = time
 
-        return [ SlicePoint(unique_id(time), time) for time in self._get_slice_times() ]
+        return [ SlicePoint(time, time) for time in self._get_slice_times() ]
 
     @listenable_property
     def selected_slice(self):
@@ -287,12 +280,20 @@ class VisibleAdapter(ModelAdapter):
         self.notify_visible()
 
 
-class TrackControlAdapter(VisibleAdapter):
+class TrackMixAdapter(VisibleAdapter):
     __events__ = ('scrollOffset',)
 
     def __init__(self, *a, **k):
-        super(TrackControlAdapter, self).__init__(*a, **k)
+        super(TrackMixAdapter, self).__init__(*a, **k)
         self._alias_observable_property('scroll_offset', 'scrollOffset')
+
+
+class TrackControlAdapter(VisibleAdapter):
+    __events__ = ('track_control_mode',)
+
+    def __init__(self, *a, **k):
+        super(TrackControlAdapter, self).__init__(*a, **k)
+        self._alias_observable_property('selected_mode', 'track_control_mode')
 
 
 class OptionsListAdapter(VisibleAdapter):

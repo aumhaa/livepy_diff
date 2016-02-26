@@ -48,6 +48,7 @@ from .note_editor import Push2NoteEditorComponent
 from .note_settings import NoteSettingsComponent
 from .notification_component import NotificationComponent
 from .pad_velocity_curve import PadVelocityCurveSender
+from .routing import RoutingControlComponent, TrackOrRoutingControlChooserComponent
 from .scales_component import ScalesComponent, ScalesEnabler
 from .selected_track_parameter_provider import SelectedTrackParameterProvider
 from .session_component import DecoratingCopyHandler, SessionComponent
@@ -174,9 +175,14 @@ class Push2(IdentifiableControlSurface, PushBase):
             self._firmware_update.process_firmware_response(data)
 
     def _process_qml_errors(self, data):
-        qmlerrors = [ entry['description'] for entry in data if entry['type'] == 'qmlerror' ]
+        qmlerrors = [ entry for entry in data if entry['type'] == 'qmlerror' ]
         if qmlerrors:
-            raise QmlError('\n'.join(qmlerrors))
+            first_error = qmlerrors[0]
+            line = first_error['line']
+            url = first_error['url']
+            description = first_error['description'].replace('"', '\\"')
+            code = '\n' * (line - 1) + 'raise QmlError("%s")' % description
+            exec compile(code, url, 'exec')
 
     def disconnect(self):
         super(Push2, self).disconnect()
@@ -498,10 +504,12 @@ class Push2(IdentifiableControlSurface, PushBase):
         self._mixer_control = MixerControlComponent(name='Global_Mix_Component', view_model=self._model.mixerView, tracks_provider=self._session_ring, is_enabled=False, layer=Layer(controls='fine_grain_param_controls', volume_button='track_state_buttons_raw[0]', panning_button='track_state_buttons_raw[1]', send_slot_one_button='track_state_buttons_raw[2]', send_slot_two_button='track_state_buttons_raw[3]', send_slot_three_button='track_state_buttons_raw[4]', send_slot_four_button='track_state_buttons_raw[5]', send_slot_five_button='track_state_buttons_raw[6]', cycle_sends_button='track_state_buttons_raw[7]'))
         self._model.mixerView.realtimeMeterData = self._mixer_control.real_time_meter_handlers
         track_mixer_control = TrackMixerControlComponent(name='Track_Mix_Component', is_enabled=False, tracks_provider=self._session_ring, layer=Layer(controls='fine_grain_param_controls', scroll_left_button='track_state_buttons_raw[6]', scroll_right_button='track_state_buttons_raw[7]'))
-        self._model.mixerView.trackControlView = track_mixer_control
+        routing_control = RoutingControlComponent(is_enabled=False, layer=Layer(monitor_state_encoder='parameter_controls_raw[0]'))
+        track_mix_or_routing_chooser = TrackOrRoutingControlChooserComponent(tracks_provider=self._session_ring, track_mixer_component=track_mixer_control, routing_control_component=routing_control, is_enabled=False, layer=Layer(mix_button='track_state_buttons_raw[0]', routing_button='track_state_buttons_raw[1]'))
+        self._model.mixerView.trackControlView = track_mix_or_routing_chooser
         self._mix_modes = ModesComponent(is_enabled=False)
         self._mix_modes.add_mode('global', self._mixer_control)
-        self._mix_modes.add_mode('track', track_mixer_control)
+        self._mix_modes.add_mode('track', track_mix_or_routing_chooser)
         self._mix_modes.selected_mode = 'global'
         self._model.mixerSelectView = self._mixer_control
         self._model.trackMixerSelectView = track_mixer_control
@@ -538,7 +546,7 @@ class Push2(IdentifiableControlSurface, PushBase):
 
     def _create_scales(self):
         root_note_buttons = ButtonMatrixElement(rows=[self.elements.track_state_buttons_raw[1:-1], self.elements.select_buttons_raw[1:-1]])
-        scales = ScalesComponent(note_layout=self._note_layout, is_enabled=False, layer=make_dialog_layer(root_note_buttons=root_note_buttons, in_key_toggle_button='select_buttons_raw[0]', fixed_toggle_button='select_buttons_raw[-1]', scale_encoders=self.elements.global_param_controls.submatrix[1:-1, :], close_button='track_state_buttons_raw[0]', up_button='nav_up_button', down_button='nav_down_button', right_button='nav_right_button', left_button='nav_left_button'))
+        scales = ScalesComponent(note_layout=self._note_layout, is_enabled=False, layer=make_dialog_layer(root_note_buttons=root_note_buttons, in_key_toggle_button='select_buttons_raw[0]', fixed_toggle_button='select_buttons_raw[-1]', scale_encoders=self.elements.global_param_controls.submatrix[1:-1, :], layout_encoder='parameter_controls_raw[0]', direction_encoder='parameter_controls_raw[-1]', close_button='track_state_buttons_raw[0]', up_button='nav_up_button', down_button='nav_down_button', right_button='nav_right_button', left_button='nav_left_button'))
         self.__on_scales_closed.subject = scales
         self._model.scalesView = scales
         return scales

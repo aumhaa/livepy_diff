@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function
 from itertools import izip
 from ableton.v2.base import forward_property, listens, SlotManager, Subject
 from ableton.v2.control_surface import Component, CompoundComponent
-from ableton.v2.control_surface.control import control_list, ButtonControl, RadioButtonControl
+from ableton.v2.control_surface.control import control_list, ButtonControl
 
 class SimpleItemSlot(SlotManager, Subject):
     __events__ = ('name',)

@@ -80,13 +80,12 @@ class NullValueWrapper(SimpleWrapper):
 
 class BoundListWrapper(SlotManager, SimpleWrapper):
 
-    def __init__(self, parent_object, name = None, wrapper = None, notifier = ModelUpdateNotifier(), verify_unique_ids = False, *a, **k):
+    def __init__(self, parent_object, name = None, wrapper = None, notifier = ModelUpdateNotifier(), *a, **k):
         raise wrapper is not None or AssertionError
         raise name is not None or AssertionError
         super(BoundListWrapper, self).__init__([], notifier=notifier, *a, **k)
         self.wrapper = wrapper
         self.attrgetter = partial(getattr, parent_object, name)
-        self._verify_unique_ids = verify_unique_ids
         self._update_list()
         self._connect(parent_object, name)
 
@@ -100,9 +99,6 @@ class BoundListWrapper(SlotManager, SimpleWrapper):
         self._value = [ self.wrapper(v, notifier=self._notifier.step(i)) for i, v in enumerate(self.attrgetter()) ]
         for value in self._value:
             self.register_disconnectable(value)
-
-        if self._verify_unique_ids:
-            raise len(self._value) == len(set((item.values['id'].get() for item in self._value))) or AssertionError('BoundListWrapper requires unique ids for items')
 
     def to_json(self):
         return [ v.to_json() for v in self._value ]
@@ -347,11 +343,11 @@ class BindingModelVisitor(ModelVisitor):
 
     def visit_value_list_property(self, name, decl, value_type):
         super(BindingModelVisitor, self).visit_value_list_property(name, decl, value_type)
-        self.current_class_info.wrappers[name] = partial(BoundListWrapper, name=name, wrapper=SimpleWrapper, verify_unique_ids=False)
+        self.current_class_info.wrappers[name] = partial(BoundListWrapper, name=name, wrapper=SimpleWrapper)
 
     def visit_complex_list_property(self, name, decl, value_type):
         super(BindingModelVisitor, self).visit_complex_list_property(name, decl, value_type)
-        self.current_class_info.wrappers[name] = partial(BoundListWrapper, name=name, wrapper=self._decl2class[value_type], verify_unique_ids=False)
+        self.current_class_info.wrappers[name] = partial(BoundListWrapper, name=name, wrapper=self._decl2class[value_type])
 
     def visit_custom_property(self, name, decl):
         super(BindingModelVisitor, self).visit_custom_property(name, decl)
@@ -359,7 +355,7 @@ class BindingModelVisitor(ModelVisitor):
 
     def visit_list_model_property(self, name, decl, value_type):
         super(BindingModelVisitor, self).visit_list_model_property(name, decl, value_type)
-        self.current_class_info.wrappers[name] = partial(BoundListWrapper, name=name, wrapper=self._decl2class[value_type], verify_unique_ids=True)
+        self.current_class_info.wrappers[name] = partial(BoundListWrapper, name=name, wrapper=self._decl2class[value_type])
 
     def visit_reference_property(self, name, decl):
         super(BindingModelVisitor, self).visit_reference_property(name, decl)
@@ -376,7 +372,7 @@ class BindingModelVisitor(ModelVisitor):
     @staticmethod
     def _resolve_reference_list(class_name, wrappers, name, decl2class):
         generated_class = decl2class[class_name]
-        wrappers[name] = partial(BoundListWrapper, name=name, wrapper=generated_class, verify_unique_ids=False)
+        wrappers[name] = partial(BoundListWrapper, name=name, wrapper=generated_class)
 
 
 class ViewModelVisitor(ModelVisitor):

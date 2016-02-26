@@ -1,7 +1,6 @@
 
 from __future__ import absolute_import, print_function
 from ableton.v2.base import liveobj_valid, NamedTuple, Subject
-from . import consts
 DISCRETE_PARAMETERS_DICT = {'GlueCompressor': ('Ratio', 'Attack', 'Release', 'Peak Clip In')}
 
 def is_parameter_quantized(parameter, parent_device):
