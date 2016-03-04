@@ -7,7 +7,6 @@ from ableton.v2.control_surface.components.device import DeviceProvider as Devic
 from pushbase.device_chain_utils import is_simpler
 from pushbase.device_component import DeviceComponent as DeviceComponentBase
 from pushbase.parameter_provider import ParameterInfo
-from .simpler_zoom import SimplerZoomHandling
 from .device_parameter_bank_with_options import create_device_bank_with_options, OPTIONS_PER_BANK
 from .real_time_channel import RealTimeDataComponent
 from .parameter_mapping_sensitivities import PARAMETER_SENSITIVITIES, DEFAULT_SENSITIVITY_KEY, FINE_GRAINED_SENSITIVITY_KEY, parameter_mapping_sensitivity, fine_grain_parameter_mapping_sensitivity
@@ -44,12 +43,8 @@ class DeviceComponent(DeviceComponentBase):
         super(DeviceComponent, self)._initialize_subcomponents()
         self._playhead_real_time_data = self.register_component(RealTimeDataComponent(channel_type='playhead'))
         self._waveform_real_time_data = self.register_component(RealTimeDataComponent(channel_type='waveform'))
-        self._zoom_handling = self.register_disconnectable(SimplerZoomHandling())
         self.default_sensitivity = partial(self._sensitivity, DEFAULT_SENSITIVITY_KEY)
         self.fine_sensitivity = partial(self._sensitivity, FINE_GRAINED_SENSITIVITY_KEY)
-        self._processed_zoom_requests = 0
-        self._use_waveform_navigation = False
-        self._on_simpler_zoom_changed.subject = self._zoom_handling
         self.__on_waveform_channel_changed.subject = self._waveform_real_time_data
         self.__on_playhead_channel_changed.subject = self._playhead_real_time_data
 
@@ -58,35 +53,16 @@ class DeviceComponent(DeviceComponentBase):
         self._playhead_real_time_data.set_data(None)
         self._waveform_real_time_data.set_data(None)
 
-    @property
-    def use_waveform_navigation(self):
-        return self._use_waveform_navigation
-
-    @use_waveform_navigation.setter
-    def use_waveform_navigation(self, value):
-        self._use_waveform_navigation = value
-        self._update_parameter_sensitivity()
-
     def _set_device(self, device):
         super(DeviceComponent, self)._set_device(device)
         simpler = self.device() if is_simpler(self.device()) else None
         if liveobj_valid(simpler):
             simpler.zoom.reset_focus_and_animation()
-        self._zoom_handling.set_parameter_host(simpler)
         self.__on_sample_or_file_path_changed.subject = simpler
         self.__on_waveform_visible_region_changed.subject = simpler
         self._playhead_real_time_data.set_data(device)
         self._waveform_real_time_data.set_data(device)
         self.notify_options()
-
-    def request_zoom(self, zoom_factor):
-        self._zoom_handling.request_zoom(zoom_factor)
-        self._processed_zoom_requests += 1
-        self.notify_processed_zoom_requests()
-
-    @listenable_property
-    def processed_zoom_requests(self):
-        return self._processed_zoom_requests
 
     @parameter_touch_buttons.pressed
     def parameter_touch_buttons(self, button):
@@ -116,15 +92,9 @@ class DeviceComponent(DeviceComponentBase):
             rt_data = getattr(self, '_%s_real_time_data' % channel_name)
             setattr(device, channel_name + '_real_time_channel_id', rt_data.channel_id)
 
-    @listens('zoom')
-    def _on_simpler_zoom_changed(self):
-        if not self.use_waveform_navigation:
-            self._update_parameter_sensitivity()
-
     @listens('waveform_navigation.visible_region')
     def __on_waveform_visible_region_changed(self, *a):
-        if self.use_waveform_navigation:
-            self._update_parameter_sensitivity()
+        self._update_parameter_sensitivity()
 
     def _update_parameter_sensitivity(self):
         changed_parameters = False
@@ -157,11 +127,8 @@ class DeviceComponent(DeviceComponentBase):
         sensitivity = parameter_sensitivities(device.class_name, parameter)[sensitivity_key]
         if liveobj_valid(parameter) and is_simpler(device) and liveobj_valid(device.sample):
             if parameter.name in self.ZOOM_SENSITIVE_PARAMETERS:
-                if self.use_waveform_navigation:
-                    if device.waveform_navigation is not None:
-                        sensitivity *= device.waveform_navigation.visible_proportion
-                else:
-                    sensitivity *= self._zoom_handling.zoom_factor
+                if device.waveform_navigation is not None:
+                    sensitivity *= device.waveform_navigation.visible_proportion
             if parameter.name in self.PARAMETERS_RELATIVE_TO_ACTIVE_AREA:
                 active_area_quotient = device.sample.length / float(device.sample.end_marker - device.sample.start_marker + 1)
                 sensitivity *= active_area_quotient

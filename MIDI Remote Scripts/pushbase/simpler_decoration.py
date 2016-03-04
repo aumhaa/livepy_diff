@@ -16,6 +16,11 @@ def to_user_range(minv, maxv):
     return lambda v, s: clamp(v * (maxv - minv) + minv, minv, maxv)
 
 
+def to_user_range_quantized(minv, maxv):
+    user_range_transform = to_user_range(minv, maxv)
+    return lambda v, s: int(round(user_range_transform(v, s)))
+
+
 def from_sample_count(value, sample):
     return float(value) / sample.length
 
@@ -65,6 +70,8 @@ class SimplerDeviceDecorator(Subject, SlotManager, LiveObjectDecorator):
         self.complex_pro_envelope_param = WrappingParameter(name='Envelope Complex Pro', parent=self, property_host=self._live_object.sample, source_property='complex_pro_envelope', from_property_value=from_user_range(8.0, 256.0), to_property_value=to_user_range(8.0, 256.0))
         self.gain_param = WrappingParameter(name='Gain', parent=self, property_host=self._live_object.sample, source_property='gain', display_value_conversion=lambda _: (self._live_object.sample.gain_display_string() if liveobj_valid(self._live_object) and liveobj_valid(self._live_object.sample) else ''))
         self.slicing_style_param = EnumWrappingParameter(name='Slice Style', parent=self, values_property_host=self, index_property_host=self._live_object.sample, values_property='available_slice_styles', index_property='slicing_style')
+        self.slicing_step_size_param = EnumWrappingParameter(name='Beat', parent=self, values_property_host=self, index_property_host=self._live_object.sample, values_property='available_slicing_step_sizes', index_property='slicing_step_size')
+        self.slicing_split_count_param = WrappingParameter(name='Split', parent=self, property_host=self._live_object.sample, source_property='slicing_split_count', from_property_value=from_user_range(2, 64), to_property_value=to_user_range_quantized(2, 64))
         self.secret_slicing_param = BoolWrappingParameter(name='Secret Slicing', parent=self, property_host=self, source_property='show_slicing_style')
         self._sample_based_parameters.extend([self.start,
          self.end,
@@ -87,6 +94,8 @@ class SimplerDeviceDecorator(Subject, SlotManager, LiveObjectDecorator):
          self.granulation_resolution,
          self.transient_loop_mode,
          self.slicing_style_param,
+         self.slicing_step_size_param,
+         self.slicing_split_count_param,
          self.secret_slicing_param])
 
     def _decorated_parameters(self):
@@ -122,7 +131,11 @@ class SimplerDeviceDecorator(Subject, SlotManager, LiveObjectDecorator):
 
     @property
     def available_slice_styles(self):
-        return (u'Transient', u'Manual')
+        return (u'Transient', u'Beats', u'Splits', u'Manual')
+
+    @property
+    def available_slicing_step_sizes(self):
+        return (u'1/16', u'1/16T', u'1/8', u'1/8T', u'1/4', u'1/4T', u'1/2', u'1/2T', u'1 Bar', u'2 Bars', u'4 Bars')
 
     @property
     def available_transient_loop_modes(self):
@@ -152,7 +165,8 @@ class SimplerDeviceDecorator(Subject, SlotManager, LiveObjectDecorator):
         for param in (self.warp_mode_param,
          self.granulation_resolution,
          self.transient_loop_mode,
-         self.slicing_style_param):
+         self.slicing_style_param,
+         self.slicing_step_size_param):
             param.set_index_property_host(self._live_object.sample)
 
         self._reconnect_to_slices()

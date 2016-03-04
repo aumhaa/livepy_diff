@@ -27,7 +27,7 @@ class SimplerSliceNudging(SlotManager):
         self.__on_nudge_delta.subject = self._nudge_parameter
 
     def _can_access_slicing_properties(self):
-        return liveobj_valid(self._simpler) and liveobj_valid(self._simpler.sample) and self._simpler.current_playback_mode == Live.SimplerDevice.PlaybackMode.slicing
+        return liveobj_valid(self._simpler) and liveobj_valid(self._simpler.sample) and self._simpler.current_playback_mode == Live.SimplerDevice.PlaybackMode.slicing and self._simpler.sample.slicing_style != Live.Sample.SlicingStyle.beats and self._simpler.sample.slicing_style != Live.Sample.SlicingStyle.splits
 
     @listens('view.selected_slice')
     def __on_selected_slice_changed(self):

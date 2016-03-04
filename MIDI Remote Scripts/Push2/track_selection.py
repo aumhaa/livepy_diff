@@ -118,7 +118,8 @@ class SessionRingTrackProvider(SessionRingComponent, ItemProvider):
 
     def move(self, tracks, scenes):
         super(SessionRingTrackProvider, self).move(tracks, scenes)
-        self._on_tracklist_changed()
+        if tracks != 0:
+            self._on_tracklist_changed()
 
     def tracks_to_use(self):
         return self._decorator_factory.decorate_all_mixer_tracks(get_all_mixer_tracks(self.song))

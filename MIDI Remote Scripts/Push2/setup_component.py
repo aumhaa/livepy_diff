@@ -38,7 +38,7 @@ class ProfilingSettings(SerializableListenableProperties):
 
 
 class ExperimentalSettings(SerializableListenableProperties):
-    new_waveform_navigation = listenable_property.managed(False)
+    dummy = False
 
 
 class Settings(CompoundDisconnectable):
@@ -156,12 +156,10 @@ class ProfilingSettingsComponent(Component):
 
 
 class ExperimentalSettingsComponent(Component):
-    new_waveform_navigation_button = ToggleButtonControl()
 
     def __init__(self, settings = None, *a, **k):
         raise settings is not None or AssertionError
         super(ExperimentalSettingsComponent, self).__init__(*a, **k)
-        self.new_waveform_navigation_button.connect_property(settings, 'new_waveform_navigation')
 
 
 class SetupComponent(ModesComponent):

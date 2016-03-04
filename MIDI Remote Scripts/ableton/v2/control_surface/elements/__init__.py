@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function
 from .button import ButtonElement, ButtonElementMixin, ButtonValue, DummyUndoStepHandler, ON_VALUE, OFF_VALUE
 from .button_matrix import ButtonMatrixElement
 from .button_slider import ButtonSliderElement
-from .color import Color, DynamicColorBase, SelectedTrackColorFactory, SelectedClipColorFactory, to_midi_value
+from .color import Color, DynamicColorBase, SelectedTrackColor, SelectedTrackColorFactory, SelectedClipColorFactory, to_midi_value
 from .combo import ComboElement, DoublePressContext, DoublePressElement, EventElement, MultiElement, ToggleElement, WrapperElement
 from .display_data_source import adjust_string, adjust_string_crop, DisplayDataSource
 from .encoder import EncoderElement, FineGrainWithModifierEncoderElement, TouchEncoderElement, TouchEncoderElementBase
@@ -44,6 +44,7 @@ __all__ = (ButtonElement,
  DisplaySegmentationError,
  PhysicalDisplayElement,
  SubDisplayElement,
+ SelectedTrackColor,
  SelectedTrackColorFactory,
  SelectedClipColorFactory,
  SliderElement,

@@ -116,8 +116,6 @@ class TrackListComponent(ModesComponent, Messenger):
         self.__on_tracks_changed.subject = self.song
         self.__on_selected_track_changed.subject = self.song.view
         self._update_track_and_chain_listeners()
-        self._update_button_enabled_state()
-        self._update_all_button_colors()
 
     @listenable_property
     def tracks(self):
@@ -148,7 +146,6 @@ class TrackListComponent(ModesComponent, Messenger):
     @listens('tracks')
     def __on_tracks_changed(self):
         self._update_track_and_chain_listeners()
-        self._update_button_enabled_state()
 
     @listens_group('mute')
     def __on_track_mute_state_changed(self, track):
@@ -169,7 +166,6 @@ class TrackListComponent(ModesComponent, Messenger):
     @listens('items')
     def __on_items_changed(self):
         self._update_track_and_chain_listeners()
-        self._update_button_enabled_state()
 
     def _update_track_and_chain_listeners(self):
         self.notify_tracks()

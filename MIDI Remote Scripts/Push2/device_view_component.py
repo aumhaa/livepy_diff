@@ -52,7 +52,6 @@ class SimplerDeviceViewConnector(DeviceViewConnector):
     def __init__(self, device_component = None, *a, **k):
         super(SimplerDeviceViewConnector, self).__init__(*a, **k)
         self._device = device_component
-        self.__on_processed_zoom_requests_changed.subject = device_component
 
     def update(self):
         super(SimplerDeviceViewConnector, self).update()
@@ -61,14 +60,6 @@ class SimplerDeviceViewConnector(DeviceViewConnector):
         self._view.properties = device
         self._view.wants_waveform_shown = self._parameter_provider.wants_waveform_shown
         self._view.simpler = device
-        self._update_zoom_requests()
-
-    def _update_zoom_requests(self):
-        self._view.processed_zoom_requests = self._parameter_provider.processed_zoom_requests
-
-    @listens('processed_zoom_requests')
-    def __on_processed_zoom_requests_changed(self):
-        self._update_zoom_requests()
 
 
 class DeviceViewComponent(ModesComponent):

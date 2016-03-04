@@ -5,26 +5,28 @@ from .mapped import MappedControl
 from .button import ButtonControl, ButtonControlBase, DoubleClickContext, PlayableControl
 from .toggle_button import ToggleButtonControl
 from .radio_button import RadioButtonControl
-from .encoder import EncoderControl, StepEncoderControl
+from .encoder import EncoderControl, ListIndexEncoderControl, ListValueEncoderControl, StepEncoderControl
 from .text_display import TextDisplayControl
 from .control_list import control_list, control_matrix, ControlList, MatrixControl, RadioButtonGroup
-__all__ = (control_color,
- control_event,
- Control,
- ControlManager,
- forward_control,
- MappedControl,
- ButtonControl,
+__all__ = (ButtonControl,
  ButtonControlBase,
- DoubleClickContext,
- PlayableControl,
- ToggleButtonControl,
- RadioButtonControl,
- EncoderControl,
- StepEncoderControl,
- TextDisplayControl,
+ Control,
+ control_color,
+ control_event,
  control_list,
  control_matrix,
  ControlList,
+ ControlManager,
+ DoubleClickContext,
+ EncoderControl,
+ forward_control,
+ ListIndexEncoderControl,
+ ListValueEncoderControl,
+ MappedControl,
  MatrixControl,
- RadioButtonGroup)
+ PlayableControl,
+ RadioButtonControl,
+ RadioButtonGroup,
+ StepEncoderControl,
+ TextDisplayControl,
+ ToggleButtonControl)

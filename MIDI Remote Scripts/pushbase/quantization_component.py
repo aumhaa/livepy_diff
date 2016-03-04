@@ -16,8 +16,8 @@ QUANTIZATION_OPTIONS = [RecordingQuantization.rec_q_quarter,
  RecordingQuantization.rec_q_sixtenth_sixtenth_triplet,
  RecordingQuantization.rec_q_thirtysecond]
 DEFAULT_QUANTIZATION_INDEX = QUANTIZATION_OPTIONS.index(RecordingQuantization.rec_q_sixtenth)
-QUANTIZATION_NAMES = ('1/4', '1/8', '1/8t', '1/8+t', '1/16', '1/16t', '1/16+t', '1/32')
-QUANTIZATION_NAMES_UNICODE = (u'\xbc', u'\u215b', u'\u215bt', u'\u215b+t', u'\ue001', u'\ue001t', u'\ue001+t', u'\ue002')
+QUANTIZATION_NAMES = ('1/4', '1/8', '1/8T', '1/8+T', '1/16', '1/16T', '1/16+T', '1/32')
+QUANTIZATION_NAMES_UNICODE = (u'\xbc', u'\u215b', u'\u215bT', u'\u215b+T', u'\ue001', u'\ue001T', u'\ue001+T', u'\ue002')
 
 def quantize_amount_to_string(amount):
     """

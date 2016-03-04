@@ -3,13 +3,18 @@ from __future__ import absolute_import, print_function
 from ableton.v2.base import clamp, listenable_property, listens, liveobj_valid, SlotManager
 from ableton.v2.control_surface import CompoundComponent
 from ableton.v2.control_surface.control import StepEncoderControl
-from pushbase.internal_parameter import InternalParameterBase
+from pushbase.internal_parameter import InternalParameterBase, EnumWrappingParameter
 from pushbase.parameter_provider import ParameterInfo, ParameterProvider
 from .parameter_mapping_sensitivities import parameter_mapping_sensitivity, fine_grain_parameter_mapping_sensitivity
 from .device_view_component import DeviceViewConnector
 NO_CHOKE_GROUP = u'None'
 MAX_CHOKE_GROUP = 16
 NUM_CHOKE_GROUPS = MAX_CHOKE_GROUP + 1
+
+def get_first_chain(drum_pad):
+    if liveobj_valid(drum_pad) and len(drum_pad.chains) > 0:
+        return drum_pad.chains[0]
+
 
 class ChokeParameter(SlotManager, InternalParameterBase):
     is_quantized = True
@@ -18,25 +23,29 @@ class ChokeParameter(SlotManager, InternalParameterBase):
     max = MAX_CHOKE_GROUP
 
     def __init__(self, drum_pad = None, *a, **k):
-        raise liveobj_valid(drum_pad) or AssertionError
         super(ChokeParameter, self).__init__(name='Choke', *a, **k)
+        self.set_drum_pad(drum_pad)
+
+    def set_drum_pad(self, drum_pad):
         self._pad = drum_pad
-        self._on_pad_updated.subject = drum_pad
+        self._on_choke_group_changed.subject = get_first_chain(drum_pad)
+        self.notify_value()
 
     @listens('choke_group')
-    def _on_pad_updated(self):
+    def _on_choke_group_changed(self):
         self.notify_value()
 
     @listenable_property
     def value(self):
-        if len(self._pad.chains) > 0:
-            return self._pad.choke_group
+        first_chain = get_first_chain(self._pad)
+        if liveobj_valid(first_chain):
+            return first_chain.choke_group
         return 0
 
     @value.setter
     def value(self, value):
         value = clamp(value, 0, MAX_CHOKE_GROUP)
-        self._pad.choke_group = value
+        get_first_chain(self._pad).choke_group = value
 
     @property
     def canonical_parent(self):
@@ -47,22 +56,62 @@ class ChokeParameter(SlotManager, InternalParameterBase):
         return unicode(self.value)
 
 
-def parameters_for_pad(pad):
-    if not pad or len(pad.chains) == 0:
+DEFAULT_OUT_NOTE = 60
+
+class DrumPadTransposeParameter(EnumWrappingParameter):
+
+    def __init__(self, drum_pad = None, *a, **k):
+        super(DrumPadTransposeParameter, self).__init__(name='Transpose', values_property_host=self, values_property='available_transpose_steps', index_property_host=get_first_chain(drum_pad), index_property='out_note', *a, **k)
+
+    @property
+    def available_transpose_steps(self, steps = range(128)):
+        return steps
+
+    @property
+    def value_items(self):
         return []
-    parameter = ChokeParameter(drum_pad=pad)
-    return [ParameterInfo(parameter=parameter, default_encoder_sensitivity=parameter_mapping_sensitivity(parameter), fine_grain_encoder_sensitivity=fine_grain_parameter_mapping_sensitivity(parameter))]
+
+    @property
+    def min(self):
+        return self.available_transpose_steps[0]
+
+    @property
+    def max(self):
+        return self.available_transpose_steps[-1]
+
+    @property
+    def canonical_parent(self):
+        return self._parent.drum_pad
+
+    @property
+    def display_value(self):
+        difference = self.value - DEFAULT_OUT_NOTE
+        sign = u'-' if difference < 0 else (u'+' if difference > 0 else u'')
+        return sign + unicode(abs(difference)) + u' st'
+
+    def set_drum_pad(self, drum_pad):
+        self.set_index_property_host(get_first_chain(drum_pad))
+        self.notify_value()
 
 
 class DrumPadParameterComponent(CompoundComponent, ParameterProvider):
     choke_encoder = StepEncoderControl(num_steps=10)
+    transpose_encoder = StepEncoderControl(num_steps=10)
 
     def __init__(self, view_model = None, *a, **k):
         raise view_model is not None or AssertionError
         super(DrumPadParameterComponent, self).__init__(*a, **k)
         self._drum_pad = None
         self._parameters = []
+        self.choke_param = ChokeParameter()
+        self.transpose_param = DrumPadTransposeParameter(parent=self)
+        self.register_disconnectables([self.choke_param, self.transpose_param])
         self._view_connector = self.register_component(DeviceViewConnector(parameter_provider=self, view=view_model.deviceParameterView))
+
+    def parameters_for_pad(self):
+        if not self.has_filled_pad:
+            return []
+        return [ ParameterInfo(parameter=parameter, default_encoder_sensitivity=parameter_mapping_sensitivity(parameter), fine_grain_encoder_sensitivity=fine_grain_parameter_mapping_sensitivity(parameter)) for parameter in [self.choke_param, self.transpose_param] ]
 
     def _get_drum_pad(self):
         return self._drum_pad
@@ -70,24 +119,24 @@ class DrumPadParameterComponent(CompoundComponent, ParameterProvider):
     def _set_drum_pad(self, pad):
         if pad != self._drum_pad:
             self._drum_pad = pad
-            self._rebuild_parameter_list()
+            self._update_parameters()
             self._on_chains_in_pad_changed.subject = self._drum_pad
 
     drum_pad = property(_get_drum_pad, _set_drum_pad)
 
     @listens('chains')
     def _on_chains_in_pad_changed(self):
-        self._rebuild_parameter_list()
+        self._update_parameters()
 
-    def _rebuild_parameter_list(self):
-        for info in self._parameters:
-            self.disconnect_disconnectable(info.parameter)
-
-        self._parameters = parameters_for_pad(self._drum_pad)
-        for info in self._parameters:
-            self.register_disconnectable(info.parameter)
-
+    def _update_parameters(self):
+        self.transpose_param.set_drum_pad(self._drum_pad if self.has_filled_pad else None)
+        self.choke_param.set_drum_pad(self._drum_pad if self.has_filled_pad else None)
+        self._parameters = self.parameters_for_pad()
         self._view_connector.update()
+
+    @property
+    def has_filled_pad(self):
+        return self._drum_pad and len(self._drum_pad.chains) > 0
 
     @property
     def parameters(self):
@@ -97,3 +146,10 @@ class DrumPadParameterComponent(CompoundComponent, ParameterProvider):
     def choke_encoder(self, value, encoder):
         if len(self._parameters) > 0:
             self._parameters[0].parameter.value += value
+
+    @transpose_encoder.value
+    def transpose_encoder(self, value, encoder):
+        if len(self._parameters) > 0:
+            parameter = self._parameters[1].parameter
+            if parameter.value + value in self.transpose_param.available_transpose_steps:
+                parameter.value += value

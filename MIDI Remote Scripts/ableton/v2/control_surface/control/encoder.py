@@ -1,7 +1,9 @@
 
 from __future__ import absolute_import, print_function
-from ...base import lazy_attribute, task, sign
+import logging
+from ...base import clamp, const, lazy_attribute, task, sign
 from .control import Connectable, InputControl, control_event
+logger = logging.getLogger(__name__)
 
 class EncoderControl(InputControl):
     TOUCH_TIME = 0.5
@@ -162,7 +164,10 @@ class StepEncoderControl(EncoderControl):
             steps = self._stepper.advance(self._control_element.normalize_value(value))
             if steps != 0:
                 self._call_listener('value', steps)
-                self.connected_property_value = steps
+                self._on_stepped(steps)
+
+        def _on_stepped(self, steps):
+            self.connected_property_value = steps
 
         def _on_touch_value(self, value, *a, **k):
             super(StepEncoderControl.State, self)._on_touch_value(value, *a, **k)
@@ -172,3 +177,58 @@ class StepEncoderControl(EncoderControl):
         @property
         def num_steps(self):
             return self._stepper._num_steps
+
+
+class ListValueEncoderControl(StepEncoderControl):
+
+    class State(StepEncoderControl.State):
+
+        def __init__(self, *a, **k):
+            super(ListValueEncoderControl.State, self).__init__(*a, **k)
+            self._list_values_getter = None
+
+        def connect_list_property(self, subject, list_property_name = None, current_value_property_name = None):
+            self.connect_property(subject, current_value_property_name)
+            self._list_values_getter = lambda : getattr(subject, list_property_name)
+
+        def connect_static_list(self, subject, current_value_property_name = None, list_values = None):
+            self.connect_property(subject, current_value_property_name)
+            self._list_values_getter = const(list_values)
+
+        def disconnect_property(self):
+            super(ListValueEncoderControl.State, self).disconnect_property()
+            self._list_values_getter = None
+
+        def _on_stepped(self, steps):
+            raise self._list_values_getter is not None or AssertionError('You have to call connect_list_property or connect_static_list before\nyou can use ListValueEncoderControl.')
+            list_values = self._list_values_getter()
+            try:
+                current_index = list_values.index(self.connected_property_value)
+            except ValueError:
+                logger.warning('Encoder was turned, but current value is not in list!')
+                current_index = 0
+
+            new_index = clamp(current_index + steps, 0, len(list_values) - 1)
+            self.connected_property_value = list_values[new_index]
+
+
+class ListIndexEncoderControl(StepEncoderControl):
+
+    class State(StepEncoderControl.State):
+
+        def __init__(self, *a, **k):
+            super(ListIndexEncoderControl.State, self).__init__(*a, **k)
+            self._max_index = None
+
+        def disconnect_property(self):
+            super(ListIndexEncoderControl.State, self).disconnect_property()
+            self._max_index = None
+
+        def connect_list_property(self, subject, current_index_property_name = None, max_index = None, *a, **k):
+            self.connect_property(subject, current_index_property_name)
+            self._max_index = max_index
+
+        def _on_stepped(self, steps):
+            raise self._max_index is not None or AssertionError('You need to call connect_list_property before you can useListIndexEncoderControl.')
+            new_index = clamp(self.connected_property_value + steps, 0, self._max_index)
+            self.connected_property_value = new_index

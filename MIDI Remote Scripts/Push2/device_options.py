@@ -5,8 +5,9 @@ from ableton.v2.base import liveobj_valid, listenable_property, listens, const, 
 class DeviceTriggerOption(Subject):
     __events__ = ('default_label',)
 
-    def __init__(self, name = None, default_label = None, callback = None, is_active = None):
+    def __init__(self, name = None, default_label = None, callback = None, is_active = None, *a, **k):
         raise callback or AssertionError
+        super(DeviceTriggerOption, self).__init__(*a, **k)
         self.trigger = callback
         self._name = name or 'Option'
         self._default_label = default_label or self._name
