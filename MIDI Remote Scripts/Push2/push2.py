@@ -346,7 +346,7 @@ class Push2(IdentifiableControlSurface, PushBase):
         return DrumGroupComponent(name='Drum_Group', is_enabled=False, tracks_provider=self._session_ring, device_decorator_factory=self._device_decorator_factory, quantizer=self._quantize)
 
     def _create_device_mode(self):
-        self._drum_pad_parameter_component = DrumPadParameterComponent(view_model=self._model, is_enabled=False, layer=Layer(choke_encoder='parameter_controls_raw[0]'))
+        self._drum_pad_parameter_component = DrumPadParameterComponent(view_model=self._model, is_enabled=False, layer=Layer(choke_encoder='parameter_controls_raw[0]', transpose_encoder='parameter_controls_raw[1]'))
         self._device_or_pad_parameter_chooser = ModesComponent()
         self._device_or_pad_parameter_chooser.add_mode('device', [make_freeze_aware(self._device_parameter_component, self._device_parameter_component.layer), self._device_view])
         self._device_or_pad_parameter_chooser.add_mode('drum_pad', [make_freeze_aware(self._drum_pad_parameter_component, self._drum_pad_parameter_component.layer)])
@@ -635,15 +635,13 @@ class Push2(IdentifiableControlSurface, PushBase):
     def _init_setup_component(self):
         self._setup_settings.general.workflow = 'scene' if self._settings['workflow'].value else 'clip'
         self.__on_workflow_setting_changed.subject = self._setup_settings.general
-        self.__on_new_waveform_navigation_setting_changed.subject = self._setup_settings.experimental
-        self.__on_new_waveform_navigation_setting_changed(self._setup_settings.experimental.new_waveform_navigation)
         in_developer_mode = self.application().has_option('_Push2DeveloperMode')
         setup = SetupComponent(name='Setup', settings=self._setup_settings, pad_curve_sender=self._pad_curve_sender, in_developer_mode=in_developer_mode, is_enabled=False, layer=make_dialog_layer(category_radio_buttons='select_buttons', priority=consts.SETUP_DIALOG_PRIORITY))
         setup.general.layer = Layer(workflow_encoder='parameter_controls_raw[0]', display_brightness_encoder='parameter_controls_raw[1]', led_brightness_encoder='parameter_controls_raw[2]', priority=consts.SETUP_DIALOG_PRIORITY)
         setup.pad_settings.layer = Layer(sensitivity_encoder='parameter_controls_raw[4]', gain_encoder='parameter_controls_raw[5]', dynamics_encoder='parameter_controls_raw[6]', priority=consts.SETUP_DIALOG_PRIORITY)
         setup.display_debug.layer = Layer(show_row_spaces_button='track_state_buttons_raw[0]', show_row_margins_button='track_state_buttons_raw[1]', show_row_middle_button='track_state_buttons_raw[2]', show_button_spaces_button='track_state_buttons_raw[3]', show_unlit_button_button='track_state_buttons_raw[4]', show_lit_button_button='track_state_buttons_raw[5]', priority=consts.SETUP_DIALOG_PRIORITY)
         setup.profiling.layer = Layer(show_qml_stats_button='track_state_buttons_raw[0]', show_usb_stats_button='track_state_buttons_raw[1]', show_realtime_ipc_stats_button='track_state_buttons_raw[2]', priority=consts.SETUP_DIALOG_PRIORITY)
-        setup.experimental.layer = Layer(new_waveform_navigation_button='track_state_buttons_raw[0]', priority=consts.SETUP_DIALOG_PRIORITY)
+        setup.experimental.layer = Layer(priority=consts.SETUP_DIALOG_PRIORITY)
         self._model.setupView = setup
         self._setup_enabler = EnablingModesComponent(component=setup, enabled_color='DefaultButton.On', disabled_color='DefaultButton.On')
         self._setup_enabler.layer = Layer(cycle_mode_button='setup_button')
@@ -655,10 +653,6 @@ class Push2(IdentifiableControlSurface, PushBase):
     @listens('workflow')
     def __on_workflow_setting_changed(self, value):
         self._settings['workflow'].value = value == 'scene'
-
-    @listens('new_waveform_navigation')
-    def __on_new_waveform_navigation_setting_changed(self, value):
-        self._device_component.use_waveform_navigation = value
 
     def _create_note_mode(self):
 
@@ -748,10 +742,3 @@ class Push2(IdentifiableControlSurface, PushBase):
     def update(self):
         if self._initialized:
             super(Push2, self).update()
-
-    def request_zoom(self, zoom_factor):
-        mode = self._main_modes.selected_mode
-        if mode == 'device':
-            self._device_component.request_zoom(zoom_factor)
-        elif mode == 'clip':
-            self._loop_controller.request_zoom(zoom_factor)

@@ -4,9 +4,11 @@ from functools import partial
 from ableton.v2.base import depends, find_if, listenable_property, listens, liveobj_valid, SlotManager, Subject
 from pushbase.decoration import LiveObjectDecorator, DecoratorFactory
 from pushbase.internal_parameter import EnumWrappingParameter, InternalParameter
+from pushbase.message_box_component import Messenger
 from pushbase.simpler_decoration import SimplerDeviceDecorator as SimplerDeviceDecoratorBase
 from .device_options import DeviceTriggerOption, DeviceSwitchOption, DeviceOnOffOption
-from .waveform_navigation import SimplerWaveformNavigation
+from .waveform_navigation import Region, SimplerWaveformNavigation
+RESET_SLICING_NOTIFICATION = 'Slicing has been reset'
 
 def get_parameter_by_name(decorator, name):
     return find_if(lambda p: p.name == name, decorator._live_object.parameters)
@@ -92,6 +94,21 @@ class WaveformNavigationParameter(SlotManager, InternalParameter):
     @listenable_property
     def waveform_navigation(self):
         return self._waveform_navigation
+
+    @property
+    def visible_region(self):
+        if self._waveform_navigation:
+            return self._waveform_navigation.visible_region
+        return Region(0, 1)
+
+    @visible_region.setter
+    def visible_region(self, region):
+        if self._waveform_navigation:
+            self._waveform_navigation.visible_region = region
+
+    def set_visible_region(self, region):
+        if self._waveform_navigation:
+            self._waveform_navigation.set_visible_region(region)
 
     def zoom(self, value):
         if self._waveform_navigation:
@@ -272,7 +289,7 @@ class SimplerPositions(SlotManager, Subject):
             self.use_beat_time = self._simpler.sample.warping
 
 
-class _SimplerDeviceDecorator(SimplerDeviceDecoratorBase):
+class _SimplerDeviceDecorator(SimplerDeviceDecoratorBase, Messenger):
     waveform_real_time_channel_id = ''
     playhead_real_time_channel_id = ''
 
@@ -315,6 +332,10 @@ class _SimplerDeviceDecorator(SimplerDeviceDecoratorBase):
             if sample_available():
                 return getattr(self._live_object.sample, name)(*a)
 
+        def reset_slices():
+            call_sample_function('reset_slices')
+            self.show_notification(RESET_SLICING_NOTIFICATION)
+
         self.crop_option = DeviceTriggerOption(name='Crop', callback=partial(call_simpler_function, 'crop'))
         self.reverse_option = DeviceTriggerOption(name='Reverse', callback=partial(call_simpler_function, 'reverse'))
         self.one_shot_sustain_mode_option = DeviceSwitchOption(name='Trigger Mode', default_label='Trigger', second_label='Gate', parameter=get_parameter_by_name(self, 'Trigger Mode'))
@@ -326,6 +347,7 @@ class _SimplerDeviceDecorator(SimplerDeviceDecoratorBase):
         self.loop_option = DeviceOnOffOption(name='Loop', property_host=get_parameter_by_name(self, 'S Loop On'), property_name='value')
         self.filter_slope_option = DeviceSwitchOption(name='Filter Slope', default_label='12dB', second_label='24dB', parameter=get_parameter_by_name(self, 'Filter Slope'))
         self.clear_slices_action = DeviceTriggerOption(name='Clear Slices', default_label='Clear Slices', callback=lambda : call_sample_function('clear_slices'), is_active=lambda : sample_available() and len(self._live_object.sample.slices) > 1)
+        self.reset_slices_action = DeviceTriggerOption(name='Reset Slices', default_label='Reset Slices', callback=reset_slices, is_active=lambda : sample_available())
 
     def get_parameter_by_name(self, name):
         return find_if(lambda p: p.name == name, self.parameters)
@@ -342,7 +364,8 @@ class _SimplerDeviceDecorator(SimplerDeviceDecoratorBase):
          self.lfo_sync_option,
          self.loop_option,
          self.filter_slope_option,
-         self.clear_slices_action)
+         self.clear_slices_action,
+         self.reset_slices_action)
 
     @listenable_property
     def waveform_navigation(self):
@@ -351,6 +374,10 @@ class _SimplerDeviceDecorator(SimplerDeviceDecoratorBase):
     @property
     def available_resolutions(self):
         return (u'1 Bar', u'\xbd', u'\xbc', u'\u215b', u'\ue001', u'\ue002', u'Transients')
+
+    @property
+    def available_slicing_step_sizes(self):
+        return (u'\ue001', u'\ue001T', u'\u215b', u'\u215bT', u'\xbc', u'\xbcT', u'\xbd', u'\xbdT', u'1 Bar', u'2 Bars', u'4 Bars')
 
     @listens('parameters')
     def __on_parameters_changed(self):
@@ -399,6 +426,7 @@ class _SimplerDeviceDecorator(SimplerDeviceDecoratorBase):
     def _on_sample_changed(self):
         super(_SimplerDeviceDecorator, self)._on_sample_changed()
         self.clear_slices_action.notify_active()
+        self.reset_slices_action.notify_active()
 
     def _on_slices_changed(self):
         super(_SimplerDeviceDecorator, self)._on_slices_changed()
@@ -514,8 +542,7 @@ class SimplerDecoratedPropertiesCopier(object):
         self._factory = factory
         self._copied_additional_properties = {}
         self._nested_properties = {}
-        self.copy_properties({'zoom': lambda s: s.zoom.linear_value,
-         self.ADDITIONAL_PROPERTIES[0]: None,
+        self.copy_properties({self.ADDITIONAL_PROPERTIES[0]: None,
          self.ADDITIONAL_PROPERTIES[1]: None})
 
     def copy_properties(self, properties):
@@ -531,5 +558,5 @@ class SimplerDecoratedPropertiesCopier(object):
         return decorated
 
     def _apply_nested_properties(self, decorated_object):
-        if 'zoom' in self._nested_properties:
-            decorated_object.zoom.linear_value = self._nested_properties['zoom']
+        if decorated_object.zoom.waveform_navigation is not None and self._decorated_object.zoom.waveform_navigation is not None:
+            decorated_object.zoom.waveform_navigation.copy_state(self._decorated_object.zoom.waveform_navigation)

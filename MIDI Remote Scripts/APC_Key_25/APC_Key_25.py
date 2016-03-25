@@ -49,7 +49,6 @@ class APC_Key_25(APC, OptimizedControlSurface):
             self._session.set_mixer(self._mixer)
             self._encoder_modes = self._create_encoder_modes()
             self._track_modes = self._create_track_button_modes()
-        self._device_selection_follows_track_selection = True
 
     def get_matrix_button(self, column, row):
         return self._matrix_buttons[row][column]
@@ -102,7 +101,7 @@ class APC_Key_25(APC, OptimizedControlSurface):
         return MixerComponent(self.SESSION_WIDTH, auto_name=True, is_enabled=False, invert_mute_feedback=True)
 
     def _create_device_component(self):
-        return DeviceComponent(name='Device_Component', is_enabled=False)
+        return DeviceComponent(name='Device_Component', is_enabled=False, device_selection_follows_track_selection=True)
 
     def _create_transport(self):
 

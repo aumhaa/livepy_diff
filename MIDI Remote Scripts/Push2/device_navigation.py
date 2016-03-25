@@ -259,7 +259,6 @@ class DeviceNavigationComponent(ItemListerComponent):
         self._track_decorator = DecoratorFactory()
         self._device_component = device_component
         self.__on_device_changed.subject = device_component
-        self.__on_device_changed()
         self._device_bank_registry = device_bank_registry
         self._delete_handler = delete_handler
         self._chain_selection = self.register_component(chain_selection)
@@ -280,6 +279,7 @@ class DeviceNavigationComponent(ItemListerComponent):
         self._track_list = track_list_component
         watcher = self.register_disconnectable(DeviceChainEnabledStateWatcher(device_navigation=self))
         self.__on_enabled_state_changed.subject = watcher
+        self.__on_device_changed()
         self._update_button_colors()
 
     @property
@@ -517,6 +517,7 @@ class DeviceNavigationComponent(ItemListerComponent):
     @listens('device')
     def __on_device_changed(self):
         if not self._should_select_drum_pad() and not self._is_drum_rack_selected():
+            self._modes.selected_mode = 'default'
             self._update_item_provider(self._device_component.device())
 
     def _is_drum_rack_selected(self):

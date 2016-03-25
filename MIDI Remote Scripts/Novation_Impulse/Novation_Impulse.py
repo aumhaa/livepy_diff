@@ -41,7 +41,6 @@ class Novation_Impulse(ControlSurface):
         ControlSurface.__init__(self, c_instance)
         with self.component_guard():
             self.set_pad_translations(PAD_TRANSLATIONS)
-            self._device_selection_follows_track_selection = True
             self._suggested_input_port = 'Impulse'
             self._suggested_output_port = 'Impulse'
             self._has_sliders = True
@@ -231,7 +230,7 @@ class Novation_Impulse(ControlSurface):
         self._next_bank_button = ButtonElement(IS_MOMENTARY, MIDI_CC_TYPE, 1, 11)
         self._prev_bank_button.name = 'Device_Bank_Down_Button'
         self._next_bank_button.name = 'Device_Bank_Up_Button'
-        device = DeviceComponent()
+        device = DeviceComponent(device_selection_follows_track_selection=True)
         device.name = 'Device_Component'
         self.set_device_component(device)
         device.set_parameter_controls(self._encoders)

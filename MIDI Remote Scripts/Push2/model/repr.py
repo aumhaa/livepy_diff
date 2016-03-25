@@ -417,6 +417,11 @@ class TrackAdapter(ModelAdapter):
         except SlotError:
             pass
 
+        try:
+            self.register_slot(self._adaptee, self.notify_outputRouting, 'current_output_routing')
+        except SlotError:
+            pass
+
     @property
     def isFoldable(self):
         return getattr(self._adaptee, 'is_foldable', False)
@@ -513,6 +518,10 @@ class TrackAdapter(ModelAdapter):
             return self._adaptee in list(self._adaptee.canonical_parent.return_tracks)
         except AttributeError:
             return False
+
+    @listenable_property
+    def outputRouting(self):
+        return getattr(self._adaptee, 'current_output_routing', '')
 
 
 class TrackListAdapter(VisibleAdapter):

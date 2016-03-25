@@ -46,8 +46,6 @@ class APC40(APC, OptimizedControlSurface):
             for component in self.components:
                 component.set_enabled(False)
 
-        self._device_selection_follows_track_selection = True
-
     def _with_shift(self, button):
         return ComboElement(button, modifiers=[self._shift_button])
 
@@ -141,7 +139,7 @@ class APC40(APC, OptimizedControlSurface):
         self._mixer.master_strip().layer = Layer(volume_control=self._master_volume_control, select_button=self._master_select_button)
 
     def _create_device(self):
-        self._device = DeviceComponent(name='Device_Component', is_enabled=False, layer=Layer(bank_buttons=self._device_bank_buttons, on_off_button=self._device_on_off_button), use_fake_banks=True)
+        self._device = DeviceComponent(name='Device_Component', is_enabled=False, layer=Layer(bank_buttons=self._device_bank_buttons, on_off_button=self._device_on_off_button), use_fake_banks=True, device_selection_follows_track_selection=True)
         ChannelTranslationSelector(8, name='Control_Translations')
         self._device.set_parameter_controls(tuple(self._device_param_controls_raw))
 

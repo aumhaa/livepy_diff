@@ -49,7 +49,6 @@ class APC40_MkII(APC, OptimizedControlSurface):
             self._session.set_mixer(self._mixer)
         self.set_highlighting_session_component(self._session)
         self.set_device_component(self._device)
-        self._device_selection_follows_track_selection = True
 
     def _with_shift(self, button):
         return ComboElement(button, modifiers=[self._shift_button])
@@ -161,7 +160,7 @@ class APC40_MkII(APC, OptimizedControlSurface):
         self._transport = TransportComponent(name='Transport', is_enabled=False, layer=Layer(shift_button=self._shift_button, play_button=self._play_button, stop_button=ComboElement(self._play_button, modifiers=[self._shift_button]), record_button=self._record_button, metronome_button=self._metronome_button, tap_tempo_button=self._tap_tempo_button, nudge_down_button=self._nudge_down_button, nudge_up_button=self._nudge_up_button, tempo_encoder=self._tempo_control), play_toggle_model_transform=lambda v: v)
 
     def _create_device(self):
-        self._device = DeviceComponent(name='Device', is_enabled=False, layer=Layer(parameter_controls=self._device_controls, bank_buttons=self._device_bank_buttons, bank_prev_button=self._device_prev_bank_button, bank_next_button=self._device_next_bank_button, on_off_button=self._device_on_off_button, lock_button=self._device_lock_button))
+        self._device = DeviceComponent(name='Device', is_enabled=False, layer=Layer(parameter_controls=self._device_controls, bank_buttons=self._device_bank_buttons, bank_prev_button=self._device_prev_bank_button, bank_next_button=self._device_next_bank_button, on_off_button=self._device_on_off_button, lock_button=self._device_lock_button), device_selection_follows_track_selection=True)
 
     def _create_view_control(self):
         self._view_control = DetailViewCntrlComponent(name='View_Control', is_enabled=False, layer=Layer(device_nav_left_button=self._prev_device_button, device_nav_right_button=self._next_device_button, device_clip_toggle_button=self._clip_device_button, detail_toggle_button=self._detail_view_button))

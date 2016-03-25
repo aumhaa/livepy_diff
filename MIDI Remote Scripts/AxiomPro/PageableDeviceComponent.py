@@ -68,8 +68,8 @@ SPECIAL_DEVICE_DICT = {'InstrumentImpulse': [(IMP_BANK1, IMP_BANK2),
 class PageableDeviceComponent(DeviceComponent):
     """ Class representing a device on the AxiomPro """
 
-    def __init__(self):
-        DeviceComponent.__init__(self)
+    def __init__(self, *a, **k):
+        super(PageableDeviceComponent, self).__init__(*a, **k)
         self._parameter_value_data_source = DisplayDataSource()
         self._parameter_name_data_sources = []
         self._page_name_data_sources = []

@@ -41,10 +41,9 @@ class MPDMkIIBase(ControlSurface):
         self._drums.layer = Layer(pads=self._pads)
 
     def _create_device(self):
-        self._device = DeviceComponent(is_enabled=True, name='Device')
+        self._device = DeviceComponent(is_enabled=True, name='Device', device_selection_follows_track_selection=True)
         self._device.layer = Layer(parameter_controls=self._encoders)
         self.set_device_component(self._device)
-        self._device_selection_follows_track_selection = True
 
     def _create_transport(self):
         self._transport = TransportComponent(is_enabled=True, name='Transport')

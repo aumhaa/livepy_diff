@@ -57,7 +57,6 @@ class Axiom_AIR_25_49_61(ControlSurface):
         self._alt_device_component = None
         with self.component_guard():
             self.set_pad_translations(PAD_TRANSLATIONS)
-            self._device_selection_follows_track_selection = True
             self._suggested_input_port = 'HyperControl'
             self._suggested_output_port = 'HyperControl'
             self._single_fader_button_modes = None
@@ -329,9 +328,9 @@ class Axiom_AIR_25_49_61(ControlSurface):
         transport_view_modes.name = 'Transport_View_Modes'
 
     def _setup_device(self):
-        self._device_for_encoders = BestBankDeviceComponent()
+        self._device_for_encoders = BestBankDeviceComponent(device_selection_follows_track_selection=True)
         self._device_for_encoders.name = 'Device_Component_for_encoders'
-        self._device_for_faders = BestBankDeviceComponent()
+        self._device_for_faders = BestBankDeviceComponent(device_selection_follows_track_selection=True)
         self._device_for_faders.name = 'Device_Component_for_faders'
         self.set_device_component(self._device_for_encoders)
         self.set_alt_device_component(self._device_for_faders)

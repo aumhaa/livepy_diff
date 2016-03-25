@@ -31,7 +31,6 @@ class Oxygen_3rd_Gen(ControlSurface):
             self._suggested_input_port = 'Oxygen'
             self._suggested_output_port = 'Oxygen'
             self._has_slider_section = True
-            self._device_selection_follows_track_selection = True
             self._shift_button = ButtonElement(is_momentary, MIDI_CC_TYPE, GLOBAL_CHANNEL, 57)
             self._shift_button.add_value_listener(self._shift_value)
             self._mixer = SpecialMixerComponent(NUM_TRACKS)
@@ -46,7 +45,7 @@ class Oxygen_3rd_Gen(ControlSurface):
             self._shift_value(0)
             self._mixer.master_strip().set_volume_control(self._master_slider)
             self._mixer.selected_strip().set_volume_control(None)
-            device = DeviceComponent()
+            device = DeviceComponent(device_selection_follows_track_selection=True)
             device.set_parameter_controls(tuple([ EncoderElement(MIDI_CC_TYPE, GLOBAL_CHANNEL, 17 + index, Live.MidiMap.MapMode.absolute) for index in range(8) ]))
             self.set_device_component(device)
             ffwd_button = ButtonElement(is_momentary, MIDI_CC_TYPE, GLOBAL_CHANNEL, 115)

@@ -53,7 +53,6 @@ class AxiomAirMini32(ControlSurface):
         with self.component_guard():
             self._suggested_input_port = 'HyperControl'
             self._suggested_output_port = 'HyperControl'
-            self._device_selection_follows_track_selection = True
             self.set_pad_translations(PAD_TRANSLATIONS)
             stop_button = make_button(116)
             play_button = make_button(117)
@@ -72,7 +71,7 @@ class AxiomAirMini32(ControlSurface):
             transport.set_play_button(play_button)
             transport.set_record_button(record_button)
             session = SessionComponent(8, 0)
-            device = BestBankDeviceComponent()
+            device = BestBankDeviceComponent(device_selection_follows_track_selection=True)
             self.set_device_component(device)
             device_nav = DeviceNavComponent()
             mixer = SpecialMixerComponent(NUM_TRACKS)

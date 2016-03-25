@@ -53,7 +53,6 @@ class LaunchControl(ControlSurface):
     def __init__(self, c_instance):
         super(LaunchControl, self).__init__(c_instance)
         with self.component_guard():
-            self._device_selection_follows_track_selection = True
             self._init_mixer()
             self._init_session()
             self._init_device()
@@ -145,7 +144,7 @@ class LaunchControl(ControlSurface):
             button.set_on_off_values(Colors.LED_ON, Colors.LED_OFF)
 
         self._device_bank_registry = DeviceBankRegistry()
-        self._device = DeviceComponent(device_bank_registry=self._device_bank_registry, name='Device')
+        self._device = DeviceComponent(device_bank_registry=self._device_bank_registry, name='Device', device_selection_follows_track_selection=True)
         self._device.set_enabled(False)
         self._device.layer = Layer(parameter_controls=ButtonMatrixElement(rows=[parameter_controls]), bank_buttons=ButtonMatrixElement(rows=[bank_buttons]))
         self.set_device_component(self._device)

@@ -66,12 +66,11 @@ class Roland_A_PRO(ControlSurface):
         self._mixer.set_enabled(True)
 
     def _create_device(self):
-        self._device = DeviceComponent()
+        self._device = DeviceComponent(device_selection_follows_track_selection=True)
         self._device_navigation = DeviceNavigationComponent()
         self._device.set_enabled(True)
         self._device_navigation.set_enabled(True)
         self.set_device_component(self._device)
-        self._device_selection_follows_track_selection = True
 
     def _create_drums(self):
         self._drums = DrumRackComponent(name='Drum_Rack', is_enabled=False, layer=Layer(pads=self._pads))

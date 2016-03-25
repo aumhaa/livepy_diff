@@ -183,7 +183,7 @@ class LoopSettingsControllerComponent(Component):
          self._on_clip_end_touched,
          self._on_clip_start_marker_touched,
          self._on_clip_looping_touched]
-        self._touched_encoder_callbacks_unlooped = [self._on_clip_start_marker_touched,
+        self._touched_encoder_callbacks_unlooped = [self._on_clip_position_touched,
          self._on_clip_end_touched,
          nop,
          self._on_clip_looping_touched]
@@ -191,7 +191,7 @@ class LoopSettingsControllerComponent(Component):
          self._on_clip_end_released,
          self._on_clip_start_marker_released,
          self._on_clip_looping_released]
-        self._released_encoder_callbacks_unlooped = [self._on_clip_start_marker_released,
+        self._released_encoder_callbacks_unlooped = [self._on_clip_position_released,
          self._on_clip_end_released,
          nop,
          self._on_clip_looping_released]

@@ -6,8 +6,8 @@ BOP_BANK_NAME = 'Best of Parameters'
 class BestBankDeviceComponent(DeviceComponent):
     """ Special Device component that uses the best of bank of a device as default """
 
-    def __init__(self):
-        DeviceComponent.__init__(self)
+    def __init__(self, *a, **k):
+        super(BestBankDeviceComponent, self).__init__(*a, **k)
         new_banks = {}
         new_bank_names = {}
         self._device_banks = DEVICE_DICT

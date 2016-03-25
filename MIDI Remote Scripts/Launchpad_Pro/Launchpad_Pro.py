@@ -175,7 +175,6 @@ class Launchpad_Pro(IdentifiableControlSurface, OptimizedControlSurface):
             self._on_session_record_changed.subject = self.song()
         self.set_highlighting_session_component(self._session)
         self.set_device_component(self._device)
-        self._device_selection_follows_track_selection = True
         self._on_session_record_changed()
 
     def disconnect(self):
@@ -224,7 +223,7 @@ class Launchpad_Pro(IdentifiableControlSurface, OptimizedControlSurface):
         self._session.set_mixer(self._mixer)
 
     def _create_device(self):
-        self._device = SpecialDeviceComponent(name='Device_Control', is_enabled=False)
+        self._device = SpecialDeviceComponent(name='Device_Control', is_enabled=False, device_selection_follows_track_selection=True)
         self._device_navigation = DeviceNavigationComponent(name='Device_Navigation')
         self._device_background = BackgroundComponent(name='Device_Background_Component')
 

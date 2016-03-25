@@ -110,9 +110,8 @@ class Launchkey_MK2(OptimizedControlSurface):
         self._mute_button_modes.set_enabled(True)
 
     def _create_device(self):
-        self._device = DeviceComponent(name='Device', is_enabled=False)
+        self._device = DeviceComponent(name='Device', is_enabled=False, device_selection_follows_track_selection=True)
         self.set_device_component(self._device)
-        self._device_selection_follows_track_selection = True
         self._device.set_enabled(True)
 
     def _create_background(self):

@@ -75,7 +75,6 @@ class ControlSurface(SlotManager):
         self.controls = []
         self._highlighting_session_component = None
         self._device_component = None
-        self._device_selection_follows_track_selection = False
         self._forwarding_long_identifier_registry = {}
         self._forwarding_registry = {}
         self._is_sending_scheduled_messages = BooleanContext()
@@ -373,8 +372,8 @@ class ControlSurface(SlotManager):
         self._c_instance.update_locks()
         if device_component is not None:
             device_component.set_lock_callback(self._toggle_lock)
-            if self._device_selection_follows_track_selection:
-                self.schedule_message(1, self._update_device_selection)
+            if device_component.device_selection_follows_track_selection:
+                device_component.update_device_selection()
 
     @contextmanager
     def suppressing_rebuild_requests(self):
@@ -661,9 +660,6 @@ class ControlSurface(SlotManager):
         for component in self._components:
             component.on_selected_track_changed()
 
-        if self._device_component is not None and self._device_selection_follows_track_selection:
-            self._update_device_selection()
-
     def _on_selected_scene_changed(self):
         for component in self._components:
             component.on_selected_scene_changed()
@@ -680,17 +676,6 @@ class ControlSurface(SlotManager):
         for display in self._displays:
             display.update()
             display._tasks.update(Defaults.TIMER_DELAY)
-
-    def _update_device_selection(self):
-        track = self.song().view.selected_track
-        device_to_select = track.view.selected_device
-        if device_to_select == None and len(track.devices) > 0:
-            device_to_select = track.devices[0]
-        if device_to_select != None:
-            self.song().view.select_device(device_to_select)
-            self._device_component.set_device(self.song().appointed_device)
-        else:
-            self._device_component.set_device(None)
 
 
 class OptimizedControlSurface(ControlSurface):

@@ -3,8 +3,10 @@ from __future__ import absolute_import, print_function
 import logging
 import math
 from collections import namedtuple, OrderedDict
+from functools import partial
+from itertools import ifilter, imap
 import Live
-from ableton.v2.base import SlotManager, Subject, const, clamp, depends, find_if, index_if, isclose, lazy_attribute, listenable_property, listens, listens_group, liveobj_changed, liveobj_valid, nop, task
+from ableton.v2.base import SlotManager, Subject, const, clamp, depends, find_if, index_if, isclose, lazy_attribute, listenable_property, listens, listens_group, nop, task
 from ableton.v2.control_surface.control import EncoderControl
 logger = logging.getLogger(__name__)
 FocusMarker = namedtuple('FocusMarker', ['name', 'position'])
@@ -118,7 +120,6 @@ class ObjectDescription(object):
         super(ObjectDescription, self).__init__(*a, **k)
         self._regions = ('waveform',) + regions + ('focused_object',)
         self._focus_name_or_getter = focus_name_or_getter
-        self.is_start = False
 
     @property
     def regions(self):
@@ -131,11 +132,17 @@ class ObjectDescription(object):
         return self._focus_name_or_getter
 
 
+class MarginType(object):
+    """ Enum for the zooming algorithm. """
+    NONE, START, END = range(3)
+
+
 class WaveformNavigation(SlotManager, Subject):
     """ Class for managing a visible area of a waveform """
     visible_region = listenable_property.managed(Region(0, 1))
     visible_region_in_samples = listenable_property.managed(Region(0, 1))
     animate_visible_region = listenable_property.managed(False)
+    focus_marker = listenable_property.managed(FocusMarker('', 0))
     show_focus = listenable_property.managed(False)
     ZOOM_SENSITIVITY = 1.5
     MIN_VISIBLE_SAMPLES = 49
@@ -143,16 +150,16 @@ class WaveformNavigation(SlotManager, Subject):
     MARGIN_IN_PX = 121
     RELATIVE_FOCUS_MARGIN = float(MARGIN_IN_PX) / WAVEFORM_WIDTH_IN_PX
     UNSNAPPING_THRESHOLD = 0.6
+    CHANGE_OBJECT_TIME = 0.1
 
     def __init__(self, *a, **k):
         super(WaveformNavigation, self).__init__(*a, **k)
         self._waveform_region = Region(0, 1)
         self.waveform_roi = self.make_region_of_interest(getter=lambda : self._waveform_region, with_margin=False)
         self.focused_object_roi = self.make_region_of_interest(getter=self._make_region_for_focused_object, with_margin=False)
-        self._complete_object_region_description()
-        self._focused_object = None
-        self._focus_marker = FocusMarker('', 0)
-        self._touched_objects = set()
+        self._focused_identifier = None
+        self._touched_identifiers = set()
+        self._changed_identifiers = set()
         self._has_tasks = False
         self._target_roi = self.waveform_roi
         self._source_roi = self.waveform_roi
@@ -210,6 +217,14 @@ class WaveformNavigation(SlotManager, Subject):
     def additional_regions_of_interest(self):
         return {}
 
+    def get_name_for_roi(self, roi):
+        """
+        Returns the name for the given roi or None, if it doesn't have one
+        """
+        item = find_if(lambda i: i[1] == roi, self.regions_of_interest.iteritems())
+        if item is not None:
+            return item[0]
+
     @lazy_attribute
     def focusable_object_descriptions(self):
         """
@@ -218,13 +233,8 @@ class WaveformNavigation(SlotManager, Subject):
         """
         return {}
 
-    def get_object_description(self, obj):
-        return self.focusable_object_descriptions.get(self.get_object_identifier(obj), None)
-
-    def _complete_object_region_description(self):
-        for identifier, d in self.focusable_object_descriptions.iteritems():
-            roi = self._get_roi_for_object_identifier(identifier)
-            d.is_start = roi.start_identifier == identifier
+    def get_object_description(self, identifier):
+        return self.focusable_object_descriptions.get(identifier, None)
 
     @property
     def visible_proportion(self):
@@ -263,14 +273,86 @@ class WaveformNavigation(SlotManager, Subject):
         source = self._source_roi.region_with_margin
         target = self._target_roi.region_with_margin
         easing_degree = calc_easing_degree_for_proportion(float(target.length) / float(source.length))
-        d = self.get_object_description(self._focused_object)
-        prefer_end = d.is_start if d is not None else False
-        t = inverse_interpolate_region(source, target, self.visible_region, easing_degree, prefer_end)
+        focused_region, focus_marker, margin_type = self._get_zoom_info_for_focused_object()
+        t = inverse_interpolate_region(source, target, self.visible_region, easing_degree, prefer_end=margin_type == MarginType.START)
         t = clamp(t + value * self.ZOOM_SENSITIVITY, 0.0, 1.0)
-        self.set_visible_region(interpolate_region(source, target, t, easing_degree), force_animate=animate, source_action='zoom')
+        region = interpolate_region(source, target, t, easing_degree)
+        region = self._add_margin_to_zoomed_region(region, focused_region, margin_type)
+        self.set_visible_region(region, force_animate=animate, source_action='zoom')
+        self.focus_marker = focus_marker
         self.show_focus = True
         self.try_hide_focus_delayed()
         self._try_lock_region()
+
+    def _get_zoom_info_for_focused_object(self):
+        """
+        Returns a tuple of the region for the focused object and weather a
+        margin should be added to the zoom region.
+        """
+        identifier = self._focused_identifier
+        roi = self._get_roi_for_object_identifier(identifier)
+        margin_type = MarginType.NONE
+        region = None
+        focus_marker = None
+        if roi is not None:
+            margin = self.waveform_region.length * self.RELATIVE_FOCUS_MARGIN
+            region = roi.region
+            is_start = roi.start_identifier == identifier
+            if is_start and region.start < margin:
+                margin_type = MarginType.START
+            elif not is_start and region.end > self.waveform_region.end - margin:
+                margin_type = MarginType.END
+            obj_description = self.focusable_object_descriptions.get(identifier, None)
+            if obj_description is not None:
+                focus_marker = FocusMarker(obj_description.focus_name, region.end if roi.end_identifier == identifier else region.start)
+        return (region, focus_marker, margin_type)
+
+    def _add_margin_to_zoomed_region(self, zoom_region, focused_region, margin_type):
+        """
+        Adds a margin to a zoom region, so that the focused object is shown with a margin
+        as soon as possible. This makes switching between zooming an focusing an object
+        seamless, as focusing will always add the margin as well.
+        """
+        if focused_region is not None and margin_type != MarginType.NONE:
+            position = focused_region.start if margin_type == MarginType.START else focused_region.end
+            if zoom_region.start <= position <= zoom_region.end:
+                if margin_type == MarginType.START:
+                    zoom_region = self._add_margin_to_zoomed_region_start(zoom_region, position)
+                else:
+                    zoom_region = self._add_margin_to_zoomed_region_end(zoom_region, position)
+            else:
+                logger.warn("Focused object not visible. Couldn't add margin to zoomed region. %d not in %r" % (position, zoom_region))
+        return zoom_region
+
+    def _add_margin_to_zoomed_region_start(self, region, focused_position):
+        p = focused_position - self.waveform_region.start
+        samples_per_pixel = p / self.MARGIN_IN_PX
+        length = self.WAVEFORM_WIDTH_IN_PX * samples_per_pixel
+        if self.waveform_region.start + length < region.end:
+            region = Region(self.waveform_region.start, region.end)
+        else:
+            p = region.end - focused_position
+            samples_per_pixel = p / (self.WAVEFORM_WIDTH_IN_PX - self.MARGIN_IN_PX)
+            length = self.WAVEFORM_WIDTH_IN_PX * samples_per_pixel
+            start = region.end - length
+            if start < region.start:
+                region = Region(start, region.end)
+        return region
+
+    def _add_margin_to_zoomed_region_end(self, region, focused_position):
+        p = self.waveform_region.end - focused_position
+        samples_per_pixel = p / self.MARGIN_IN_PX
+        length = self.WAVEFORM_WIDTH_IN_PX * samples_per_pixel
+        if self.waveform_region.end - length > region.start:
+            region = Region(region.start, self.waveform_region.end)
+        else:
+            p = focused_position - region.start
+            samples_per_pixel = p / (self.WAVEFORM_WIDTH_IN_PX - self.MARGIN_IN_PX)
+            length = self.WAVEFORM_WIDTH_IN_PX * samples_per_pixel
+            end = region.start + length
+            if end > region.end:
+                region = Region(region.start, end)
+        return region
 
     def _process_unsnapping(self, value):
         """
@@ -283,7 +365,9 @@ class WaveformNavigation(SlotManager, Subject):
         return False
 
     def _try_lock_region(self):
-        if self.visible_region == self._target_roi.region_with_margin:
+        if self.visible_region == self._waveform_region:
+            self._locked_roi = None
+        elif self.visible_region == self._target_roi.region_with_margin:
             self._locked_roi = self._target_roi
         elif self.visible_region == self._source_roi.region_with_margin:
             self._locked_roi = self._source_roi
@@ -297,19 +381,64 @@ class WaveformNavigation(SlotManager, Subject):
     def focus_object(self, obj):
         if obj != self.get_zoom_object():
             identifier = self.get_object_identifier(obj)
+            zoom_identifier = self.get_object_identifier(self.get_zoom_object())
+            touched_identifiers = self._touched_identifiers - set([zoom_identifier])
+            objects_to_show = self._changed_identifiers & touched_identifiers
             if identifier in self.focusable_object_descriptions:
-                touched_objects = self._touched_objects - set([self.get_zoom_object()])
-                animate = len(touched_objects) <= 1 and self.object_changed(self._focused_object, obj)
-                self._focused_object = obj
-                self._focus_object_by_identifier(identifier, animate=animate)
+                if len(objects_to_show) > 1:
+                    self._focused_identifier = identifier
+                    self._show_all_objects(objects_to_show)
+                else:
+                    animate = len(touched_identifiers) <= 1 and self.object_changed(self._focused_identifier, identifier)
+                    self._focused_identifier = identifier
+                    self._focus_object_by_identifier(identifier, animate=animate)
                 return True
         return False
 
-    def object_changed(self, obj1, obj2):
-        return liveobj_changed(obj1, obj2)
+    def object_changed(self, identifier1, identifier2):
+        return identifier1 != identifier2
 
     def _get_roi_for_object_identifier(self, identifier):
         return find_if(lambda roi: roi.bound_by(identifier), self.regions_of_interest.values())
+
+    def _get_position_for_identifier(self, identifier):
+        roi = self._get_roi_for_object_identifier(identifier)
+        if roi is not None:
+            if roi.start_identifier == identifier:
+                return roi.region.start
+            return roi.region.end
+
+    def _zoom_out_or_move_region(self, source_region, target_region):
+        """
+        Zooms out the source region, if it's contained in the target region
+        or moves it left or right depending on where they overlap.
+        """
+        new_region = None
+        if source_region.inside(target_region):
+            new_region = target_region
+        elif target_region.start < source_region.start:
+            new_region = Region(target_region.start, max(target_region.start + source_region.length, target_region.end))
+        elif target_region.end > source_region.end:
+            new_region = Region(min(target_region.end - source_region.length, target_region.start), target_region.end)
+        return new_region
+
+    def _show_all_objects(self, identifiers):
+        start = self.waveform_region.end
+        end = self.waveform_region.start
+        positions = imap(self._get_position_for_identifier, identifiers)
+        for position in ifilter(None, positions):
+            start = min(start, position)
+            end = max(end, position)
+
+        margin = self.visible_region.length * self.RELATIVE_FOCUS_MARGIN
+        visible_region_without_margin = Region(self.visible_region.start + margin, self.visible_region.end - margin)
+        object_region = Region(start, end)
+        new_region = self._zoom_out_or_move_region(visible_region_without_margin, object_region)
+        if new_region is not None:
+            self.set_visible_region(self._add_margin_to_region(new_region), source_action='show_objects %r' % identifiers)
+            self._request_select_region = True
+            self._locked_roi = None
+        self.focus_marker = FocusMarker('', 0)
 
     def _focus_object_by_identifier(self, identifier, animate = False):
         """ Focuses the object in the waveform and brings it into the visible range.
@@ -346,27 +475,36 @@ class WaveformNavigation(SlotManager, Subject):
                 right = left + visible_length
             self.set_visible_region(Region(clamp(left, waveform_start, waveform_end - visible_length), clamp(right, waveform_start + visible_length, waveform_end)), force_animate=animate)
             self._request_select_region = True
-        self._focus_marker = FocusMarker(self.focusable_object_descriptions[identifier].focus_name, region.end if roi.end_identifier == identifier else region.start)
-        self.notify_focus_marker()
-
-    @listenable_property
-    def focus_marker(self):
-        return self._focus_marker
+        self.focus_marker = FocusMarker(self.focusable_object_descriptions[identifier].focus_name, region.end if roi.end_identifier == identifier else region.start)
 
     def touch_object(self, obj):
         is_zoom_object = obj == self.get_zoom_object()
         if is_zoom_object and self.is_snapped:
             self._request_select_region = True
-        self._touched_objects.add(obj)
+        self._touched_identifiers.add(self.get_object_identifier(obj))
         if self.focus_object(obj) or is_zoom_object:
             self.show_focus = True
 
     def release_object(self, obj):
-        if obj in self._touched_objects:
-            self._touched_objects.remove(obj)
+        identifier = self.get_object_identifier(obj)
+        self._remove_changed_object(identifier)
+        if identifier in self._touched_identifiers:
+            self._touched_identifiers.remove(identifier)
             self.try_hide_focus()
 
+    def _remove_changed_object(self, identifier):
+        if identifier in self._changed_identifiers:
+            self._changed_identifiers.remove(identifier)
+
+    def _remove_changed_object_delayed(self, identifier):
+        tasks = self._tasks
+        if tasks is not None:
+            tasks.add(task.sequence(task.wait(self.CHANGE_OBJECT_TIME), task.run(partial(self._remove_changed_object, identifier))))
+
     def change_object(self, obj):
+        identifier = self.get_object_identifier(obj)
+        self._changed_identifiers.add(identifier)
+        self._remove_changed_object_delayed(identifier)
         if self.focus_object(obj) or obj == self.get_zoom_object():
             self.show_focus = True
             self.try_hide_focus_delayed()
@@ -392,12 +530,31 @@ class WaveformNavigation(SlotManager, Subject):
             self._hide_focus_task.restart()
 
     def _should_hide_focus(self):
-        return self.get_zoom_object() not in self._touched_objects and self._focused_object not in self._touched_objects
+        zoom_identifier = self.get_object_identifier(self.get_zoom_object())
+        return zoom_identifier not in self._touched_identifiers and self._focused_identifier not in self._touched_identifiers
 
     def reset_focus_and_animation(self):
         self.show_focus = False
         self.animate_visible_region = False
-        self._touched_objects = set()
+        self._touched_identifiers = set()
+        self._changed_identifiers = set()
+
+    def copy_state(self, navigation):
+        """
+        Tries to replicate the state of the given waveform navigation.
+        The waveform regions need to be identical for this to make sense.
+        The focused identifier and all region of interests should be available
+        in both navigations, or the result will be undefined.
+        """
+        if self._waveform_region == navigation.waveform_region:
+            self.set_visible_region(navigation.visible_region)
+            self._focused_identifier = navigation._focused_identifier
+            source_roi_name = navigation.get_name_for_roi(navigation._source_roi)
+            target_roi_name = navigation.get_name_for_roi(navigation._target_roi)
+            locked_roi_name = navigation.get_name_for_roi(navigation._locked_roi)
+            self._source_roi = self.regions_of_interest.get(source_roi_name, None)
+            self._target_roi = self.regions_of_interest.get(target_roi_name, None)
+            self._locked_roi = self.regions_of_interest.get(locked_roi_name, None)
 
     @lazy_attribute
     @depends(parent_task_group=const(None))
@@ -416,9 +573,13 @@ class WaveformNavigation(SlotManager, Subject):
     def _add_margin_to_region(self, region):
         start, end = region
         margin = self.RELATIVE_FOCUS_MARGIN
-        start = (margin * start + end * margin - start) / (2 * margin - 1)
-        end = (end - margin * start) / (1 - margin)
-        return Region(start, end).clamp_to_region(self._waveform_region)
+        start1 = (margin * start + end * margin - start) / (2 * margin - 1)
+        start1 = self._waveform_region.clamp_position(start1)
+        end1 = (end - margin * start1) / (1 - margin)
+        end2 = (margin * start + end * margin - end) / (2 * margin - 1)
+        end2 = self._waveform_region.clamp_position(end2)
+        start2 = (start - margin * end2) / (1 - margin)
+        return Region(max(start1, start2), min(end1, end2))
 
     def _make_region_from_position_identifier(self, identifier):
         roi = self._get_roi_for_object_identifier(identifier)
@@ -436,13 +597,13 @@ class WaveformNavigation(SlotManager, Subject):
         return Region(left, right)
 
     def _make_region_for_focused_object(self):
-        if self._focused_object is not None:
-            return self._make_region_from_position_identifier(self.get_object_identifier(self._focused_object))
+        if self._focused_identifier is not None:
+            return self._make_region_from_position_identifier(self._focused_identifier)
         return Region(0, 0)
 
     def _get_roi_for_focused_identifier(self):
-        if liveobj_valid(self._focused_object):
-            return map(self.regions_of_interest.get, self.get_object_description(self._focused_object).regions)
+        if self._focused_identifier is not None:
+            return map(self.regions_of_interest.get, self.get_object_description(self._focused_identifier).regions)
         return []
 
     def _get_unique_regions_of_interest(self):
@@ -568,10 +729,10 @@ class SimplerWaveformNavigation(WaveformNavigation):
             next_pos = max(positions.end_marker, positions.selected_slice.time + min_visible_length)
         return next_pos
 
-    def object_changed(self, obj1, obj2):
-        if self.selected_slice_focus in (obj1, obj2) and self._get_selected_slice_index() == 0 and self._simpler.get_parameter_by_name('Start') in (obj1, obj2):
+    def object_changed(self, identifier1, identifier2):
+        if self.selected_slice_focus in (identifier1, identifier2) and self._get_selected_slice_index() == 0 and 'Start' in (identifier1, identifier2):
             return False
-        return liveobj_changed(obj1, obj2)
+        return identifier1 != identifier2
 
     @listens('playback_mode')
     def __on_playback_mode_changed(self):
@@ -674,10 +835,10 @@ class AudioClipWaveformNavigation(WaveformNavigation):
     def get_zoom_object(self):
         return self.zoom_focus
 
-    def object_changed(self, obj1, obj2):
-        if self.start_marker_focus in (obj1, obj2) and self.loop_start_focus in (obj1, obj2) and self._clip.positions.start_marker == self._clip.positions.loop_start:
+    def object_changed(self, identfier1, identifier2):
+        if self.start_marker_focus in (identfier1, identifier2) and self.loop_start_focus in (identfier1, identifier2) and self._clip.positions.start_marker == self._clip.positions.loop_start:
             return False
-        return liveobj_changed(obj1, obj2)
+        return identfier1 != identifier2
 
     def change_object(self, obj):
         if self._process_object_changes:

@@ -694,6 +694,9 @@ class PushBase(ControlSurface):
         if mode == sysex.USER_MODE:
             self._suppress_sysex = True
             self.request_rebuild_midi_map()
+            for control in self.controls:
+                control.clear_send_cache()
+
         self._update_auto_arm()
 
     @listens('selected_mode')

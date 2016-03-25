@@ -72,7 +72,6 @@ class Launchkey(ControlSurface):
         self._identity_response = identity_response
         with self.component_guard():
             self.set_pad_translations(PAD_TRANSLATIONS)
-            self._device_selection_follows_track_selection = True
             self._suggested_input_port = 'Launchkey InControl'
             self._suggested_output_port = 'Launchkey InControl'
             self._has_sliders = True
@@ -210,7 +209,7 @@ class Launchkey(ControlSurface):
     def _setup_device(self):
         encoders = [ make_encoder(21 + index, 'Device_Control_%d' % index) for index in xrange(8) ]
         self._encoders = tuple(encoders)
-        device = DeviceComponent()
+        device = DeviceComponent(device_selection_follows_track_selection=True)
         device.name = 'Device_Component'
         self.set_device_component(device)
         device.set_parameter_controls(self._encoders)

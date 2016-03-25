@@ -104,7 +104,7 @@ class GenericScript(ControlSurface):
     def _init_device_component(self, device_controls, bank_controls, global_channel, macro_map_mode):
         is_momentary = True
         if device_controls:
-            device = DeviceComponent()
+            device = DeviceComponent(device_selection_follows_track_selection=True)
             device.name = 'Device_Component'
             if bank_controls:
                 next_button = None

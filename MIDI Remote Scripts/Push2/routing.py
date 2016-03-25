@@ -22,7 +22,7 @@ class TrackOrRoutingControlChooserComponent(ModesComponent):
             button.mode_selected_color = 'MixOrRoutingChooser.ModeActive'
             button.mode_unselected_color = 'MixOrRoutingChooser.ModeInactive'
 
-        self._previous_selection_was_chain = None
+        self._routing_previously_available = False
         self.__on_selected_item_changed.subject = self._tracks_provider
         self.__on_selected_item_changed()
 
@@ -38,21 +38,26 @@ class TrackOrRoutingControlChooserComponent(ModesComponent):
     def routing_mode_available(self):
         return self._can_enable_routing_mode()
 
+    def update(self):
+        super(TrackOrRoutingControlChooserComponent, self).update()
+        if self.is_enabled():
+            self._update_routing_mode_availability()
+
     @listens('selected_item')
     def __on_selected_item_changed(self):
-        chain_selected = is_chain(self._tracks_provider.selected_item)
-        if chain_selected != self._previous_selection_was_chain:
+        if self.is_enabled():
             self._update_routing_mode_availability()
-        self._previous_selection_was_chain = chain_selected
 
     def _update_routing_mode_availability(self):
         is_available = self._can_enable_routing_mode()
-        self._update_buttons(enable_buttons=is_available)
-        if is_available and 'routing' in self.active_modes:
-            self.pop_mode('mix')
-        else:
-            self.push_mode('mix')
-        self.notify_routing_mode_available()
+        if is_available != self._routing_previously_available:
+            self._update_buttons(enable_buttons=is_available)
+            if is_available and 'routing' in self.active_modes:
+                self.pop_mode('mix')
+            else:
+                self.push_mode('mix')
+            self.notify_routing_mode_available()
+            self._routing_previously_available = is_available
 
     def _can_enable_routing_mode(self):
         return not is_chain(self._tracks_provider.selected_item) and Live.Application.get_application().has_option('_Push2RoutingSettings')

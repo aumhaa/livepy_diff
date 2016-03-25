@@ -42,10 +42,9 @@ class MiniLab(ArturiaControlSurface):
         self._pads = ButtonMatrixElement(rows=[ [ ButtonElement(True, MIDI_NOTE_TYPE, PAD_CHANNEL, col + 36 + 8 * row, name='Pad_%d_%d' % (col, row)) for col in xrange(8) ] for row in xrange(2) ])
 
     def _create_device(self):
-        self._device = DeviceComponent(name='Device', is_enabled=False, layer=Layer(parameter_controls=self._device_controls))
+        self._device = DeviceComponent(name='Device', is_enabled=False, layer=Layer(parameter_controls=self._device_controls), device_selection_follows_track_selection=True)
         self._device.set_enabled(True)
         self.set_device_component(self._device)
-        self._device_selection_follows_track_selection = True
 
     def _create_session(self):
         self._session = SessionComponent(num_tracks=self._pads.width(), num_scenes=self._pads.height(), name='Session', is_enabled=False, layer=Layer(clip_launch_buttons=self._pads, scene_select_control=self._vertical_scroll_encoder))

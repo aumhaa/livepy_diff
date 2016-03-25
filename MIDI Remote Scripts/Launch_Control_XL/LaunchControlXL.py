@@ -27,7 +27,6 @@ class LaunchControlXL(IdentifiableControlSurface):
 
     def __init__(self, c_instance, *a, **k):
         super(LaunchControlXL, self).__init__(c_instance=c_instance, product_id_bytes=(0, 32, 41, 97), *a, **k)
-        self._device_selection_follows_track_selection = True
         self._biled_skin = make_biled_skin()
         self._default_skin = make_default_skin()
         with self.component_guard():
@@ -126,7 +125,7 @@ class LaunchControlXL(IdentifiableControlSurface):
         self._show_controlled_tracks_message(session)
 
     def _create_device(self):
-        device = DeviceComponent(name='Device_Component', is_enabled=False)
+        device = DeviceComponent(name='Device_Component', is_enabled=False, device_selection_follows_track_selection=True)
         device.layer = Layer(parameter_controls=self._pan_device_encoders, parameter_lights=self._pan_device_encoder_lights, priority=1)
         device_settings_layer = Layer(bank_buttons=self._state_buttons, prev_device_button=self._left_button, next_device_button=self._right_button, priority=1)
         mode = DeviceModeComponent(component=device, device_settings_mode=[AddLayerMode(device, device_settings_layer)], is_enabled=True)

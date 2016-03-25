@@ -94,10 +94,9 @@ class KeyLab(ArturiaControlSurface):
         self._display_line2_data_source.set_display_string('Ableton Live')
 
     def _create_device(self):
-        self._device = DeviceComponent(name='Device', is_enabled=False, layer=Layer(parameter_controls=self._device_encoders))
+        self._device = DeviceComponent(name='Device', is_enabled=False, layer=Layer(parameter_controls=self._device_encoders), device_selection_follows_track_selection=True)
         self._device.set_enabled(True)
         self.set_device_component(self._device)
-        self._device_selection_follows_track_selection = True
         self._device_navigation = DeviceNavigationComponent(name='Device_Navigation', is_enabled=False, layer=Layer(device_nav_left_button=self._device_left_button, device_nav_right_button=self._device_right_button))
         self._device_navigation.set_enabled(True)
 

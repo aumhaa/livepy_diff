@@ -23,6 +23,7 @@ class Track(Binding):
     isMaster = view_property(bool, False)
     isAudio = view_property(bool, False)
     isReturn = view_property(bool, False)
+    outputRouting = view_property(unicode, '')
     id = id_property()
 
 
@@ -178,7 +179,6 @@ class SimplerProperties(Binding):
     sample_length = view_property(DeviceParameter)
     loop_length = view_property(DeviceParameter)
     loop_on = view_property(DeviceParameter)
-    zoom = view_property(DeviceParameter)
     gain = view_property(float, 0.0)
     start_marker = view_property(int, 0)
     end_marker = view_property(int, 0)
@@ -206,7 +206,6 @@ class SimplerDeviceViewModel(ViewModel):
     parameters = view_property(listof(DeviceParameter))
     properties = view_property(SimplerProperties)
     wants_waveform_shown = view_property(bool, False)
-    processed_zoom_requests = view_property(int, 0)
 
 
 class RealTimeChannel(Binding):
@@ -373,8 +372,6 @@ class FixedLengthSelectorModel(Binding):
 class LoopSettingsModel(Binding):
     looping = view_property(bool, False)
     loop_parameters = view_property(listof(DeviceParameter))
-    zoom = view_property(DeviceParameter)
-    processed_zoom_requests = view_property(int, 0)
     waveform_navigation = view_property(WaveformNavigation)
 
 
@@ -471,7 +468,7 @@ class ProfilingSettingsModel(Binding):
 
 
 class ExperimentalSettingsModel(Binding):
-    new_waveform_navigation = view_property(bool, False)
+    dummy = view_property(bool, False)
 
 
 class SettingsModel(Binding):

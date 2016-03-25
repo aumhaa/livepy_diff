@@ -42,7 +42,6 @@ class AxiomPro(ControlSurface):
         ControlSurface.__init__(self, c_instance)
         with self.component_guard():
             is_momentary = True
-            self._device_selection_follows_track_selection = True
             self.set_pad_translations(PAD_TRANSLATIONS)
             self._suggested_input_port = 'HyperControl'
             self._suggested_output_port = 'HyperControl'
@@ -58,7 +57,7 @@ class AxiomPro(ControlSurface):
             for index in range(8):
                 mixer2.channel_strip(index).set_volume_control(SliderElement(MIDI_CC_TYPE, 15, 33 + index))
 
-            device = PageableDeviceComponent()
+            device = PageableDeviceComponent(device_selection_follows_track_selection=True)
             self.set_device_component(device)
             ffwd_button = ButtonElement(is_momentary, MIDI_CC_TYPE, 15, 115)
             rwd_button = ButtonElement(is_momentary, MIDI_CC_TYPE, 15, 114)

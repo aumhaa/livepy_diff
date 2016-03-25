@@ -31,7 +31,6 @@ class Serato(ControlSurface):
     def __init__(self, c_instance):
         publish_in_cs_list = True
         ControlSurface.__init__(self, c_instance, not publish_in_cs_list)
-        self._device_selection_follows_track_selection = True
         with self.component_guard():
             self._matrix = None
             self._session = None
@@ -133,7 +132,7 @@ class Serato(ControlSurface):
     def _setup_device_control(self):
         is_momentary = True
         self._device_on_off_button = ButtonElement(not is_momentary, MIDI_NOTE_TYPE, 0, 0)
-        self._device = SpecialDeviceComponent()
+        self._device = SpecialDeviceComponent(device_selection_follows_track_selection=True)
         self._device.set_serato_interface(self._serato_interface)
         self._device.set_parameter_controls(tuple([ SliderElement(MIDI_CC_TYPE, 0, 0) for index in range(NUM_PARAMS) ]))
         self._device.set_on_off_button(self._device_on_off_button)

@@ -172,4 +172,4 @@ class ClipDecoratedPropertiesCopier(object):
         if not self._destination_clip:
             return
         new_clip_decorated = self._decorator_factory.decorate(self._destination_clip)
-        new_clip_decorated.zoom.linear_value = copied_decorated_clip.zoom.linear_value
+        new_clip_decorated.zoom.copy_state(copied_decorated_clip.zoom)

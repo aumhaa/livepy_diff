@@ -39,7 +39,7 @@ class DeviceComponent(ControlSurfaceComponent, Subject):
     """ Class representing a device in Live """
     __subject_events__ = ('device',)
 
-    def __init__(self, device_bank_registry = None, *a, **k):
+    def __init__(self, device_bank_registry = None, device_selection_follows_track_selection = False, *a, **k):
         super(DeviceComponent, self).__init__(*a, **k)
         self._device_bank_registry = device_bank_registry or DeviceBankRegistry()
         self._device = None
@@ -73,6 +73,7 @@ class DeviceComponent(ControlSurfaceComponent, Subject):
         self._on_off_button_slot = make_button_slot('on_off')
         song = self.song()
         view = song.view
+        self.device_selection_follows_track_selection = device_selection_follows_track_selection
         self._device_bank_property_slot.subject = self._device_bank_registry
         self.__on_appointed_device_changed.subject = song
         self.__on_selected_track_changed.subject = view
@@ -124,6 +125,8 @@ class DeviceComponent(ControlSurfaceComponent, Subject):
     @subject_slot('selected_track')
     def __on_selected_track_changed(self):
         self.__on_selected_device_changed.subject = self.song().view.selected_track.view
+        if self.device_selection_follows_track_selection:
+            self.update_device_selection()
 
     @subject_slot('chains')
     def __on_chains_changed(self):
@@ -141,6 +144,15 @@ class DeviceComponent(ControlSurfaceComponent, Subject):
         rack_device = device if isinstance(device, Live.RackDevice.RackDevice) else None
         self.__on_has_macro_mappings_changed.subject = rack_device
         self.__on_chains_changed.subject = rack_device
+
+    def update_device_selection(self):
+        track = self.song().view.selected_track
+        device_to_select = track.view.selected_device
+        if device_to_select == None and len(track.devices) > 0:
+            device_to_select = track.devices[0]
+        if device_to_select != None:
+            self.song().view.select_device(device_to_select)
+        self.set_device(device_to_select)
 
     def set_bank_prev_button(self, button):
         if button != self._bank_down_button:

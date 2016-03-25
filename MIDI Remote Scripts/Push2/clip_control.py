@@ -10,7 +10,6 @@ from pushbase.mapped_control import MappedControl
 from .clip_decoration import ClipDecoratorFactory
 from .decoration import find_decorated_object
 from .real_time_channel import RealTimeDataComponent
-from .simpler_zoom import ZoomHandling
 PARAMETERS_LOOPED = ('Loop position', 'Loop length', 'Start offset')
 PARAMETERS_NOT_LOOPED = ('Start', 'End')
 PARAMETERS_AUDIO = ('Warp', 'Transpose', 'Detune', 'Gain')
@@ -50,40 +49,19 @@ class LoopSetting(WrappingParameter):
         return unicode(self._conversion((self.canonical_parent.clip.signature_numerator, self.canonical_parent.clip.signature_denominator), self._get_property_value()))
 
 
-class ClipZoomHandling(ZoomHandling):
-
-    def _set_zoom_parameter(self):
-        self._zoom_parameter = getattr(self._parameter_host, '_zoom_parameter', None)
-
-    def set_parameter_host(self, parameter_host):
-        self._parameter_host = parameter_host
-        self._set_zoom_parameter()
-        if self._zoom_parameter:
-            self._zoom_parameter.set_scaling_functions(self._zoom_to_internal, self._internal_to_zoom)
-        self._on_zoom_changed.subject = self._zoom_parameter
-
-    @property
-    def max_zoom(self):
-        clip = self._parameter_host
-        length = float(clip.length if liveobj_valid(clip) and clip.length > 0 else self.SCREEN_WIDTH)
-        return float(length / self.SCREEN_WIDTH)
-
-
 class LoopSettingsControllerComponent(LoopSettingsControllerComponentBase):
     __events__ = ('looping', 'loop_parameters', 'zoom')
     zoom_encoder = MappedControl()
     zoom_touch_encoder = EncoderControl()
     loop_button = ToggleButtonControl(toggled_color='Clip.Option', untoggled_color='Clip.OptionDisabled')
 
-    def __init__(self, zoom_handler = None, *a, **k):
+    def __init__(self, *a, **k):
         super(LoopSettingsControllerComponent, self).__init__(*a, **k)
         self._looping_settings = [LoopSetting(name=PARAMETERS_LOOPED[0], parent=self._loop_model, source_property='position'), LoopSetting(name=PARAMETERS_LOOPED[1], parent=self._loop_model, use_length_conversion=True, source_property='loop_length'), LoopSetting(name=PARAMETERS_LOOPED[2], parent=self._loop_model, source_property='start_marker')]
         self._non_looping_settings = [LoopSetting(name=PARAMETERS_NOT_LOOPED[0], parent=self._loop_model, source_property='loop_start'), LoopSetting(name=PARAMETERS_NOT_LOOPED[1], parent=self._loop_model, source_property='loop_end')]
         for setting in self._looping_settings + self._non_looping_settings:
             self.register_disconnectable(setting)
 
-        self._zoom_handler = self.register_disconnectable(zoom_handler or ClipZoomHandling())
-        self._processed_zoom_requests = 0
         self.__on_looping_changed.subject = self._loop_model
         self.__on_looping_changed()
 
@@ -110,10 +88,6 @@ class LoopSettingsControllerComponent(LoopSettingsControllerComponentBase):
     def zoom(self):
         if liveobj_valid(self.clip):
             return getattr(self.clip, 'zoom', None)
-
-    @listenable_property
-    def processed_zoom_requests(self):
-        return self._processed_zoom_requests
 
     @listenable_property
     def waveform_navigation(self):
@@ -143,7 +117,6 @@ class LoopSettingsControllerComponent(LoopSettingsControllerComponentBase):
         self._update_and_notify()
         self.__on_is_recording_changed.subject = self._loop_model.clip
         self.__on_is_recording_changed()
-        self._zoom_handler.set_parameter_host(self._loop_model.clip)
         self._connect_encoder()
         self.notify_waveform_navigation()
 
@@ -194,11 +167,6 @@ class LoopSettingsControllerComponent(LoopSettingsControllerComponentBase):
         self.zoom_encoder.set_control_element(encoder)
         self.zoom_touch_encoder.set_control_element(encoder)
         self._connect_encoder()
-
-    def request_zoom(self, zoom_factor):
-        self._zoom_handler.request_zoom(zoom_factor)
-        self._processed_zoom_requests += 1
-        self.notify_processed_zoom_requests()
 
 
 class GainSetting(WrappingParameter):

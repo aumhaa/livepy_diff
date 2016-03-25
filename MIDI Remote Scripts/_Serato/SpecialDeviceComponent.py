@@ -6,8 +6,8 @@ from _Framework.DeviceComponent import DeviceComponent
 
 class SpecialDeviceComponent(DeviceComponent):
 
-    def __init__(self):
-        DeviceComponent.__init__(self)
+    def __init__(self, *a, **k):
+        super(SpecialDeviceComponent, self).__init__(*a, **k)
         self._serato_interface = None
         self._parameter_listeners = []
 
