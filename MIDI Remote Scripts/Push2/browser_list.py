@@ -2,10 +2,10 @@
 from __future__ import absolute_import, print_function
 import Live
 from itertools import islice
-from ableton.v2.base import Subject, listenable_property, clamp, nop
+from ableton.v2.base import EventObject, listenable_property, clamp, nop
 from .model.uniqueid import UniqueIdMixin
 
-class BrowserList(Subject, UniqueIdMixin):
+class BrowserList(EventObject, UniqueIdMixin):
     LAZY_ACCESS_COUNT = 1000
     LAZY_ACCESS_THRESHOLD = LAZY_ACCESS_COUNT - 100
 

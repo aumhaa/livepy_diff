@@ -2,6 +2,9 @@
 from __future__ import absolute_import, print_function
 import Live
 from itertools import imap
+from ableton.v2.base import Proxy, liveobj_valid
+from ableton.v2.control_surface.control import ButtonControl
+from pushbase.actions import get_clip_name
 from pushbase.colors import Blink, Pulse
 from pushbase.special_session_component import ClipSlotCopyHandler, SpecialClipSlotComponent, SpecialSceneComponent, SpecialSessionComponent
 from .clip_decoration import ClipDecoratedPropertiesCopier
@@ -22,8 +25,32 @@ class DecoratingCopyHandler(ClipSlotCopyHandler):
         ClipDecoratedPropertiesCopier(source_clip=source_clip_slot.clip, destination_clip=target_clip_slot.clip, decorator_factory=self._decorator_factory).post_duplication_action()
 
 
+class ClipProxy(Proxy):
+
+    @property
+    def name(self):
+        return get_clip_name(self.proxied_object)
+
+
 class ClipSlotComponent(SpecialClipSlotComponent):
     _decorator_factory = None
+    select_color_button = ButtonControl()
+
+    def __init__(self, color_chooser = None, *a, **k):
+        super(ClipSlotComponent, self).__init__(*a, **k)
+        self._color_chooser = color_chooser
+
+    @select_color_button.released
+    def select_color_button(self, button):
+        self._color_chooser.object = None
+
+    def _on_launch_button_pressed(self):
+        if self.select_color_button.is_pressed and self._color_chooser is not None:
+            clip = self._clip_slot.clip if self.has_clip() else None
+            if liveobj_valid(clip):
+                self._color_chooser.object = ClipProxy(clip)
+        else:
+            super(ClipSlotComponent, self)._on_launch_button_pressed()
 
     def _feedback_value(self, track, slot_or_clip):
         clip_color = self._color_value(slot_or_clip)
@@ -54,6 +81,10 @@ class ClipSlotComponent(SpecialClipSlotComponent):
 class SceneComponent(SpecialSceneComponent):
     clip_slot_component_type = ClipSlotComponent
 
+    def __init__(self, color_chooser = None, *a, **k):
+        self._color_chooser = color_chooser
+        super(SceneComponent, self).__init__(*a, **k)
+
     def build_clip_slot_list(self):
         scene_index = list(self.song.scenes).index(self._scene)
 
@@ -65,6 +96,16 @@ class SceneComponent(SpecialSceneComponent):
 
         return imap(slot_for_track, self._session_ring.controlled_tracks())
 
+    def _create_clip_slot(self):
+        return self.clip_slot_component_type(color_chooser=self._color_chooser)
+
 
 class SessionComponent(SpecialSessionComponent):
     scene_component_type = SceneComponent
+
+    def __init__(self, color_chooser = None, *a, **k):
+        self._color_chooser = color_chooser
+        super(SessionComponent, self).__init__(*a, **k)
+
+    def _create_scene(self):
+        return self.scene_component_type(session_ring=self._session_ring, color_chooser=self._color_chooser)

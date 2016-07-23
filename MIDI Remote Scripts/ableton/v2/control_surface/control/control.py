@@ -1,9 +1,9 @@
 
 from __future__ import absolute_import, print_function
 from functools import partial
-from ...base import lazy_attribute, mixin, nop, task, Disconnectable, NamedTuple, SlotManager
+from ...base import lazy_attribute, mixin, nop, task, Disconnectable, EventObject, NamedTuple
 
-class ControlManager(SlotManager):
+class ControlManager(EventObject):
 
     def __init__(self, *a, **k):
         super(ControlManager, self).__init__(*a, **k)
@@ -63,7 +63,7 @@ class control_color(object):
 
 class Control(object):
 
-    class State(SlotManager):
+    class State(EventObject):
         enabled = True
 
         def __init__(self, control = None, manager = None, *a, **k):
@@ -75,7 +75,7 @@ class Control(object):
             self._event_listeners = control._event_listeners
             self._control_element = None
             self._has_tasks = False
-            manager.register_slot_manager(self)
+            manager.register_disconnectable(self)
 
         def disconnect(self):
             super(Control.State, self).disconnect()
@@ -162,7 +162,7 @@ class InputControl(Control):
             self._channel = channel
             self._identifier = identifier
             self._register_value_slot(self._manager, control)
-            self._manager.register_slot_manager(self)
+            self._manager.register_disconnectable(self)
 
         def set_control_element(self, control_element):
             super(InputControl.State, self).set_control_element(control_element)
@@ -234,7 +234,7 @@ class NullSlot(Disconnectable):
     pass
 
 
-class Connectable(SlotManager):
+class Connectable(EventObject):
     """
     Mixin for connecting a property with a control.
     """

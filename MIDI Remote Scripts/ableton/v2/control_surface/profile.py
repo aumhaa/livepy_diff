@@ -1,4 +1,7 @@
 
+"""
+Provides facilities to ease the profiling of Control Surfaces.
+"""
 from __future__ import absolute_import, print_function
 from functools import wraps, partial
 ENABLE_PROFILING = False
@@ -8,7 +11,7 @@ if ENABLE_PROFILING:
 
 def profile(fn):
     """
-    Decorator to mark a function to be profiled. Only mark top level functions
+    Decorator to mark a function to be profiled.
     """
     if ENABLE_PROFILING:
 
@@ -26,6 +29,17 @@ def profile(fn):
 
 
 def dump(name = 'default'):
+    """
+    Dumps profiling data to the working directory with the given `name`. Three files
+    are created:
+    
+    1. [name].profile contains the profile data in pstats format.
+    2. [name].profile.time.txt contains the data in human readable form, sorted
+       by *total time* - i.e. how much time has been expent in each function itself,
+       without counting the time spent in sub-functions.
+    3. [name].profile.cumulative.txt contains the data sorted by cumulative time - i.e.
+       how much time is spent in a function and its sub-calls.
+    """
     raise ENABLE_PROFILING or AssertionError
     import pstats
     fname = name + '.profile'

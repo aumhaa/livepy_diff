@@ -3,13 +3,14 @@
 Component that automatically selects the playing clip in the selected track.
 """
 from __future__ import absolute_import, print_function
-from ableton.v2.base import index_if, partial, nop, listens, task
+from functools import partial
+from ableton.v2.base import index_if, nop, listens, task
 from ableton.v2.control_surface.control import ButtonControl
-from ableton.v2.control_surface.mode import ModesComponent, AddLayerMode
+from ableton.v2.control_surface.mode import AddLayerMode
 from .consts import MessageBoxText
-from .message_box_component import Messenger
+from .messenger_mode_component import MessengerModesComponent
 
-class SelectPlayingClipComponent(ModesComponent, Messenger):
+class SelectPlayingClipComponent(MessengerModesComponent):
     action_button = ButtonControl(color='DefaultButton.Alert')
 
     def __init__(self, playing_clip_above_layer = None, playing_clip_below_layer = None, *a, **k):
@@ -17,9 +18,10 @@ class SelectPlayingClipComponent(ModesComponent, Messenger):
         self._update_mode_task = self._tasks.add(task.sequence(task.delay(1), task.run(self._update_mode)))
         self._update_mode_task.kill()
         self.add_mode('default', None)
-        self.add_mode('above', [AddLayerMode(self, playing_clip_above_layer), partial(self._show_notification, MessageBoxText.PLAYING_CLIP_ABOVE_SELECTED_CLIP)])
-        self.add_mode('below', [AddLayerMode(self, playing_clip_below_layer), partial(self._show_notification, MessageBoxText.PLAYING_CLIP_BELOW_SELECTED_CLIP)])
+        self.add_mode('above', [AddLayerMode(self, playing_clip_above_layer)], message=MessageBoxText.PLAYING_CLIP_ABOVE_SELECTED_CLIP)
+        self.add_mode('below', [AddLayerMode(self, playing_clip_below_layer)], message=MessageBoxText.PLAYING_CLIP_BELOW_SELECTED_CLIP)
         self.selected_mode = 'default'
+        self.notify_when_enabled = True
         self._on_detail_clip_changed.subject = self.song.view
         self._on_playing_slot_index_changed.subject = self.song.view.selected_track
         self._notification_reference = partial(nop, None)
@@ -48,8 +50,8 @@ class SelectPlayingClipComponent(ModesComponent, Messenger):
         if self._notification_reference() is not None:
             self._notification_reference().hide()
 
-    def _show_notification(self, display_text):
-        self._notification_reference = self.show_notification(display_text, blink_text=MessageBoxText.SELECTED_CLIP_BLINK, notification_time=-1)
+    def show_notification(self, display_text):
+        self._notification_reference = super(SelectPlayingClipComponent, self).show_notification(display_text, blink_text=MessageBoxText.SELECTED_CLIP_BLINK, notification_time=-1)
 
     def _selected_track_clip_is_playing(self):
         playing_clip_slot = self._playing_clip_slot()

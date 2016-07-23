@@ -1,7 +1,7 @@
 
 from __future__ import absolute_import, print_function
 from functools import partial
-from ableton.v2.base import depends, find_if, listenable_property, listens, liveobj_valid, SlotManager, Subject
+from ableton.v2.base import EventObject, depends, find_if, listenable_property, listens, liveobj_valid
 from pushbase.decoration import LiveObjectDecorator, DecoratorFactory
 from pushbase.internal_parameter import EnumWrappingParameter, InternalParameter
 from pushbase.message_box_component import Messenger
@@ -9,6 +9,7 @@ from pushbase.simpler_decoration import SimplerDeviceDecorator as SimplerDeviceD
 from .device_options import DeviceTriggerOption, DeviceSwitchOption, DeviceOnOffOption
 from .waveform_navigation import Region, SimplerWaveformNavigation
 RESET_SLICING_NOTIFICATION = 'Slicing has been reset'
+MAX_NUMBER_SLICES = 64
 
 def get_parameter_by_name(decorator, name):
     return find_if(lambda p: p.name == name, decorator._live_object.parameters)
@@ -31,7 +32,7 @@ OscillatorType.b = OscillatorType(1)
 OscillatorType.c = OscillatorType(2)
 OscillatorType.d = OscillatorType(3)
 
-class NotifyingList(Subject):
+class NotifyingList(EventObject):
     __events__ = ('index',)
 
     def __init__(self, available_values, default_value = None, *a, **k):
@@ -76,7 +77,7 @@ class BandTypesList(NotifyingList):
         super(BandTypesList, self).__init__(available_values=range(1, 9))
 
 
-class WaveformNavigationParameter(SlotManager, InternalParameter):
+class WaveformNavigationParameter(InternalParameter):
     """ Class for connecting a Simpler with a WaveformNavigation. It will create a new
         instance of WaveformNavigation for every sample. It also still acts as a
         parameter, for the current zooming implemenation.
@@ -165,8 +166,8 @@ class SlicePoint(object):
         return not self == other
 
 
-class SimplerPositions(SlotManager, Subject):
-    __events__ = ('warp_markers',)
+class SimplerPositions(EventObject):
+    __events__ = ('warp_markers', 'before_update_all', 'after_update_all')
     start = listenable_property.managed(0.0)
     end = listenable_property.managed(0.0)
     start_marker = listenable_property.managed(0.0)
@@ -209,7 +210,7 @@ class SimplerPositions(SlotManager, Subject):
         Converts to beat time, if the sample is warped
         """
         sample = self._simpler.sample
-        if sample.warping:
+        if sample is not None and sample.warping:
             return sample.sample_to_beat_time(sample_time)
         return sample_time
 
@@ -273,6 +274,7 @@ class SimplerPositions(SlotManager, Subject):
 
     def update_all(self):
         if liveobj_valid(self._simpler.sample):
+            self.notify_before_update_all()
             self.start = self._convert_sample_time(0)
             self.end = self._convert_sample_time(self._simpler.sample.length)
             self.__on_start_marker_changed()
@@ -287,6 +289,24 @@ class SimplerPositions(SlotManager, Subject):
             self.__on_slices_changed()
             self.__on_selected_slice_changed()
             self.use_beat_time = self._simpler.sample.warping
+            self.notify_after_update_all()
+
+
+def center_point(start, end):
+    return int((end - start) / 2.0) + start
+
+
+def insert_new_slice(simpler):
+    sample = simpler.sample
+    view = simpler.view
+    slices = list(sample.slices) + [sample.end_marker]
+    selected_slice = view.selected_slice
+    if selected_slice in slices:
+        slice_index = slices.index(selected_slice)
+        new_slice_point = center_point(selected_slice, slices[slice_index + 1])
+        if new_slice_point not in slices:
+            sample.insert_slice(new_slice_point)
+            view.selected_slice = new_slice_point
 
 
 class _SimplerDeviceDecorator(SimplerDeviceDecoratorBase, Messenger):
@@ -306,6 +326,7 @@ class _SimplerDeviceDecorator(SimplerDeviceDecoratorBase, Messenger):
         self.__on_can_warp_double_changed.subject = self._live_object
         self.__on_start_marker_changed.subject = self._live_object.sample
         self.__on_end_marker_changed.subject = self._live_object.sample
+        self.__on_selected_slice_changed.subject = self._live_object.view
 
     def setup_parameters(self):
         super(_SimplerDeviceDecorator, self).setup_parameters()
@@ -313,7 +334,7 @@ class _SimplerDeviceDecorator(SimplerDeviceDecoratorBase, Messenger):
         self.zoom = WaveformNavigationParameter(name='Zoom', parent=self, simpler=self)
         self.zoom.focus_region_of_interest('start_end_marker', self.get_parameter_by_name('Start'))
         self.zoom.add_waveform_navigation_listener(self.notify_waveform_navigation)
-        self.envelope = EnumWrappingParameter(name='Env. Type', parent=self, values_property_host=self._envelope_types_provider, index_property_host=self._envelope_types_provider, values_property='available_values', index_property='index', value_type=EnvelopeType)
+        self.envelope = EnumWrappingParameter(name='Env. Type', parent=self, values_host=self._envelope_types_provider, index_property_host=self._envelope_types_provider, values_property='available_values', index_property='index', value_type=EnvelopeType)
         self._additional_parameters.extend([self.zoom, self.envelope])
 
     def setup_options(self):
@@ -336,6 +357,12 @@ class _SimplerDeviceDecorator(SimplerDeviceDecoratorBase, Messenger):
             call_sample_function('reset_slices')
             self.show_notification(RESET_SLICING_NOTIFICATION)
 
+        def split_slice_available():
+            if sample_available():
+                slices = self._live_object.sample.slices
+                return len(slices) != MAX_NUMBER_SLICES or slices[-1] != self._live_object.view.selected_slice
+            return False
+
         self.crop_option = DeviceTriggerOption(name='Crop', callback=partial(call_simpler_function, 'crop'))
         self.reverse_option = DeviceTriggerOption(name='Reverse', callback=partial(call_simpler_function, 'reverse'))
         self.one_shot_sustain_mode_option = DeviceSwitchOption(name='Trigger Mode', default_label='Trigger', second_label='Gate', parameter=get_parameter_by_name(self, 'Trigger Mode'))
@@ -348,6 +375,7 @@ class _SimplerDeviceDecorator(SimplerDeviceDecoratorBase, Messenger):
         self.filter_slope_option = DeviceSwitchOption(name='Filter Slope', default_label='12dB', second_label='24dB', parameter=get_parameter_by_name(self, 'Filter Slope'))
         self.clear_slices_action = DeviceTriggerOption(name='Clear Slices', default_label='Clear Slices', callback=lambda : call_sample_function('clear_slices'), is_active=lambda : sample_available() and len(self._live_object.sample.slices) > 1)
         self.reset_slices_action = DeviceTriggerOption(name='Reset Slices', default_label='Reset Slices', callback=reset_slices, is_active=lambda : sample_available())
+        self.split_slice_action = DeviceTriggerOption(name='Split Slice', default_label='Split Slice', callback=lambda : insert_new_slice(self._live_object), is_active=split_slice_available)
 
     def get_parameter_by_name(self, name):
         return find_if(lambda p: p.name == name, self.parameters)
@@ -365,7 +393,8 @@ class _SimplerDeviceDecorator(SimplerDeviceDecoratorBase, Messenger):
          self.loop_option,
          self.filter_slope_option,
          self.clear_slices_action,
-         self.reset_slices_action)
+         self.reset_slices_action,
+         self.split_slice_action)
 
     @listenable_property
     def waveform_navigation(self):
@@ -376,7 +405,7 @@ class _SimplerDeviceDecorator(SimplerDeviceDecoratorBase, Messenger):
         return (u'1 Bar', u'\xbd', u'\xbc', u'\u215b', u'\ue001', u'\ue002', u'Transients')
 
     @property
-    def available_slicing_step_sizes(self):
+    def available_slicing_beat_divisions(self):
         return (u'\ue001', u'\ue001T', u'\u215b', u'\u215bT', u'\xbc', u'\xbcT', u'\xbd', u'\xbdT', u'1 Bar', u'2 Bars', u'4 Bars')
 
     @listens('parameters')
@@ -423,10 +452,15 @@ class _SimplerDeviceDecorator(SimplerDeviceDecoratorBase, Messenger):
     def __on_can_warp_double_changed(self):
         self.warp_double_option.notify_active()
 
+    @listens('selected_slice')
+    def __on_selected_slice_changed(self):
+        self.split_slice_action.notify_active()
+
     def _on_sample_changed(self):
         super(_SimplerDeviceDecorator, self)._on_sample_changed()
         self.clear_slices_action.notify_active()
         self.reset_slices_action.notify_active()
+        self.split_slice_action.notify_active()
 
     def _on_slices_changed(self):
         super(_SimplerDeviceDecorator, self)._on_slices_changed()
@@ -440,13 +474,13 @@ class _SimplerDeviceDecorator(SimplerDeviceDecoratorBase, Messenger):
             return 'Warp as X Bars'
 
 
-class _OperatorDeviceDecorator(SlotManager, LiveObjectDecorator):
+class _OperatorDeviceDecorator(EventObject, LiveObjectDecorator):
 
     def __init__(self, song = None, osc_types_provider = None, *a, **k):
         super(_OperatorDeviceDecorator, self).__init__(*a, **k)
         self._osc_types_provider = osc_types_provider if osc_types_provider is not None else OscillatorTypesList()
         self.__on_parameters_changed.subject = self._live_object
-        self.oscillator = EnumWrappingParameter(name='Oscillator', parent=self, values_property_host=self._osc_types_provider, index_property_host=self._osc_types_provider, values_property='available_values', index_property='index', value_type=OscillatorType)
+        self.oscillator = EnumWrappingParameter(name='Oscillator', parent=self, values_host=self._osc_types_provider, index_property_host=self._osc_types_provider, values_property='available_values', index_property='index', value_type=OscillatorType)
         self.filter_slope_option = DeviceSwitchOption(name='Filter Slope', default_label='12dB', second_label='24dB', parameter=get_parameter_by_name(self, 'Filter Slope'))
         self.register_disconnectables(self.options)
 
@@ -463,7 +497,7 @@ class _OperatorDeviceDecorator(SlotManager, LiveObjectDecorator):
         self.filter_slope_option.set_parameter(get_parameter_by_name(self, 'Filter Slope'))
 
 
-class _SamplerDeviceDecorator(SlotManager, LiveObjectDecorator):
+class _SamplerDeviceDecorator(EventObject, LiveObjectDecorator):
 
     def __init__(self, song = None, *a, **k):
         super(_SamplerDeviceDecorator, self).__init__(*a, **k)
@@ -480,7 +514,7 @@ class _SamplerDeviceDecorator(SlotManager, LiveObjectDecorator):
         self.filter_slope_option.set_parameter(get_parameter_by_name(self, 'Filter Slope'))
 
 
-class _AutoFilterDeviceDecorator(SlotManager, LiveObjectDecorator):
+class _AutoFilterDeviceDecorator(EventObject, LiveObjectDecorator):
 
     def __init__(self, song = None, *a, **k):
         super(_AutoFilterDeviceDecorator, self).__init__(*a, **k)
@@ -502,7 +536,7 @@ class _Eq8DeviceDecorator(LiveObjectDecorator):
     def __init__(self, song = None, band_types_provider = None, *a, **k):
         super(_Eq8DeviceDecorator, self).__init__(*a, **k)
         self._band_types_provider = band_types_provider if band_types_provider is not None else BandTypesList()
-        self.band = EnumWrappingParameter(name='Band', parent=self, values_property_host=self._band_types_provider, index_property_host=self._band_types_provider, values_property='available_values', index_property='index')
+        self.band = EnumWrappingParameter(name='Band', parent=self, values_host=self._band_types_provider, index_property_host=self._band_types_provider, values_property='available_values', index_property='index')
 
     @property
     def parameters(self):

@@ -1,9 +1,9 @@
 
 from __future__ import absolute_import, print_function
 from math import fabs
-from ableton.v2.base import sign, clamp, Subject, Event
+from ableton.v2.base import sign, clamp, EventObject, Event
 
-class Setting(Subject):
+class Setting(EventObject):
     """
     Setting interface for writing to the preferences and all
     information for changing and displaying it.

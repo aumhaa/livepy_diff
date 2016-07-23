@@ -1,6 +1,6 @@
 
 from __future__ import absolute_import, print_function
-from ableton.v2.base import clamp, listenable_property, listens, liveobj_valid, SlotManager
+from ableton.v2.base import clamp, listenable_property, listens, liveobj_valid
 from ableton.v2.control_surface import CompoundComponent
 from ableton.v2.control_surface.control import StepEncoderControl
 from pushbase.internal_parameter import InternalParameterBase, EnumWrappingParameter
@@ -16,7 +16,7 @@ def get_first_chain(drum_pad):
         return drum_pad.chains[0]
 
 
-class ChokeParameter(SlotManager, InternalParameterBase):
+class ChokeParameter(InternalParameterBase):
     is_quantized = True
     value_items = [NO_CHOKE_GROUP] + map(unicode, range(1, NUM_CHOKE_GROUPS))
     min = 0
@@ -61,7 +61,7 @@ DEFAULT_OUT_NOTE = 60
 class DrumPadTransposeParameter(EnumWrappingParameter):
 
     def __init__(self, drum_pad = None, *a, **k):
-        super(DrumPadTransposeParameter, self).__init__(name='Transpose', values_property_host=self, values_property='available_transpose_steps', index_property_host=get_first_chain(drum_pad), index_property='out_note', *a, **k)
+        super(DrumPadTransposeParameter, self).__init__(name='Transpose', values_host=self, values_property='available_transpose_steps', index_property_host=get_first_chain(drum_pad), index_property='out_note', *a, **k)
 
     @property
     def available_transpose_steps(self, steps = range(128)):
@@ -90,7 +90,7 @@ class DrumPadTransposeParameter(EnumWrappingParameter):
         return sign + unicode(abs(difference)) + u' st'
 
     def set_drum_pad(self, drum_pad):
-        self.set_index_property_host(get_first_chain(drum_pad))
+        self.set_property_host(get_first_chain(drum_pad))
         self.notify_value()
 
 
@@ -98,7 +98,8 @@ class DrumPadParameterComponent(CompoundComponent, ParameterProvider):
     choke_encoder = StepEncoderControl(num_steps=10)
     transpose_encoder = StepEncoderControl(num_steps=10)
 
-    def __init__(self, view_model = None, *a, **k):
+    def __init__(self, device_component = None, view_model = None, *a, **k):
+        raise device_component is not None or AssertionError
         raise view_model is not None or AssertionError
         super(DrumPadParameterComponent, self).__init__(*a, **k)
         self._drum_pad = None
@@ -106,7 +107,7 @@ class DrumPadParameterComponent(CompoundComponent, ParameterProvider):
         self.choke_param = ChokeParameter()
         self.transpose_param = DrumPadTransposeParameter(parent=self)
         self.register_disconnectables([self.choke_param, self.transpose_param])
-        self._view_connector = self.register_component(DeviceViewConnector(parameter_provider=self, view=view_model.deviceParameterView))
+        self._view_connector = self.register_component(DeviceViewConnector(device_component=device_component, parameter_provider=self, view=view_model.deviceParameterView))
 
     def parameters_for_pad(self):
         if not self.has_filled_pad:

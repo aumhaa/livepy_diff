@@ -6,6 +6,7 @@ from ableton.v2.control_surface.elements import SelectedTrackColorFactory, Selec
 from pushbase.colors import Blink, FallbackColor, Pulse
 from pushbase.skin_default import Colors as ColorsBase
 from .colors import Basic, determine_shaded_color_index, Rgb, translate_color_index
+from .colors import SelectedDeviceChainColorFactory, SelectedDrumPadColorFactory
 
 def shaded_color(color_index, shade_level = 1):
     return determine_shaded_color_index(translate_color_index(color_index), shade_level)
@@ -15,14 +16,20 @@ shade_transform = partial(shaded_color, shade_level=1)
 shade_transform2 = partial(shaded_color, shade_level=2)
 SelectedTrackColor = SelectedTrackColorFactory(transformation=translate_color_index)
 SelectedClipColor = SelectedClipColorFactory(transformation=translate_color_index)
+SelectedDrumPadColor = SelectedDrumPadColorFactory(transformation=translate_color_index)
+SelectedDeviceChainColor = SelectedDeviceChainColorFactory(transformation=translate_color_index)
 SelectedTrackColorShade = SelectedTrackColorFactory(transformation=shade_transform)
 SelectedTrackColorShade2 = SelectedTrackColorFactory(transformation=shade_transform2)
 SelectedClipColorShade = SelectedClipColorFactory(transformation=shade_transform)
 SelectedClipColorShade2 = SelectedClipColorFactory(transformation=shade_transform2)
+SelectedDrumPadColorShade = SelectedDrumPadColorFactory(transformation=shade_transform)
+SelectedDrumPadColorShade2 = SelectedDrumPadColorFactory(transformation=shade_transform2)
 TRACK_SOLOED_COLOR = Rgb.OCEAN
 RECORDING_COLOR = Rgb.RED
 CLIP_PLAYING_COLOR = Rgb.GREEN
 UNLIT_COLOR = Rgb.BLACK
+SELECTION_COLOR = Rgb.WHITE
+SELECTION_PULSE_SPEED = 48
 
 class Colors(ColorsBase):
 
@@ -72,6 +79,15 @@ class Colors(ColorsBase):
         InsideLoop = Rgb.LIGHT_GREY
         OutsideLoop = Rgb.BLACK
 
+    class VelocityLevels:
+        LowLevel = Rgb.DARK_GREY
+        MidLevel = Rgb.LIGHT_GREY
+        HighLevel = Rgb.WHITE
+        SelectedLevel = SelectedTrackColor
+
+    class DrumGroupVelocityLevels(VelocityLevels):
+        pass
+
     class NoteEditor:
 
         class Step:
@@ -99,6 +115,9 @@ class Colors(ColorsBase):
         NoteInvalid = Rgb.BLACK
 
     class DrumGroupNoteEditor(NoteEditor):
+        pass
+
+    class SlicingNoteEditor(NoteEditor):
         pass
 
     class Option:
@@ -136,6 +155,12 @@ class Colors(ColorsBase):
         ItemSelected = Rgb.WHITE
         NoItem = Rgb.BLACK
         ItemNotSelected = SelectedTrackColor
+
+    class EditModeOptions(ItemNavigation):
+        pass
+
+    class BankSelection(ItemNavigation):
+        pass
 
     class Browser:
         Navigation = FallbackColor(Rgb.WHITE, Basic.ON)
@@ -212,5 +237,31 @@ class Colors(ColorsBase):
         Off = Basic.ON
 
 
+class ColorsWithDrumPadColoring(Colors):
+
+    class DrumGroup:
+        PadEmpty = Rgb.DARK_GREY
+
+    class DrumGroupNoteEditor:
+
+        class Step:
+            Low = SelectedDrumPadColorShade2
+            High = SelectedDrumPadColorShade
+            Full = SelectedDrumPadColor
+
+    class DrumGroupVelocityLevels:
+        SelectedLevel = SelectedDrumPadColor
+
+    class EditModeOptions:
+        ItemNotSelected = SelectedDeviceChainColor
+
+    class BankSelection:
+        ItemNotSelected = SelectedDeviceChainColor
+
+
 def make_default_skin():
     return Skin(Colors)
+
+
+def make_drum_pad_coloring_skin():
+    return Skin(ColorsWithDrumPadColoring)

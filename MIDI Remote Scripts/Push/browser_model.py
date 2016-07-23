@@ -4,7 +4,7 @@ import os
 from functools import partial
 from itertools import imap, chain
 import Live
-from ableton.v2.base import first, nop, find_if, index_if, in_range, lazy_attribute, BooleanContext, SlotManager, Subject
+from ableton.v2.base import first, nop, find_if, index_if, in_range, lazy_attribute, BooleanContext, EventObject
 from pushbase.scrollable_list import ActionList, ActionListItem
 from pushbase.browser_util import filter_type_for_hotswap_target
 
@@ -75,7 +75,7 @@ class BrowserList(ActionList):
         self.browser = browser
 
 
-class BrowserModel(Subject, SlotManager):
+class BrowserModel(EventObject):
     """
     A browser model provides the data to a browser component as a
     sequence of BrowserLists.

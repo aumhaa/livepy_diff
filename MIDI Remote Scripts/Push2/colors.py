@@ -1,7 +1,9 @@
 
 from __future__ import absolute_import, print_function
-from ableton.v2.base.util import in_range
+from ableton.v2.base import depends, in_range, listens, liveobj_valid, nop
+from ableton.v2.control_surface.elements.color import DynamicColorBase, DynamicColorFactory
 from pushbase.colors import Blink, FallbackColor, Pulse, PushColor
+from .device_util import find_chain_or_track
 WHITE_MIDI_VALUE = 122
 TRANSLATED_WHITE_INDEX = 5
 WHITE_COLOR_INDEX_FROM_LIVE = 59
@@ -43,12 +45,103 @@ class IndexedColor(PushColor):
 
 
 def translate_color_index(index):
+    """
+    Translates a color index coming from Live into the reduced color palette of Push
+    """
     try:
         if index > -1:
             return COLOR_INDEX_TO_PUSH_INDEX[index]
         return TRANSLATED_WHITE_INDEX
     except:
         return TRANSLATED_WHITE_INDEX
+
+
+def inverse_translate_color_index(translated_index):
+    """
+    Translates a color index coming with the reduced palette of Push [1..26] to the best
+    matching color of Live [0..59].
+    """
+    raise 1 <= translated_index <= len(PUSH_INDEX_TO_COLOR_INDEX) or AssertionError
+    return PUSH_INDEX_TO_COLOR_INDEX[translated_index - 1] - 1
+
+
+class SelectedDrumPadColor(DynamicColorBase):
+    """
+    Dynamic color that sets the color of the currently selected drum pad.
+    The drum rack is used from the percussion_instrument_finder.
+    """
+
+    @depends(percussion_instrument_finder=nop)
+    def __init__(self, song = None, percussion_instrument_finder = None, *a, **k):
+        if not liveobj_valid(song):
+            raise AssertionError
+            super(SelectedDrumPadColor, self).__init__(*a, **k)
+            self.song = song
+            self.__on_selected_track_color_index_changed.subject = percussion_instrument_finder is not None and self.song.view
+            self.__on_instrument_changed.subject = percussion_instrument_finder
+            self.__on_instrument_changed()
+
+    @listens('instrument')
+    def __on_instrument_changed(self):
+        drum_group = self.__on_instrument_changed.subject.drum_group
+        if liveobj_valid(drum_group):
+            self.__on_selected_drum_pad_chains_changed.subject = drum_group.view
+            self.__on_selected_drum_pad_chains_changed()
+
+    @listens('selected_drum_pad.chains')
+    def __on_selected_drum_pad_chains_changed(self):
+        drum_pad = self.__on_selected_drum_pad_chains_changed.subject.selected_drum_pad
+        if liveobj_valid(drum_pad) and drum_pad.chains:
+            self.__on_color_index_changed.subject = drum_pad.chains[0]
+            self.__on_color_index_changed()
+        else:
+            self._update_midi_value(self.song.view.selected_track)
+
+    @listens('color_index')
+    def __on_color_index_changed(self):
+        chain = self.__on_color_index_changed.subject
+        self._update_midi_value(chain)
+
+    @listens('selected_track.color_index')
+    def __on_selected_track_color_index_changed(self):
+        drum_group = self.__on_selected_drum_pad_chains_changed.subject
+        drum_pad = drum_group.selected_drum_pad if liveobj_valid(drum_group) else None
+        if not liveobj_valid(drum_pad) or not drum_pad.chains:
+            self._update_midi_value(self.song.view.selected_track)
+
+
+class SelectedDrumPadColorFactory(DynamicColorFactory):
+
+    def instantiate(self, song):
+        return SelectedDrumPadColor(song=song, transformation=self._transform)
+
+
+class SelectedDeviceChainColor(DynamicColorBase):
+
+    @depends(device_provider=nop)
+    def __init__(self, device_provider = None, *a, **k):
+        super(SelectedDeviceChainColor, self).__init__(*a, **k)
+        self.__on_device_changed.subject = device_provider
+        self.__on_device_changed()
+
+    @listens('device')
+    def __on_device_changed(self):
+        device = self.__on_device_changed.subject.device
+        chain = find_chain_or_track(device)
+        self.__on_chain_color_index_changed.subject = chain
+        self.__on_chain_color_index_changed()
+
+    @listens('color_index')
+    def __on_chain_color_index_changed(self):
+        chain = self.__on_chain_color_index_changed.subject
+        if liveobj_valid(chain):
+            self._update_midi_value(chain)
+
+
+class SelectedDeviceChainColorFactory(DynamicColorFactory):
+
+    def instantiate(self, song):
+        return SelectedDeviceChainColor(transformation=self._transform)
 
 
 class Rgb:
@@ -86,6 +179,7 @@ class Basic:
 
 
 COLOR_INDEX_TO_PUSH_INDEX = (1, 1, 4, 10, 9, 13, 17, 16, 17, 18, 19, 16, 1, 5, 10, 10, 9, 12, 15, 19, 20, 22, 24, 1, 1, 7, 8, 8, 11, 14, 14, 15, 19, 20, 21, 25, 3, 6, 6, 6, 4, 9, 12, 15, 17, 2, 23, 26, 2, 5, 7, 10, 9, 11, 15, 19, 26, 14, 26, 5)
+PUSH_INDEX_TO_COLOR_INDEX = (1, 46, 37, 41, 50, 38, 26, 28, 17, 16, 29, 18, 6, 31, 19, 8, 7, 10, 20, 21, 35, 22, 47, 23, 36, 48)
 COLOR_TABLE = ((0, 0, 0),
  (1, 16720932, 2),
  (2, 15874572, 4),

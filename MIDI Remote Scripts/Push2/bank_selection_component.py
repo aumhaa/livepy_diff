@@ -1,12 +1,12 @@
 
 from __future__ import absolute_import, print_function
-from ableton.v2.base import NamedTuple, listenable_property, listens, listens_group, liveobj_valid, SlotManager, nop
+from ableton.v2.base import NamedTuple, listenable_property, listens, listens_group, liveobj_valid, nop
 from ableton.v2.control_surface import Component
 from ableton.v2.control_surface.control import control_list, ButtonControl
 from pushbase.banking_util import MAIN_KEY
 from .item_lister_component import ItemListerComponent, ItemProvider
 
-class BankProvider(ItemProvider, SlotManager):
+class BankProvider(ItemProvider):
 
     def __init__(self, bank_registry = None, banking_info = None, *a, **k):
         raise bank_registry is not None or AssertionError
@@ -72,7 +72,8 @@ class BankProvider(ItemProvider, SlotManager):
 
 
 class EditModeOptionsComponent(Component):
-    option_buttons = control_list(ButtonControl, color='ItemNavigation.ItemSelected', control_count=8)
+    color_class_name = 'EditModeOptions'
+    option_buttons = control_list(ButtonControl, color=color_class_name + '.ItemSelected', control_count=8)
 
     def __init__(self, back_callback = nop, device_options_provider = None, *a, **k):
         super(EditModeOptionsComponent, self).__init__(*a, **k)
@@ -102,14 +103,11 @@ class EditModeOptionsComponent(Component):
 
     def _set_device(self, device):
         self._device = device
-        self.__on_device_name_changed.subject = device
         self.notify_device()
 
     @listenable_property
     def device(self):
-        if liveobj_valid(self._device):
-            return self._device.name
-        return ''
+        return self._device
 
     @listenable_property
     def options(self):
@@ -120,10 +118,6 @@ class EditModeOptionsComponent(Component):
     @listens('device')
     def __on_device_changed(self):
         self._update_device()
-
-    @listens('name')
-    def __on_device_name_changed(self):
-        self.notify_device()
 
     @listens('options')
     def __on_options_changed(self):
@@ -140,7 +134,7 @@ class EditModeOptionsComponent(Component):
             if button.index > 0:
                 option = self._option_for_button(button)
                 has_active_option = option and option.active
-                button.color = 'ItemNavigation.' + ('ItemNotSelected' if has_active_option else 'NoItem')
+                button.color = self.color_class_name + '.' + ('ItemNotSelected' if has_active_option else 'NoItem')
 
     def _update_device(self):
         self._set_device(self._device_options_provider.device())
@@ -152,6 +146,7 @@ class EditModeOptionsComponent(Component):
 
 
 class BankSelectionComponent(ItemListerComponent):
+    color_class_name = 'BankSelection'
     __events__ = ('back',)
 
     def __init__(self, bank_registry = None, banking_info = None, device_options_provider = None, *a, **k):

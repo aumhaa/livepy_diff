@@ -10,7 +10,7 @@ from _Framework.SessionComponent import SessionComponent
 from _Framework.Resource import SharedResource
 from _Framework.Util import nop
 from _Framework.TransportComponent import TransportComponent
-from _APC.APC import APC
+from _APC.APC import APC, MANUFACTURER_ID
 from _APC.ControlElementUtils import make_button, make_knob
 from _APC.DeviceComponent import DeviceComponent
 from _APC.SkinDefault import make_default_skin, make_biled_skin, make_stop_button_skin
@@ -45,7 +45,6 @@ class APC_Key_25(APC, OptimizedControlSurface):
             if self.HAS_TRANSPORT:
                 self._transport = self._create_transport()
             self.set_device_component(self._device)
-            self.set_highlighting_session_component(self._session)
             self._session.set_mixer(self._mixer)
             self._encoder_modes = self._create_encoder_modes()
             self._track_modes = self._create_track_button_modes()
@@ -136,20 +135,22 @@ class APC_Key_25(APC, OptimizedControlSurface):
         track_button_modes.layer = Layer(clip_stop_button=self._stop_button, solo_button=self._solo_button, arm_button=self._arm_button, mute_button=self._mute_button, select_button=self._select_button)
         return track_button_modes
 
-    def _enable_components(self):
+    def _set_components_enabled(self, enable):
         with self.component_guard():
-            self._session.set_enabled(True)
-            self._mixer.set_enabled(True)
-            self._device.set_enabled(True)
+            self._session.set_enabled(enable)
+            self._mixer.set_enabled(enable)
+            self._device.set_enabled(enable)
             if self.HAS_TRANSPORT:
-                self._transport.set_enabled(True)
-            self._encoder_modes.set_enabled(True)
-            self._track_modes.set_enabled(True)
+                self._transport.set_enabled(enable)
+            self._encoder_modes.set_enabled(enable)
+            self._track_modes.set_enabled(enable)
 
     def _should_combine(self):
         return False
 
     def _update_hardware(self):
+        self.set_highlighting_session_component(None)
+        self._set_components_enabled(False)
         self._send_midi((240, 126, 127, 6, 1, 247))
 
     def _product_model_id_byte(self):
@@ -157,7 +158,9 @@ class APC_Key_25(APC, OptimizedControlSurface):
 
     def _on_identity_response(self, midi_bytes):
         super(APC_Key_25, self)._on_identity_response(midi_bytes)
-        self._enable_components()
+        if midi_bytes[5] == MANUFACTURER_ID and midi_bytes[6] == self._product_model_id_byte():
+            self._set_components_enabled(True)
+            self.set_highlighting_session_component(self._session)
 
     def _send_dongle_challenge(self):
         pass

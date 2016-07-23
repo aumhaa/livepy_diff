@@ -8,7 +8,7 @@ class SessionComponent(SessionComponentBase):
         if not track_offset >= 0:
             raise AssertionError
             self._is_linked() and self._unlink()
-        self.set_offsets(track_offset, 0)
+        self.set_offsets(track_offset, self.scene_offset())
         self._link()
 
     def unlink(self):

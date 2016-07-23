@@ -1,6 +1,6 @@
 
 from __future__ import absolute_import, print_function
-from ...base import listenable_property, listens, liveobj_valid, nop, Subject, SlotManager
+from ...base import EventObject, listenable_property, listens, liveobj_valid, nop
 
 def to_midi_value(int_or_color):
     if hasattr(int_or_color, 'midi_value'):
@@ -43,7 +43,7 @@ def is_dynamic_color_factory(skin_element):
     return isinstance(skin_element, DynamicColorFactory)
 
 
-class DynamicColorBase(Color, Subject, SlotManager):
+class DynamicColorBase(Color, EventObject):
     midi_value = listenable_property.managed(0)
 
     def __init__(self, transformation = nop, *a, **k):

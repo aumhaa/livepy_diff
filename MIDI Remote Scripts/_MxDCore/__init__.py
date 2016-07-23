@@ -1,6 +1,6 @@
 
 from MxDCore import MxDCore as _MxDCore
-import sys
+import sys, warnings
 
 def set_manager(manager):
     raise manager != None or AssertionError
@@ -19,9 +19,13 @@ def execute_command(device_id, object_id, command, arguments):
     raise isinstance(arguments, (str, unicode)) or AssertionError
     if hasattr(_MxDCore.instance, command):
         try:
-            _MxDCore.instance.update_device_context(device_id, object_id)
-            function = getattr(_MxDCore.instance, command)
-            function(device_id, object_id, arguments)
+            with warnings.catch_warnings(record=True) as caught_warnings:
+                _MxDCore.instance.update_device_context(device_id, object_id)
+                function = getattr(_MxDCore.instance, command)
+                function(device_id, object_id, arguments)
+                for warning in caught_warnings:
+                    _MxDCore.instance._warn(device_id, object_id, str(warning.message))
+
         except:
             if sys.exc_info()[0].__name__ == 'RuntimeError':
                 assert_reason = str(sys.exc_info()[1])

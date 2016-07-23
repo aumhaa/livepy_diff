@@ -4,7 +4,7 @@ Scrollable list component.
 """
 from __future__ import absolute_import, print_function
 from functools import partial
-from ableton.v2.base import in_range, Event
+from ableton.v2.base import EventObject, in_range, Event
 from ableton.v2.base.signal import short_circuit_signal
 from ableton.v2.control_surface import Component
 from ableton.v2.control_surface.elements import DisplayDataSource
@@ -29,7 +29,7 @@ class ScrollableListComponent(Component):
         self._offset_index = 0
         self._option_names = []
         self._select_buttons = []
-        self._select_button_slots = self.register_slot_manager()
+        self._select_button_slots = self.register_disconnectable(EventObject())
         self.register_slot(self, self._set_selected_option, 'press_option')
 
     def set_display_line(self, line):

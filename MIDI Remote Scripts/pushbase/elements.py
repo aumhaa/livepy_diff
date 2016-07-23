@@ -7,15 +7,17 @@ from . import consts
 from .configurable_button_element import PadButtonElement
 from .control_element_factory import create_button, create_modifier_button, create_note_button
 from .playhead_element import PlayheadElement
+from .velocity_levels_element import VelocityLevelsElement
 from .touch_encoder_element import TouchEncoderElement
 BASE_ENCODER_SENSITIVITY = 0.5
 
 class Elements(object):
 
-    def __init__(self, deleter = None, undo_handler = None, pad_sensitivity_update = None, playhead = None, continuous_mapping_sensitivity = None, fine_grained_continuous_mapping_sensitivity = None, *a, **k):
+    def __init__(self, deleter = None, undo_handler = None, pad_sensitivity_update = None, playhead = None, velocity_levels = None, continuous_mapping_sensitivity = None, fine_grained_continuous_mapping_sensitivity = None, *a, **k):
         raise deleter is not None or AssertionError
         raise undo_handler is not None or AssertionError
         raise playhead is not None or AssertionError
+        raise velocity_levels is not None or AssertionError
         raise continuous_mapping_sensitivity is not None or AssertionError
         raise fine_grained_continuous_mapping_sensitivity is not None or AssertionError
         super(Elements, self).__init__(*a, **k)
@@ -93,3 +95,4 @@ class Elements(object):
         self.fine_grain_param_controls = ButtonMatrixElement(rows=[self.fine_grain_param_controls_raw])
         self.any_touch_button = MultiElement(*self.global_param_touch_buttons.nested_control_elements())
         self.playhead_element = PlayheadElement(playhead)
+        self.velocity_levels_element = VelocityLevelsElement(velocity_levels)

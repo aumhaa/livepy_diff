@@ -1,6 +1,7 @@
 
 from __future__ import absolute_import, print_function
-from ...base import lazy_attribute, partial, task
+from functools import partial
+from ...base import lazy_attribute, task
 from ..defaults import MOMENTARY_DELAY, DOUBLE_CLICK_DELAY
 from .control import InputControl, control_event, control_color
 

@@ -1,7 +1,7 @@
 
 from __future__ import absolute_import, print_function
 from itertools import ifilter
-from ableton.v2.base import liveobj_valid, listenable_property
+from ableton.v2.base import liveobj_valid, listenable_property, listens
 from pushbase.automation_component import AutomationComponent as AutomationComponentBase
 from pushbase.internal_parameter import InternalParameterBase
 from pushbase.parameter_provider import ParameterInfo
@@ -75,10 +75,22 @@ class AutomationComponent(AutomationComponentBase):
     @property
     def deviceType(self):
         device_type = 'default'
-        if hasattr(self.parameter_provider, 'device'):
+        device = self.device
+        if liveobj_valid(device):
             device = self.parameter_provider.device()
             device_type = device.class_name if liveobj_valid(device) else device_type
         return device_type
+
+    @listenable_property
+    def device(self):
+        device = None
+        if hasattr(self.parameter_provider, 'device'):
+            device = self.parameter_provider.device()
+        return device
+
+    def _on_parameter_provider_changed(self, provider):
+        self.notify_device()
+        self.__on_device_changed.subject = provider if getattr(self.parameter_provider, 'device', None) is not None else None
 
     @property
     def parameters(self):
@@ -124,3 +136,7 @@ class AutomationComponent(AutomationComponentBase):
     def _parameter_for_index(self, parameters, index):
         if parameters[index]:
             return parameters[index].original_parameter
+
+    @listens('device')
+    def __on_device_changed(self):
+        self.notify_device()

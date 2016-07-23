@@ -2,7 +2,7 @@
 from __future__ import absolute_import, print_function
 from itertools import ifilter
 from .control_element import ControlElementClient, NotifyingControlElement
-from ..base import BooleanContext, first, second, SlotManager, listens_group
+from ..base import BooleanContext, first, second, listens_group
 
 class NestedElementClient(ControlElementClient):
 
@@ -15,7 +15,7 @@ class NestedElementClient(ControlElementClient):
         self.compound.set_control_element(element, grabbed)
 
 
-class CompoundElement(NotifyingControlElement, SlotManager, ControlElementClient):
+class CompoundElement(NotifyingControlElement, ControlElementClient):
     """
     Utility class that helps in writing Elements that act as a facade
     to nested elements, hiding the complexity oif making sure that

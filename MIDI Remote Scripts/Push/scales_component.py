@@ -1,7 +1,7 @@
 
 from __future__ import absolute_import, print_function
 from functools import partial
-from ableton.v2.base import forward_property, listens, listens_group, recursive_map
+from ableton.v2.base import EventObject, forward_property, listens, listens_group, recursive_map
 from ableton.v2.control_surface import CompoundComponent
 from ableton.v2.control_surface.mode import ModesComponent
 from ableton.v2.control_surface.control import ButtonControl
@@ -109,7 +109,7 @@ class InstrumentScalesComponent(CompoundComponent):
         super(InstrumentScalesComponent, self).__init__(*a, **k)
         self._note_layout = note_layout
         self._key_center_buttons = []
-        self._encoder_touch_button_slots = self.register_slot_manager()
+        self._encoder_touch_button_slots = self.register_disconnectable(EventObject())
         self._encoder_touch_buttons = []
         self._top_key_center_buttons = None
         self._bottom_key_center_buttons = None

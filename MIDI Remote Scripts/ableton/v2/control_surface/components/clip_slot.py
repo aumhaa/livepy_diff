@@ -40,7 +40,6 @@ class ClipSlotComponent(Component):
         self._clip_rgb_table = None
         self._record_button_color = 'Session.RecordButton'
         self._empty_slot_color = 'Session.ClipEmpty'
-        self._has_fired_slot = False
         self._delete_button = None
         self._select_button = None
         self._duplicate_button = None
@@ -88,7 +87,6 @@ class ClipSlotComponent(Component):
 
     def update(self):
         super(ClipSlotComponent, self).update()
-        self._has_fired_slot = False
         self._update_launch_button_color()
 
     def _update_launch_button_color(self):
@@ -181,10 +179,6 @@ class ClipSlotComponent(Component):
     @listens('is_triggered')
     def __on_slot_triggered_changed(self):
         if not self.has_clip():
-            song = self.song
-            view = song.view
-            if song.select_on_launch and self._clip_slot.is_triggered and self._has_fired_slot and self._clip_slot.will_record_on_start and self._clip_slot != view.highlighted_clip_slot:
-                view.highlighted_clip_slot = self._clip_slot
             self._update_launch_button_color()
 
     @launch_button.pressed
@@ -234,10 +228,9 @@ class ClipSlotComponent(Component):
         object_to_launch = self._clip_slot
         if self.has_clip():
             object_to_launch = self._clip_slot.clip
-        else:
-            self._has_fired_slot = True
         object_to_launch.set_fire_button_state(fire_state)
 
     def _show_launched_clip_as_highlighted_clip(self):
-        if self.has_clip() and self.song.select_on_launch:
+        song = self.song
+        if song.select_on_launch and self._clip_slot != song.view.highlighted_clip_slot:
             self.song.view.highlighted_clip_slot = self._clip_slot

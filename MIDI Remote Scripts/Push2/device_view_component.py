@@ -6,10 +6,12 @@ from ableton.v2.control_surface.mode import ModesComponent
 
 class DeviceViewConnector(Component):
 
-    def __init__(self, parameter_provider = None, device_type_provider = const('default'), view = None, *a, **k):
+    def __init__(self, device_component = None, parameter_provider = None, device_type_provider = const('default'), view = None, *a, **k):
+        raise device_component is not None or AssertionError
         raise parameter_provider is not None or AssertionError
         raise view is not None or AssertionError
         super(DeviceViewConnector, self).__init__(*a, **k)
+        self._device_component = device_component
         self._parameter_provider = parameter_provider
         self._view = view
         self._parameters = None
@@ -20,6 +22,7 @@ class DeviceViewConnector(Component):
         super(DeviceViewConnector, self).update()
         if self.is_enabled():
             self._view.deviceType = self._device_type_provider()
+        self._view.device = self._device_component.device()
         parameters = self._value_for_state(map(lambda p: p and p.parameter, self._parameter_provider.parameters), [])
         if self._parameters_changed(parameters):
             self._view.parameters = parameters
@@ -49,17 +52,12 @@ class DeviceViewConnector(Component):
 
 class SimplerDeviceViewConnector(DeviceViewConnector):
 
-    def __init__(self, device_component = None, *a, **k):
-        super(SimplerDeviceViewConnector, self).__init__(*a, **k)
-        self._device = device_component
-
     def update(self):
         super(SimplerDeviceViewConnector, self).update()
-        device = self._value_for_state(self._device.device(), None)
+        device = self._value_for_state(self._device_component.device(), None)
         raise device == None or device.class_name == 'OriginalSimpler' or AssertionError
         self._view.properties = device
         self._view.wants_waveform_shown = self._parameter_provider.wants_waveform_shown
-        self._view.simpler = device
 
 
 class DeviceViewComponent(ModesComponent):
@@ -72,10 +70,19 @@ class DeviceViewComponent(ModesComponent):
         for view in (view_model.deviceParameterView, view_model.simplerDeviceView):
             view.visible = False
 
-        self.add_mode('default', DeviceViewConnector(parameter_provider=device_component, device_type_provider=self._device_type, view=view_model.deviceParameterView, is_enabled=False))
-        self.add_mode('OriginalSimpler', SimplerDeviceViewConnector(parameter_provider=device_component, device_component=device_component, device_type_provider=self._device_type, view=view_model.simplerDeviceView, is_enabled=False))
+        self.add_mode('default', DeviceViewConnector(device_component=device_component, parameter_provider=device_component, device_type_provider=self._device_type, view=view_model.deviceParameterView, is_enabled=False))
+        self.add_mode('OriginalSimpler', SimplerDeviceViewConnector(device_component=device_component, parameter_provider=device_component, device_type_provider=self._device_type, view=view_model.simplerDeviceView, is_enabled=False))
         self._on_parameters_changed.subject = device_component
         self._on_parameters_changed()
+
+    def on_enabled_changed(self):
+        self._last_selected_mode = None
+        super(DeviceViewComponent, self).on_enabled_changed()
+
+    def update(self):
+        super(DeviceViewComponent, self).update()
+        if self.is_enabled():
+            self.selected_mode = self._mode_to_select()
 
     def _device_type(self):
         device = self._get_device()

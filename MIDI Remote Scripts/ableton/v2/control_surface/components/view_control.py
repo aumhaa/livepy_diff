@@ -143,7 +143,7 @@ class ViewControlComponent(CompoundComponent):
 
     def show_view(self, view):
         raise view in VIEWS or AssertionError
-        app_view = self.application().view
+        app_view = self.application.view
         try:
             if view == 'Detail/DeviceChain' or 'Detail/Clip':
                 if not app_view.is_view_visible('Detail'):
@@ -156,7 +156,7 @@ class ViewControlComponent(CompoundComponent):
     def focus_view(self, view):
         if not view in VIEWS:
             raise AssertionError
-            app_view = self.application().view
+            app_view = self.application.view
             if view == 'Detail/DeviceChain' or 'Detail/Clip':
                 if not app_view.is_view_visible('Detail'):
                     app_view.show_view('Detail')

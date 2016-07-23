@@ -1,7 +1,7 @@
 
 from __future__ import absolute_import, print_function
 from functools import partial
-from ableton.v2.base import listenable_property, listens, listens_group, liveobj_valid, MultiSlot, SlotManager, Subject
+from ableton.v2.base import listenable_property, listens, listens_group, liveobj_valid, EventObject, MultiSlot
 from ableton.v2.control_surface import Component, CompoundComponent, Layer
 from ableton.v2.control_surface.control import ButtonControl
 from pushbase.message_box_component import Messenger
@@ -14,7 +14,7 @@ def stop_clip_in_selected_track(song):
         selected_track.stop_all_clips()
 
 
-class TrackStateColorIndicator(Subject, SlotManager):
+class TrackStateColorIndicator(EventObject):
     color = listenable_property.managed('DefaultButton.On')
 
     def __init__(self, item_provider = None, track_property = None, property_active_color = None, song = None, *a, **k):
@@ -24,7 +24,7 @@ class TrackStateColorIndicator(Subject, SlotManager):
         self._property = track_property
         self._song = song
         self.__on_items_changed.subject = item_provider
-        self.register_slot(MultiSlot(listener=self.__on_property_changed, event=('selected_item', track_property), subject=item_provider))
+        self.register_slot(MultiSlot(listener=self.__on_property_changed, event_name_list=('selected_item', track_property), subject=item_provider))
         self._update_color()
 
     @listens('items')

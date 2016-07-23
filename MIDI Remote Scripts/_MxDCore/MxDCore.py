@@ -422,7 +422,7 @@ class MxDCore(object):
                 self._set_property_value(current_object, property_name, value)
                 self._warn_if_using_private_property(device_id, object_id, property_name)
             except LomAttributeError as e:
-                self._raise(device_id, object_id, e.message)
+                self._raise(device_id, object_id, unicode(e))
 
     def obj_get_val(self, device_id, object_id, parameters):
         self.obj_get(device_id, object_id, parameters)
@@ -446,7 +446,7 @@ class MxDCore(object):
                 result = self._str_representation_for_object(result_value)
                 self.manager.send_message(device_id, object_id, 'obj_prop_val', result)
             except LomAttributeError as e:
-                self._warn(device_id, object_id, e.message)
+                self._warn(device_id, object_id, unicode(e))
 
         else:
             self._warn(device_id, object_id, 'get: no valid object set')
@@ -461,9 +461,9 @@ class MxDCore(object):
                 handler = self._call_handler[func_name] if func_name in self._call_handler.keys() else self._object_default_call_handler
                 handler(device_id, object_id, current_object, param_comps)
             except AttributeError as e:
-                self._raise(device_id, object_id, e.message)
+                self._raise(device_id, object_id, unicode(e))
             except RuntimeError as e:
-                self._raise(device_id, object_id, u"%s: '%s'" % (e.message, parameters))
+                self._raise(device_id, object_id, u"%s: '%s'" % (unicode(e), parameters))
             except Exception as e:
                 reason = 'Invalid ' + ('arguments' if isinstance(e, TypeError) else 'syntax')
                 self._raise(device_id, object_id, u"%s: '%s'" % (reason, parameters))
@@ -544,7 +544,7 @@ class MxDCore(object):
             lom_object = resolver.lom_object
         except (LomAttributeError, LomObjectError) as e:
             if must_exist or isinstance(e, LomObjectError):
-                self._raise(device_id, object_id, e.message)
+                self._raise(device_id, object_id, unicode(e))
 
         return lom_object
 
@@ -677,7 +677,7 @@ class MxDCore(object):
                 raise len(operations[NOTE_BUFFER_KEY]) >= operations[NOTE_COUNT_KEY] and LomNoteOperationError('too many notes')
             operations[NOTE_BUFFER_KEY].append(note_from_parameters(parameters[1:]))
         except LomNoteOperationError as e:
-            self._raise(device_id, object_id, e.message)
+            self._raise(device_id, object_id, unicode(e))
             self._stop_note_operation(device_id, object_id)
 
     def _selector_for_note_operation(self, note_operation):
@@ -701,7 +701,7 @@ class MxDCore(object):
                 selector = self._selector_for_note_operation(operation)
                 getattr(lom_object, selector)(notes)
             except LomNoteOperationWarning as w:
-                self._warn(device_id, object_id, w.message)
+                self._warn(device_id, object_id, unicode(w))
 
             self._stop_note_operation(device_id, object_id)
         else:

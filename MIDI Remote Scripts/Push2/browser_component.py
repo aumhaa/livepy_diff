@@ -8,6 +8,8 @@ from ableton.v2.base import BooleanContext, depends, index_if, lazy_attribute, l
 from ableton.v2.control_surface import Component, CompoundComponent
 from ableton.v2.control_surface.control import control_list, ButtonControl, StepEncoderControl, ToggleButtonControl
 from pushbase.browser_util import filter_type_for_hotswap_target, get_selection_for_new_device
+from pushbase.consts import MessageBoxText
+from pushbase.live_util import get_position_for_new_track
 from pushbase.message_box_component import Messenger
 from .colors import translate_color_index
 from .browser_list import BrowserList
@@ -504,6 +506,10 @@ class BrowserComponent(CompoundComponent, Messenger):
         self._update_load_neighbour_overlay_visibility()
         self._update_navigation_buttons()
         item = self._get_actual_item(focused_list.selected_item)
+        self._load_item(item)
+        self.notify_loaded()
+
+    def _show_load_notification(self, item):
         notification_text = self._make_notification_text(item)
         text_length = len(notification_text)
         notification_time = self.MIN_TIME
@@ -514,13 +520,12 @@ class BrowserComponent(CompoundComponent, Messenger):
                 notification_time = self.MIN_TIME + (self.MAX_TIME - self.MIN_TIME) * float(text_length - self.MIN_TIME_TEXT_LENGTH) / (self.MAX_TIME_TEXT_LENGTH - self.MIN_TIME_TEXT_LENGTH)
         self.show_notification(notification_text, notification_time=notification_time)
         self._commit_model_changes()
-        self._load_item(item)
-        self.notify_loaded()
 
     def _make_notification_text(self, browser_item):
         return 'Loading %s' % browser_item.name
 
     def _load_item(self, item):
+        self._show_load_notification(item)
         if liveobj_valid(self._browser.hotswap_target):
             if isinstance(item, PluginPresetBrowserItem):
                 self._browser.hotswap_target.selected_preset_index = item.preset_index
@@ -754,7 +759,7 @@ class BrowserComponent(CompoundComponent, Messenger):
         having two actions on an item (open and load).
         """
         wrapped_loadable = WrappedLoadableBrowserItem(name=item.name, is_loadable=True, contained_item=item)
-        return FolderBrowserItem(name=item.name, is_loadable=True, is_device=True, contained_item=item, wrapped_loadable=wrapped_loadable)
+        return FolderBrowserItem(name=item.name, is_loadable=True, is_device=True, contained_item=item, wrapped_loadable=wrapped_loadable, icon='browser_arrowcontent.svg')
 
     def _is_hotswap_target_plugin(self, item):
         return isinstance(self._browser.hotswap_target, Live.PluginDevice.PluginDevice) and isinstance(item, Live.Browser.BrowserItem) and self._browser.relation_to_hotswap_target(item) == Live.Browser.Relation.equal
@@ -766,7 +771,7 @@ class BrowserComponent(CompoundComponent, Messenger):
 class TrackBrowserItem(BrowserItem):
     filter_type = Live.Browser.FilterType.hotswap_off
 
-    def create_track(self, song, index):
+    def create_track(self, song, selected_track_index):
         raise NotImplementedError
 
 
@@ -776,8 +781,8 @@ class MidiTrackBrowserItem(TrackBrowserItem):
     def __init__(self, *a, **k):
         super(MidiTrackBrowserItem, self).__init__(name='MIDI track', *a, **k)
 
-    def create_track(self, song, index):
-        song.create_midi_track(index)
+    def create_track(self, song, selected_track_index):
+        song.create_midi_track(get_position_for_new_track(song, selected_track_index))
 
 
 class AudioTrackBrowserItem(TrackBrowserItem):
@@ -786,8 +791,8 @@ class AudioTrackBrowserItem(TrackBrowserItem):
     def __init__(self, *a, **k):
         super(AudioTrackBrowserItem, self).__init__(name='Audio track', *a, **k)
 
-    def create_track(self, song, index):
-        song.create_audio_track(index)
+    def create_track(self, song, selected_track_index):
+        song.create_audio_track(get_position_for_new_track(song, selected_track_index))
 
 
 class ReturnTrackBrowserItem(TrackBrowserItem):
@@ -796,7 +801,7 @@ class ReturnTrackBrowserItem(TrackBrowserItem):
     def __init__(self, *a, **k):
         super(ReturnTrackBrowserItem, self).__init__(name='Return track', *a, **k)
 
-    def create_track(self, song, index):
+    def create_track(self, song, selected_track_index):
         song.create_return_track()
 
 
@@ -852,18 +857,28 @@ class NewTrackBrowserComponent(BrowserComponent):
         self.context_text = 'Close'
 
     def _load_item(self, item):
-        self._selected_track_item().create_track(self.song, self._selected_track_index())
-        if not isinstance(item, DefaultTrackBrowserItem):
-            super(NewTrackBrowserComponent, self)._load_item(item)
+        try:
+            self._selected_track_item().create_track(self.song, self._selected_track_index())
+            if isinstance(item, DefaultTrackBrowserItem):
+                self._show_load_notification(item)
+            else:
+                super(NewTrackBrowserComponent, self)._load_item(item)
+        except Live.Base.LimitationError:
+            self.show_notification(MessageBoxText.TRACK_LIMIT_REACHED)
+        except RuntimeError:
+            self.show_notification(MessageBoxText.MAX_RETURN_TRACKS_REACHED)
 
     def _make_notification_text(self, browser_item):
-        return '%s loaded in track %i' % (browser_item.name, self._selected_track_index() + 1)
+        if isinstance(browser_item, DefaultTrackBrowserItem):
+            return 'Default track created'
+        new_track_position = self._selected_track_index() + 1
+        return '%s loaded in track %i' % (browser_item.name, new_track_position)
 
     def _selected_track_index(self):
         song = self.song
         selected_track = self._selection.selected_track
         if selected_track in song.tracks:
-            return list(song.tracks).index(selected_track) + 1
+            return list(song.tracks).index(selected_track)
         return -1
 
     def _selected_track_item(self):

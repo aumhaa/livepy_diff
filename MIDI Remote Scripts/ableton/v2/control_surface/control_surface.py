@@ -1,16 +1,14 @@
 
 from __future__ import absolute_import, print_function
-from collections import OrderedDict
-from functools import partial
-from itertools import chain, ifilter, imap
-from contextlib import contextmanager
-from pickle import loads, dumps
-from encodings import ascii
-ascii
 import logging
 import traceback
+from collections import OrderedDict
+from contextlib import contextmanager
+from functools import partial
+from itertools import chain, ifilter, imap
+from pickle import loads, dumps
 import Live
-from ..base import BooleanContext, const, find_if, first, in_range, inject, lazy_attribute, liveobj_valid, SlotManager, task
+from ..base import BooleanContext, EventObject, const, find_if, first, in_range, inject, lazy_attribute, liveobj_valid, task
 from . import defaults
 from . import midi
 from .components.device import DeviceProvider
@@ -37,7 +35,7 @@ def get_control_surfaces():
         return getattr(__builtins__, CS_LIST_KEY)
 
 
-class SimpleControlSurface(SlotManager):
+class SimpleControlSurface(EventObject):
     """
     Central base class for scripts based on the new Framework. New
     scripts need to subclass this class and add special behavior.
@@ -48,7 +46,6 @@ class SimpleControlSurface(SlotManager):
     preferences_key = None
 
     def __init__(self, c_instance = None, publish_self = True, *a, **k):
-        """ Define and Initialize standard behavior """
         super(SimpleControlSurface, self).__init__(*a, **k)
         if not c_instance:
             raise AssertionError
@@ -56,8 +53,6 @@ class SimpleControlSurface(SlotManager):
             publish_self and publish_control_surface(self)
         self._c_instance = c_instance
         self._pad_translations = None
-        self._suggested_input_port = str('')
-        self._suggested_output_port = str('')
         self._components = []
         self._displays = []
         self.controls = []
@@ -80,10 +75,16 @@ class SimpleControlSurface(SlotManager):
 
     @property
     def components(self):
+        """
+        Tuple of all components, that have been registered for this control surface.
+        """
         return tuple(filter(lambda comp: not comp.is_private, self._components))
 
     @property
     def root_components(self):
+        """
+        Tuple of all root components, that have been registered for this control surface.
+        """
         return tuple(filter(lambda comp: comp.is_root and not comp.is_private, self._components))
 
     def _get_tasks(self):
@@ -91,6 +92,7 @@ class SimpleControlSurface(SlotManager):
 
     _tasks = property(_get_tasks)
 
+    @property
     def application(self):
         """ Returns a reference to the application that we are running in """
         return Live.Application.get_application()
@@ -102,7 +104,14 @@ class SimpleControlSurface(SlotManager):
 
     def disconnect(self):
         """
-        Live -> Script: Called right before we get disconnected from Live
+        Live -> Script
+        
+        Is called by Live when the script is unloaded. This happens when the script
+        gets unselected from the preferences, automatically when the corresponding MIDI
+        ports are gone or Live is shut down.
+        
+        All listeners to the Live API need to be removed. Cyclic dependencies should be
+        broken, so the control surface can be garbage collected.
         """
         self._pre_serialize()
         self._disconnect_and_unregister_all_components()
@@ -115,35 +124,28 @@ class SimpleControlSurface(SlotManager):
         self.controls = None
         self._displays = None
         self._pad_translations = None
-        cs_list = self._control_surfaces()
+        cs_list = get_control_surfaces()
         if self in cs_list:
             cs_list.remove(self)
         self._task_group.clear()
         super(SimpleControlSurface, self).disconnect()
 
-    def _control_surfaces(self):
-        """ Returns list of registered control surfaces """
-        return get_control_surfaces()
-
     def can_lock_to_devices(self):
         """
         Live -> Script
+        
+        Should return True, if the ControlSurfaces can lock a device.
+        SimpleControlSurface does not support controlling devices, so it will always
+        be False.
         """
         return False
 
-    def suggest_input_port(self):
-        """ Live -> Script: Live can ask for the name of the script's
-        prefered input port"""
-        return self._suggested_input_port
-
-    def suggest_output_port(self):
-        """ Live -> Script: Live can ask for the name of the script's
-        prefered output port"""
-        return self._suggested_output_port
-
     def suggest_map_mode(self, cc_no, channel):
-        """ Live -> Script: Live can ask for a suitable mapping mode
-        for a given CC"""
+        """
+        Live -> Script
+        
+        Live can ask for a suitable mapping mode for a given CC
+        """
         raise midi.is_valid_value(cc_no) or AssertionError
         raise midi.is_valid_channel(channel) or AssertionError
         suggested_map_mode = -1
@@ -154,43 +156,38 @@ class SimpleControlSurface(SlotManager):
 
         return suggested_map_mode
 
-    def suggest_needs_takeover(self, cc_no, channel):
-        """ Live -> Script: Live can ask whether a given CC needs takeover """
-        raise midi.is_valid_value(cc_no) or AssertionError
-        raise midi.is_valid_channel(channel) or AssertionError
-        needs_takeover = True
-        for control in self._controls:
-            if isinstance(control, InputControlElement) and control.message_type() == MIDI_CC_TYPE and control.message_identifier() == cc_no and control.message_channel() == channel:
-                needs_takeover = control.needs_takeover()
-                break
-
-        return needs_takeover
-
     def supports_pad_translation(self):
+        """
+        Returns True if pad translations have been installed using
+        :meth:`set_pad_translations`.
+        """
         return self._pad_translations is not None
 
     def show_message(self, message):
-        """ Displays the given message in Live's status bar """
+        """
+        Displays the given message in Live's status bar.
+        """
         raise isinstance(message, (str, unicode)) or AssertionError
         self._c_instance.show_message(message)
 
-    def instance_identifier(self):
-        return self._c_instance.instance_identifier()
-
     def connect_script_instances(self, instanciated_scripts):
-        """ Called by the Application as soon as all scripts are initialized.
-            You can connect yourself to other running scripts here, as we do it
-            connect the extension modules (MackieControlXTs).
+        """
+        Script -> Live
+        
+        Called by the Application as soon as all scripts are initialized.
+        You can connect yourself to other running scripts here.
         """
         pass
 
     def request_rebuild_midi_map(self):
-        """ Script -> Live.
-            When the internal MIDI controller has changed in a way that
-            you need to rebuild the MIDI mappings, request a rebuild
-            by calling this function This is processed as a request,
-            to be sure that its not too often called, because its
-            time-critical.
+        """
+        Script -> Live.
+        
+        When the internal MIDI controller has changed in a way that
+        you need to rebuild the MIDI mappings, request a rebuild
+        by calling this function. This is processed as a request,
+        to be sure that its not too often called, because its
+        time-critical.
         """
         if not not self._in_build_midi_map:
             raise AssertionError
@@ -199,11 +196,13 @@ class SimpleControlSurface(SlotManager):
             self._c_instance.request_rebuild_midi_map()
 
     def build_midi_map(self, midi_map_handle):
-        """ Live -> Script
-            Build DeviceParameter Mappings, that are processed in Audio time, or
-            forward MIDI messages explicitly to our receive_midi_functions.
-            Which means that when you are not forwarding MIDI, nor mapping parameters,
-            you will never get any MIDI messages at all.
+        """
+        Live -> Script
+        
+        Build DeviceParameter Mappings, that are processed in Audio time, or
+        forward MIDI messages explicitly to our receive_midi_functions.
+        Which means that when you are not forwarding MIDI, nor mapping parameters,
+        you will never get any MIDI messages at all.
         """
         with self._in_build_midi_map():
             self._forwarding_registry.clear()
@@ -216,18 +215,23 @@ class SimpleControlSurface(SlotManager):
                 self._c_instance.set_pad_translation(self._pad_translations)
 
     def port_settings_changed(self):
-        """ Live -> Script
-            Is called when either the user changes the MIDI ports that are assigned
-            to the script, or the ports state changes due to unplugging/replugging the
-            device.
-            Will always be called initially when setting up the script.
+        """
+        Live -> Script
+        
+        Is called when either the user changes the MIDI ports that are assigned
+        to the script, or the ports state changes due to unplugging/replugging the
+        device.
+        
+        Will always be called initially when setting up the script.
         """
         self.refresh_state()
 
     def refresh_state(self):
-        """ Live -> Script
-            Send out MIDI to completely update the attached MIDI controller.
-            Will be called when exiting MIDI map mode
+        """
+        Live -> Script
+        
+        Send out MIDI to completely update the attached MIDI controller.
+        Will be called when exiting MIDI map mode
         """
         self.update()
 
@@ -241,9 +245,11 @@ class SimpleControlSurface(SlotManager):
 
     @profile
     def update_display(self):
-        """ Live -> Script
-            Aka on_timer. Called every 100 ms and should be used to update display
-            relevant parts of the controller
+        """
+        Live -> Script
+        
+        Aka on_timer. Called every 100 ms and should be used to update display
+        relevant parts of the controller
         """
         with self.component_guard():
             with self._is_sending_scheduled_messages():
@@ -251,18 +257,22 @@ class SimpleControlSurface(SlotManager):
 
     @profile
     def receive_midi(self, midi_bytes):
-        """ Live -> Script
-            MIDI messages are only received through this function, when explicitly
-            forwarded in 'build_midi_map'.
+        """
+        Live -> Script
+        
+        MIDI messages are only received through this function, when explicitly
+        forwarded in 'build_midi_map'.
         """
         with self.component_guard():
             self._do_receive_midi(midi_bytes)
 
     @profile
     def receive_midi_chunk(self, midi_chunk):
-        """ Live -> Script
-            MIDI messages are only received through this function, when explicitly
-            forwarded in 'build_midi_map'.
+        """
+        Live -> Script
+        
+        MIDI messages are only received through this function, when explicitly
+        forwarded in 'build_midi_map'.
         """
         with self.component_guard():
             self._do_receive_midi_chunk(midi_chunk)
@@ -399,17 +409,12 @@ class SimpleControlSurface(SlotManager):
         else:
             self._task_group.add(message)
 
-    def _process_remaining_scheduled_messages(self):
-        current_scheduled_messages = tuple(self._remaining_scheduled_messages)
-        for message, in current_scheduled_messages:
-            message(None)
-
     def set_feedback_channels(self, channels):
         self._c_instance.set_feedback_channels(channels)
 
     def set_controlled_track(self, track):
         """ Sets the track that will send its feedback to the control surface """
-        raise track == None or isinstance(track, Live.Track.Track) or AssertionError
+        raise liveobj_valid(track) or isinstance(track, Live.Track.Track) or AssertionError
         self._c_instance.set_controlled_track(track)
 
     def release_controlled_track(self):
@@ -418,7 +423,7 @@ class SimpleControlSurface(SlotManager):
 
     def _register_control(self, control):
         """ puts control into the list of controls for triggering updates """
-        if not control != None:
+        if not control is not None:
             raise AssertionError
             if not control not in self.controls:
                 raise AssertionError('Control registered twice')
@@ -429,7 +434,7 @@ class SimpleControlSurface(SlotManager):
 
     def _register_component(self, component):
         """ puts component into the list of controls for triggering updates """
-        raise component != None or AssertionError
+        raise component is not None or AssertionError
         raise component not in self._components or AssertionError('Component registered twice')
         self._components.append(component)
         component.canonical_parent = self
@@ -446,7 +451,7 @@ class SimpleControlSurface(SlotManager):
     def component_guard(self):
         """
         Context manager that guards user code.  This prevents
-        unnecesary updating and enables several optimisations.  Should
+        unnecessary updating and enables several optimizations.  Should
         be used to guard calls to components or control elements.
         """
         if not self._in_component_guard:
@@ -455,10 +460,6 @@ class SimpleControlSurface(SlotManager):
                     yield
         else:
             yield
-
-    @property
-    def in_component_guard(self):
-        return bool(self._in_component_guard)
 
     @contextmanager
     def _component_guard(self):
@@ -502,7 +503,8 @@ class SimpleControlSurface(SlotManager):
             sysex_status_byte = 240
             entry = (self._midi_message_count, midi_event_bytes)
             if optimized and midi_event_bytes[0] != sysex_status_byte:
-                self._midi_message_dict[midi_event_bytes[0], midi_event_bytes[1]] = entry
+                key = (midi_event_bytes[0], midi_event_bytes[1])
+                self._midi_message_dict[key] = entry
             else:
                 self._midi_message_list.append(entry)
             self._midi_message_count += 1
@@ -533,7 +535,7 @@ class SimpleControlSurface(SlotManager):
     def _install_mapping(self, midi_map_handle, control, parameter, feedback_delay, feedback_map):
         if not self._in_build_midi_map:
             raise AssertionError
-            raise control != None and parameter != None or AssertionError
+            raise control is not None and liveobj_valid(parameter) or AssertionError
             raise isinstance(parameter, Live.DeviceParameter.DeviceParameter) or AssertionError
             raise isinstance(control, InputControlElement) or AssertionError
             raise isinstance(feedback_delay, int) or AssertionError
@@ -551,7 +553,7 @@ class SimpleControlSurface(SlotManager):
             elif control.message_type() == MIDI_PB_TYPE:
                 feedback_rule = Live.MidiMap.PitchBendFeedbackRule()
                 feedback_rule.value_pair_map = feedback_map
-            if not feedback_rule != None:
+            if not feedback_rule is not None:
                 raise AssertionError
                 feedback_rule.channel = control.message_channel()
                 feedback_rule.delay_in_ms = feedback_delay
@@ -566,7 +568,7 @@ class SimpleControlSurface(SlotManager):
     def _install_forwarding(self, midi_map_handle, control):
         if not self._in_build_midi_map:
             raise AssertionError
-            raise control != None or AssertionError
+            raise control is not None or AssertionError
             if not isinstance(control, InputControlElement):
                 raise AssertionError
                 success = False
@@ -599,21 +601,18 @@ class SimpleControlSurface(SlotManager):
         else:
             raise False or AssertionError
 
-    def _refresh_displays(self):
-        """
-        Make sure the displays of the control surface display current
-        data.
-        """
-        for display in self._displays:
-            display.update()
-            display._tasks.update(defaults.TIMER_DELAY)
-
     @lazy_attribute
     def preferences(self):
         """
-        Returns a dictionary of preferences, that are persistent. The class member
-        preferences_key is used, as an identifier.
-        Raises an error if the preferences are accessed but preferences_key is not set
+        Returns a dictionary of preferences, that is persistent and stored in the
+        users preferences folder. :attr:`preferences_key` is used to uniquely access
+        the dictionary.
+        
+        The preferences are saved whenever the control surface is disconnected,
+        Lives preferences dialog is closed or Live is shut down.
+        
+        Raises a :class:`RuntimeError` if the preferences are accessed but
+        preferences_key is not set.
         """
         if self.preferences_key is None:
             raise RuntimeError('Trying to access preferences without providing a preference_key')
@@ -678,7 +677,8 @@ class ControlSurface(SimpleControlSurface):
     def lock_to_device(self, device):
         """
         Live -> Script
-        Live tells the script which device to control
+        
+        Called by Live when the user enables the lock to device setting.
         """
         raise self._device_provider is not None or AssertionError
         with self.component_guard():
@@ -687,7 +687,8 @@ class ControlSurface(SimpleControlSurface):
     def unlock_from_device(self, device):
         """
         Live -> Script
-        Live tells the script to unlock from a certain device
+        
+        Called by Live when the user disables the lock to device setting.
         """
         raise self._device_provider is not None or AssertionError
         raise self._device_provider.is_locked_to_device or AssertionError
@@ -697,6 +698,7 @@ class ControlSurface(SimpleControlSurface):
     def restore_bank(self, bank_index):
         """
         Live -> Script
+        
         Live tells the script which bank to use.
         """
         if not self._device_provider is not None:
@@ -706,8 +708,10 @@ class ControlSurface(SimpleControlSurface):
                 self._device_bank_registry.set_device_bank(device, bank_index)
 
     def toggle_lock(self):
-        """ Script -> Live
-            Use this function to toggle the script's lock on devices
+        """
+        Script -> Live
+        
+        Use this function to toggle the script's lock on devices
         """
         self._c_instance.toggle_lock()
 

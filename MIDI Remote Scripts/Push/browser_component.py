@@ -78,7 +78,7 @@ class BrowserComponent(CompoundComponent):
     def __init__(self, browser = None, make_browser_model = None, preferences = dict(), *a, **k):
         super(BrowserComponent, self).__init__(*a, **k)
         raise make_browser_model is not None or AssertionError
-        self._browser = browser or self.application().browser
+        self._browser = browser or self.application.browser
         self._browser_model = EmptyBrowserModel(browser=self._browser)
         self._make_browser_model = make_browser_model
         num_data_sources = self.NUM_COLUMNS * self.COLUMN_SIZE
@@ -330,7 +330,7 @@ class BrowserComponent(CompoundComponent):
             new_model.disconnect()
         else:
             self.disconnect_disconnectable(self._browser_model)
-            self._browser_model = self.register_slot_manager(new_model)
+            self._browser_model = self.register_disconnectable(new_model)
             self._on_content_lists_changed.subject = self._browser_model
             self._on_selection_updated.subject = self._browser_model
         self._browser_model.update_content()

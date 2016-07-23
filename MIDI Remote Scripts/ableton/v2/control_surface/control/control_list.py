@@ -166,11 +166,13 @@ class MatrixControl(ControlList):
 
     class State(ControlList.State):
 
-        def __init__(self, control = None, manager = None, *a, **k):
-            raise control is not None or AssertionError
-            raise manager is not None or AssertionError
-            self._dimensions = (None, None)
-            super(MatrixControl.State, self).__init__(control, manager, *a, **k)
+        def __init__(self, control = None, manager = None, dimensions = None, *a, **k):
+            if not control is not None:
+                raise AssertionError
+                raise manager is not None or AssertionError
+                super(MatrixControl.State, self).__init__(control, manager, *a, **k)
+                self._dimensions = (None, None)
+                self.dimensions = dimensions is not None and dimensions
 
         @property
         def dimensions(self):
@@ -208,7 +210,7 @@ class MatrixControl(ControlList):
             if hasattr(control_elements, 'width') and hasattr(control_elements, 'height'):
                 dimensions = (control_elements.height(), control_elements.width())
                 if not self._dynamic_create:
-                    control_elements = [ control_elements.get_button(col, row) for row, col in product(xrange(self.height), xrange(self.width)) ]
+                    control_elements = [ control_elements.get_button(row, col) for row, col in product(xrange(self.height), xrange(self.width)) ]
             elif is_matrix(control_elements):
                 dimensions = (len(control_elements), len(first(control_elements)))
                 if not self._dynamic_create:

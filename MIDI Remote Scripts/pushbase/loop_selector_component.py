@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function
 from contextlib import contextmanager
 from functools import partial
 from itertools import izip
-from ableton.v2.base import clamp, listens, liveobj_changed, liveobj_valid, Subject, task
+from ableton.v2.base import EventObject, clamp, listens, liveobj_changed, liveobj_valid, task
 from ableton.v2.control_surface import defaults, Component
 from ableton.v2.control_surface.control import ButtonControl
 
@@ -24,7 +24,7 @@ def clip_is_new_recording(clip):
     return clip.is_recording and not clip.is_overdubbing
 
 
-class Paginator(Subject):
+class Paginator(EventObject):
     """
     Paginator interface for objects that split continuous time into
     discrete pages.  This can be used as trivial paginator splits time

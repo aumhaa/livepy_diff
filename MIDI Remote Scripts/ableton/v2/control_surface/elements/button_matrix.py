@@ -62,7 +62,7 @@ class ButtonMatrixElement(CompoundElement):
                 button = len(self._buttons[row]) > column and self._buttons[row][column]
                 button and button.set_light(value)
 
-    def get_button(self, column, row):
+    def get_button(self, row, column):
         if not in_range(column, 0, self.width()):
             raise AssertionError
             raise in_range(row, 0, self.height()) or AssertionError
@@ -75,7 +75,7 @@ class ButtonMatrixElement(CompoundElement):
 
     def __iter__(self):
         for j, i in product(xrange(self.height()), xrange(self.width())):
-            button = self.get_button(i, j)
+            button = self.get_button(j, i)
             yield button
 
     def __getitem__(self, index):
@@ -90,14 +90,14 @@ class ButtonMatrixElement(CompoundElement):
     def _do_get_item(self, index):
         raise in_range(index, 0, len(self)) or AssertionError('Index out of range')
         row, col = divmod(index, self.width())
-        return self.get_button(col, row)
+        return self.get_button(row, col)
 
     def __len__(self):
         return self.width() * self.height()
 
     def iterbuttons(self):
         for j, i in product(xrange(self.height()), xrange(self.width())):
-            button = self.get_button(i, j)
+            button = self.get_button(j, i)
             yield (button, (i, j))
 
     def on_nested_control_element_value(self, value, sender):

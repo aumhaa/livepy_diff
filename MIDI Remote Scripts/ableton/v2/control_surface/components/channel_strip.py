@@ -2,7 +2,7 @@
 from __future__ import absolute_import, print_function
 from itertools import chain
 import Live
-from ...base import nop, listens, liveobj_valid
+from ...base import EventObject, nop, listens, liveobj_valid
 from ..control import ButtonControl
 from ..component import Component
 from ..elements import DisplayDataSource
@@ -63,7 +63,7 @@ class ChannelStripComponent(Component):
         self._invert_mute_feedback = False
         self._track_name_data_source = DisplayDataSource()
         self._update_track_name_data_source()
-        self._empty_control_slots = self.register_slot_manager()
+        self._empty_control_slots = self.register_disconnectable(EventObject())
         self.__on_selected_track_changed.subject = self.song.view
 
         def make_property_slot(name, alias = None):

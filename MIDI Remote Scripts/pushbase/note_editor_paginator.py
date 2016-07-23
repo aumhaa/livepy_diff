@@ -1,9 +1,9 @@
 
 from __future__ import absolute_import, print_function
-from ableton.v2.base import forward_property, SlotManager, listens, listens_group
+from ableton.v2.base import forward_property, listens, listens_group
 from .loop_selector_component import Paginator
 
-class NoteEditorPaginator(Paginator, SlotManager):
+class NoteEditorPaginator(Paginator):
 
     def __init__(self, note_editors = None, *a, **k):
         super(NoteEditorPaginator, self).__init__(*a, **k)

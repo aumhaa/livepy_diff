@@ -1,11 +1,11 @@
 
 from __future__ import absolute_import, print_function
-from ...base import SlotManager
+from ...base import EventObject
 from ..input_control_element import InputControlElement, MIDI_INVALID_TYPE
 from .button import ButtonElement
 from .slider import SliderElement
 
-class ButtonSliderElement(SliderElement, SlotManager):
+class ButtonSliderElement(SliderElement):
     """ Class representing a set of buttons used as a slider """
     _last_sent_value = -1
 
@@ -16,7 +16,7 @@ class ButtonSliderElement(SliderElement, SlotManager):
         SliderElement.__init__(self, MIDI_INVALID_TYPE, 0, 0)
         self._parameter_value_slot = self.register_slot(None, self._on_parameter_changed, 'value')
         self._buttons = buttons
-        self._button_slots = self.register_slot_manager()
+        self._button_slots = self.register_disconnectable(EventObject())
         for button in self._buttons:
             raise button != None or AssertionError
             raise isinstance(button, ButtonElement) or AssertionError

@@ -114,7 +114,7 @@ class DeviceNavigationComponent(CompoundComponent):
             return
         self.disconnect_disconnectable(self._current_node)
         self._current_node = node
-        self.register_slot_manager(node)
+        self.register_disconnectable(node)
         self._on_children_changed_in_node.subject = node
         self._on_selected_child_changed_in_node.subject = node
         self._on_state_changed_in_node.subject = node
@@ -227,7 +227,7 @@ class DeviceNavigationComponent(CompoundComponent):
 
     def _update_hotswap_target(self):
         try:
-            browser = self.application().browser
+            browser = self.application.browser
             if liveobj_valid(self.selected_object) and liveobj_valid(browser.hotswap_target):
                 browser.hotswap_target = self.selected_object
         except RuntimeError:

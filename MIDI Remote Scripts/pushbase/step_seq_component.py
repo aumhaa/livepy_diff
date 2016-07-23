@@ -8,9 +8,15 @@ from .loop_selector_component import LoopSelectorComponent
 from .playhead_component import PlayheadComponent
 from .note_editor_paginator import NoteEditorPaginator
 from .matrix_maps import PLAYHEAD_FEEDBACK_CHANNELS
+from .step_duplicator import StepDuplicatorComponent
 
 class StepSeqComponent(CompoundComponent):
-    """ Step Sequencer Component """
+    """
+    This component represents one of the sequencing mechanisms for Push, which has one
+    NoteEditorComponent associated with a single pitch. The component mostly manages
+    distributing control elements to sub-components, which then provide the logic for
+    this layout.
+    """
 
     def __init__(self, clip_creator = None, skin = None, grid_resolution = None, note_editor_component = None, instrument_component = None, *a, **k):
         super(StepSeqComponent, self).__init__(*a, **k)
@@ -19,13 +25,12 @@ class StepSeqComponent(CompoundComponent):
         raise instrument_component is not None or AssertionError
         raise note_editor_component is not None or AssertionError
         self._grid_resolution = grid_resolution
-        self._note_editor, self._loop_selector, self._big_loop_selector = self.register_components(note_editor_component, LoopSelectorComponent(clip_creator=clip_creator), LoopSelectorComponent(clip_creator=clip_creator, measure_length=2.0))
+        self._note_editor, self._loop_selector = self.register_components(note_editor_component, LoopSelectorComponent(clip_creator=clip_creator))
         self._instrument = instrument_component
         self._paginator = NoteEditorPaginator([self._note_editor])
-        self._big_loop_selector.set_enabled(False)
-        self._big_loop_selector.set_paginator(self._paginator)
+        self._step_duplicator = self.register_component(StepDuplicatorComponent())
+        self._note_editor.set_step_duplicator(self._step_duplicator)
         self._loop_selector.set_paginator(self._paginator)
-        self._note_editor_matrix = None
         self._on_pressed_pads_changed.subject = self._instrument
         self._on_selected_note_changed.subject = self._instrument
         self._on_detail_clip_changed.subject = self.song.view
@@ -76,10 +81,6 @@ class StepSeqComponent(CompoundComponent):
     def set_solo_button(self, button):
         self._instrument.set_solo_button(button)
 
-    def set_shift_button(self, button):
-        self._big_loop_selector.set_select_button(button)
-        self._on_shift_value.subject = button
-
     def set_delete_button(self, button):
         self._instrument.set_delete_button(button)
 
@@ -97,14 +98,12 @@ class StepSeqComponent(CompoundComponent):
 
     def set_follow_button(self, button):
         self._loop_selector.set_follow_button(button)
-        self._big_loop_selector.set_follow_button(button)
 
     def set_duplicate_button(self, button):
-        self._instrument.duplicate_button.set_control_element(button)
+        self._step_duplicator.button.set_control_element(button)
 
     def set_button_matrix(self, matrix):
-        self._note_editor_matrix = matrix
-        self._update_note_editor_matrix()
+        self._note_editor.set_button_matrix(matrix)
 
     def set_quantization_buttons(self, buttons):
         self._grid_resolution.set_buttons(buttons)
@@ -134,13 +133,7 @@ class StepSeqComponent(CompoundComponent):
         self._detail_clip = clip
         self._note_editor.set_detail_clip(clip)
         self._loop_selector.set_detail_clip(clip)
-        self._big_loop_selector.set_detail_clip(clip)
         self._playhead_component.set_clip(self._detail_clip)
-
-    @listens('value')
-    def _on_shift_value(self, value):
-        if self.is_enabled():
-            self._update_note_editor_matrix(enable_big_loop_selector=value and not self._loop_selector.is_following)
 
     @listens('selected_note')
     def _on_selected_note_changed(self):
@@ -151,15 +144,3 @@ class StepSeqComponent(CompoundComponent):
     @listens('pressed_pads')
     def _on_pressed_pads_changed(self):
         self._note_editor.modify_all_notes_enabled = bool(self._instrument.pressed_pads)
-
-    def _update_note_editor_matrix(self, enable_big_loop_selector = False):
-        if enable_big_loop_selector:
-            self._note_editor.set_enabled(False)
-            self._note_editor.set_button_matrix(None)
-            self._big_loop_selector.set_enabled(True)
-            self._big_loop_selector.set_loop_selector_matrix(self._note_editor_matrix)
-        else:
-            self._big_loop_selector.set_enabled(False)
-            self._big_loop_selector.set_loop_selector_matrix(None)
-            self._note_editor.set_enabled(True)
-            self._note_editor.set_button_matrix(self._note_editor_matrix)

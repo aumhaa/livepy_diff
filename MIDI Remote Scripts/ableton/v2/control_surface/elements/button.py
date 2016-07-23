@@ -1,7 +1,7 @@
 
 from __future__ import absolute_import, print_function
 import Live
-from ...base import BooleanContext, const, has_event, listens, SlotManager
+from ...base import BooleanContext, const, has_event, listens
 from ..input_control_element import InputControlElement, MIDI_CC_TYPE
 from ..skin import Skin
 
@@ -63,7 +63,7 @@ class ButtonElementMixin(object):
         self.send_value(OFF_VALUE)
 
 
-class ButtonElement(InputControlElement, ButtonElementMixin, SlotManager):
+class ButtonElement(InputControlElement, ButtonElementMixin):
     """
     Class representing a button a the controller
     """

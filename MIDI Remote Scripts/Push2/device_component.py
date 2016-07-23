@@ -1,7 +1,7 @@
 
 from __future__ import absolute_import, print_function
 from functools import partial
-from ableton.v2.base import SlotError, const, listenable_property, listens, liveobj_valid
+from ableton.v2.base import EventError, const, listenable_property, listens, liveobj_valid
 from ableton.v2.control_surface.control import control_list, ButtonControl
 from ableton.v2.control_surface.components.device import DeviceProvider as DeviceProviderBase
 from pushbase.device_chain_utils import is_simpler
@@ -150,5 +150,5 @@ class DeviceComponent(DeviceComponentBase):
         super(DeviceComponent, self)._setup_bank(device, bank_factory=create_device_bank_with_options)
         try:
             self.__on_options_changed.subject = self._bank
-        except SlotError:
+        except EventError:
             pass

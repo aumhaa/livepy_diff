@@ -5,7 +5,7 @@ from functools import partial
 import Live.DrumPad
 import Live.Song
 import Live.Track
-from ableton.v2.base import compose, find_if, flatten, index_if, in_range, listens, liveobj_valid, second, SlotManager, Subject
+from ableton.v2.base import compose, find_if, flatten, index_if, in_range, listens, liveobj_valid, second, EventObject
 from ableton.v2.control_surface.components import select_and_appoint_device
 from pushbase import consts
 DeviceType = Live.Device.DeviceType
@@ -47,7 +47,7 @@ def make_navigation_node(model_object, is_entering = True, session_ring = None, 
     return node
 
 
-class NavigationNode(SlotManager, Subject):
+class NavigationNode(EventObject):
     """
     Navigation nodes provide a generic and observable interface for
     tree-like datastructures in the model. It can be used to implement
@@ -99,12 +99,6 @@ class NavigationNode(SlotManager, Subject):
         if selected_child_index == None and self.children:
             self.selected_child = 0
         self.notify_selected_child(self.selected_child)
-
-    def disconnect(self):
-        self.clear_children_listeners()
-        self.clear_selected_child_listeners()
-        self.clear_state_listeners()
-        super(NavigationNode, self).disconnect()
 
 
 class ModelNode(NavigationNode):
@@ -209,9 +203,9 @@ class ChainNode(ModelNode):
         self._device_bank_registry = device_bank_registry
         self._on_devices_changed_in_live.subject = self._object
         self._on_selected_device_changed_in_live.subject = self._get_track().view
-        self._child_name_slots = self.register_slot_manager()
-        self._child_state_slots = self.register_slot_manager()
-        self._selected_drum_pad_slots = self.register_slot_manager()
+        self._child_name_slots = self.register_disconnectable(EventObject())
+        self._child_state_slots = self.register_disconnectable(EventObject())
+        self._selected_drum_pad_slots = self.register_disconnectable(EventObject())
         self._update_children()
         self._update_selected_child()
 

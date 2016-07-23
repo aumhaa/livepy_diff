@@ -1,6 +1,6 @@
 
 from __future__ import absolute_import, print_function
-from ableton.v2.base import Subject, index_if, listenable_property, listens, liveobj_valid, find_if
+from ableton.v2.base import EventObject, index_if, listenable_property, listens, liveobj_valid, find_if
 from ableton.v2.control_surface import CompoundComponent
 from ableton.v2.control_surface.control import control_matrix
 from ableton.v2.control_surface.components import PlayableComponent, Slideable, SlideComponent
@@ -11,9 +11,7 @@ from .pad_control import PadControl
 from .slideable_touch_strip_component import SlideableTouchStripComponent
 DEFAULT_SCALE = SCALES[0]
 
-class NoteLayout(Subject):
-    is_horizontal = listenable_property.managed(True)
-    interval = listenable_property.managed(3)
+class NoteLayout(EventObject):
 
     def __init__(self, song = None, preferences = dict(), *a, **k):
         raise liveobj_valid(song) or AssertionError
@@ -23,6 +21,8 @@ class NoteLayout(Subject):
         self._preferences = preferences
         self._is_in_key = self._preferences.setdefault('is_in_key', True)
         self._is_fixed = self._preferences.setdefault('is_fixed', False)
+        self._interval = self._song.get_data('push-note-layout-interval', 3)
+        self._is_horizontal = self._song.get_data('push-note-layout-horizontal', True)
 
     @property
     def notes(self):
@@ -66,6 +66,28 @@ class NoteLayout(Subject):
         self._is_fixed = is_fixed
         self._preferences['is_fixed'] = self._is_fixed
         self.notify_is_fixed(self._is_fixed)
+
+    @listenable_property
+    def interval(self):
+        return self._interval
+
+    @interval.setter
+    def interval(self, interval):
+        if interval != self._interval:
+            self._interval = interval
+            self._song.set_data('push-note-layout-interval', interval)
+            self.notify_interval(interval)
+
+    @listenable_property
+    def is_horizontal(self):
+        return self._is_horizontal
+
+    @is_horizontal.setter
+    def is_horizontal(self, is_horizontal):
+        if is_horizontal != self._is_horizontal:
+            self._is_horizontal = is_horizontal
+            self._song.set_data('push-note-layout-horizontal', is_horizontal)
+            self.notify_is_horizontal(is_horizontal)
 
     def _get_scale_from_name(self, name):
         return find_if(lambda scale: scale.name == name, SCALES) or DEFAULT_SCALE

@@ -116,11 +116,11 @@ class QuantizationComponent(CompoundComponent, Messenger):
         self._settings.set_enabled(False)
         self._cancel_quantize = False
 
-    def quantize_pitch(self, note):
+    def quantize_pitch(self, note, source = None):
         clip = self.song.view.detail_clip
         if clip:
             clip.quantize_pitch(note, self._settings.quantize_to, self._settings.quantize_amount)
-            self.show_notification(MessageBoxText.QUANTIZE_CLIP_PITCH % dict(amount=quantize_amount_to_string(self._settings.quantize_amount), to=self._settings.selected_quantization_name))
+            self.show_notification(MessageBoxText.QUANTIZE_CLIP_PITCH % dict(source=source, amount=quantize_amount_to_string(self._settings.quantize_amount), to=self._settings.selected_quantization_name))
         self._cancel_quantize = True
 
     @action_button.pressed_delayed

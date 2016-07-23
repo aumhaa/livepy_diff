@@ -2,7 +2,7 @@
 from __future__ import absolute_import, print_function
 import re
 from functools import partial
-from ableton.v2.base import Slot, SlotError, SlotManager, Subject, find_if, listenable_property, listens, liveobj_valid
+from ableton.v2.base import EventObject, Slot, EventError, find_if, listenable_property, listens, liveobj_valid
 DEVICE_TYPES_WITH_PRESET_NAME = ['InstrumentGroupDevice',
  'DrumGroupDevice',
  'AudioEffectGroupDevice',
@@ -66,7 +66,7 @@ def strip_formatted_string(str):
     return re.sub('\\s\\s+', ' ', str).strip()
 
 
-class ModelAdapter(Subject, SlotManager):
+class ModelAdapter(EventObject):
 
     def __init__(self, adaptee = None, *a, **k):
         raise liveobj_valid(adaptee) or AssertionError
@@ -77,7 +77,7 @@ class ModelAdapter(Subject, SlotManager):
         return liveobj_valid(self._adaptee)
 
     def __getattr__(self, name):
-        if name in self.__dict__:
+        if name in self.__dict__ or name in self.__class__.__dict__:
             return object.__getattribute__(self, name)
         return getattr(self._adaptee, name)
 
@@ -129,7 +129,7 @@ class DeviceParameterAdapter(ModelAdapter):
         self.register_slot(self._adaptee, self.notify_isActive, 'state')
         try:
             self.register_slot(self._adaptee, self.notify_valueItems, 'value_items')
-        except SlotError:
+        except EventError:
             pass
 
     @listenable_property
@@ -331,7 +331,7 @@ class DeviceAdapter(ModelAdapter):
     __events__ = ('is_active',)
 
     def __init__(self, *a, **k):
-        from ..device_navigation import is_drum_pad
+        from ..device_util import is_drum_pad, find_chain_or_track, find_rack
         super(DeviceAdapter, self).__init__(*a, **k)
         item = self._unwrapped_item()
         if hasattr(item, 'is_active'):
@@ -339,17 +339,24 @@ class DeviceAdapter(ModelAdapter):
         elif is_drum_pad(item):
             self.__on_is_active_changed.subject = item.canonical_parent
             self.__on_mute_changed.subject = item
+        if hasattr(item, 'name'):
+            self.__on_name_changed.subject = item
+        self._chain = find_chain_or_track(item)
+        self._rack_chain = find_chain_or_track(find_rack(item))
+        self.__on_chain_color_index_changed.subject = self._chain
+        self.__on_rack_color_index_changed.subject = self._rack_chain
 
     def _unwrapped_item(self):
         return getattr(self._adaptee, 'item', self._adaptee)
 
-    @property
-    def name(self):
+    @listenable_property
+    def navigation_name(self):
         item = self._unwrapped_item()
+        name = getattr(item, 'name', '')
         if hasattr(item, 'class_name') and item.class_name in DEVICE_TYPES_WITH_PRESET_NAME:
-            return item.name
+            return name
         else:
-            return getattr(item, 'class_display_name', item.name)
+            return getattr(item, 'class_display_name', name)
 
     @property
     def class_name(self):
@@ -383,9 +390,33 @@ class DeviceAdapter(ModelAdapter):
     def __on_mute_changed(self):
         self.notify_is_active()
 
+    @listens('name')
+    def __on_name_changed(self):
+        self.notify_navigation_name()
+
     @property
     def icon(self):
         return getattr(self._adaptee, 'icon', '')
+
+    @listenable_property
+    def chain_color_index(self):
+        if liveobj_valid(self._chain):
+            return self._chain.color_index
+        return -1
+
+    @listens('color_index')
+    def __on_chain_color_index_changed(self):
+        self.notify_chain_color_index()
+
+    @listenable_property
+    def rack_color_index(self):
+        if liveobj_valid(self._rack_chain):
+            return self._rack_chain.color_index
+        return -1
+
+    @listens('color_index')
+    def __on_rack_color_index_changed(self):
+        self.notify_rack_color_index()
 
 
 class TrackAdapter(ModelAdapter):
@@ -397,9 +428,14 @@ class TrackAdapter(ModelAdapter):
             self.__on_mute_changed.subject = self._adaptee
             self.__on_solo_changed.subject = self._adaptee
             self.__on_muted_via_solo_changed.subject = self._adaptee
+        self.has_playing_clip = False
+        self._update_has_playing_clip()
+        if hasattr(self._adaptee, 'playing_slot_index'):
+            self.__on_playing_slot_index_changed.subject = self._adaptee
+            self._update_playing_clip_listeners()
         try:
             self.register_slot(self._adaptee, self.notify_colorIndex, 'color_index')
-        except SlotError:
+        except EventError:
             pass
 
         try:
@@ -409,17 +445,17 @@ class TrackAdapter(ModelAdapter):
 
         try:
             self.register_slot(self._adaptee, self.notify_isFrozen, 'is_frozen')
-        except SlotError:
+        except EventError:
             pass
 
         try:
             self.register_slot(self._adaptee, self.notify_arm, 'arm')
-        except SlotError:
+        except EventError:
             pass
 
         try:
             self.register_slot(self._adaptee, self.notify_outputRouting, 'current_output_routing')
-        except SlotError:
+        except EventError:
             pass
 
     @property
@@ -477,6 +513,48 @@ class TrackAdapter(ModelAdapter):
     def __on_muted_via_solo_changed(self):
         self.notify_activated()
 
+    @listens('playing_slot_index')
+    def __on_playing_slot_index_changed(self):
+        self.notify_playingClipPosition()
+        self._update_playing_clip_listeners()
+        self._update_has_playing_clip()
+
+    def _update_has_playing_clip(self):
+        has_playing_clip = self._adaptee.playing_slot_index >= 0 if hasattr(self._adaptee, 'playing_slot_index') else False
+        if has_playing_clip != self.has_playing_clip:
+            self.has_playing_clip = has_playing_clip
+            self.notify_hasPlayingClip()
+
+    @listens('playing_position')
+    def __on_playing_clip_play_position_changed(self):
+        self.notify_playingClipPosition()
+
+    @listens('loop_start')
+    def __on_playing_clip_loop_start_changed(self):
+        self.notify_playingClipPosition()
+
+    @listens('loop_end')
+    def __on_playing_clip_loop_end_changed(self):
+        self.notify_playingClipPosition()
+
+    def _playing_clip_slot(self):
+        if hasattr(self._adaptee, 'playing_slot_index'):
+            try:
+                if self._adaptee.playing_slot_index >= 0:
+                    return self._adaptee.clip_slots[self._adaptee.playing_slot_index]
+            except RuntimeError:
+                pass
+
+    def _playing_clip(self):
+        playing_clip_slot = self._playing_clip_slot()
+        if playing_clip_slot is not None:
+            return playing_clip_slot.clip
+
+    def _update_playing_clip_listeners(self):
+        self.__on_playing_clip_play_position_changed.subject = self._playing_clip()
+        self.__on_playing_clip_loop_start_changed.subject = self._playing_clip()
+        self.__on_playing_clip_loop_end_changed.subject = self._playing_clip()
+
     @staticmethod
     def _convert_color_index(color_index):
         from ..colors import UNCOLORED_INDEX
@@ -523,6 +601,18 @@ class TrackAdapter(ModelAdapter):
     def outputRouting(self):
         return getattr(self._adaptee, 'current_output_routing', '')
 
+    @listenable_property
+    def hasPlayingClip(self):
+        return self.has_playing_clip
+
+    @listenable_property
+    def playingClipPosition(self):
+        playing_clip = self._playing_clip()
+        if liveobj_valid(playing_clip):
+            return (playing_clip.playing_position - playing_clip.loop_start) / (playing_clip.loop_end - playing_clip.loop_start)
+        else:
+            return 0.0
+
 
 class TrackListAdapter(VisibleAdapter):
     __events__ = ('selectedTrack',)
@@ -539,7 +629,7 @@ class BrowserItemAdapter(ModelAdapter):
         return getattr(self._adaptee, 'icon', '')
 
 
-class BrowserListWrapper(SlotManager):
+class BrowserListWrapper(EventObject):
     """
     Custom object wrapper that takes care of binding a browser list and serializing it.
     This is necessary to greatly improve performance and avoid unnecessary wrapping of
@@ -581,3 +671,12 @@ class LiveDialogAdapter(VisibleAdapter):
         if text is not None:
             return strip_formatted_string(text)
         return ''
+
+
+class RoutingAdapter(VisibleAdapter):
+    __events__ = ('routingTypeList', 'routingChannelList')
+
+    def __init__(self, *a, **k):
+        super(RoutingAdapter, self).__init__(*a, **k)
+        self._alias_observable_property('routing_type_list', 'routingTypeList', lambda self_: [self_._adaptee.routing_type_list])
+        self._alias_observable_property('routing_channel_list', 'routingChannelList', lambda self_: [self_._adaptee.routing_channel_list])

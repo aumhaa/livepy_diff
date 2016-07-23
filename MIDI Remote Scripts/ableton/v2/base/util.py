@@ -194,7 +194,7 @@ def monkeypatch_extend(target, name = None):
     to super in a diamond-shaped hierarchy [1]).  If
     monkeypatch_extend in a metaclass, this can be worked around by
     injecting a cooperative definition of the method in Deriv's
-    dictionary. An example of this can be seen in Slot.SubjectMeta
+    dictionary. An example of this can be seen in slot.EventObjectMeta
     
     [1] A definition of cooperative method http://sinusoid.es/jpblib/coop.html
     """

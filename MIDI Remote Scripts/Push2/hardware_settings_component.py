@@ -30,6 +30,10 @@ class HardwareSettingsComponent(Component):
         self._led_brightness_timer.stop()
         self._led_brightness_timer = None
 
+    def hardware_initialized(self):
+        self.fade_in_led_brightness(self._settings.led_brightness)
+        self._display_brightness_element.send_value(self._settings.display_brightness)
+
     def fade_in_led_brightness(self, target_brightness):
         raise MIN_BRIGHTNESS_FOR_FADE_IN <= target_brightness <= self._settings.max_led_brightness or AssertionError
         self._led_brightness = MIN_BRIGHTNESS_FOR_FADE_IN

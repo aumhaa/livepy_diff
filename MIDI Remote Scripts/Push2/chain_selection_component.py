@@ -1,9 +1,9 @@
 
 from __future__ import absolute_import, print_function
-from ableton.v2.base import SlotManager, listens, liveobj_valid
+from ableton.v2.base import listens, liveobj_valid
 from .item_lister_component import ItemListerComponent, ItemProvider
 
-class ChainProvider(SlotManager, ItemProvider):
+class ChainProvider(ItemProvider):
 
     def __init__(self, *a, **k):
         super(ChainProvider, self).__init__(*a, **k)

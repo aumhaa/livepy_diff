@@ -93,12 +93,13 @@ class TrackListComponent(ModesComponent, Messenger):
     __events__ = ('mute_solo_stop_cancel_action_performed',)
     track_action_buttons = control_list(ButtonControl, control_count=8)
 
-    def __init__(self, tracks_provider = None, trigger_recording_on_release_callback = nop, *a, **k):
+    def __init__(self, tracks_provider = None, trigger_recording_on_release_callback = nop, color_chooser = None, *a, **k):
         raise tracks_provider is not None or AssertionError
         super(TrackListComponent, self).__init__(*a, **k)
         self.locked_mode = None
         self._button_handler = self._select_mixable
         self._button_feedback_provider = mixable_button_color
+        self._color_chooser = color_chooser
         self._setup_action_mode('select', handler=self._select_mixable)
         self._setup_action_mode('lock_override', handler=self._select_mixable)
         self._setup_action_mode('delete', handler=self._delete_mixable)
@@ -107,6 +108,7 @@ class TrackListComponent(ModesComponent, Messenger):
         self._setup_action_mode('mute', handler=partial(toggle_mixable_mute, song=self.song))
         self._setup_action_mode('solo', handler=partial(toggle_mixable_solo, song=self.song))
         self._setup_action_mode('stop', handler=self._stop_track_clip, feedback_provider=stop_clip_button_color)
+        self._setup_action_mode('select_color', handler=self._select_mixable_color, exit_handler=partial(self._select_mixable_color, None))
         self.selected_mode = 'select'
         self._can_trigger_recording_callback = trigger_recording_on_release_callback
         self._track_provider = tracks_provider
@@ -132,8 +134,8 @@ class TrackListComponent(ModesComponent, Messenger):
         selected_track = song.view.selected_track
         return list(tracks).index(selected_track)
 
-    def _setup_action_mode(self, name, handler, feedback_provider = mixable_button_color):
-        self.add_mode(name, partial(self._enter_action_mode, handler=handler, feedback_provider=feedback_provider), behaviour=TrackListBehaviour())
+    def _setup_action_mode(self, name, handler, exit_handler = nop, feedback_provider = mixable_button_color):
+        self.add_mode(name, [(partial(self._enter_action_mode, handler=handler, feedback_provider=feedback_provider), exit_handler)], behaviour=TrackListBehaviour())
         self.get_mode_button(name).mode_selected_color = 'DefaultButton.Transparent'
         self.get_mode_button(name).mode_unselected_color = 'DefaultButton.Transparent'
 
@@ -258,6 +260,10 @@ class TrackListComponent(ModesComponent, Messenger):
     def _stop_track_clip(self, mixable):
         if not is_chain(mixable):
             mixable.stop_all_clips()
+
+    def _select_mixable_color(self, mixable):
+        if self._color_chooser is not None:
+            self._color_chooser.object = mixable
 
     def on_enabled_changed(self):
         super(TrackListComponent, self).on_enabled_changed()

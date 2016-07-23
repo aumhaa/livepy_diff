@@ -133,7 +133,7 @@ class DialogComponent(CompoundComponent):
         self._message_box = self.register_component(MessageBoxComponent())
         self._message_box.set_enabled(False)
         self._next_message = None
-        self._on_open_dialog_count.subject = self.application()
+        self._on_open_dialog_count.subject = self.application
         self._on_message_cancel.subject = self._message_box
 
     message_box_layer = forward_property('_message_box')('layer')
@@ -157,7 +157,7 @@ class DialogComponent(CompoundComponent):
     def _on_message_cancel(self):
         self._next_message = None
         try:
-            self.application().press_current_dialog_button(0)
+            self.application.press_current_dialog_button(0)
         except RuntimeError:
             pass
 
@@ -168,7 +168,7 @@ class DialogComponent(CompoundComponent):
         can_cancel = self._next_message != None
         self._message_box.text = message
         self._message_box.can_cancel = can_cancel
-        self._message_box.set_enabled(self.application().open_dialog_count > 0 or not open_dialog_changed and self._next_message)
+        self._message_box.set_enabled(self.application.open_dialog_count > 0 or not open_dialog_changed and self._next_message)
 
 
 class InfoComponent(BackgroundComponent):

@@ -2,7 +2,7 @@
 from __future__ import absolute_import, print_function
 from itertools import imap
 from contextlib import contextmanager
-from ...base import const, depends, find_if, is_iterable, lazy_attribute, nop, ProxyBase, SlotManager, Subject, listens, task
+from ...base import const, depends, find_if, is_iterable, lazy_attribute, nop, EventObject, ProxyBase, listens, task
 from .. import defaults
 from ..compound_element import CompoundElement
 from ..input_control_element import ParameterSlot
@@ -144,7 +144,7 @@ class ComboElement(WrapperElement):
         return self.owns_control_element(mod) and mod.is_pressed()
 
 
-class EventElement(NotifyingControlElement, SlotManager, ProxyBase, ButtonElementMixin):
+class EventElement(NotifyingControlElement, ProxyBase, ButtonElementMixin):
     """
     Translate an arbitrary subject event into a notifying control
     element interface.
@@ -152,12 +152,12 @@ class EventElement(NotifyingControlElement, SlotManager, ProxyBase, ButtonElemen
     event_value = 1
     _subject = None
 
-    def __init__(self, subject = None, event = None, *a, **k):
+    def __init__(self, subject = None, event_name = None, *a, **k):
         raise subject is not None or AssertionError
-        raise event is not None or AssertionError
+        raise event_name is not None or AssertionError
         super(EventElement, self).__init__(*a, **k)
         self._subject = subject
-        self.register_slot(subject, self._on_event, event)
+        self.register_slot(subject, self._on_event, event_name)
 
     @property
     def proxied_object(self):
@@ -193,7 +193,7 @@ class EventElement(NotifyingControlElement, SlotManager, ProxyBase, ButtonElemen
         set_light(*a, **k)
 
 
-class DoublePressContext(Subject):
+class DoublePressContext(EventObject):
     """
     Determines the context of double press.  Every double press element
     in the same scope can not be interleaved -- i.e. let buttons B1

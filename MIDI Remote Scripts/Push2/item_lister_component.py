@@ -1,11 +1,11 @@
 
 from __future__ import absolute_import, print_function
 from itertools import izip
-from ableton.v2.base import forward_property, listens, SlotManager, Subject
+from ableton.v2.base import forward_property, listens, EventObject
 from ableton.v2.control_surface import Component, CompoundComponent
 from ableton.v2.control_surface.control import control_list, ButtonControl
 
-class SimpleItemSlot(SlotManager, Subject):
+class SimpleItemSlot(EventObject):
     __events__ = ('name',)
 
     def __init__(self, item = None, name = '', nesting_level = -1, icon = '', *a, **k):
@@ -56,7 +56,7 @@ class ItemSlot(SimpleItemSlot):
     _live_ptr = forward_property('_item')('_live_ptr')
 
 
-class ItemProvider(Subject):
+class ItemProvider(EventObject):
     """ General interface to implement for providers used in ItemListerComponent """
     __events__ = ('items', 'selected_item')
 
@@ -208,7 +208,8 @@ class ScrollOverlayComponent(CompoundComponent):
 
 
 class ItemListerComponent(ItemListerComponentBase):
-    select_buttons = control_list(ButtonControl, unavailable_color='ItemNavigation.NoItem')
+    color_class_name = 'ItemNavigation'
+    select_buttons = control_list(ButtonControl, unavailable_color=color_class_name + '.NoItem')
 
     def __init__(self, *a, **k):
         super(ItemListerComponent, self).__init__(*a, **k)
@@ -241,8 +242,8 @@ class ItemListerComponent(ItemListerComponentBase):
 
     def _color_for_button(self, button_index, is_selected):
         if is_selected:
-            return 'ItemNavigation.ItemSelected'
-        return 'ItemNavigation.ItemNotSelected'
+            return self.color_class_name + '.ItemSelected'
+        return self.color_class_name + '.ItemNotSelected'
 
     @select_buttons.pressed
     def select_buttons(self, button):

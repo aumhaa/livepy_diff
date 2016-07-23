@@ -1,7 +1,7 @@
 
 from __future__ import absolute_import, print_function
 import Live
-from ableton.v2.base import SlotManager, in_range, nop, NamedTuple, clamp
+from ableton.v2.base import in_range, nop, NamedTuple, clamp
 from ableton.v2.control_surface import InputControlElement, MIDI_PB_TYPE
 MAX_PITCHBEND = 16384.0
 
@@ -88,7 +88,7 @@ class DraggingBehaviour(SelectingBehaviour):
 DEFAULT_BEHAVIOUR = SimpleBehaviour()
 MODWHEEL_BEHAVIOUR = SimpleBehaviour(mode=TouchStripModes.MODWHEEL)
 
-class TouchStripElement(InputControlElement, SlotManager):
+class TouchStripElement(InputControlElement):
     """
     Represents the Push TouchStrip.
     """

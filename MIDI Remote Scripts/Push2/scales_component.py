@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function
 from collections import namedtuple
 from math import ceil
 from functools import partial
-from ableton.v2.base import clamp, listens, listenable_property
+from ableton.v2.base import clamp, index_if, listens, listenable_property
 from ableton.v2.control_surface import Component
 from ableton.v2.control_surface.control import ButtonControl, RadioButtonControl, StepEncoderControl, ToggleButtonControl, control_list
 from pushbase.melodic_pattern import ROOT_NOTES, SCALES, NOTE_NAMES
@@ -41,8 +41,10 @@ class ScalesComponent(Component):
         self.fixed_toggle_button.connect_property(note_layout, 'is_fixed')
         self.__on_root_note_changed.subject = self._note_layout
         self.__on_scale_changed.subject = self._note_layout
+        self.__on_interval_changed.subject = self._note_layout
         self.__on_root_note_changed(note_layout.root_note)
         self.__on_scale_changed(note_layout.scale)
+        self.__on_interval_changed(self._note_layout.interval)
 
     def _set_selected_scale_index(self, index):
         index = clamp(index, 0, len(self._scale_list) - 1)
@@ -113,11 +115,7 @@ class ScalesComponent(Component):
     @layout_encoder.value
     def layout_encoder(self, value, encoder):
         index = clamp(self._selected_layout_index + value, 0, len(self._layouts) - 1)
-        if index != self._selected_layout_index:
-            self._selected_layout_index = index
-            interval = self._layouts[index].interval
-            self._note_layout.interval = interval
-            self.notify_selected_layout_index()
+        self.selected_layout_index = index
 
     @property
     def layout_names(self):
@@ -126,6 +124,14 @@ class ScalesComponent(Component):
     @listenable_property
     def selected_layout_index(self):
         return self._selected_layout_index
+
+    @selected_layout_index.setter
+    def selected_layout_index(self, index):
+        if index != self._selected_layout_index:
+            self._selected_layout_index = index
+            interval = self._layouts[index].interval
+            self._note_layout.interval = interval
+            self.notify_selected_layout_index()
 
     @direction_encoder.value
     def direction_encoder(self, value, encoder):
@@ -141,6 +147,11 @@ class ScalesComponent(Component):
 
     def _update_horizontal_navigation(self):
         self.horizontal_navigation = self.right_button.is_pressed or self.left_button.is_pressed
+
+    @listens('interval')
+    def __on_interval_changed(self, interval):
+        index = index_if(lambda layout: layout.interval == interval, self._layouts)
+        self.selected_layout_index = index
 
 
 class ScalesEnabler(Component):

@@ -1,7 +1,7 @@
 
 from __future__ import absolute_import, print_function
 from Live import DeviceParameter
-from ableton.v2.base import listenable_property, liveobj_valid, nop, Slot, SlotError, SlotManager, Subject
+from ableton.v2.base import listenable_property, liveobj_valid, nop, EventError, EventObject, Slot
 
 def identity(value, _parent):
     return value
@@ -17,7 +17,7 @@ def to_percentage_display(value):
     return unicode(percentage_str + ' %')
 
 
-class InternalParameterBase(Subject):
+class InternalParameterBase(EventObject):
     is_enabled = True
     is_quantized = False
 
@@ -137,7 +137,16 @@ class InternalParameter(InternalParameterBase):
         return self._display_value_conversion(self.value)
 
 
-class WrappingParameter(InternalParameter, SlotManager):
+class PropertyHostMixin(object):
+    """
+    This is only used to document the set_property_host API
+    """
+
+    def set_property_host(self, new_host):
+        raise NotImplementedError
+
+
+class WrappingParameter(InternalParameter, PropertyHostMixin):
 
     def __init__(self, property_host = None, source_property = None, from_property_value = None, to_property_value = None, display_value_conversion = nop, value_items = [], *a, **k):
         raise source_property is not None or AssertionError
@@ -147,7 +156,7 @@ class WrappingParameter(InternalParameter, SlotManager):
         self._source_property = source_property
         self._value_items = value_items
         self.set_scaling_functions(to_property_value, from_property_value)
-        self._property_slot = self.register_slot(Slot(listener=self.notify_value, event=source_property, subject=self._property_host))
+        self._property_slot = self.register_slot(Slot(listener=self.notify_value, event_name=source_property, subject=self._property_host))
 
     def set_property_host(self, new_host):
         self._property_host = new_host
@@ -194,17 +203,17 @@ class WrappingParameter(InternalParameter, SlotManager):
         return self._value_items
 
 
-class EnumWrappingParameter(InternalParameterBase, SlotManager):
+class EnumWrappingParameter(InternalParameterBase, PropertyHostMixin):
     is_enabled = True
     is_quantized = True
 
-    def __init__(self, parent = None, index_property_host = None, values_property_host = None, values_property = None, index_property = None, value_type = int, to_index_conversion = None, from_index_conversion = None, *a, **k):
+    def __init__(self, parent = None, index_property_host = None, values_host = None, values_property = None, index_property = None, value_type = int, to_index_conversion = None, from_index_conversion = None, *a, **k):
         raise parent is not None or AssertionError
         raise values_property is not None or AssertionError
         raise index_property is not None or AssertionError
         super(EnumWrappingParameter, self).__init__(*a, **k)
         self._parent = parent
-        self._values_property_host = values_property_host
+        self._values_host = values_host
         self._index_property_host = index_property_host
         self._values_property = values_property
         self._index_property = index_property
@@ -213,11 +222,11 @@ class EnumWrappingParameter(InternalParameterBase, SlotManager):
         self.value_type = value_type
         self._index_property_slot = self.register_slot(index_property_host, self.notify_value, index_property)
         try:
-            self.register_slot(self._values_property_host, self.notify_value_items, values_property)
-        except SlotError:
+            self.register_slot(self._values_host, self.notify_value_items, values_property)
+        except EventError:
             pass
 
-    def set_index_property_host(self, new_host):
+    def set_property_host(self, new_host):
         self._index_property_host = new_host
         self._index_property_slot.subject = self._index_property_host
 
@@ -243,8 +252,8 @@ class EnumWrappingParameter(InternalParameterBase, SlotManager):
         self._set_index(new_value)
 
     def _get_values(self):
-        if liveobj_valid(self._values_property_host):
-            return getattr(self._values_property_host, self._values_property)
+        if liveobj_valid(self._values_host):
+            return getattr(self._values_host, self._values_property)
         return []
 
     def _get_index(self):

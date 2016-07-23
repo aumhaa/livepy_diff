@@ -7,7 +7,6 @@ logger = logging.getLogger(__name__)
 
 class EncoderControl(InputControl):
     TOUCH_TIME = 0.5
-    RELEASE_DELAY = 0.1
     touched = control_event('touched')
     released = control_event('released')
 
@@ -47,7 +46,6 @@ class EncoderControl(InputControl):
             self._is_touched = True
             if not is_touched:
                 self._call_listener('touched')
-            self._delayed_release_task.kill()
 
         def _release_encoder(self):
             is_touched = self._is_touched
@@ -85,17 +83,13 @@ class EncoderControl(InputControl):
                     else:
                         self._touch_encoder()
                 else:
-                    self._delayed_release_task.restart()
+                    self._release_encoder()
                     self._delayed_touch_task.kill()
                 self._cancel_timer_based_events()
 
         @lazy_attribute
         def _timer_based_release_task(self):
             return self.tasks.add(task.sequence(task.wait(EncoderControl.TOUCH_TIME), task.run(self._release_encoder)))
-
-        @lazy_attribute
-        def _delayed_release_task(self):
-            return self.tasks.add(task.sequence(task.wait(EncoderControl.RELEASE_DELAY), task.run(self._release_encoder)))
 
         @lazy_attribute
         def _delayed_touch_task(self):
@@ -107,7 +101,6 @@ class EncoderControl(InputControl):
                 self._timer_based = False
 
         def _kill_all_tasks(self):
-            self._delayed_release_task.kill()
             self._timer_based_release_task.kill()
             self._delayed_touch_task.kill()
 

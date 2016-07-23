@@ -1,6 +1,5 @@
 
 from __future__ import absolute_import, print_function
-from itertools import chain
 from ableton.v2.base import listens, liveobj_valid, listenable_property
 from ableton.v2.control_surface import CompoundComponent
 from ableton.v2.control_surface.control import EncoderControl, ToggleButtonControl
@@ -22,10 +21,19 @@ class LoopSetting(WrappingParameter):
         super(LoopSetting, self).__init__(*a, **k)
         raise self.canonical_parent is not None or AssertionError
         self._conversion = convert_beat_length_to_bars_beats_sixteenths if use_length_conversion else convert_beat_time_to_bars_beats_sixteenths
-        self.recording = False
+        self._recording = False
         self.set_property_host(self._parent)
         self.__on_clip_changed.subject = self.canonical_parent
         self.__on_clip_changed()
+
+    @property
+    def recording(self):
+        return self._recording
+
+    @recording.setter
+    def recording(self, value):
+        self._recording = value
+        self.notify_value()
 
     @listens('clip')
     def __on_clip_changed(self):
@@ -315,12 +323,25 @@ class ClipControlComponent(CompoundComponent):
         self._audio_clip_controller = self.register_component(audio_clip_controller)
         self._mode_selector = self.register_component(mode_selector)
         self._decorator_factory = decorator_factory or ClipDecoratorFactory()
+        self.__on_selected_scene_changed.subject = self.song.view
+        self.__on_selected_track_changed.subject = self.song.view
         self.__on_selected_clip_changed.subject = self.song.view
-        self.__on_selected_clip_changed()
+        self.__on_has_clip_changed.subject = self.song.view.highlighted_clip_slot
+        self._update_controller()
+
+    @listens('selected_scene')
+    def __on_selected_scene_changed(self):
+        self._update_controller()
+
+    @listens('selected_track')
+    def __on_selected_track_changed(self):
+        self._update_controller()
 
     @listens('detail_clip')
     def __on_selected_clip_changed(self):
-        self._update_controller()
+        clip = self.song.view.detail_clip
+        if not liveobj_valid(clip) or clip.is_arrangement_clip:
+            self._update_controller()
 
     def on_enabled_changed(self):
         super(ClipControlComponent, self).on_enabled_changed()
@@ -329,12 +350,17 @@ class ClipControlComponent(CompoundComponent):
     def _decorate_clip(self, clip):
         return find_decorated_object(clip, self._decorator_factory) or self._decorator_factory.decorate(clip)
 
+    @listens('has_clip')
+    def __on_has_clip_changed(self):
+        self._update_controller()
+
     def _update_controller(self):
         if self.is_enabled():
             clip = self.song.view.detail_clip
             self._update_selected_mode(clip)
             self._loop_controller.clip = self._decorate_clip(clip) if self._mode_selector.selected_mode == 'audio' else clip
             self._audio_clip_controller.clip = clip if liveobj_valid(clip) and clip.is_audio_clip else None
+            self.__on_has_clip_changed.subject = self.song.view.highlighted_clip_slot
             self.notify_clip()
 
     def _update_selected_mode(self, clip):

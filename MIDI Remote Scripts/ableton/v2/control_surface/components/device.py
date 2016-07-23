@@ -2,7 +2,7 @@
 from __future__ import absolute_import, print_function
 import Live
 from _Generic.Devices import best_of_parameter_bank, device_parameters_to_map, number_of_parameter_banks, parameter_bank_names, parameter_banks
-from ...base import depends, listenable_property, listens, listens_group, liveobj_changed, liveobj_valid, SlotManager, Subject
+from ...base import depends, listenable_property, listens, listens_group, liveobj_changed, liveobj_valid, EventObject
 from ..component import Component
 from ..elements import DisplayDataSource
 
@@ -33,7 +33,7 @@ def select_and_appoint_device(song, device_to_select, ignore_unmapped_macros = T
     song.appointed_device = appointed_device
 
 
-class DeviceProvider(Subject, SlotManager):
+class DeviceProvider(EventObject):
     """
     Provide "controlled device" to device component
     

@@ -2,7 +2,7 @@
 from __future__ import absolute_import, print_function
 from functools import partial
 import Live
-from ableton.v2.base import SlotManager, Subject, const, depends, flatten, nop, listenable_property, listens, listens_group, liveobj_changed, liveobj_valid
+from ableton.v2.base import EventObject, const, depends, flatten, nop, listenable_property, listens, listens_group, liveobj_changed, liveobj_valid
 from ableton.v2.control_surface.components import SessionRingComponent, right_align_return_tracks_track_assigner
 from ableton.v2.control_surface.components.view_control import has_next_item, next_item, TrackScroller as TrackScrollerBase, ViewControlComponent as ViewControlComponentBase
 from pushbase.device_chain_utils import find_instrument_devices
@@ -30,7 +30,7 @@ def get_all_mixer_tracks(song):
     return tracks + list(song.return_tracks)
 
 
-class SelectedMixerTrackProvider(Subject, SlotManager):
+class SelectedMixerTrackProvider(EventObject):
 
     @depends(song=None)
     def __init__(self, song = None, *a, **k):
@@ -191,7 +191,7 @@ class SessionRingTrackProvider(SessionRingComponent, ItemProvider):
         self.notify_selected_item()
 
 
-class TrackScroller(TrackScrollerBase, Subject):
+class TrackScroller(TrackScrollerBase, EventObject):
     __events__ = ('scrolled',)
 
     @depends(tracks_provider=None)

@@ -2,7 +2,7 @@
 from __future__ import absolute_import, print_function
 import Live
 from itertools import count
-from ...base import in_range, product, listens, listens_group
+from ...base import EventObject, in_range, product, listens, listens_group
 from ..compound_component import CompoundComponent
 from .scene import SceneComponent
 
@@ -24,7 +24,7 @@ class SessionComponent(CompoundComponent):
             self._stop_track_clip_buttons = None
             self._stop_clip_triggered_value = 'Session.StopClipTriggered'
             self._stop_clip_value = 'Session.StopClip'
-            self._track_slots = self.register_slot_manager()
+            self._track_slots = self.register_disconnectable(EventObject())
             self._selected_scene = self.register_component(self._create_scene())
             self._scenes = self.register_components(*[ self._create_scene() for _ in xrange(self._session_ring.num_scenes) ])
             if self._session_component_ends_initialisation:

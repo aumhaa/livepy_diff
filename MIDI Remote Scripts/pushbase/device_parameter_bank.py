@@ -1,9 +1,9 @@
 
 from __future__ import absolute_import, print_function
-from ableton.v2.base import SlotManager, Subject, find_if, listens, listens_group, listenable_property, liveobj_valid, clamp
+from ableton.v2.base import EventObject, find_if, listens, listens_group, listenable_property, liveobj_valid, clamp
 from .banking_util import PARAMETERS_KEY, MAIN_KEY, BANK_FORMAT, all_parameters
 
-class DeviceParameterBank(SlotManager, Subject):
+class DeviceParameterBank(EventObject):
 
     def __init__(self, size = None, device = None, banking_info = None, *a, **k):
         raise size is not None or AssertionError

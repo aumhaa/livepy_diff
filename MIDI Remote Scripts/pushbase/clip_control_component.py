@@ -1,7 +1,7 @@
 
 from __future__ import absolute_import, print_function
 import Live
-from ableton.v2.base import clamp, listens, liveobj_valid, nop, Subject, SlotManager, forward_property, listenable_property
+from ableton.v2.base import clamp, listens, liveobj_valid, nop, EventObject, forward_property, listenable_property
 from ableton.v2.control_surface import Component
 from ableton.v2.control_surface.control import ButtonControl, control_list, EncoderControl, StepEncoderControl
 from ableton.v2.control_surface.mode import ModesComponent
@@ -60,7 +60,7 @@ def one_bar_in_note_values((numerator, denominator), note_value = 4.0):
     return note_value * numerator / denominator
 
 
-class LoopSettingsModel(Subject, SlotManager):
+class LoopSettingsModel(EventObject):
     __events__ = ('looping', 'loop_start', 'loop_end', 'loop_length', 'position', 'start_marker')
 
     def __init__(self, song, *a, **k):
@@ -382,7 +382,7 @@ class LoopSettingsComponent(LoopSettingsControllerComponent):
             self.__on_start_marker_changed()
 
 
-class AudioClipSettingsModel(Subject, SlotManager):
+class AudioClipSettingsModel(EventObject):
     __events__ = ('pitch_fine', 'pitch_coarse', 'gain', 'warp_mode', 'warping')
 
     def __init__(self, *a, **k):

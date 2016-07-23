@@ -1,12 +1,12 @@
 
 from __future__ import absolute_import, print_function
-from ableton.v2.base import liveobj_valid, listenable_property, listens, SlotManager, Subject
+from ableton.v2.base import liveobj_valid, listenable_property, listens, EventObject
 from pushbase.decoration import DecoratorFactory, LiveObjectDecorator
 from pushbase.internal_parameter import InternalParameter
 from .decoration import find_decorated_object
 from .waveform_navigation import AudioClipWaveformNavigation
 
-class ClipPositions(Subject, SlotManager):
+class ClipPositions(EventObject):
     __events__ = ('is_recording', 'warp_markers', 'before_update_all', 'after_update_all')
     start = listenable_property.managed(0.0)
     end = listenable_property.managed(0.0)
@@ -125,7 +125,7 @@ class ZoomParameter(AudioClipWaveformNavigation, InternalParameter):
     pass
 
 
-class ClipDecoration(Subject, SlotManager, LiveObjectDecorator):
+class ClipDecoration(EventObject, LiveObjectDecorator):
     __events__ = ('zoom',)
 
     def __init__(self, *a, **k):

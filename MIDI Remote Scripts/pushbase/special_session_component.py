@@ -112,11 +112,13 @@ class DuplicateSceneComponent(Component, Messenger):
 
 class SpecialClipSlotComponent(ClipSlotComponent, Messenger):
 
-    @depends(copy_handler=const(None))
-    def __init__(self, copy_handler = None, *a, **k):
+    @depends(copy_handler=const(None), fixed_length_recording=const(None))
+    def __init__(self, copy_handler = None, fixed_length_recording = None, *a, **k):
         raise copy_handler is not None or AssertionError
+        raise fixed_length_recording is not None or AssertionError
         super(SpecialClipSlotComponent, self).__init__(*a, **k)
         self._copy_handler = copy_handler
+        self._fixed_length_recording = fixed_length_recording
 
     def _do_delete_clip(self):
         if self._clip_slot and self._clip_slot.has_clip:
@@ -130,25 +132,25 @@ class SpecialClipSlotComponent(ClipSlotComponent, Messenger):
                 self.song.view.highlighted_clip_slot = self._clip_slot
 
     def _do_duplicate_clip(self):
-        if self._use_new_copying_behaviour():
-            self._copy_handler.duplicate(self._clip_slot)
-        elif self._clip_slot and self._clip_slot.has_clip:
-            try:
-                track = self._clip_slot.canonical_parent
-                destination_slot_ix = track.duplicate_clip_slot(list(track.clip_slots).index(self._clip_slot))
-                self._on_clip_duplicated(self._clip_slot.clip, track.clip_slots[destination_slot_ix].clip)
-            except Live.Base.LimitationError:
-                self.expect_dialog(MessageBoxText.SCENE_LIMIT_REACHED)
-            except RuntimeError:
-                self.expect_dialog(MessageBoxText.CLIP_DUPLICATION_FAILED)
+        self._copy_handler.duplicate(self._clip_slot)
 
     def _on_clip_duplicated(self, source_clip, destination_clip):
         slot_name = source_clip.name
         self.show_notification(MessageBoxText.DUPLICATE_CLIP % slot_name)
 
-    def _use_new_copying_behaviour(self):
-        app = Live.Application.get_application()
-        return app.has_option('_Push2NewClipDuplication')
+    def _clip_is_recording(self):
+        return self.has_clip() and self._clip_slot.clip.is_recording
+
+    def _do_launch_clip(self, fire_state):
+        should_start_fixed_length_recording = self._fixed_length_recording.should_start_fixed_length_recording(self._clip_slot)
+        clip_is_recording = self._clip_is_recording()
+        if fire_state and not should_start_fixed_length_recording and not clip_is_recording or not fire_state:
+            super(SpecialClipSlotComponent, self)._do_launch_clip(fire_state)
+        elif should_start_fixed_length_recording:
+            track = self._clip_slot.canonical_parent
+            self._fixed_length_recording.start_recording_in_slot(track, list(track.clip_slots).index(self._clip_slot))
+        elif clip_is_recording:
+            self._fixed_length_recording.stop_recording(self._clip_slot.clip)
 
 
 class SpecialSceneComponent(SceneComponent, Messenger):
@@ -174,9 +176,10 @@ class SpecialSessionComponent(SessionComponent):
     scene_component_type = SpecialSceneComponent
     duplicate_button = ButtonControl()
 
-    def __init__(self, clip_slot_copy_handler = None, *a, **k):
+    def __init__(self, clip_slot_copy_handler = None, fixed_length_recording = None, *a, **k):
         self._clip_copy_handler = clip_slot_copy_handler or ClipSlotCopyHandler()
-        with inject(copy_handler=const(self._clip_copy_handler)).everywhere():
+        self._fixed_length_recording = fixed_length_recording
+        with inject(copy_handler=const(self._clip_copy_handler), fixed_length_recording=const(self._fixed_length_recording)).everywhere():
             super(SpecialSessionComponent, self).__init__(*a, **k)
         self._slot_launch_button = None
         self._duplicate_button = None

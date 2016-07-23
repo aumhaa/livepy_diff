@@ -1,6 +1,6 @@
 
 from __future__ import absolute_import, print_function
-from ableton.v2.base import liveobj_valid, NamedTuple, Subject
+from ableton.v2.base import liveobj_valid, NamedTuple, EventObject
 DISCRETE_PARAMETERS_DICT = {'GlueCompressor': ('Ratio', 'Attack', 'Release', 'Peak Clip In')}
 
 def is_parameter_quantized(parameter, parent_device):
@@ -24,7 +24,7 @@ class ParameterInfo(NamedTuple):
         return self._overriden_name or getattr(self.parameter, 'name', '')
 
 
-class ParameterProvider(Subject):
+class ParameterProvider(EventObject):
     __events__ = ('parameters',)
 
     @property

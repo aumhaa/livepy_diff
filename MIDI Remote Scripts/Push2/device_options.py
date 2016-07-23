@@ -1,8 +1,8 @@
 
 from __future__ import absolute_import, print_function
-from ableton.v2.base import liveobj_valid, listenable_property, listens, const, Subject, Slot, SlotManager
+from ableton.v2.base import liveobj_valid, listenable_property, listens, const, EventObject, Slot
 
-class DeviceTriggerOption(Subject):
+class DeviceTriggerOption(EventObject):
     __events__ = ('default_label',)
 
     def __init__(self, name = None, default_label = None, callback = None, is_active = None, *a, **k):
@@ -34,7 +34,7 @@ class DeviceTriggerOption(Subject):
     default_label = property(_get_default_label, _set_default_label)
 
 
-class DeviceSwitchOption(SlotManager, DeviceTriggerOption):
+class DeviceSwitchOption(DeviceTriggerOption):
 
     def __init__(self, second_label = None, parameter = None, *a, **k):
         super(DeviceSwitchOption, self).__init__(callback=self.cycle_index, *a, **k)
@@ -69,7 +69,7 @@ class DeviceSwitchOption(SlotManager, DeviceTriggerOption):
             self._parameter.value = float((self.active_index + 1.0) % 2)
 
 
-class DeviceOnOffOption(SlotManager, DeviceTriggerOption):
+class DeviceOnOffOption(DeviceTriggerOption):
     ON_LABEL = 'ON'
     OFF_LABEL = 'OFF'
 
@@ -82,7 +82,7 @@ class DeviceOnOffOption(SlotManager, DeviceTriggerOption):
             self.notify_active_index()
             self.notify_default_label()
 
-        self._property_slot = self.register_slot(Slot(subject=property_host, event=property_name, listener=notify_index_and_default_label))
+        self._property_slot = self.register_slot(Slot(subject=property_host, event_name=property_name, listener=notify_index_and_default_label))
 
     def _property_value(self):
         if liveobj_valid(self._property_host):

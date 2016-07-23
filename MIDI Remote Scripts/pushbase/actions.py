@@ -157,13 +157,19 @@ def select_clip_and_get_name_from_slot(clip_slot, song):
     return clip_name_from_clip_slot(clip_slot)
 
 
+def get_clip_name(clip):
+    if clip.name != '':
+        return clip.name
+    return '[unnamed]'
+
+
 def clip_name_from_clip_slot(clip_slot):
     clip_name = '[none]'
     if liveobj_valid(clip_slot):
         clip = clip_slot.clip
         clip_name = '[empty slot]'
         if liveobj_valid(clip):
-            clip_name = clip.name if clip.name != '' else '[unnamed]'
+            clip_name = get_clip_name(clip)
     return clip_name
 
 

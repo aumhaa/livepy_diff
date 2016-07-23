@@ -1,6 +1,6 @@
 
 from __future__ import absolute_import, print_function
-from ableton.v2.base import depends, listens, SlotManager
+from ableton.v2.base import depends, listens
 from .parameter_provider import ParameterProvider
 TRACK_PARAMETER_NAMES = ('Volume', 'Pan', 'Send A', 'Send B', 'Send C', 'Send D', 'Send E', 'Send F', 'Send G', 'Send H', 'Send I', 'Send J', 'Send K', 'Send L')
 
@@ -13,7 +13,7 @@ def toggle_arm(track_to_arm, song, exclusive = False):
                     track.arm = False
 
 
-class SelectedTrackParameterProvider(ParameterProvider, SlotManager):
+class SelectedTrackParameterProvider(ParameterProvider):
 
     @depends(song=None)
     def __init__(self, song = None, *a, **k):

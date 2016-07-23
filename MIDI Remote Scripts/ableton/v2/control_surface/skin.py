@@ -1,7 +1,7 @@
 
 from __future__ import absolute_import, print_function
 from itertools import chain
-from ableton.v2.base import depends, const, liveobj_valid, SlotManager
+from ableton.v2.base import depends, const, liveobj_valid, EventObject
 from ableton.v2.control_surface.elements.color import is_dynamic_color_factory
 
 class SkinColorMissingError(Exception):
@@ -12,7 +12,7 @@ class DynamicColorNotAvailableError(Exception):
     msg = 'In order to use dynamic colors, you need to inject the song while creating         the skin'
 
 
-class Skin(SlotManager):
+class Skin(EventObject):
 
     @depends(song=const(None))
     def __init__(self, colors = None, song = None, *a, **k):

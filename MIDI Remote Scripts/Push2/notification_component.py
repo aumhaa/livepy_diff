@@ -39,8 +39,9 @@ class NotificationComponent(Component):
             notification_time = self._default_notification_time
         if self._notification_timer:
             self._notification_timer.stop()
-        self._notification_timer = Live.Base.Timer(callback=self.hide_notification, interval=int(1000 * notification_time), repeat=False)
-        self._notification_timer.start()
+        if notification_time != -1:
+            self._notification_timer = Live.Base.Timer(callback=self.hide_notification, interval=int(1000 * notification_time), repeat=False)
+            self._notification_timer.start()
         if not self._visible:
             self._visible = True
             self.notify_visible()

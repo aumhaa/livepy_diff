@@ -157,6 +157,23 @@ def extract_identity_response_info(data):
      board_revision)
 
 
+def make_pad_setting_message(scene_index, track_index, setting):
+    """
+    This command allows to select one of N available sets of pad
+    parameter values called settings.
+    
+    If scene_index and track_index are 0, the settings for all pads are selected.
+    
+    scene_index - 1 (top) ... 8(bottom), or 0 for all pads
+    track_index - 1 (left) ... 8(right), or 0 for all pads
+    setting     - (0-regular, 1-less sensitive)
+    """
+    raise 0 <= scene_index <= 8 or AssertionError
+    raise 0 <= track_index <= 8 or AssertionError
+    raise 0 <= setting <= 1 or AssertionError
+    return make_message(40, (scene_index, track_index, setting))
+
+
 MANUFACTURER_ID = (0, 33, 29)
 MESSAGE_START = (midi.SYSEX_START,) + MANUFACTURER_ID + (1, 1)
 IDENTITY_RESPONSE_PRODUCT_ID_BYTES = MANUFACTURER_ID + (103, 50, 2, 0)

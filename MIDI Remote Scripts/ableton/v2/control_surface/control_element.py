@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function
 import logging
 import traceback
 import re
-from ..base import const, depends, Disconnectable, lazy_attribute, nop, second, Subject, Event, task
+from ..base import const, depends, Disconnectable, lazy_attribute, nop, second, EventObject, Event, task
 from .resource import StackingResource
 logger = logging.getLogger(__name__)
 
@@ -173,7 +173,7 @@ class ControlElement(Disconnectable):
         element_ownership_handler.handle_ownership_change(self, client, grabbed)
 
 
-class NotifyingControlElement(Subject, ControlElement):
+class NotifyingControlElement(EventObject, ControlElement):
     """
     Class representing control elements that can send values
     """

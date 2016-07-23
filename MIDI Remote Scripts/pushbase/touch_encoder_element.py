@@ -1,6 +1,5 @@
 
 from __future__ import absolute_import, print_function
-from ableton.v2.base import SlotManager
 from ableton.v2.control_surface.elements import TouchEncoderElement as TouchEncoderElementBase
 
 class TouchEncoderObserver(object):
@@ -13,7 +12,7 @@ class TouchEncoderObserver(object):
         pass
 
 
-class TouchEncoderElement(TouchEncoderElementBase, SlotManager):
+class TouchEncoderElement(TouchEncoderElementBase):
     """ Class representing an encoder that is touch sensitive """
 
     def __init__(self, undo_step_handler = None, delete_handler = None, *a, **k):

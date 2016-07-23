@@ -15,12 +15,16 @@ from pushbase.browser_modes import BrowserHotswapMode
 from pushbase.control_element_factory import create_sysex_element
 from pushbase.note_editor_component import NoteEditorComponent
 from pushbase.note_settings_component import NoteSettingsComponent
+from pushbase.pad_sensitivity import PadUpdateComponent
 from pushbase.playhead_element import NullPlayhead
+from pushbase.velocity_levels_element import NullVelocityLevels
 from pushbase.push_base import PushBase
 from pushbase.quantization_component import QuantizationComponent
 from pushbase.sysex import LIVE_MODE
 from pushbase.session_recording_component import FixedLengthSessionRecordingComponent
 from pushbase.simpler_decoration import SimplerDecoratorFactory
+from pushbase.sliced_simpler_component import SlicedSimplerComponent
+from pushbase.special_session_component import SpecialSessionComponent
 from .actions import CreateDeviceComponent, CreateDefaultTrackComponent, CreateInstrumentTrackComponent
 from .browser_component import BrowserComponent
 from .browser_model_factory import make_browser_model
@@ -35,7 +39,7 @@ from .quantization_settings import QuantizationSettingsComponent
 from .mode_behaviours import AlternativeBehaviour, CancellableBehaviour, DynamicBehaviourMixin, ExcludingBehaviourMixin
 from .multi_entry_mode import MultiEntryMode
 from .notification_component import NotificationComponent, align_right
-from .pad_sensitivity import PadUpdateComponent, pad_parameter_sender
+from .pad_sensitivity import pad_parameter_sender
 from .scales_component import InstrumentScalesComponent
 from .selected_track_parameter_provider import SelectedTrackParameterProvider
 from .settings import CRITICAL_THRESHOLD_LIMIT, action_pad_sensitivity, create_settings, make_pad_parameters
@@ -63,6 +67,7 @@ class Push(PushBase):
     selected_track_parameter_provider_class = SelectedTrackParameterProvider
     bank_definitions = BANK_DEFINITIONS
     note_editor_class = NoteEditorComponent
+    sliced_simpler_class = SlicedSimplerComponent
 
     def __init__(self, *a, **k):
         super(Push, self).__init__(*a, **k)
@@ -120,7 +125,7 @@ class Push(PushBase):
         dongle_message, dongle = make_dongle_message(sysex.DONGLE_ENQUIRY_PREFIX)
         identity_control = create_sysex_element(sysex.IDENTITY_PREFIX, sysex.IDENTITY_ENQUIRY)
         dongle_control = create_sysex_element(sysex.DONGLE_PREFIX, dongle_message)
-        presentation_control = create_sysex_element(sysex.DONGLE_PREFIX, sysex.make_presentation_message(self.application()))
+        presentation_control = create_sysex_element(sysex.DONGLE_PREFIX, sysex.make_presentation_message(self.application))
         self._handshake = HandshakeComponent(identity_control=identity_control, dongle_control=dongle_control, presentation_control=presentation_control, dongle=dongle, is_root=True)
         self._on_handshake_success.subject = self._handshake
         self._on_handshake_failure.subject = self._handshake
@@ -138,6 +143,7 @@ class Push(PushBase):
     def _start_handshake(self):
         self._start_handshake_task.kill()
         self.elements.playhead_element.proxied_object = self._c_instance.playhead
+        self.elements.velocity_levels_element.proxied_object = self._c_instance.velocity_levels
         self._note_repeat.set_note_repeat(self._c_instance.note_repeat)
         self._accent_component.set_full_velocity(self._c_instance.full_velocity)
         for control in self.controls:
@@ -170,6 +176,8 @@ class Push(PushBase):
             self._c_instance.set_firmware_version(0.0)
         self._c_instance.playhead.enabled = False
         self.elements.playhead_element.proxied_object = NullPlayhead()
+        self._c_instance.velocity_levels.enabled = False
+        self.elements.velocity_levels_element.proxied_object = NullVelocityLevels()
         self._note_repeat.set_note_repeat(None)
         self._accent_component.set_full_velocity(None)
         for control in self.controls:
@@ -254,8 +262,8 @@ class Push(PushBase):
                 return self._mode.component
 
         self._browser_mode = BrowserMode(self._create_browser)
-        self._browser_hotswap_mode = MultiEntryMode(BrowserHotswapMode(application=self.application()))
-        self._on_browse_mode_changed.subject = self.application().view
+        self._browser_hotswap_mode = MultiEntryMode(BrowserHotswapMode(application=self.application))
+        self._on_browse_mode_changed.subject = self.application.view
 
     def _init_browse_mode(self):
         self._main_modes.add_mode('browse', [self._when_track_is_not_frozen(self._enable_stop_mute_solo_as_modifiers, partial(self._view_control.show_view, 'Browser'), self._browser_back_to_top, self._browser_hotswap_mode, self._browser_mode, self._browser_reset_load_memory)], groups=['add_effect', 'add_track', 'browse'], behaviour=mixin(DynamicBehaviourMixin, CancellableBehaviour)(lambda : not self._browser_hotswap_mode._mode.can_hotswap() and 'add_effect_left'))
@@ -267,7 +275,7 @@ class Push(PushBase):
 
     @listens('browse_mode')
     def _on_browse_mode_changed(self):
-        if not self.application().browser.hotswap_target:
+        if not self.application.browser.hotswap_target:
             if self._main_modes.selected_mode == 'browse' or self._browser_hotswap_mode.is_entered:
                 self._main_modes.selected_mode = 'device'
 
@@ -352,6 +360,9 @@ class Push(PushBase):
 
     def _create_note_mode_behaviour(self):
         return self._auto_arm.auto_arm_restore_behaviour(ReenterBehaviour, on_reenter=self._switch_note_mode_layout)
+
+    def _instantiate_session(self):
+        return SpecialSessionComponent(session_ring=self._session_ring, is_enabled=False, auto_name=True, fixed_length_recording=self._create_fixed_length_recording(), layer=self._create_session_layer())
 
     def _create_session_mode(self):
         return [self._session_overview_mode, self._session_mode, self._session_navigation]
@@ -443,7 +454,7 @@ class Push(PushBase):
             def delete_clip_envelope(_, param):
                 return self._delete_default_component.delete_clip_envelope(param)
 
-        self.elements = Elements(deleter=Deleter(), undo_handler=self.song, pad_sensitivity_update=self._pad_sensitivity_update, playhead=self._c_instance.playhead)
+        self.elements = Elements(deleter=Deleter(), undo_handler=self.song, pad_sensitivity_update=self._pad_sensitivity_update, playhead=self._c_instance.playhead, velocity_levels=self._c_instance.velocity_levels)
 
     def _create_pad_sensitivity_update(self):
         all_pad_sysex_control = create_sysex_element(sysex.ALL_PADS_SENSITIVITY_PREFIX)

@@ -1,11 +1,11 @@
 
 from __future__ import absolute_import, print_function
 from functools import partial
-from ableton.v2.base import nop, listens, liveobj_valid, listenable_property
+from ableton.v2.base import find_if, nop, listens, liveobj_valid, listenable_property, NamedTuple
 from ableton.v2.control_surface.control import control_matrix, ButtonControl
 from ableton.v2.control_surface.components import DrumGroupComponent
-from .consts import MessageBoxText
-from .matrix_maps import PAD_FEEDBACK_CHANNEL
+from .consts import MessageBoxText, DISTANT_FUTURE
+from .matrix_maps import PAD_FEEDBACK_CHANNEL, NON_FEEDBACK_CHANNEL
 from .message_box_component import Messenger
 from .pad_control import PadControl
 from .slideable_touch_strip_component import SlideableTouchStripComponent
@@ -76,11 +76,16 @@ class DrumGroupComponent(SlideableTouchStripComponent, DrumGroupComponent, Messe
         self.notify_contents()
 
     def quantize_pitch(self, note):
-        self._quantizer.quantize_pitch(note)
+        self._quantizer.quantize_pitch(note, 'pad')
 
     def _update_selected_drum_pad(self):
         super(DrumGroupComponent, self)._update_selected_drum_pad()
         self.notify_selected_note()
+        self.notify_selected_target_note()
+
+    def _update_assigned_drum_pads(self):
+        super(DrumGroupComponent, self)._update_assigned_drum_pads()
+        self.notify_selected_target_note()
 
     def _make_copy_handler(self):
         return DrumPadCopyHandler(self.show_notification)
@@ -132,8 +137,8 @@ class DrumGroupComponent(SlideableTouchStripComponent, DrumGroupComponent, Messe
 
     def delete_pitch(self, drum_pad):
         clip = self.song.view.detail_clip
-        if clip and any(clip.get_notes(0, drum_pad.note, 999999, 1)):
-            clip.remove_notes(0, drum_pad.note, 999999, 1)
+        if clip and any(clip.get_notes(0, drum_pad.note, DISTANT_FUTURE, 1)):
+            clip.remove_notes(0, drum_pad.note, DISTANT_FUTURE, 1)
             self.show_notification(MessageBoxText.DELETE_NOTES % drum_pad.name)
         else:
             self.show_notification(MessageBoxText.DELETE_DRUM_RACK_PAD % drum_pad.name)
@@ -162,7 +167,19 @@ class DrumGroupComponent(SlideableTouchStripComponent, DrumGroupComponent, Messe
 
     @listenable_property
     def selected_note(self):
-        selected_drum_pad = self._drum_group_device.view.selected_drum_pad if liveobj_valid(self._drum_group_device) else None
-        if liveobj_valid(selected_drum_pad):
-            return selected_drum_pad.note
+        if liveobj_valid(self._selected_drum_pad):
+            return self._selected_drum_pad.note
         return -1
+
+    @listenable_property
+    def selected_target_note(self):
+        note_and_channel = (-1, -1)
+        if liveobj_valid(self._drum_group_device) and liveobj_valid(self._selected_drum_pad):
+            if self._selected_drum_pad in self.assigned_drum_pads:
+                predicate = lambda b: self._pad_for_button(b) == self._selected_drum_pad
+                button = find_if(predicate, self.matrix)
+                if button != None and None not in (button.identifier, button.channel):
+                    note_and_channel = (button.identifier, button.channel)
+            else:
+                note_and_channel = (self._selected_drum_pad.note, NON_FEEDBACK_CHANNEL)
+        return NamedTuple(note=note_and_channel[0], channel=note_and_channel[1])

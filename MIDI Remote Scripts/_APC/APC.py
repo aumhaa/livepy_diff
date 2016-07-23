@@ -16,6 +16,9 @@ class APC(ControlSurface):
             support_devices |= instance._device_component != None
 
         track_offset = 0
+        if APC._active_instances:
+            first_instance = APC._active_instances[0]
+            track_offset = first_instance.highlighting_session_component().track_offset()
         for instance in APC._active_instances:
             instance._activate_combination_mode(track_offset, support_devices)
             track_offset += instance.highlighting_session_component().width()

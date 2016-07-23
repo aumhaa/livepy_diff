@@ -1,9 +1,9 @@
 
 from __future__ import absolute_import, print_function
-from ...base import SlotManager, listens
+from ...base import listens
 from .combo import ToggleElement
 
-class ChoosingElement(ToggleElement, SlotManager):
+class ChoosingElement(ToggleElement):
     """
     An Element wrapper that enables one of the nested elements based on
     the value of the given flag.

@@ -2,12 +2,12 @@
 from __future__ import absolute_import, print_function
 from contextlib import contextmanager
 import Live
-from ableton.v2.base import SlotManager, find_if, liveobj_valid, clamp, listens
+from ableton.v2.base import EventObject, find_if, liveobj_valid, clamp, listens
 from .device_chain_utils import is_simpler
 CENTERED_NUDGE_VALUE = 0.5
 MINIMUM_SLICE_DISTANCE = 2
 
-class SimplerSliceNudging(SlotManager):
+class SimplerSliceNudging(EventObject):
     _simpler = None
     _nudge_parameter = None
 
@@ -27,7 +27,7 @@ class SimplerSliceNudging(SlotManager):
         self.__on_nudge_delta.subject = self._nudge_parameter
 
     def _can_access_slicing_properties(self):
-        return liveobj_valid(self._simpler) and liveobj_valid(self._simpler.sample) and self._simpler.current_playback_mode == Live.SimplerDevice.PlaybackMode.slicing and self._simpler.sample.slicing_style != Live.Sample.SlicingStyle.beats and self._simpler.sample.slicing_style != Live.Sample.SlicingStyle.splits
+        return liveobj_valid(self._simpler) and liveobj_valid(self._simpler.sample) and self._simpler.current_playback_mode == Live.SimplerDevice.PlaybackMode.slicing
 
     @listens('view.selected_slice')
     def __on_selected_slice_changed(self):

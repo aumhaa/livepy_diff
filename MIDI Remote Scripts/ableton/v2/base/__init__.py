@@ -3,11 +3,11 @@ from __future__ import absolute_import, print_function
 from .isclose import isclose
 from .live_api_utils import liveobj_changed, liveobj_valid
 from .proxy import Proxy, ProxyBase
-from .slot import Event, has_event, listenable_property, listens, listens_group, MultiSlot, SerializableListenableProperties, Slot, SlotError, SlotGroup, SlotManager, Subject
+from .event import Event, EventError, EventObject, has_event, listenable_property, listens, listens_group, MultiSlot, SerializableListenableProperties, Slot, SlotGroup
 from .signal import Signal
 from .dependency import DependencyError, depends, inject
 from .disconnectable import disconnectable, Disconnectable, CompoundDisconnectable
-from .util import Bindable, BooleanContext, chunks, clamp, compose, const, dict_diff, find_if, first, flatten, forward_property, get_slice, group, index_if, infinite_context_manager, instance_decorator, in_range, is_contextmanager, is_iterable, is_matrix, lazy_attribute, linear, maybe, memoize, mixin, monkeypatch, monkeypatch_extend, NamedTuple, negate, next, nop, overlaymap, partial, print_message, product, recursive_map, remove_if, second, sign, Slicer, slicer, slice_size, third, to_slice, trace_value, union, wraps
+from .util import Bindable, BooleanContext, chunks, clamp, compose, const, dict_diff, find_if, first, flatten, forward_property, get_slice, group, index_if, infinite_context_manager, instance_decorator, in_range, is_contextmanager, is_iterable, is_matrix, lazy_attribute, linear, maybe, memoize, mixin, monkeypatch, monkeypatch_extend, NamedTuple, negate, next, nop, overlaymap, print_message, product, recursive_map, remove_if, second, sign, Slicer, slicer, slice_size, third, to_slice, trace_value, union
 from .gcutil import histogram, instances_by_name, refget
 __all__ = (Bindable,
  BooleanContext,
@@ -22,6 +22,8 @@ __all__ = (Bindable,
  Disconnectable,
  disconnectable,
  Event,
+ EventError,
+ EventObject,
  find_if,
  first,
  flatten,
@@ -58,7 +60,6 @@ __all__ = (Bindable,
  next,
  nop,
  overlaymap,
- partial,
  print_message,
  product,
  Proxy,
@@ -74,12 +75,8 @@ __all__ = (Bindable,
  slicer,
  slice_size,
  Slot,
- SlotError,
  SlotGroup,
- SlotManager,
- Subject,
  third,
  to_slice,
  trace_value,
- union,
- wraps)
+ union)

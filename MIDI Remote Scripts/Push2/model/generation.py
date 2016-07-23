@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from collections import namedtuple
 from operator import attrgetter
 from functools import partial
-from ableton.v2.base import Disconnectable, SlotManager, Slot, has_event
+from ableton.v2.base import Disconnectable, EventObject, Slot, has_event
 from .repr import ModelAdapter
 from .declaration import ViewModelsCantContainRefs, ViewModelCantContainListModels, UndeclaredReferenceClass, ModelVisitor
 
@@ -78,7 +78,7 @@ class NullValueWrapper(SimpleWrapper):
         self._notifier.structural_change()
 
 
-class BoundListWrapper(SlotManager, SimpleWrapper):
+class BoundListWrapper(EventObject, SimpleWrapper):
 
     def __init__(self, parent_object, name = None, wrapper = None, notifier = ModelUpdateNotifier(), *a, **k):
         raise wrapper is not None or AssertionError
@@ -127,7 +127,7 @@ class BoundAttributeWrapper(WrapperBase):
         self._notifier.attribute_changed(self.get())
 
 
-class BoundObjectWrapper(SlotManager, SimpleWrapper):
+class BoundObjectWrapper(EventObject, SimpleWrapper):
 
     def __init__(self, bound_object, wrappers = None, adapter = None, *a, **k):
         if not adapter is not None:
@@ -496,6 +496,14 @@ class ModelFingerprintVisitor(ModelVisitor):
     def visit_list_model_property(self, name, decl, property_type):
         super(ModelFingerprintVisitor, self).visit_list_model_property(name, decl, property_type)
         self.property_prints.append('%s:listmodel(%s)' % (name, property_type.__name__))
+
+    def visit_complex_list_property(self, name, decl, value_type):
+        super(ModelFingerprintVisitor, self).visit_complex_list_property(name, decl, value_type)
+        self.property_prints.append('%s:listof(%s)' % (name, value_type.__name__))
+
+    def visit_binding_property(self, name, decl):
+        super(ModelFingerprintVisitor, self).visit_binding_property(name, decl)
+        self.property_prints.append('%s:%s' % (name, decl.property_type.__name__))
 
 
 def generate_model_fingerprint(cls):

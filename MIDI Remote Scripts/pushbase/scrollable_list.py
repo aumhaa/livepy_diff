@@ -1,7 +1,7 @@
 
 from __future__ import absolute_import, print_function
 from functools import partial
-from ableton.v2.base import BooleanContext, clamp, forward_property, in_range, index_if, Subject, listens, task
+from ableton.v2.base import BooleanContext, EventObject, clamp, forward_property, in_range, index_if, listens, task
 from ableton.v2.control_surface import CompoundComponent, defaults
 from ableton.v2.control_surface.control import ButtonControl, EncoderControl, control_list
 from ableton.v2.control_surface.components import ScrollComponent, Scrollable
@@ -41,7 +41,7 @@ class ScrollableListItem(object):
         return self._scrollable_list and self._scrollable_list.select_item(self)
 
 
-class ScrollableList(Subject, Scrollable):
+class ScrollableList(EventObject, Scrollable):
     """
     Class for managing a visual subset of a list of items.
     

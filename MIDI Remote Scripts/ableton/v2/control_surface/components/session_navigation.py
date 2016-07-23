@@ -68,18 +68,14 @@ class SessionNavigationComponent(CompoundComponent):
         track_offset = self._session_ring.track_offset
         scene_offset = self._session_ring.scene_offset
         if scene_offset > 0:
-            new_scene_offset = scene_offset
-            if scene_offset % height > 0:
-                new_scene_offset -= scene_offset % height
-            else:
-                new_scene_offset = max(0, scene_offset - height)
+            new_scene_offset = max(0, scene_offset - height)
             self._session_ring.set_offsets(track_offset, new_scene_offset)
 
     def _scroll_page_down(self):
         height = self._session_ring.num_scenes
         track_offset = self._session_ring.track_offset
         scene_offset = self._session_ring.scene_offset
-        new_scene_offset = scene_offset + height - scene_offset % height
+        new_scene_offset = scene_offset + height
         self._session_ring.set_offsets(track_offset, new_scene_offset)
 
     def _can_scroll_page_left(self):
@@ -93,18 +89,14 @@ class SessionNavigationComponent(CompoundComponent):
         track_offset = self._session_ring.track_offset
         scene_offset = self._session_ring.scene_offset
         if track_offset > 0:
-            new_track_offset = track_offset
-            if track_offset % width > 0:
-                new_track_offset -= track_offset % width
-            else:
-                new_track_offset = max(0, track_offset - width)
+            new_track_offset = max(0, track_offset - width)
             self._session_ring.set_offsets(new_track_offset, scene_offset)
 
     def _scroll_page_right(self):
         width = self._session_ring.num_tracks
         track_offset = self._session_ring.track_offset
         scene_offset = self._session_ring.scene_offset
-        new_track_offset = track_offset + width - track_offset % width
+        new_track_offset = track_offset + width
         self._session_ring.set_offsets(new_track_offset, scene_offset)
 
     def _can_bank_down(self):

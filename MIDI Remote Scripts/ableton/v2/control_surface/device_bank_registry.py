@@ -7,9 +7,9 @@ given device instances.
 banking to the C++ code is the best mid-term solution.
 """
 from __future__ import absolute_import, print_function
-from ..base import Subject
+from ..base import EventObject
 
-class DeviceBankRegistry(Subject):
+class DeviceBankRegistry(EventObject):
     __events__ = ('device_bank',)
 
     def __init__(self, *a, **k):

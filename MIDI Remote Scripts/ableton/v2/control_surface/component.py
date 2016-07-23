@@ -2,10 +2,10 @@
 from __future__ import absolute_import, print_function
 import Live
 from .control import ControlManager
-from ..base import depends, lazy_attribute, Subject, task, is_iterable
+from ..base import depends, lazy_attribute, task, is_iterable
 from ..base.dependency import dependency
 
-class Component(ControlManager, Subject):
+class Component(ControlManager):
     """
     Base class for all classes encapsulating functions in Live
     """
@@ -87,6 +87,7 @@ class Component(ControlManager, Subject):
     def control_notifications_enabled(self):
         return self.is_enabled()
 
+    @property
     def application(self):
         return Live.Application.get_application()
 

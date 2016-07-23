@@ -1,15 +1,11 @@
 
-from _Framework.ModeSelectorComponent import ModeSelectorComponent
-from _Framework.ButtonElement import ButtonElement
-from _Framework.ButtonMatrixElement import ButtonMatrixElement
-from _Framework.ButtonSliderElement import ButtonSliderElement
-from _Framework.ClipSlotComponent import ClipSlotComponent
-from _Framework.ChannelStripComponent import ChannelStripComponent
-from _Framework.SceneComponent import SceneComponent
 from _Framework.SessionZoomingComponent import DeprecatedSessionZoomingComponent
-from ConfigurableButtonElement import ConfigurableButtonElement
 from SpecialSessionComponent import SpecialSessionComponent
 from SubSelectorComponent import *
+SESSION_MODE = 0
+USER_1_MODE = 1
+USER_2_MODE = 2
+MIXER_MODE = 3
 
 class MainSelectorComponent(ModeSelectorComponent):
     """ Class that reassigns the button on the launchpad to different functions """
@@ -75,7 +71,7 @@ class MainSelectorComponent(ModeSelectorComponent):
                 self._modes_buttons.append(button)
                 button.add_value_listener(self._mode_value, identify_sender)
 
-        self.set_mode(0)
+        self.set_mode(SESSION_MODE)
 
     def number_of_modes(self):
         return 4
@@ -86,7 +82,7 @@ class MainSelectorComponent(ModeSelectorComponent):
     def set_mode(self, mode):
         if not mode in range(self.number_of_modes()):
             raise AssertionError
-            self._mode_index = (self._mode_index != mode or mode == 3) and mode
+            self._mode_index = (self._mode_index != mode or mode == MIXER_MODE) and mode
             self.update()
 
     def channel_for_current_mode(self):
@@ -121,18 +117,18 @@ class MainSelectorComponent(ModeSelectorComponent):
                 self._zooming.set_allow_update(False)
                 self._config_button.send_value(40)
                 self._config_button.send_value(1)
-                release_buttons = self._mode_index == 1
-                self._mode_index == 0 and self._setup_mixer(not as_active)
+                release_buttons = self._mode_index == USER_1_MODE
+                self._mode_index == SESSION_MODE and self._setup_mixer(not as_active)
                 self._setup_session(as_active, as_enabled)
-            elif self._mode_index == 1:
+            elif self._mode_index == USER_1_MODE:
                 self._setup_session(not as_active, not as_enabled)
                 self._setup_mixer(not as_active)
                 self._setup_user(release_buttons)
-            elif self._mode_index == 2:
+            elif self._mode_index == USER_2_MODE:
                 self._setup_session(not as_active, not as_enabled)
                 self._setup_mixer(not as_active)
                 self._setup_user(release_buttons)
-            elif self._mode_index == 3:
+            elif self._mode_index == MIXER_MODE:
                 self._setup_session(not as_active, as_enabled)
                 self._setup_mixer(as_active)
             else:
@@ -212,7 +208,7 @@ class MainSelectorComponent(ModeSelectorComponent):
             button.turn_off()
             button.set_enabled(not release_buttons)
 
-        if release_buttons:
+        if self._mode_index == USER_1_MODE:
             self._config_button.send_value(2)
         self._config_button.send_value(32, force=True)
 

@@ -29,6 +29,7 @@ from .DrumGroupComponent import DrumGroupComponent
 from .SpecialMixerComponent import SpecialMixerComponent
 from .SpecialSessionComponent import SpecialSessionComponent as SessionComponent, SpecialClipSlotComponent, SpecialSessionZoomingComponent as SessionZoomingComponent, SessionZoomingManagerComponent
 from .SpecialModesComponent import SpecialModesComponent, SpecialReenterBehaviour, CancelingReenterBehaviour
+from .UserMatrixComponent import UserMatrixComponent
 import consts
 NUM_TRACKS = 8
 NUM_SCENES = 8
@@ -172,8 +173,8 @@ class Launchpad_Pro(IdentifiableControlSurface, OptimizedControlSurface):
                 self._create_device()
                 self._create_modes()
                 self._create_m4l_interface()
+                self._create_user()
             self._on_session_record_changed.subject = self.song()
-        self.set_highlighting_session_component(self._session)
         self.set_device_component(self._device)
         self._on_session_record_changed()
 
@@ -413,6 +414,10 @@ class Launchpad_Pro(IdentifiableControlSurface, OptimizedControlSurface):
             else:
                 view.show_view('Detail/DeviceChain')
 
+    def _create_user(self):
+        self._user_matrix_component = UserMatrixComponent(name='User_Matrix_Component', is_enabled=False, layer=Layer(user_button_matrix_ch_6=self._midimap['User_Button_Matrix_Ch_6'], user_button_matrix_ch_7=self._midimap['User_Button_Matrix_Ch_7'], user_button_matrix_ch_8=self._midimap['User_Button_Matrix_Ch_8'], user_button_matrix_ch_14=self._midimap['User_Button_Matrix_Ch_14'], user_button_matrix_ch_15=self._midimap['User_Button_Matrix_Ch_15'], user_button_matrix_ch_16=self._midimap['User_Button_Matrix_Ch_16'], user_left_side_button_matrix_ch_6=self._midimap['User_Left_Side_Button_Matrix_Ch_6'], user_left_side_button_matrix_ch_7=self._midimap['User_Left_Side_Button_Matrix_Ch_7'], user_left_side_button_matrix_ch_8=self._midimap['User_Left_Side_Button_Matrix_Ch_8'], user_left_side_button_matrix_ch_14=self._midimap['User_Left_Side_Button_Matrix_Ch_14'], user_left_side_button_matrix_ch_15=self._midimap['User_Left_Side_Button_Matrix_Ch_15'], user_left_side_button_matrix_ch_16=self._midimap['User_Left_Side_Button_Matrix_Ch_16'], user_right_side_button_matrix_ch_6=self._midimap['User_Right_Side_Button_Matrix_Ch_6'], user_right_side_button_matrix_ch_7=self._midimap['User_Right_Side_Button_Matrix_Ch_7'], user_right_side_button_matrix_ch_8=self._midimap['User_Right_Side_Button_Matrix_Ch_8'], user_right_side_button_matrix_ch_14=self._midimap['User_Right_Side_Button_Matrix_Ch_14'], user_right_side_button_matrix_ch_15=self._midimap['User_Right_Side_Button_Matrix_Ch_15'], user_right_side_button_matrix_ch_16=self._midimap['User_Right_Side_Button_Matrix_Ch_16'], user_bottom_button_matrix_ch_6=self._midimap['User_Bottom_Button_Matrix_Ch_6'], user_bottom_button_matrix_ch_7=self._midimap['User_Bottom_Button_Matrix_Ch_7'], user_bottom_button_matrix_ch_8=self._midimap['User_Bottom_Button_Matrix_Ch_8'], user_bottom_button_matrix_ch_14=self._midimap['User_Bottom_Button_Matrix_Ch_14'], user_bottom_button_matrix_ch_15=self._midimap['User_Bottom_Button_Matrix_Ch_15'], user_bottom_button_matrix_ch_16=self._midimap['User_Bottom_Button_Matrix_Ch_16'], user_arrow_button_matrix_ch_6=self._midimap['User_Arrow_Button_Matrix_Ch_6'], user_arrow_button_matrix_ch_7=self._midimap['User_Arrow_Button_Matrix_Ch_7'], user_arrow_button_matrix_ch_8=self._midimap['User_Arrow_Button_Matrix_Ch_8'], user_arrow_button_matrix_ch_14=self._midimap['User_Arrow_Button_Matrix_Ch_14'], user_arrow_button_matrix_ch_15=self._midimap['User_Arrow_Button_Matrix_Ch_15'], user_arrow_button_matrix_ch_16=self._midimap['User_Arrow_Button_Matrix_Ch_16']))
+        self._user_matrix_component.set_enabled(True)
+
     @subject_slot('drum_group')
     def _on_drum_group_changed(self):
         if self._note_modes.selected_mode == 'drum_mode':
@@ -519,6 +524,7 @@ class Launchpad_Pro(IdentifiableControlSurface, OptimizedControlSurface):
         self._last_sent_mode_byte = mode
 
     def _send_identity_request(self):
+        self.set_highlighting_session_component(None)
         self._send_midi(consts.SYSEX_IDENTITY_REQUEST)
 
     def on_identified(self):
@@ -544,6 +550,7 @@ class Launchpad_Pro(IdentifiableControlSurface, OptimizedControlSurface):
             self.set_feedback_channels(consts.FEEDBACK_CHANNELS)
         if self._last_sent_mode_byte is not None:
             self._layout_setup(self._last_sent_mode_byte)
+        self.set_highlighting_session_component(self._session)
         self.update()
 
     def _is_challenge_response(self, midi_bytes):

@@ -3,38 +3,41 @@ from __future__ import absolute_import, print_function
 from itertools import izip_longest
 from ableton.v2.base import forward_property, find_if, listens
 from ableton.v2.control_surface.elements import to_midi_value
-from ableton.v2.control_surface.mode import ModesComponent, LayerMode
+from ableton.v2.control_surface.mode import LayerMode
+from .consts import MessageBoxText
 from .instrument_component import InstrumentComponent
 from .loop_selector_component import LoopSelectorComponent
 from .matrix_maps import PLAYHEAD_FEEDBACK_CHANNELS, NON_FEEDBACK_CHANNEL
 from .melodic_pattern import pitch_index_to_string
-from .message_box_component import Messenger
+from .messenger_mode_component import MessengerModesComponent
 from .note_editor_component import NoteEditorComponent
 from .note_editor_paginator import NoteEditorPaginator
 from .playhead_component import PlayheadComponent
+from .step_duplicator import StepDuplicatorComponent
 NUM_NOTE_EDITORS = 7
 
-class MelodicComponent(ModesComponent, Messenger):
+class MelodicComponent(MessengerModesComponent):
 
     def __init__(self, clip_creator = None, parameter_provider = None, grid_resolution = None, note_layout = None, note_editor_settings = None, note_editor_class = NoteEditorComponent, velocity_range_thresholds = None, skin = None, instrument_play_layer = None, instrument_sequence_layer = None, pitch_mod_touch_strip_mode = None, layer = None, *a, **k):
         super(MelodicComponent, self).__init__(*a, **k)
         self._matrices = None
         self._grid_resolution = grid_resolution
-        self._instrument = self.register_component(InstrumentComponent(note_layout=note_layout))
+        self._instrument, self._step_duplicator = self.register_components(InstrumentComponent(note_layout=note_layout), StepDuplicatorComponent())
         self._note_editors = self.register_components(*[ note_editor_class(clip_creator=clip_creator, grid_resolution=self._grid_resolution, velocity_range_thresholds=velocity_range_thresholds, is_enabled=False) for _ in xrange(NUM_NOTE_EDITORS) ])
         for editor in self._note_editors:
             note_editor_settings.add_editor(editor)
+            editor.set_step_duplicator(self._step_duplicator)
 
         self._paginator = NoteEditorPaginator(self._note_editors)
         self._loop_selector = self.register_component(LoopSelectorComponent(clip_creator=clip_creator, paginator=self._paginator, is_enabled=False))
         self._playhead = None
         self._playhead_component = self.register_component(PlayheadComponent(grid_resolution=grid_resolution, paginator=self._paginator, follower=self._loop_selector, feedback_channels=PLAYHEAD_FEEDBACK_CHANNELS, is_enabled=False))
-        self.add_mode('play', [LayerMode(self._instrument, instrument_play_layer), pitch_mod_touch_strip_mode])
+        self.add_mode('play', [LayerMode(self._instrument, instrument_play_layer), pitch_mod_touch_strip_mode], message=MessageBoxText.LAYOUT_MELODIC_PLAYING)
         self.add_mode('sequence', [LayerMode(self._instrument, instrument_sequence_layer),
          self._loop_selector,
          note_editor_settings,
          LayerMode(self, layer),
-         self._playhead_component] + self._note_editors)
+         self._playhead_component] + self._note_editors, message=MessageBoxText.LAYOUT_MELODIC_SEQUENCER)
         self.selected_mode = 'play'
         self._on_detail_clip_changed.subject = self.song.view
         self._on_pattern_changed.subject = self._instrument
@@ -60,6 +63,9 @@ class MelodicComponent(ModesComponent, Messenger):
 
     next_loop_page_button = forward_property('_loop_selector')('next_page_button')
     prev_loop_page_button = forward_property('_loop_selector')('prev_page_button')
+
+    def set_duplicate_button(self, button):
+        self._step_duplicator.button.set_control_element(button)
 
     def set_note_editor_matrices(self, matrices):
         raise not matrices or len(matrices) <= NUM_NOTE_EDITORS or AssertionError

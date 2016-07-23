@@ -53,6 +53,7 @@ class DeviceParameterComponentBase(Component):
         self._parameter_provider = provider or ParameterProvider()
         self._on_parameters_changed.subject = self._parameter_provider
         self._update_parameters()
+        self._on_parameter_provider_changed(provider)
 
     parameter_provider = property(_get_parameter_provider, _set_parameter_provider)
 
@@ -83,6 +84,9 @@ class DeviceParameterComponentBase(Component):
     @listens('parameters')
     def _on_parameters_changed(self):
         self._update_parameters()
+
+    def _on_parameter_provider_changed(self, provider):
+        pass
 
     def update(self):
         super(DeviceParameterComponentBase, self).update()

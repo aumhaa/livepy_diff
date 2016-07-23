@@ -1,7 +1,7 @@
 
 from __future__ import absolute_import, print_function
-from ableton.v2.base import Proxy, nop
-from ableton.v2.control_surface import ControlElement
+from ableton.v2.base import nop
+from .proxy_element import ProxyElement
 
 class NullPlayhead(object):
     notes = []
@@ -11,15 +11,6 @@ class NullPlayhead(object):
     wrap_around = False
     track = None
     set_feedback_channels = nop
-
-
-class ProxyElement(Proxy, ControlElement):
-
-    def reset(self):
-        try:
-            super(ProxyElement, self).__getattr__('reset')()
-        except AttributeError:
-            pass
 
 
 class PlayheadElement(ProxyElement):

@@ -6,7 +6,7 @@ from collections import namedtuple, OrderedDict
 from functools import partial
 from itertools import ifilter, imap
 import Live
-from ableton.v2.base import SlotManager, Subject, const, clamp, depends, find_if, index_if, isclose, lazy_attribute, listenable_property, listens, listens_group, nop, task
+from ableton.v2.base import EventObject, const, clamp, depends, find_if, index_if, isclose, lazy_attribute, listenable_property, listens, listens_group, nop, task
 from ableton.v2.control_surface.control import EncoderControl
 logger = logging.getLogger(__name__)
 FocusMarker = namedtuple('FocusMarker', ['name', 'position'])
@@ -137,7 +137,7 @@ class MarginType(object):
     NONE, START, END = range(3)
 
 
-class WaveformNavigation(SlotManager, Subject):
+class WaveformNavigation(EventObject):
     """ Class for managing a visible area of a waveform """
     visible_region = listenable_property.managed(Region(0, 1))
     visible_region_in_samples = listenable_property.managed(Region(0, 1))
@@ -386,9 +386,11 @@ class WaveformNavigation(SlotManager, Subject):
             objects_to_show = self._changed_identifiers & touched_identifiers
             if identifier in self.focusable_object_descriptions:
                 if len(objects_to_show) > 1:
+                    logger.debug('Focus all objects %r' % objects_to_show)
                     self._focused_identifier = identifier
                     self._show_all_objects(objects_to_show)
                 else:
+                    logger.debug('Focus object %r' % identifier)
                     animate = len(touched_identifiers) <= 1 and self.object_changed(self._focused_identifier, identifier)
                     self._focused_identifier = identifier
                     self._focus_object_by_identifier(identifier, animate=animate)
@@ -669,12 +671,15 @@ class SimplerWaveformNavigation(WaveformNavigation):
     def __init__(self, simpler = None, *a, **k):
         super(SimplerWaveformNavigation, self).__init__(*a, **k)
         self._simpler = simpler
+        self._enable_focus_objects = True
         focusable_parameters = [ self._simpler.get_parameter_by_name(n) for n in self.focusable_object_descriptions ]
         self.__on_playback_mode_changed.subject = simpler
         self.__on_playing_position_enabled_changed.subject = simpler
         self.__on_selected_slice_changed.subject = simpler.positions
         self.__on_use_beat_time_changed.subject = simpler.positions
         self.__on_warp_markers_changed.subject = simpler.positions
+        self.__on_before_update_all.subject = simpler.positions
+        self.__on_after_update_all.subject = simpler.positions
         self.__on_parameter_value_changed.replace_subjects(focusable_parameters)
         self._update_waveform_region()
 
@@ -734,6 +739,11 @@ class SimplerWaveformNavigation(WaveformNavigation):
             return False
         return identifier1 != identifier2
 
+    def focus_object(self, obj):
+        if self._enable_focus_objects:
+            return super(SimplerWaveformNavigation, self).focus_object(obj)
+        return False
+
     @listens('playback_mode')
     def __on_playback_mode_changed(self):
         start_end_region = self.regions_of_interest['start_end_marker'].region
@@ -764,6 +774,14 @@ class SimplerWaveformNavigation(WaveformNavigation):
     @listens('warp_markers')
     def __on_warp_markers_changed(self):
         self._update_waveform_region_and_preserve_visible_region()
+
+    @listens('before_update_all')
+    def __on_before_update_all(self):
+        self._enable_focus_objects = False
+
+    @listens('after_update_all')
+    def __on_after_update_all(self):
+        self._enable_focus_objects = True
 
     def _update_waveform_region_and_preserve_visible_region(self):
         sample = self._simpler.sample
