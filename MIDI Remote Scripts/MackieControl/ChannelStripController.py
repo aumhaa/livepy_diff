@@ -2,6 +2,30 @@
 from MackieControlComponent import *
 from _Generic.Devices import *
 from itertools import chain
+flatten_target = lambda routing_target: routing_target.display_name
+
+def flatten_target_list(target_list):
+    """
+        Takes a list of RoutingType- or RoutingChannel objects
+        and returns a list of their `display_names`
+    """
+    target_names = []
+    for target in target_list:
+        name = flatten_target(target)
+        if name not in target_names:
+            target_names.append(name)
+
+    return target_names
+
+
+def target_by_name(target_list, name):
+    """
+        Return the first object in `target_list` whose `display_name` is equal to `name`
+    """
+    matches = filter(lambda t: t.display_name == name, target_list)
+    if matches:
+        return matches[0]
+
 
 class ChannelStripController(MackieControlComponent):
     """
@@ -359,12 +383,12 @@ class ChannelStripController(MackieControlComponent):
             t = channel_strip.assigned_track()
             if t:
                 if self.__sub_mode_in_io_mode == CSM_IO_MODE_INPUT_MAIN:
-                    return t.input_routings
+                    return flatten_target_list(t.available_input_routing_types)
                 if self.__sub_mode_in_io_mode == CSM_IO_MODE_INPUT_SUB:
-                    return t.input_sub_routings
+                    return flatten_target_list(t.available_input_routing_channels)
                 if self.__sub_mode_in_io_mode == CSM_IO_MODE_OUTPUT_MAIN:
-                    return t.output_routings
-                return self.__sub_mode_in_io_mode == CSM_IO_MODE_OUTPUT_SUB and t.output_sub_routings
+                    return flatten_target_list(t.available_output_routing_types)
+                return self.__sub_mode_in_io_mode == CSM_IO_MODE_OUTPUT_SUB and flatten_target_list(t.available_output_routing_channels)
             raise 0 or AssertionError
         else:
             return None
@@ -375,12 +399,12 @@ class ChannelStripController(MackieControlComponent):
             t = channel_strip.assigned_track()
             if t:
                 if self.__sub_mode_in_io_mode == CSM_IO_MODE_INPUT_MAIN:
-                    return t.current_input_routing
+                    return flatten_target(t.input_routing_type)
                 if self.__sub_mode_in_io_mode == CSM_IO_MODE_INPUT_SUB:
-                    return t.current_input_sub_routing
+                    return flatten_target(t.input_routing_channel)
                 if self.__sub_mode_in_io_mode == CSM_IO_MODE_OUTPUT_MAIN:
-                    return t.current_output_routing
-                return self.__sub_mode_in_io_mode == CSM_IO_MODE_OUTPUT_SUB and t.current_output_sub_routing
+                    return flatten_target(t.output_routing_type)
+                return self.__sub_mode_in_io_mode == CSM_IO_MODE_OUTPUT_SUB and flatten_target(t.output_routing_channel)
             raise 0 or AssertionError
         else:
             return None
@@ -390,13 +414,13 @@ class ChannelStripController(MackieControlComponent):
         t = channel_strip.assigned_track()
         if t:
             if self.__sub_mode_in_io_mode == CSM_IO_MODE_INPUT_MAIN:
-                t.current_input_routing = target_string
+                t.input_routing_type = target_by_name(t.available_input_routing_types, target_string)
             elif self.__sub_mode_in_io_mode == CSM_IO_MODE_INPUT_SUB:
-                t.current_input_sub_routing = target_string
+                t.input_routing_channel = target_by_name(t.available_input_routing_channels, target_string)
             elif self.__sub_mode_in_io_mode == CSM_IO_MODE_OUTPUT_MAIN:
-                t.current_output_routing = target_string
+                t.output_routing_type = target_by_name(t.available_output_routing_types, target_string)
             elif self.__sub_mode_in_io_mode == CSM_IO_MODE_OUTPUT_SUB:
-                t.current_output_sub_routing = target_string
+                t.output_routing_channel = target_by_name(t.available_output_routing_channels, target_string)
             else:
                 raise 0 or AssertionError
 

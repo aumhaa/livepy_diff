@@ -6,7 +6,7 @@ from ableton.v2.control_surface.control import ButtonControl, control_matrix
 from pushbase.colors import Pulse
 from pushbase.message_box_component import Messenger
 from .colors import IndexedColor, Rgb, inverse_translate_color_index, translate_color_index
-from .skin_default import SELECTION_COLOR, SELECTION_PULSE_SPEED
+from .skin_default import SELECTION_PULSE_SPEED
 COLOR_CHOOSER_LAYOUT = ((13, 12, 14, 15, 17, 16, 18, 19),
  (11, None, None, None, None, None, None, 20),
  (9, None, None, None, None, None, None, 21),
@@ -61,8 +61,8 @@ class ColorChooserComponent(Component, Messenger):
             color_index = button.color_index
             if color_index is not None:
                 if color_index == selected_color_index:
-                    button.color = Pulse(IndexedColor(color_index), SELECTION_COLOR, SELECTION_PULSE_SPEED)
+                    button.color = Pulse(IndexedColor.from_push_index(color_index, shade_level=2), IndexedColor.from_push_index(color_index), SELECTION_PULSE_SPEED)
                 else:
-                    button.color = IndexedColor(color_index)
+                    button.color = IndexedColor.from_push_index(color_index)
             else:
                 button.color = Rgb.BLACK

@@ -4,7 +4,8 @@ from contextlib import contextmanager
 from functools import partial
 from itertools import izip, izip_longest
 from math import ceil
-from ableton.v2.base import clamp, depends, listens, liveobj_valid, NamedTuple
+import Live
+from ableton.v2.base import clamp, depends, listens, listens_group, liveobj_valid, NamedTuple
 from ableton.v2.control_surface.control import control_list, ButtonControl
 from ableton.v2.control_surface.mode import ModesComponent
 from pushbase.mapped_control import MappedControl
@@ -35,10 +36,31 @@ class MixerSectionDescription(NamedTuple):
     parameter_name = None
 
 
+def find_parent_track(live_obj):
+    if isinstance(live_obj, Live.Track.Track):
+        return live_obj
+    else:
+        return find_parent_track(live_obj.canonical_parent)
+
+
+def assign_parameters(controls, parameters):
+    for control, parameter in izip_longest(controls, parameters):
+        if control:
+            if not liveobj_valid(parameter) or isinstance(parameter.canonical_parent, Live.MixerDevice.MixerDevice):
+                control.mapped_parameter = parameter
+            else:
+                track = find_parent_track(parameter)
+                control.mapped_parameter = parameter if liveobj_valid(track) and not track.is_frozen else None
+
+
 class MixerControlComponent(ModesComponent):
     __events__ = ('items', 'selected_item')
     controls = control_list(MappedControl)
     cycle_sends_button = ButtonControl(color='DefaultButton.Off')
+
+    @staticmethod
+    def get_tracks(items):
+        return filter(lambda item: item is not None and isinstance(item.proxied_object, Live.Track.Track), items)
 
     @depends(tracks_provider=None, real_time_mapper=None, register_real_time_data=None)
     def __init__(self, view_model = None, tracks_provider = None, real_time_mapper = None, register_real_time_data = None, *a, **k):
@@ -63,6 +85,7 @@ class MixerControlComponent(ModesComponent):
         self._update_mixer_sections()
         self._on_items_changed.subject = self._track_provider
         self._on_selected_item_changed.subject = self._track_provider
+        self.__on_track_frozen_state_changed.replace_subjects(self.get_tracks(self._track_provider.items))
 
     def _setup_modes(self, view_model):
         self._add_mode('volume', view_model.volumeControlListView, lambda mixer: mixer.volume, additional_mode_contents=self.real_time_meter_handlers)
@@ -126,6 +149,10 @@ class MixerControlComponent(ModesComponent):
     def _on_items_changed(self):
         self._update_controls(self._parameter_getter, self._selected_view)
 
+    @listens_group('is_frozen')
+    def __on_track_frozen_state_changed(self, identifier):
+        self._update_controls(self._parameter_getter, self._selected_view)
+
     @listens('selected_item')
     def _on_selected_item_changed(self):
         if self.number_sends <= SEND_LIST_LENGTH:
@@ -167,11 +194,11 @@ class MixerControlComponent(ModesComponent):
         return self._selected_item
 
     def _update_controls(self, parameter_getter, control_view):
-        parameters = self._get_parameter_for_tracks(parameter_getter)
-        control_view.parameters = parameters
-        self._update_realtime_ids()
-        for control, parameter in izip_longest(self.controls, parameters):
-            control.mapped_parameter = parameter
+        if self.is_enabled():
+            parameters = self._get_parameter_for_tracks(parameter_getter)
+            control_view.parameters = parameters
+            self._update_realtime_ids()
+            assign_parameters(self.controls, parameters)
 
     def _update_realtime_ids(self):
         mixables = self._track_provider.items

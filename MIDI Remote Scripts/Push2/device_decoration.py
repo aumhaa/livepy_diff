@@ -1,6 +1,7 @@
 
 from __future__ import absolute_import, print_function
 from functools import partial
+import Live
 from ableton.v2.base import EventObject, depends, find_if, listenable_property, listens, liveobj_valid
 from pushbase.decoration import LiveObjectDecorator, DecoratorFactory
 from pushbase.internal_parameter import EnumWrappingParameter, InternalParameter
@@ -210,17 +211,19 @@ class SimplerPositions(EventObject):
         Converts to beat time, if the sample is warped
         """
         sample = self._simpler.sample
-        if sample is not None and sample.warping:
+        if liveobj_valid(sample) and sample.warping:
             return sample.sample_to_beat_time(sample_time)
         return sample_time
 
     @listens('start_marker')
     def __on_start_marker_changed(self):
-        self.start_marker = self._convert_sample_time(self._simpler.sample.start_marker)
+        if liveobj_valid(self._simpler.sample):
+            self.start_marker = self._convert_sample_time(self._simpler.sample.start_marker)
 
     @listens('end_marker')
     def __on_end_marker_changed(self):
-        self.end_marker = self._convert_sample_time(self._simpler.sample.end_marker)
+        if liveobj_valid(self._simpler.sample):
+            self.end_marker = self._convert_sample_time(self._simpler.sample.end_marker)
 
     @listens('sample_start')
     def __on_active_start_changed(self):
@@ -244,24 +247,28 @@ class SimplerPositions(EventObject):
 
     @listens('sample_env_fade_in')
     def __on_env_fade_in_changed(self):
-        start_marker = self._simpler.sample.start_marker
-        fade_in_end = start_marker + self._simpler.view.sample_env_fade_in
-        self.env_fade_in = self._convert_sample_time(fade_in_end) - self._convert_sample_time(start_marker)
+        if liveobj_valid(self._simpler.sample):
+            start_marker = self._simpler.sample.start_marker
+            fade_in_end = start_marker + self._simpler.view.sample_env_fade_in
+            self.env_fade_in = self._convert_sample_time(fade_in_end) - self._convert_sample_time(start_marker)
 
     @listens('sample_env_fade_out')
     def __on_env_fade_out_changed(self):
-        end_marker = self._simpler.sample.end_marker
-        fade_out_start = end_marker - self._simpler.view.sample_env_fade_out
-        self.env_fade_out = self._convert_sample_time(end_marker) - self._convert_sample_time(fade_out_start)
+        if liveobj_valid(self._simpler.sample):
+            end_marker = self._simpler.sample.end_marker
+            fade_out_start = end_marker - self._simpler.view.sample_env_fade_out
+            self.env_fade_out = self._convert_sample_time(end_marker) - self._convert_sample_time(fade_out_start)
 
     @listens('slices')
     def __on_slices_changed(self):
-        self.slices = [ SlicePoint(s, self._convert_sample_time(s)) for s in self._simpler.sample.slices ]
+        if liveobj_valid(self._simpler.sample):
+            self.slices = [ SlicePoint(s, self._convert_sample_time(s)) for s in self._simpler.sample.slices ]
 
     @listens('selected_slice')
     def __on_selected_slice_changed(self):
-        t = self._convert_sample_time(self._simpler.view.selected_slice)
-        self.selected_slice = SlicePoint(t, t)
+        if liveobj_valid(self._simpler.sample):
+            t = self._convert_sample_time(self._simpler.view.selected_slice)
+            self.selected_slice = SlicePoint(t, t)
 
     @listens('warping')
     def __on_warping_changed(self):

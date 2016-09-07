@@ -372,6 +372,12 @@ class SessionComponent(CompoundComponent):
             list_of_tracks = self.song().visible_tracks
         return list_of_tracks
 
+    @property
+    def current_tracks(self):
+        tracks_to_use = self.tracks_to_use()
+        offset = self.track_offset()
+        return tracks_to_use[offset:offset + self.width()]
+
     def _get_minimal_track_offset(self):
         if self._is_linked():
             return SessionComponent._minimal_track_offset
@@ -457,9 +463,9 @@ class SessionComponent(CompoundComponent):
         self._vertical_paginator.update()
 
     def _reassign_tracks(self):
-        tracks_to_use = self.tracks_to_use()
-        self._on_fired_slot_index_changed.replace_subjects(tracks_to_use, count())
-        self._on_playing_slot_index_changed.replace_subjects(tracks_to_use, count())
+        current_tracks = self.current_tracks
+        self._on_fired_slot_index_changed.replace_subjects(current_tracks, count())
+        self._on_playing_slot_index_changed.replace_subjects(current_tracks, count())
         self._horizontal_banking.update()
         self._horizontal_paginator.update()
         self._update_stop_all_clips_button()
@@ -514,14 +520,12 @@ class SessionComponent(CompoundComponent):
                 self._highlighting_callback(-1, -1, -1, -1, include_returns)
 
     @subject_slot_group('fired_slot_index')
-    def _on_fired_slot_index_changed(self, track_index):
-        button_index = track_index - self.track_offset()
-        self._update_stop_clips_led(button_index)
+    def _on_fired_slot_index_changed(self, controlled_track_index):
+        self._update_stop_clips_led(controlled_track_index)
 
     @subject_slot_group('playing_slot_index')
-    def _on_playing_slot_index_changed(self, track_index):
-        button_index = track_index - self.track_offset()
-        self._update_stop_clips_led(button_index)
+    def _on_playing_slot_index_changed(self, controlled_track_index):
+        self._update_stop_clips_led(controlled_track_index)
 
     def _update_stop_clips_led(self, index):
         tracks_to_use = self.tracks_to_use()

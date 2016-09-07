@@ -31,7 +31,7 @@ from .browser_component import BrowserComponent, NewTrackBrowserComponent
 from .browser_modes import AddDeviceMode, AddTrackMode, BrowseMode, BrowserComponentMode, BrowserModeBehaviour
 from .color_chooser import ColorChooserComponent
 from .device_decoration import DeviceDecoratorFactory
-from .skin_default import make_default_skin, make_drum_pad_coloring_skin
+from .skin_default import make_default_skin
 from .mute_solo_stop import MuteSoloStopClipComponent
 from .device_component import Push2DeviceProvider, DeviceComponent
 from .device_view_component import DeviceViewComponent
@@ -51,7 +51,7 @@ from .mixer_control_component import MixerControlComponent
 from .note_editor import Push2NoteEditorComponent
 from .note_settings import NoteSettingsComponent
 from .notification_component import NotificationComponent
-from .pad_sensitivity import default_profile, pad_parameter_sender, playing_profile
+from .pad_sensitivity import default_profile, loop_selector_profile, pad_parameter_sender, playing_profile
 from .pad_velocity_curve import PadVelocityCurveSender
 from .routing import RoutingControlComponent, TrackOrRoutingControlChooserComponent
 from .scales_component import ScalesComponent, ScalesEnabler
@@ -128,8 +128,6 @@ class Push2(IdentifiableControlSurface, PushBase):
     def __init__(self, c_instance = None, model = None, bank_definitions = None, *a, **k):
         if not model is not None:
             raise AssertionError
-            application = Live.Application.get_application()
-            self._color_chooser_feature_enabled = application.has_option('_Push2ColorChooser')
             self._model = model
             self._real_time_mapper = c_instance.real_time_mapper
             self._clip_decorator_factory = ClipDecoratorFactory()
@@ -173,6 +171,7 @@ class Push2(IdentifiableControlSurface, PushBase):
             self.initialize()
 
     def on_process_state_changed(self, state):
+        logger.debug('Process state changed %r' % state)
         StateEnum = MidiRemoteScript.Push2ProcessState
         self._connected = state == StateEnum.connected
         if state == StateEnum.died:
@@ -188,6 +187,7 @@ class Push2(IdentifiableControlSurface, PushBase):
 
     def on_user_data_arrived(self, message):
         if self._initialized:
+            logger.debug('User data arrived %r' % message)
             data = json.loads(message)
             self._process_qml_errors(data)
             self._firmware_update.process_firmware_response(data)
@@ -217,8 +217,6 @@ class Push2(IdentifiableControlSurface, PushBase):
         return DeviceDecoratorFactory()
 
     def _create_skin(self):
-        if self._color_chooser_feature_enabled:
-            return self.register_disconnectable(make_drum_pad_coloring_skin())
         return self.register_disconnectable(make_default_skin())
 
     def _create_injector(self):
@@ -273,8 +271,7 @@ class Push2(IdentifiableControlSurface, PushBase):
 
     def _select_note_mode(self):
         super(Push2, self)._select_note_mode()
-        if self._color_chooser_feature_enabled:
-            self._note_settings_component.set_color_mode('drum_pad' if self._note_modes.selected_mode == 'drums' else 'clip')
+        self._note_settings_component.set_color_mode('drum_pad' if self._note_modes.selected_mode == 'drums' else 'clip')
 
     def _init_note_editor_settings_component(self):
         super(Push2, self)._init_note_editor_settings_component()
@@ -331,14 +328,16 @@ class Push2(IdentifiableControlSurface, PushBase):
     def _create_instrument_layer(self):
         return super(Push2, self)._create_instrument_layer() + Layer(prev_loop_page_button='page_left_button', next_loop_page_button='page_right_button')
 
-    def _create_step_sequencer_layer(self):
-        return super(Push2, self)._create_step_sequencer_layer() + Layer(prev_loop_page_button='page_left_button', next_loop_page_button='page_right_button')
+    def _create_drum_step_sequencer_layer(self):
+        return super(Push2, self)._create_drum_step_sequencer_layer() + Layer(prev_loop_page_button='page_left_button', next_loop_page_button='page_right_button')
+
+    def _create_slice_step_sequencer_layer(self):
+        return super(Push2, self)._create_slice_step_sequencer_layer() + Layer(prev_loop_page_button='page_left_button', next_loop_page_button='page_right_button')
 
     def _create_color_chooser(self):
-        if self._color_chooser_feature_enabled:
-            color_chooser = ColorChooserComponent()
-            color_chooser.layer = Layer(matrix='matrix', priority=consts.MOMENTARY_DIALOG_PRIORITY)
-            return color_chooser
+        color_chooser = ColorChooserComponent()
+        color_chooser.layer = Layer(matrix='matrix', priority=consts.MOMENTARY_DIALOG_PRIORITY)
+        return color_chooser
 
     def _create_session(self):
         session = super(Push2, self)._create_session()
@@ -346,8 +345,7 @@ class Push2(IdentifiableControlSurface, PushBase):
             scene = session.scene(scene_ix)
             for track_ix in xrange(8):
                 clip_slot = scene.clip_slot(track_ix)
-                if self._color_chooser_feature_enabled:
-                    clip_slot.layer += Layer(select_color_button='shift_button')
+                clip_slot.layer += Layer(select_color_button='shift_button')
                 clip_slot.set_decorator_factory(self._clip_decorator_factory)
 
         return session
@@ -376,12 +374,11 @@ class Push2(IdentifiableControlSurface, PushBase):
         return SessionComponent(session_ring=self._session_ring, is_enabled=False, auto_name=True, clip_slot_copy_handler=DecoratingCopyHandler(decorator_factory=self._clip_decorator_factory), fixed_length_recording=self._create_fixed_length_recording(), color_chooser=self._create_color_chooser(), layer=self._create_session_layer())
 
     def _create_drum_component(self):
-        return DrumGroupComponent(name='Drum_Group', is_enabled=False, tracks_provider=self._session_ring, device_decorator_factory=self._device_decorator_factory, quantizer=self._quantize, show_chain_color=self._color_chooser_feature_enabled, color_chooser=self._create_color_chooser())
+        return DrumGroupComponent(name='Drum_Group', is_enabled=False, tracks_provider=self._session_ring, device_decorator_factory=self._device_decorator_factory, quantizer=self._quantize, color_chooser=self._create_color_chooser())
 
     def _init_drum_component(self):
         super(Push2, self)._init_drum_component()
-        if self._color_chooser_feature_enabled:
-            self._drum_component.layer += Layer(select_color_button='shift_button')
+        self._drum_component.layer += Layer(select_color_button='shift_button')
 
     def _create_device_mode(self):
         self._drum_pad_parameter_component = DrumPadParameterComponent(device_component=self._device_component, view_model=self._model, is_enabled=False, layer=Layer(choke_encoder='parameter_controls_raw[0]', transpose_encoder='parameter_controls_raw[1]'))
@@ -505,7 +502,7 @@ class Push2(IdentifiableControlSurface, PushBase):
         self._bank_selection.scroll_left_layer = Layer(button='select_buttons_raw[0]', priority=consts.DIALOG_PRIORITY)
         self._bank_selection.scroll_right_layer = Layer(button='select_buttons_raw[-1]', priority=consts.DIALOG_PRIORITY)
         move_device = MoveDeviceComponent(is_enabled=False, layer=Layer(move_encoders='global_param_controls'))
-        device_navigation = DeviceNavigationComponent(name='DeviceNavigation', device_bank_registry=self._device_bank_registry, banking_info=self._banking_info, device_component=self._device_component, delete_handler=self._delete_component, chain_selection=self._chain_selection, bank_selection=self._bank_selection, move_device=move_device, track_list_component=self._track_list_component, use_chain_color=self._color_chooser_feature_enabled, is_enabled=False, layer=Layer(select_buttons='track_state_buttons'))
+        device_navigation = DeviceNavigationComponent(name='DeviceNavigation', device_bank_registry=self._device_bank_registry, banking_info=self._banking_info, device_component=self._device_component, delete_handler=self._delete_component, chain_selection=self._chain_selection, bank_selection=self._bank_selection, move_device=move_device, track_list_component=self._track_list_component, is_enabled=False, layer=Layer(select_buttons='track_state_buttons'))
         device_navigation.scroll_left_layer = Layer(button='track_state_buttons_raw[0]')
         device_navigation.scroll_right_layer = Layer(button='track_state_buttons_raw[-1]')
         self.__on_drum_pad_selection_changed.subject = device_navigation
@@ -528,23 +525,21 @@ class Push2(IdentifiableControlSurface, PushBase):
         return SessionRecordingComponent(fixed_length_setting=self._fixed_length_setting, clip_creator=self._clip_creator, view_controller=self._view_control, name='Session_Recording', is_root=True)
 
     def _init_session_ring(self):
-        self._session_ring = SessionRingTrackProvider(name='Session_Ring', num_tracks=NUM_TRACKS, num_scenes=NUM_SCENES, tracks_to_use=partial(tracks_to_use_from_song, self.song), is_enabled=True, is_root=True)
+        self._session_ring = SessionRingTrackProvider(name='Session_Ring', num_tracks=NUM_TRACKS, num_scenes=NUM_SCENES, is_enabled=True, is_root=True)
 
     def _init_session_ring_selection_linking(self):
         self._sessionring_link = self.register_disconnectable(SessionRingSelectionLinking(session_ring=self._session_ring, selection_changed_notifier=self._view_control))
 
     def _init_track_list(self):
-        self._track_list_component = TrackListComponent(tracks_provider=self._session_ring, trigger_recording_on_release_callback=self._session_recording.set_trigger_recording_on_release, color_chooser=self._create_color_chooser(), is_enabled=False, is_root=True, layer=Layer(track_action_buttons='select_buttons', lock_override_button='select_button', delete_button='delete_button', duplicate_button='duplicate_button', arm_button='record_button'))
+        self._track_list_component = TrackListComponent(tracks_provider=self._session_ring, trigger_recording_on_release_callback=self._session_recording.set_trigger_recording_on_release, color_chooser=self._create_color_chooser(), is_enabled=False, is_root=True, layer=Layer(track_action_buttons='select_buttons', lock_override_button='select_button', delete_button='delete_button', duplicate_button='duplicate_button', arm_button='record_button', select_color_button='shift_button'))
         self._track_list_component.set_enabled(True)
-        if self._color_chooser_feature_enabled:
-            self._track_list_component.layer += Layer(select_color_button='shift_button')
         self._model.tracklistView = self._track_list_component
 
     def _create_main_mixer_modes(self):
         self._mixer_control = MixerControlComponent(name='Global_Mix_Component', view_model=self._model.mixerView, tracks_provider=self._session_ring, is_enabled=False, layer=Layer(controls='fine_grain_param_controls', volume_button='track_state_buttons_raw[0]', panning_button='track_state_buttons_raw[1]', send_slot_one_button='track_state_buttons_raw[2]', send_slot_two_button='track_state_buttons_raw[3]', send_slot_three_button='track_state_buttons_raw[4]', send_slot_four_button='track_state_buttons_raw[5]', send_slot_five_button='track_state_buttons_raw[6]', cycle_sends_button='track_state_buttons_raw[7]'))
         self._model.mixerView.realtimeMeterData = self._mixer_control.real_time_meter_handlers
         track_mixer_control = TrackMixerControlComponent(name='Track_Mix_Component', is_enabled=False, tracks_provider=self._session_ring, layer=Layer(controls='fine_grain_param_controls', scroll_left_button='track_state_buttons_raw[6]', scroll_right_button='track_state_buttons_raw[7]'))
-        routing_control = RoutingControlComponent(is_enabled=False, layer=Layer(monitor_state_encoder='parameter_controls_raw[0]', input_output_choice_encoder='parameter_controls_raw[1]', routing_target_encoder='parameter_controls_raw[2]', routing_sub_target_encoders=self.elements.global_param_controls.submatrix[3:7, :]))
+        routing_control = RoutingControlComponent(is_enabled=False, layer=Layer(monitor_state_encoder='parameter_controls_raw[0]', input_output_choice_encoder='parameter_controls_raw[1]', routing_target_encoder='parameter_controls_raw[2]', routing_sub_target_encoders=self.elements.global_param_controls.submatrix[3:7, :], routing_channel_position_encoder='parameter_controls_raw[7]'))
         track_mix_or_routing_chooser = TrackOrRoutingControlChooserComponent(tracks_provider=self._session_ring, track_mixer_component=track_mixer_control, routing_control_component=routing_control, is_enabled=False, layer=Layer(mix_button='track_state_buttons_raw[0]', routing_button='track_state_buttons_raw[1]'))
         self._model.mixerView.trackControlView = track_mix_or_routing_chooser
         self._mix_modes = ModesComponent(is_enabled=False)
@@ -586,8 +581,7 @@ class Push2(IdentifiableControlSurface, PushBase):
 
     def _create_scales(self):
         root_note_buttons = ButtonMatrixElement(rows=[self.elements.track_state_buttons_raw[1:-1], self.elements.select_buttons_raw[1:-1]])
-        scales = ScalesComponent(note_layout=self._note_layout, is_enabled=False, layer=make_dialog_layer(root_note_buttons=root_note_buttons, in_key_toggle_button='select_buttons_raw[0]', fixed_toggle_button='select_buttons_raw[-1]', scale_encoders=self.elements.global_param_controls.submatrix[1:-1, :], layout_encoder='parameter_controls_raw[0]', direction_encoder='parameter_controls_raw[-1]', close_button='track_state_buttons_raw[0]', up_button='nav_up_button', down_button='nav_down_button', right_button='nav_right_button', left_button='nav_left_button'))
-        self.__on_scales_closed.subject = scales
+        scales = ScalesComponent(note_layout=self._note_layout, is_enabled=False, layer=make_dialog_layer(root_note_buttons=root_note_buttons, in_key_toggle_button='select_buttons_raw[0]', fixed_toggle_button='select_buttons_raw[-1]', scale_encoders=self.elements.global_param_controls.submatrix[1:-1, :], layout_encoder='parameter_controls_raw[0]', direction_encoder='parameter_controls_raw[-1]', up_button='nav_up_button', down_button='nav_down_button', right_button='nav_right_button', left_button='nav_left_button'))
         self._model.scalesView = scales
         return scales
 
@@ -597,10 +591,6 @@ class Push2(IdentifiableControlSurface, PushBase):
 
     def _create_scales_enabler(self):
         return ScalesEnabler(enter_dialog_mode=self._enter_dialog_mode, exit_dialog_mode=self._exit_dialog_mode, is_enabled=False, is_root=True, layer=Layer(toggle_button='scale_presets_button'))
-
-    @listens('close')
-    def __on_scales_closed(self):
-        self._dialog_modes.selected_mode = None
 
     def _create_clip_mode(self):
         base_loop_layer = Layer(shift_button='shift_button', loop_button='track_state_buttons_raw[1]', zoom_encoder='fine_grain_param_controls_raw[0]', encoders=self.elements.global_param_controls.submatrix[1:4, :])
@@ -629,7 +619,7 @@ class Push2(IdentifiableControlSurface, PushBase):
 
     def _init_fixed_length(self):
         super(Push2, self)._init_fixed_length()
-        self._fixed_length_settings_component.layer = make_dialog_layer(length_option_buttons='select_buttons', fixed_length_toggle_button='track_state_buttons_raw[0]', priority=consts.MOMENTARY_DIALOG_PRIORITY)
+        self._fixed_length_settings_component.layer = make_dialog_layer(length_option_buttons='select_buttons', fixed_length_toggle_button='track_state_buttons_raw[0]', legato_launch_toggle_button='track_state_buttons_raw[7]', priority=consts.MOMENTARY_DIALOG_PRIORITY)
         self._model.fixedLengthSelectorView = self._fixed_length_settings_component
         self._model.fixedLengthSettings = self._fixed_length_setting
 
@@ -644,7 +634,7 @@ class Push2(IdentifiableControlSurface, PushBase):
         return Layer(mix_button='mix_button', clip_button='clip_mode_button', device_button='device_mode_button', browse_button='browse_mode_button', add_device_button='create_device_button', add_track_button='create_track_button') + Layer(user_button='user_button', priority=consts.USER_BUTTON_PRIORITY)
 
     def _should_send_palette(self):
-        return self._firmware_version <= FirmwareVersion(0, 5, 28)
+        return self._firmware_version < FirmwareVersion(1, 0, 59)
 
     def _send_color_palette(self):
         if self._should_send_palette():
@@ -673,11 +663,10 @@ class Push2(IdentifiableControlSurface, PushBase):
         self._hardware_settings = HardwareSettingsComponent(led_brightness_element=SysexElement(sysex.make_led_brightness_message), display_brightness_element=SysexElement(sysex.make_display_brightness_message), settings=self._setup_settings.hardware)
 
     def _init_transport_state(self):
-        self._model.transportState = TransportState(song=self.song, count_in_enabled=self._setup_component.count_in_feature_enabled)
+        self._model.transportState = TransportState(song=self.song)
 
     def _init_setup_component(self):
         self._setup_settings.general.workflow = 'scene' if self._settings['workflow'].value else 'clip'
-        self._setup_settings.general.advanced_coloring = self._color_chooser_feature_enabled
         self.__on_workflow_setting_changed.subject = self._setup_settings.general
         setup = SetupComponent(name='Setup', settings=self._setup_settings, pad_curve_sender=self._pad_curve_sender, firmware_switcher=self._firmware_switcher, is_enabled=False, layer=make_dialog_layer(category_radio_buttons='select_buttons', priority=consts.SETUP_DIALOG_PRIORITY, make_it_go_boom_button='track_state_buttons_raw[7]'))
         setup.general.layer = Layer(workflow_encoder='parameter_controls_raw[0]', display_brightness_encoder='parameter_controls_raw[1]', led_brightness_encoder='parameter_controls_raw[2]', priority=consts.SETUP_DIALOG_PRIORITY)
@@ -743,6 +732,7 @@ class Push2(IdentifiableControlSurface, PushBase):
         self._pad_sensitivity_update = PadUpdateComponent(all_pads=range(64), parameter_sender=sensitivity_sender, default_profile=default_profile, update_delay=TIMER_DELAY, is_root=True)
         self._pad_sensitivity_update.set_profile('drums', playing_profile)
         self._pad_sensitivity_update.set_profile('instrument', playing_profile)
+        self._pad_sensitivity_update.set_profile('loop', loop_selector_profile)
 
     def _update_full_velocity(self, accent_is_active):
         super(Push2, self)._update_full_velocity(accent_is_active)

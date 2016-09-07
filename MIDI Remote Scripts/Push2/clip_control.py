@@ -104,9 +104,16 @@ class LoopSettingsControllerComponent(LoopSettingsControllerComponentBase):
 
     @listens('is_recording')
     def __on_is_recording_changed(self):
-        recording = False
-        if liveobj_valid(self._loop_model.clip):
-            recording = self._loop_model.clip.is_recording
+        self._update_recording_state()
+
+    @listens('is_overdubbing')
+    def __on_is_overdubbing_changed(self):
+        self._update_recording_state()
+
+    def _update_recording_state(self):
+        clip = self._loop_model.clip
+        if liveobj_valid(clip):
+            recording = clip.is_recording and not clip.is_overdubbing
             self._looping_settings[1].recording = recording
             self._non_looping_settings[1].recording = recording
 
@@ -124,7 +131,8 @@ class LoopSettingsControllerComponent(LoopSettingsControllerComponentBase):
             self.waveform_navigation.reset_focus_and_animation()
         self._update_and_notify()
         self.__on_is_recording_changed.subject = self._loop_model.clip
-        self.__on_is_recording_changed()
+        self.__on_is_overdubbing_changed.subject = self._loop_model.clip
+        self._update_recording_state()
         self._connect_encoder()
         self.notify_waveform_navigation()
 

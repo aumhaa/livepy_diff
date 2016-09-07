@@ -27,7 +27,9 @@ class FixedLengthRecording(EventObject):
         self._clip_creator = clip_creator
         self._fixed_length_setting = fixed_length_setting
         self._clip_creator.fixed_length = 8.0
+        self._clip_creator.legato_launch = self._fixed_length_setting.legato_launch
         self.__on_setting_selected_index_changes.subject = self._fixed_length_setting
+        self.__on_setting_legato_launch_changes.subject = self._fixed_length_setting
 
     def should_start_fixed_length_recording(self, clip_slot):
         return track_can_record(clip_slot.canonical_parent) and not clip_slot.is_recording and not clip_slot.has_clip and self._fixed_length_setting.enabled
@@ -53,10 +55,10 @@ class FixedLengthRecording(EventObject):
         if self.should_start_fixed_length_recording(clip_slot):
             length, quant = self._fixed_length_setting.get_selected_length(self._song)
             if track_can_overdub(track):
-                self._clip_creator.create(clip_slot, length)
+                self._clip_creator.create(clip_slot, length=length, launch_quantization=self._song.clip_trigger_quantization)
             else:
                 clip_slot.fire(record_length=length, launch_quantization=quant)
-        elif not clip_slot.is_triggered:
+        elif not clip_slot.is_playing or not self._song.is_playing:
             if clip_slot.has_clip:
                 clip_slot.fire(force_legato=True, launch_quantization=Quantization.q_no_q)
             else:
@@ -66,6 +68,10 @@ class FixedLengthRecording(EventObject):
     def __on_setting_selected_index_changes(self, _):
         length, _ = self._fixed_length_setting.get_selected_length(self._song)
         self._clip_creator.fixed_length = length
+
+    @listens('legato_launch')
+    def __on_setting_legato_launch_changes(self, value):
+        self._clip_creator.legato_launch = value
 
 
 class FixedLengthSessionRecordingComponent(SessionRecordingComponent, Messenger):
@@ -77,28 +83,28 @@ class FixedLengthSessionRecordingComponent(SessionRecordingComponent, Messenger)
         raise fixed_length_setting is not None or AssertionError
         super(FixedLengthSessionRecordingComponent, self).__init__(*a, **k)
         self._fixed_length_recording = self.register_disconnectable(FixedLengthRecording(song=self.song, clip_creator=clip_creator, fixed_length_setting=fixed_length_setting))
+        self.footswitch_toggles_arrangement_recording = False
         self.__on_record_mode_changed.subject = self.song
         self.__on_record_mode_changed()
 
     @foot_switch_button.pressed
     def foot_switch_button(self, button):
-        self._trigger_recording()
+        if self.footswitch_toggles_arrangement_recording:
+            self._toggle_arrangement_recording()
+        else:
+            self._trigger_recording()
 
     @arrangement_record_button.pressed
     def arrangement_record_button(self, button):
+        self._toggle_arrangement_recording()
+
+    def _toggle_arrangement_recording(self):
         self.song.record_mode = not self.song.record_mode
 
     def _clip_slot_index_to_record_into(self):
         song = self.song
         selected_scene = song.view.selected_scene
         return list(song.scenes).index(selected_scene)
-
-    def _trigger_recording(self):
-        if self.is_enabled():
-            if self.song.record_mode:
-                self.song.record_mode = False
-            else:
-                super(FixedLengthSessionRecordingComponent, self)._trigger_recording()
 
     def _update_record_button(self):
         if self.is_enabled():

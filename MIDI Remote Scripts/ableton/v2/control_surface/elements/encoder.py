@@ -111,7 +111,7 @@ class TouchEncoderElement(CompoundElement, TouchEncoderElementBase):
 
     def __init__(self, msg_type = MIDI_CC_TYPE, channel = 0, identifier = 0, map_mode = _map_modes.absolute, touch_element = None, *a, **k):
         raise touch_element is not None or AssertionError
-        super(TouchEncoderElement, self).__init__(msg_type, channel, identifier, map_mode, *a, **k)
+        super(TouchEncoderElement, self).__init__(msg_type=msg_type, channel=channel, identifier=identifier, map_mode=map_mode, control_elements=None, *a, **k)
         self._touch_element = self.register_control_element(touch_element)
         self.request_listen_nested_control_elements()
 

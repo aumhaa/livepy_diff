@@ -11,12 +11,13 @@ import Live
 from ..base import BooleanContext, EventObject, const, find_if, first, in_range, inject, lazy_attribute, liveobj_valid, task
 from . import defaults
 from . import midi
-from .components.device import DeviceProvider
 from .control_element import OptimizedOwnershipHandler
 from .device_bank_registry import DeviceBankRegistry
+from .device_provider import DeviceProvider
 from .elements import PhysicalDisplayElement
 from .input_control_element import InputControlElement, MIDI_CC_TYPE, MIDI_NOTE_TYPE, MIDI_PB_TYPE, MIDI_SYSEX_TYPE
 from .profile import profile
+__all__ = ('SimpleControlSurface', 'ControlSurface')
 logger = logging.getLogger(__name__)
 CS_LIST_KEY = 'control_surfaces'
 
@@ -37,10 +38,12 @@ def get_control_surfaces():
 
 class SimpleControlSurface(EventObject):
     """
-    Central base class for scripts based on the new Framework. New
-    scripts need to subclass this class and add special behavior.
+    Base class for connecting a hardware controller with Live. It gives access to
+    the controllers MIDI input and output ports as well as Live's data model. Together
+    it can be used to connect hardware controls with functionality in Live and give
+    feedback through MIDI.
     
-    This class does not support device control/locking etc. Use ControlSurface if
+    This class does not support controlling devices. Use :class:`ControlSurface` if
     you need device support.
     """
     preferences_key = None
@@ -639,8 +642,7 @@ class SimpleControlSurface(EventObject):
 
 class ControlSurface(SimpleControlSurface):
     """
-    Central base class for scripts based on the new Framework. New
-    scripts need to subclass this class and add special behavior.
+    Extends :class:`SimpleControlSurface` by support for controlling devices.
     
     This class supports device control, i.e. it supports locking to a device, and
     appoints devices when the selected track/device changes etc. The appointing behavior

@@ -4,8 +4,40 @@ from .declaration import Binding, custom_property, id_property, listmodel, listo
 from .repr import BrowserItemAdapter, BrowserListWrapper, ClipAdapter, DeviceAdapter, DeviceParameterAdapter, EditModeOptionAdapter, ItemListAdapter, ItemSlotAdapter, LiveDialogAdapter, OptionsListAdapter, RoutingAdapter, SimplerDeviceAdapter, TrackAdapter, TrackControlAdapter, TrackListAdapter, TrackMixAdapter, VisibleAdapter
 __all__ = (ModelVisitor,)
 
+class RealTimeChannel(Binding):
+    channel_id = view_property(unicode, '')
+    object_id = view_property(unicode, '')
+
+
 class VisibleModel(ViewModel):
     visible = view_property(bool, False)
+
+
+class ClipPositions(Binding):
+    start = view_property(float, -1)
+    end = view_property(float, -1)
+    start_marker = view_property(float, -1)
+    end_marker = view_property(float, -1)
+    loop_start = view_property(float, -1)
+    loop_end = view_property(float, -1)
+
+
+class ClipModel(Binding):
+    ADAPTER = ClipAdapter
+    id = id_property()
+    name = view_property(unicode, '')
+    color_index = view_property(int, -1)
+    is_recording = view_property(bool, False)
+    warping = view_property(bool, False)
+    positions = view_property(ClipPositions)
+    loop_start = view_property(float, 0.0)
+    loop_end = view_property(float, 0.0)
+    signature_numerator = view_property(int, 4)
+    signature_denominator = view_property(int, 4)
+
+
+class ClipControlModel(Binding):
+    clip = view_property(ClipModel)
 
 
 class Track(Binding):
@@ -18,13 +50,14 @@ class Track(Binding):
     nestingLevel = view_property(int, 0)
     activated = view_property(bool, True)
     isFrozen = view_property(bool, True)
+    parent_track_frozen = view_property(bool, False)
     parentColorIndex = view_property(int, -1)
     arm = view_property(bool, False)
     isMaster = view_property(bool, False)
     isAudio = view_property(bool, False)
     isReturn = view_property(bool, False)
     hasPlayingClip = view_property(bool, False)
-    playingClipPosition = view_property(float, 0.0)
+    playingClip = view_property(ClipModel)
     outputRouting = view_property(unicode, '')
     id = id_property()
 
@@ -35,6 +68,7 @@ class TrackListModel(Binding):
     tracks = view_property(listof(Track))
     selectedTrack = view_property(Track)
     absolute_selected_track_index = view_property(int, -1)
+    playhead_real_time_channels = view_property(listof(RealTimeChannel))
 
 
 class Device(Binding):
@@ -88,7 +122,7 @@ class EditModeOptionsModel(Binding):
 
 class TransportState(Binding):
     count_in_duration = view_property(int, 0)
-    current_or_count_in_real_time_channel_id = view_property(unicode, '')
+    count_in_real_time_channel_id = view_property(unicode, '')
     is_counting_in = view_property(bool, False)
     signature_numerator = view_property(int, 4)
     signature_denominator = view_property(int, 4)
@@ -100,6 +134,7 @@ class Chain(Binding):
     name = view_property(unicode, '')
     id = id_property()
     icon = view_property(unicode, '')
+    color_index = view_property(int, -1)
 
 
 class ChainListModel(Binding):
@@ -223,11 +258,6 @@ class SimplerDeviceViewModel(ViewModel):
     wants_waveform_shown = view_property(bool, False)
 
 
-class RealTimeChannel(Binding):
-    channel_id = view_property(unicode, '')
-    object_id = view_property(unicode, '')
-
-
 class TrackMixModel(Binding):
     ADAPTER = TrackMixAdapter
     visible = view_property(bool, False)
@@ -236,7 +266,34 @@ class TrackMixModel(Binding):
     real_time_meter_channel = view_property(RealTimeChannel)
 
 
-class RoutingTargetList(Binding):
+class RoutingType(Binding):
+    id = id_property()
+    name = view_property(unicode, u'')
+
+
+class RoutingChannel(Binding):
+    id = id_property()
+    name = view_property(unicode, u'')
+    layout = view_property(unicode, u'')
+    realtime_channel = view_property(RealTimeChannel)
+
+
+class RoutingTypeList(Binding):
+    id = id_property()
+    targets = view_property(listof(RoutingType))
+    selected_target = view_property(RoutingType)
+    selected_index = view_property(int, -1, depends=targets)
+    selected_track = view_property(Track)
+
+
+class RoutingChannelList(Binding):
+    id = id_property()
+    targets = view_property(listof(RoutingChannel))
+    selected_target = view_property(RoutingChannel)
+    selected_index = view_property(int, -1, depends=targets)
+
+
+class RoutingChannelPositionList(Binding):
     id = id_property()
     targets = view_property(listof(unicode))
     selected_index = view_property(int, -1, depends=targets)
@@ -248,8 +305,9 @@ class RoutingControlModel(Binding):
     can_monitor = view_property(bool, False)
     can_route = view_property(bool, False)
     is_choosing_output = view_property(bool, False)
-    routingTypeList = view_property(listof(RoutingTargetList))
-    routingChannelList = view_property(listof(RoutingTargetList))
+    routingTypeList = view_property(listof(RoutingTypeList))
+    routingChannelList = view_property(listof(RoutingChannelList))
+    routingChannelPositionList = view_property(listof(RoutingChannelPositionList))
 
 
 class TrackControlModel(Binding):
@@ -296,6 +354,7 @@ class BrowserModel(Binding):
     prehear_enabled = view_property(bool, False)
     context_text = view_property(unicode, u'')
     context_color_index = view_property(int, -1)
+    context_display_type = view_property(unicode, u'')
     load_neighbour_overlay = view_property(BrowserLoadNeighbourOverlay)
     should_widen_focused_item = view_property(bool, False)
 
@@ -389,6 +448,7 @@ class FixedLengthSettingsModel(Binding):
     option_names = view_property(listof(unicode))
     selected_index = view_property(int, -1)
     enabled = view_property(bool, False)
+    legato_launch = view_property(bool, False)
 
 
 class FixedLengthSelectorModel(Binding):
@@ -410,40 +470,11 @@ class AudioClipSettingsModel(Binding):
     playhead_real_time_channel_id = view_property(unicode, '')
 
 
-class ClipPositions(Binding):
-    start = view_property(float, -1)
-    end = view_property(float, -1)
-    start_marker = view_property(float, -1)
-    end_marker = view_property(float, -1)
-    loop_start = view_property(float, -1)
-    loop_end = view_property(float, -1)
-
-
-class ClipModel(Binding):
-    ADAPTER = ClipAdapter
-    id = id_property()
-    name = view_property(unicode, '')
-    color_index = view_property(int, -1)
-    is_recording = view_property(bool, False)
-    warping = view_property(bool, False)
-    positions = view_property(ClipPositions)
-    signature_numerator = view_property(int, 4)
-    signature_denominator = view_property(int, 4)
-
-
-class ClipControlModel(Binding):
-    clip = view_property(ClipModel)
-
-
 class ModeState(Binding):
     main_mode = view_property(unicode, '')
     mix_mode = view_property(unicode, '')
     global_mix_mode = view_property(unicode, '')
     device_mode = view_property(unicode, '')
-
-
-class MixerRealTimeMeterModel(Binding):
-    real_time_meter_channel_ids = view_property(listof(unicode), '')
 
 
 class MixerViewModel(ViewModel):
@@ -456,7 +487,6 @@ class MixerViewModel(ViewModel):
 
 class GeneralSettingsModel(Binding):
     workflow = view_property(unicode, 'scene')
-    advanced_coloring = view_property(bool, False)
 
 
 class PadSettingsModel(Binding):
@@ -515,8 +545,6 @@ class SetupModel(Binding):
     modes = view_property(listof(unicode))
     velocity_curve = view_property(VelocityCurveModel)
     make_it_go_boom = view_property(bool, False)
-    count_in_feature_enabled = view_property(bool, False)
-    record_phase_feature_enabled = view_property(bool, False)
 
 
 class ValueModel(Binding):

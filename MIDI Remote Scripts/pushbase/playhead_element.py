@@ -10,6 +10,7 @@ class NullPlayhead(object):
     velocity = 0.0
     wrap_around = False
     track = None
+    clip = None
     set_feedback_channels = nop
 
 

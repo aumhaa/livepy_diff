@@ -11,7 +11,7 @@ from pushbase.browser_util import filter_type_for_hotswap_target, get_selection_
 from pushbase.consts import MessageBoxText
 from pushbase.live_util import get_position_for_new_track
 from pushbase.message_box_component import Messenger
-from .colors import translate_color_index
+from .colors import DISPLAY_BUTTON_SHADE_LEVEL, IndexedColor
 from .browser_list import BrowserList
 from .browser_item import BrowserItem, ProxyBrowserItem
 NAVIGATION_COLORS = dict(color='Browser.Navigation', disabled_color='Browser.NavigationDisabled')
@@ -372,6 +372,10 @@ class BrowserComponent(CompoundComponent, Messenger):
     def should_widen_focused_item(self):
         return self.focused_item.is_loadable and not self.focused_item.is_device
 
+    @property
+    def context_display_type(self):
+        return 'custom_button'
+
     def disconnect(self):
         super(BrowserComponent, self).disconnect()
         self._lists = []
@@ -571,7 +575,7 @@ class BrowserComponent(CompoundComponent, Messenger):
         self.load_button.enabled = selected_item_loadable
         self._load_neighbour_overlay.can_load_previous = self._previous_can_be_loaded()
         self._load_neighbour_overlay.can_load_next = self._next_can_be_loaded()
-        context_button_color = translate_color_index(self.context_color_index) if self.context_color_index > -1 else 'Browser.Navigation'
+        context_button_color = IndexedColor.from_live_index(self.context_color_index, DISPLAY_BUTTON_SHADE_LEVEL) if self.context_color_index > -1 else 'Browser.Navigation'
         self.load_button.color = context_button_color
         self.close_button.color = context_button_color
         self._load_neighbour_overlay.load_next_button.color = context_button_color
@@ -836,6 +840,10 @@ class NewTrackBrowserComponent(BrowserComponent):
     def browse_for_audio_clip(self):
         return False
 
+    @property
+    def context_display_type(self):
+        return 'cancel_button'
+
     def _update_root_content(self):
         real_root_items = super(NewTrackBrowserComponent, self)._make_root_browser_items()
         self._content[:] = [DefaultTrackBrowserItem()] + real_root_items
@@ -854,7 +862,7 @@ class NewTrackBrowserComponent(BrowserComponent):
             self._update_root_content()
 
     def _update_context(self):
-        self.context_text = 'Close'
+        pass
 
     def _load_item(self, item):
         try:

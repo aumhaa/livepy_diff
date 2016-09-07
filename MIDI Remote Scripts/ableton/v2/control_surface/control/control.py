@@ -2,14 +2,23 @@
 from __future__ import absolute_import, print_function
 from functools import partial
 from ...base import lazy_attribute, mixin, nop, task, Disconnectable, EventObject, NamedTuple
+__all__ = ('Control', 'InputControl', 'ControlManager', 'control_event', 'control_color', 'Connectable')
 
 class ControlManager(EventObject):
+    """
+    Base class needed to define Controls. The Control Manager stores the state of the
+    Controls.
+    """
 
     def __init__(self, *a, **k):
         super(ControlManager, self).__init__(*a, **k)
         self._control_states = dict()
 
     def add_control(self, name, control):
+        """
+        Dynamically adds a Control to the object. The Control will be added to the object
+        as an attribute with the given `name`.
+        """
         if hasattr(self, name):
             raise AttributeError('Control would overwrite an existing property')
         control_state = control._get_state(self)
@@ -18,17 +27,38 @@ class ControlManager(EventObject):
 
     @lazy_attribute
     def _tasks(self):
+        """
+        Task Group for Controls for time-based events and feedback.
+        """
         return task.TaskGroup()
 
     def control_notifications_enabled(self):
+        """
+        Override to enable/disable triggering events for all Controls in this
+        Control Manager.
+        """
         return True
 
     def update(self):
+        """
+        Sends the current feedback to all Control Elements that are connected to Controls
+        of this Control Manager.
+        """
         for control_state in self._control_states.values():
             control_state.update()
 
 
 def control_event(event_name):
+    """
+    Defines an event of a Control. The event can be used in two ways:
+    
+     * As a function-decorator on a class level
+     * By assigning a callable to the event
+    
+    Only one listener can be connected with an event.
+    
+    Events need to be defined on a Control class-level.
+    """
 
     def event_decorator(self):
 
@@ -46,13 +76,19 @@ def control_event(event_name):
 
 
 class control_color(object):
+    """
+    Defines a color of a Control. The color is created with a default color and will
+    be update the Control every time a new color is set.
+    
+    Colors need to be defined on Control-state level.
+    """
 
     def __init__(self, default_color, *a, **k):
         super(control_color, self).__init__(*a, **k)
         self.default_color = default_color
 
     def __get__(self, obj, owner):
-        if self not in obj._colors:
+        if obj is None or self not in obj._colors:
             return self.default_color
         return obj._colors[self]
 
@@ -62,8 +98,35 @@ class control_color(object):
 
 
 class Control(object):
+    """
+    Base class for all Controls. Controls are used to define a high level interface for
+    low level Control Elements. They add a useful set of functionality to it:
+    
+     * Well defined and descriptive events that compensate for inconsistencies of
+       the received MIDI.
+     * Logic and state common in other UI frameworks, like an enabled state to deactivate
+       the Control under certain circumstances.
+     * Feedback to represents different states of the Control.
+    
+    Controls are a virtual representation of a relation between a hardware control and
+    a piece of logic. A Control needs to be connected with a Control Element to be
+    functional. The Control Element is connected and disconnected by using
+    :meth:`Control.State.set_control_element`. The user of a Control does not need to
+    care a Control Element is currently connected, which makes working with Controls
+    much less error-prone than working with Control Elements directly.
+    
+    Controls are a Descriptor on a class level, so listeners can be easily defined using
+    decorators. Events are defined using :func:`control_event`. Classes using Controls
+    need to inherit from :class:`ControlManager`.
+    
+    The Control needs an actual stateful representation, that instantiated for each
+    instance of the class implementing it. This is defined in the inner State-class.
+    """
 
     class State(EventObject):
+        """
+        State-full representation of the Control.
+        """
         enabled = True
 
         def __init__(self, control = None, manager = None, *a, **k):
@@ -85,10 +148,20 @@ class Control(object):
 
         @lazy_attribute
         def tasks(self):
+            """
+            Returns a Task Group for this Control. The Task Group is created the first
+            time the property is accessed.
+            """
             self._has_tasks = True
             return self._manager._tasks.add(task.TaskGroup())
 
         def set_control_element(self, control_element):
+            """
+            Connect a Control with a Control Element or disconnect the Control if
+            None is passed. When connecting, the Control Element is reset and the
+            Controls current color is sent. When disconnecting, the Control Element
+            needs to be updates by its new owner.
+            """
             self._control_element = control_element
             if self._control_element:
                 self._control_element.reset_state()
@@ -152,9 +225,15 @@ class Control(object):
 
 
 class InputControl(Control):
+    """
+    Base Class for Controls that react to a MIDI value event.
+    """
     value = control_event('value')
 
     class State(Control.State):
+        """
+        State-full representation of the Control.
+        """
 
         def __init__(self, control = None, channel = None, identifier = None, *a, **k):
             super(InputControl.State, self).__init__(control=control, *a, **k)
@@ -165,6 +244,10 @@ class InputControl(Control):
             self._manager.register_disconnectable(self)
 
         def set_control_element(self, control_element):
+            """
+            Connects the Control to the value-event of the Control Element and sets the
+            defined :attr:`channel` and :attr:`identifier`.
+            """
             super(InputControl.State, self).set_control_element(control_element)
             if self._value_slot:
                 self._value_slot.subject = control_element
@@ -183,6 +266,9 @@ class InputControl(Control):
 
         @property
         def channel(self):
+            """
+            Translates the channel of the received MIDI when sent to Live.
+            """
             return self._channel
 
         @channel.setter
@@ -193,6 +279,9 @@ class InputControl(Control):
 
         @property
         def identifier(self):
+            """
+            Translates the identifier of the received MIDI when sent to Live.
+            """
             return self._identifier
 
         @identifier.setter
@@ -245,10 +334,27 @@ class Connectable(EventObject):
         self._connection = self._make_empty_connection()
 
     def connect_property(self, subject, property_name, transform = nop):
+        """
+        Create a bidirectional connection between a property and a Control.
+        The `subject` is the host of the property with the given name.
+        The connected property needs to be listenable in case
+        :attr:`requires_listenable_connected_property` is set to True.
+        If a Control is a Connectable, it has certain expectations on the connected
+        property.
+        
+        The transform argument can be used to transform the Controls value to the
+        expected value of the property.
+        
+        Only one property can be connected at a time.
+        """
+        raise subject is not None or AssertionError
         self.disconnect_property()
         self._connection = NamedTuple(slot=self._register_property_slot(subject, property_name), getter=partial(getattr, subject, property_name), setter=partial(setattr, subject, property_name), transform=transform)
 
     def disconnect_property(self):
+        """
+        Disconnects a property that has been connected with :meth:`connect_property`.
+        """
         self._connection.slot.disconnect()
         self._connection = self._make_empty_connection()
 
@@ -263,6 +369,9 @@ class Connectable(EventObject):
 
     @property
     def connected_property_value(self):
+        """
+        Get/set the property connected with :meth:`connect_property`
+        """
         return self._connection.getter()
 
     @connected_property_value.setter
@@ -271,7 +380,7 @@ class Connectable(EventObject):
 
     def on_connected_property_changed(self, value):
         """
-        Called if the property changes.
-        Has no effect if requires_listenable_connected_property is set to False.
+        Called if the connected property changes.
+        Has no effect if :attr:`requires_listenable_connected_property` is set to False.
         """
         pass

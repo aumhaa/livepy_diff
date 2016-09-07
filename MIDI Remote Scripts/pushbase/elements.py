@@ -1,7 +1,7 @@
 
 from __future__ import absolute_import, print_function
 from ableton.v2.base import depends, recursive_map
-from ableton.v2.control_surface import PrioritizedResource, MIDI_NOTE_TYPE
+from ableton.v2.control_surface import CompoundElement, MIDI_NOTE_TYPE, PrioritizedResource
 from ableton.v2.control_surface.elements import ButtonMatrixElement, DoublePressElement, FineGrainWithModifierEncoderElement, MultiElement
 from . import consts
 from .configurable_button_element import PadButtonElement

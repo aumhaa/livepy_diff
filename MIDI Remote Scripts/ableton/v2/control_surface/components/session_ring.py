@@ -52,7 +52,8 @@ class SessionRingComponent(Component):
                 self._tracks_to_use = tracks_to_use
             else:
                 self._tracks_to_use = lambda : self.song.visible_tracks
-            self._cached_track_list = self.tracks_to_use()
+            self._cached_track_list = []
+            self._update_track_list()
             self._snap_offsets = always_snap_track_offset
             self.notify_offset(0, 0)
             self.is_enabled() and self._update_highlight()
@@ -61,7 +62,7 @@ class SessionRingComponent(Component):
         self.__on_scene_list_changed.subject = self.song
 
     def tracks_to_use(self):
-        return self._tracks_to_use()
+        return self._cached_track_list
 
     def set_offsets(self, track_offset, scene_offset):
         if not track_offset >= 0:
@@ -126,13 +127,13 @@ class SessionRingComponent(Component):
         self._update_track_list()
 
     def _update_track_list(self):
-        new_offset = min(self.track_offset, len(self.tracks_to_use()) - 1)
+        current_track_list = self._tracks_to_use()
+        new_offset = min(self.track_offset, len(current_track_list) - 1)
         if new_offset != self.track_offset:
             self.track_offset = new_offset
-        current_track_list = self.tracks_to_use()
         if self._cached_track_list != current_track_list:
-            self.notify_tracks()
             self._cached_track_list = current_track_list
+            self.notify_tracks()
 
     @listens('scenes')
     def __on_scene_list_changed(self):

@@ -1,12 +1,15 @@
 
 from __future__ import absolute_import, print_function
 from itertools import izip_longest
+import Live
 from ableton.v2.base import clamp, depends, listens, liveobj_valid
 from ableton.v2.control_surface import CompoundComponent
+from ableton.v2.control_surface.mode import ModesComponent
 from ableton.v2.control_surface.control import control_list, ButtonControl
 from pushbase.mapped_control import MappedControl
 from .real_time_channel import RealTimeDataComponent
 from .item_lister_component import SimpleItemSlot
+from .mixer_control_component import find_parent_track, assign_parameters
 MAX_RETURN_TRACKS = 6
 
 class TrackMixerControlComponent(CompoundComponent):
@@ -51,10 +54,7 @@ class TrackMixerControlComponent(CompoundComponent):
 
     def _update_controls(self):
         if self.is_enabled():
-            for control, parameter in izip_longest(self.controls, self.parameters[self.scroll_offset:]):
-                if control:
-                    control.mapped_parameter = parameter
-
+            assign_parameters(self.controls, self.parameters[self.scroll_offset:])
             self.notify_parameters()
 
     @property

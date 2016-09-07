@@ -177,6 +177,8 @@ class Colors:
     class FixedLength:
         On = Basic.FULL
         Off = Basic.HALF
+        PhraseAlignedOn = BiLed.AMBER
+        PhraseAlignedOff = BiLed.YELLOW_HALF
 
     class Accent:
         On = Basic.FULL
