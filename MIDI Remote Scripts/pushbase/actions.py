@@ -2,7 +2,7 @@
 from __future__ import absolute_import, print_function
 from itertools import izip, count
 import Live
-from ableton.v2.base import forward_property, listens, listens_group, liveobj_valid
+from ableton.v2.base import forward_property, listens, listens_group, liveobj_changed, liveobj_valid
 from ableton.v2.control_surface import Component, CompoundComponent
 from ableton.v2.control_surface.control import control_list, ButtonControl
 from ableton.v2.control_surface.elements import DisplayDataSource
@@ -28,37 +28,60 @@ def convert_beats_to_mins_secs(length_in_beats, tempo = 120.0):
     return convert_length_to_mins_secs(length_in_secs)
 
 
+def duplicate_arrangement_clip(clip, song_view, show_notification):
+    try:
+        track = clip.canonical_parent
+        song_view.detail_clip = track.duplicate_clip_to_arrangement(clip, clip.end_time)
+        show_notification(MessageBoxText.DUPLICATE_CLIP % clip.name)
+    except RuntimeError:
+        show_notification(MessageBoxText.CLIP_DUPLICATION_FAILED)
+
+
 class CaptureAndInsertSceneComponent(ActionWithSettingsComponent, Messenger):
 
-    def post_trigger_action(self):
+    def _capture_and_insert_scene(self):
         try:
             self.song.capture_and_insert_scene()
             self.show_notification(MessageBoxText.CAPTURE_AND_INSERT_SCENE % self.song.view.selected_scene.name.strip())
         except Live.Base.LimitationError:
             self.expect_dialog(MessageBoxText.SCENE_LIMIT_REACHED)
 
+    def post_trigger_action(self):
+        view = self.song.view
+        clip = view.detail_clip
+        if liveobj_valid(clip) and clip.is_arrangement_clip:
+            duplicate_arrangement_clip(clip, view, self.show_notification)
+        else:
+            self._capture_and_insert_scene()
+
 
 class DuplicateDetailClipComponent(ActionWithSettingsComponent, Messenger):
+
+    def _duplicate_session_clip(self, clip, view):
+        try:
+            slot = clip.canonical_parent
+            track = slot.canonical_parent
+            start_duplicate = clip.is_playing
+            target_index = list(track.clip_slots).index(slot)
+            destination_index = track.duplicate_clip_slot(target_index)
+            view.highlighted_clip_slot = track.clip_slots[destination_index]
+            view.detail_clip = view.highlighted_clip_slot.clip
+            if start_duplicate:
+                view.highlighted_clip_slot.fire(force_legato=True, launch_quantization=_Q.q_no_q)
+            self.show_notification(MessageBoxText.DUPLICATE_CLIP % clip.name)
+        except Live.Base.LimitationError:
+            self.expect_dialog(MessageBoxText.SCENE_LIMIT_REACHED)
+        except RuntimeError:
+            self.show_notification(MessageBoxText.CLIP_DUPLICATION_FAILED)
 
     def post_trigger_action(self):
         view = self.song.view
         clip = view.detail_clip
         if liveobj_valid(clip):
-            slot = clip.canonical_parent
-            track = slot.canonical_parent
-            try:
-                start_duplicate = clip.is_playing
-                target_index = list(track.clip_slots).index(slot)
-                destination_index = track.duplicate_clip_slot(target_index)
-                view.highlighted_clip_slot = track.clip_slots[destination_index]
-                view.detail_clip = view.highlighted_clip_slot.clip
-                if start_duplicate:
-                    view.highlighted_clip_slot.fire(force_legato=True, launch_quantization=_Q.q_no_q)
-                self.show_notification(MessageBoxText.DUPLICATE_CLIP % clip.name)
-            except Live.Base.LimitationError:
-                self.expect_dialog(MessageBoxText.SCENE_LIMIT_REACHED)
-            except RuntimeError:
-                self.show_notification(MessageBoxText.CLIP_DUPLICATION_FAILED)
+            if clip.is_arrangement_clip:
+                duplicate_arrangement_clip(clip, view, self.show_notification)
+            else:
+                self._duplicate_session_clip(clip, view)
 
 
 class DuplicateLoopComponent(ActionWithSettingsComponent, Messenger):
@@ -94,11 +117,21 @@ class DeleteSelectedClipComponent(ActionWithSettingsComponent, Messenger):
     """
 
     def post_trigger_action(self):
-        slot = self.song.view.highlighted_clip_slot
-        if liveobj_valid(slot) and slot.has_clip:
-            name = slot.clip.name
-            slot.delete_clip()
-            self.show_notification(MessageBoxText.DELETE_CLIP % name)
+        clip = self.song.view.detail_clip
+        if liveobj_valid(clip) and clip.is_arrangement_clip:
+            try:
+                name = clip.name
+                self.song.view.selected_track.delete_clip(clip)
+                self.show_notification(MessageBoxText.DELETE_CLIP % name)
+            except RuntimeError:
+                pass
+
+        else:
+            slot = self.song.view.highlighted_clip_slot
+            if liveobj_valid(slot) and slot.has_clip:
+                name = slot.clip.name
+                slot.delete_clip()
+                self.show_notification(MessageBoxText.DELETE_CLIP % name)
 
 
 class DeleteSelectedSceneComponent(ActionWithSettingsComponent, Messenger):
@@ -154,6 +187,8 @@ def select_clip_and_get_name_from_slot(clip_slot, song):
     if liveobj_valid(clip_slot):
         if song.view.highlighted_clip_slot != clip_slot:
             song.view.highlighted_clip_slot = clip_slot
+        if clip_slot.has_clip and liveobj_changed(song.view.detail_clip, clip_slot.clip):
+            song.view.detail_clip = clip_slot.clip
     return clip_name_from_clip_slot(clip_slot)
 
 
@@ -380,7 +415,7 @@ class StopClipComponent(Component):
         return color
 
     def _update_stop_button(self, track, button):
-        has_clip_slots = isinstance(track, Live.Track.Track) and bool(track.clip_slots)
+        has_clip_slots = liveobj_valid(track) and isinstance(track, Live.Track.Track) and bool(track.clip_slots)
         if has_clip_slots:
             button.color = self._color_for_button(track)
         button.enabled = bool(has_clip_slots)

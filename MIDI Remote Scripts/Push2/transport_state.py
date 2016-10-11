@@ -8,24 +8,21 @@ COUNT_IN_DURATION_IN_BARS = (0, 1, 2, 4)
 class TransportState(CompoundComponent):
     count_in_duration = listenable_property.managed(0)
 
-    def __init__(self, song = None, count_in_enabled = False, *a, **kw):
+    def __init__(self, song = None, *a, **kw):
         super(TransportState, self).__init__(*a, **kw)
         self._song = song
-        self._count_in_enabled = count_in_enabled
         self.__on_is_playing_changed.subject = song
-        if count_in_enabled:
-            self._current_or_count_in_time_real_time_data = self.register_component(RealTimeDataComponent(channel_type='current-or-count-in'))
-            self.__on_count_in_duration_changed.subject = song
-            self.__on_is_counting_in_changed.subject = song
-            self.__on_signature_numerator_changed.subject = song
-            self.__on_signature_denominator_changed.subject = song
-            self.__on_current_or_count_in_channel_changed.subject = self._current_or_count_in_time_real_time_data
-            self._update_count_in_duration()
+        self._count_in_time_real_time_data = self.register_component(RealTimeDataComponent(channel_type='count-in'))
+        self.__on_count_in_duration_changed.subject = song
+        self.__on_is_counting_in_changed.subject = song
+        self.__on_signature_numerator_changed.subject = song
+        self.__on_signature_denominator_changed.subject = song
+        self.__on_count_in_channel_changed.subject = self._count_in_time_real_time_data
+        self._update_count_in_duration()
 
     @listenable_property
-    def current_or_count_in_real_time_channel_id(self):
-        if self._count_in_enabled:
-            return self._current_or_count_in_time_real_time_data.channel_id
+    def count_in_real_time_channel_id(self):
+        return self._count_in_time_real_time_data.channel_id
 
     @listenable_property
     def is_counting_in(self):
@@ -49,7 +46,7 @@ class TransportState(CompoundComponent):
 
     @listens('is_counting_in')
     def __on_is_counting_in_changed(self):
-        self._current_or_count_in_time_real_time_data.set_data(self._song if self.is_counting_in else None)
+        self._count_in_time_real_time_data.set_data(self._song if self.is_counting_in else None)
         self.notify_is_counting_in()
         self._update_count_in_duration()
 
@@ -70,5 +67,5 @@ class TransportState(CompoundComponent):
         self.notify_is_playing()
 
     @listens('channel_id')
-    def __on_current_or_count_in_channel_changed(self):
-        self.notify_current_or_count_in_real_time_channel_id()
+    def __on_count_in_channel_changed(self):
+        self.notify_count_in_real_time_channel_id()

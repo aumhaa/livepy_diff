@@ -2,8 +2,8 @@
 from __future__ import absolute_import, print_function
 from functools import partial
 from ableton.v2.base import EventError, const, listenable_property, listens, liveobj_valid
+from ableton.v2.control_surface import DeviceProvider as DeviceProviderBase
 from ableton.v2.control_surface.control import control_list, ButtonControl
-from ableton.v2.control_surface.components.device import DeviceProvider as DeviceProviderBase
 from pushbase.device_chain_utils import is_simpler
 from pushbase.device_component import DeviceComponent as DeviceComponentBase
 from pushbase.parameter_provider import ParameterInfo

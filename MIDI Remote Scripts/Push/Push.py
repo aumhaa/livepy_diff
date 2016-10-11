@@ -335,7 +335,7 @@ class Push(PushBase):
 
     def _init_fixed_length(self):
         super(Push, self)._init_fixed_length()
-        self._fixed_length_settings_component.layer = (BackgroundLayer('track_state_buttons', 'display_line1', 'display_line2', priority=consts.MOMENTARY_DIALOG_PRIORITY), Layer(length_option_buttons='select_buttons', label_display_line='display_line3', option_display_line='display_line4', _notification=self._notification.use_single_line(1), priority=consts.MOMENTARY_DIALOG_PRIORITY))
+        self._fixed_length_settings_component.layer = (BackgroundLayer(self.elements.track_state_buttons.submatrix[:7, :], 'display_line1', 'display_line2', priority=consts.MOMENTARY_DIALOG_PRIORITY), Layer(length_option_buttons='select_buttons', label_display_line='display_line3', option_display_line='display_line4', legato_launch_toggle_button='track_state_buttons_raw[7]', _notification=self._notification.use_single_line(1), priority=consts.MOMENTARY_DIALOG_PRIORITY))
 
     def _create_note_repeat_layer(self):
         return super(Push, self)._create_note_repeat_layer() + Layer(pad_parameters=self._pad_parameter_control, priority=consts.DIALOG_PRIORITY)
@@ -484,6 +484,7 @@ class Push(PushBase):
         new_pad_parameters = make_pad_parameters(self._settings['curve'].value, self._settings['threshold'].value)
         self._pad_sensitivity_update.set_profile('instrument', new_pad_parameters)
         self._pad_sensitivity_update.set_profile('drums', new_pad_parameters)
+        self._pad_sensitivity_update.set_profile('loop', action_pad_sensitivity)
 
     def _update_calibration(self):
         self._send_midi(sysex.CALIBRATION_SET)

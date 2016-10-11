@@ -3,11 +3,12 @@ from __future__ import absolute_import, print_function
 import Live
 from ableton.v2.base import listenable_property, listens, liveobj_valid, NamedTuple, EventObject, task
 from ableton.v2.control_surface.components import PlayableComponent
-from ableton.v2.control_surface.control import control_matrix
+from ableton.v2.control_surface.control import ButtonControl, control_matrix
 from .matrix_maps import NON_FEEDBACK_CHANNEL
 from .pad_control import PadControl
 SLICE_MODE = Live.SimplerDevice.PlaybackMode.slicing
 BASE_SLICING_NOTE = 36
+INVALID_LEVEL = -1.0
 
 class NullTargetNoteProvider(EventObject):
 
@@ -20,12 +21,13 @@ class VelocityLevelsComponent(PlayableComponent):
     SOURCE_NOTES = list(reversed(range(64, 128)))
     DEFAULT_VELOCITY = 100
     matrix = control_matrix(PadControl)
+    select_button = ButtonControl()
 
     def __init__(self, velocity_levels = None, target_note_provider = None, skin_base_key = None, *a, **k):
         super(VelocityLevelsComponent, self).__init__(*a, **k)
         self._target_note_provider = target_note_provider or NullTargetNoteProvider()
         self.__on_selected_target_note_changed.subject = self._target_note_provider
-        self._played_level = None
+        self._played_level = INVALID_LEVEL
         self.set_skin_base_key(skin_base_key or 'VelocityLevels')
         self._notification_task = self._tasks.add(task.run(self._update_velocity))
         self._notification_task.kill()
@@ -33,9 +35,7 @@ class VelocityLevelsComponent(PlayableComponent):
 
     @listenable_property
     def velocity(self):
-        has_levels = liveobj_valid(self.velocity_levels)
-        levels = self.velocity_levels.levels if has_levels else []
-        if self._played_level in levels:
+        if 0 <= self._played_level < 128:
             return self._played_level
         return self.DEFAULT_VELOCITY
 
@@ -77,11 +77,19 @@ class VelocityLevelsComponent(PlayableComponent):
     def matrix(self, button):
         self._on_matrix_released(button)
 
+    @select_button.pressed
+    def select_button(self, _value):
+        self._set_control_pads_from_script(True)
+
+    @select_button.released
+    def select_button(self, _value):
+        self._set_control_pads_from_script(False)
+
     def _on_matrix_pressed(self, button):
         has_levels = liveobj_valid(self.velocity_levels)
         levels = self.velocity_levels.levels if has_levels else []
         index = self._button_index(button)
-        self._played_level = levels[index] if index < len(levels) else -1.0
+        self._played_level = levels[index] if index < len(levels) else INVALID_LEVEL
         self._update_led_feedback()
         self.notify_velocity()
 
@@ -92,7 +100,7 @@ class VelocityLevelsComponent(PlayableComponent):
     @listens('last_played_level')
     def __on_last_played_level(self):
         if not self._takeover_pads:
-            played = self.velocity_levels.last_played_level if liveobj_valid(self.velocity_levels) else -1.0
+            played = self.velocity_levels.last_played_level if liveobj_valid(self.velocity_levels) else INVALID_LEVEL
             self._played_level = played
             self._update_led_feedback()
             self._notification_task.restart()

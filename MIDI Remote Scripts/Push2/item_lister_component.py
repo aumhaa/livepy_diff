@@ -1,12 +1,11 @@
 
 from __future__ import absolute_import, print_function
 from itertools import izip
-from ableton.v2.base import forward_property, listens, EventObject
+from ableton.v2.base import forward_property, listenable_property, listens, EventObject
 from ableton.v2.control_surface import Component, CompoundComponent
 from ableton.v2.control_surface.control import control_list, ButtonControl
 
 class SimpleItemSlot(EventObject):
-    __events__ = ('name',)
 
     def __init__(self, item = None, name = '', nesting_level = -1, icon = '', *a, **k):
         super(SimpleItemSlot, self).__init__(*a, **k)
@@ -14,14 +13,10 @@ class SimpleItemSlot(EventObject):
         self._name = name
         self._nesting_level = nesting_level
         self._icon = icon
-        self.__on_name_changed.subject = self._item if hasattr(self._item, 'name_has_listener') else None
+        self.__on_name_changed.subject = self._item if getattr(self._item, 'name_has_listener', None) else None
+        self.__on_color_index_changed.subject = self._item if getattr(self._item, 'color_index_has_listener', None) else None
 
-    @listens('name')
-    def __on_name_changed(self):
-        self.notify_name()
-        self._name = self._item.name
-
-    @property
+    @listenable_property
     def name(self):
         return self._name
 
@@ -36,6 +31,19 @@ class SimpleItemSlot(EventObject):
     @property
     def icon(self):
         return self._icon
+
+    @listenable_property
+    def color_index(self):
+        return getattr(self._item, 'color_index', -1)
+
+    @listens('name')
+    def __on_name_changed(self):
+        self.notify_name()
+        self._name = self._item.name
+
+    @listens('color_index')
+    def __on_color_index_changed(self):
+        self.notify_color_index()
 
 
 class ItemSlot(SimpleItemSlot):
@@ -234,11 +242,13 @@ class ItemListerComponent(ItemListerComponentBase):
     def __on_selection_changed(self):
         self._update_button_colors()
 
+    def _items_equal(self, item, selected_item):
+        return item == selected_item
+
     def _update_button_colors(self):
         selected_item = self._item_provider.selected_item
         for button, item in izip(self.select_buttons, self.items):
-            is_selected = item == selected_item
-            button.color = self._color_for_button(button.index, is_selected)
+            button.color = self._color_for_button(button.index, self._items_equal(item, selected_item))
 
     def _color_for_button(self, button_index, is_selected):
         if is_selected:

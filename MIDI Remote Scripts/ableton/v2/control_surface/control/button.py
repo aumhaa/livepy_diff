@@ -4,11 +4,15 @@ from functools import partial
 from ...base import lazy_attribute, task
 from ..defaults import MOMENTARY_DELAY, DOUBLE_CLICK_DELAY
 from .control import InputControl, control_event, control_color
+__all__ = ('ButtonControl',
+ 'PlayableControl',
+ 'ButtonControlBase',
+ 'DoubleClickContext')
 
 class DoubleClickContext(object):
     """
     Injectable context to use in conjunction with ButtonControls that ensures other clicks
-    in the same scope will cancel a double click event if occuring between clicks of a
+    in the same scope will cancel a double click event if occurring between clicks of a
     double click.
     """
     control_state = None
@@ -20,6 +24,15 @@ class DoubleClickContext(object):
 
 
 class ButtonControlBase(InputControl):
+    """
+    Base class for Button-like Controls. The class has a set of common events when
+    interacting with buttons. It is expected to connect with a
+    :class:`ableton.v2.control_surface.elements.button.ButtonElement`.
+    
+    As a base class, no default color is defined, as different Button types define
+    different states. Use :class:`ButtonControl` for the simplest implementation of
+    a button.
+    """
     DELAY_TIME = MOMENTARY_DELAY
     DOUBLE_CLICK_TIME = DOUBLE_CLICK_DELAY
     REPEAT_RATE = 0.1
@@ -31,6 +44,9 @@ class ButtonControlBase(InputControl):
     double_clicked = control_event('double_clicked')
 
     class State(InputControl.State):
+        """
+        State-full representation of the Control.
+        """
         disabled_color = control_color('DefaultButton.Disabled')
         pressed_color = control_color(None)
 
@@ -47,6 +63,12 @@ class ButtonControlBase(InputControl):
 
         @property
         def enabled(self):
+            """
+            Enables/disables a button. A disabled button is indicated using the
+            :attr:`disabled_color` and will not react to any input. No event is triggered
+            while it's disabled. If a button is disabled while it's pressed, the button
+            is released first.
+            """
             return self._enabled
 
         @enabled.setter
@@ -59,16 +81,29 @@ class ButtonControlBase(InputControl):
 
         @property
         def is_momentary(self):
+            """
+            True if the Control is connected to a Button Element and it's a momentary
+            button.
+            """
             return self._control_element and self._control_element.is_momentary()
 
         @property
         def is_pressed(self):
+            """
+            True while the Control is pressed. The state might be different than the
+            connected Button Elements `is_pressed` state.
+            """
             return self._is_pressed
 
         def _event_listener_required(self):
             return True
 
         def set_control_element(self, control_element):
+            """
+            Connects a :class:`~ableton.v2.control_surface.elements.button.ButtonElement`
+            with the Control. If a Button Element is already connected and it's
+            currently pressed, the :attr:`released` event will be triggered.
+            """
             if self._control_element != control_element:
                 self._release_button()
                 self._kill_all_tasks()
@@ -182,8 +217,17 @@ class ButtonControlBase(InputControl):
 
 
 class ButtonControl(ButtonControlBase):
+    """
+    A Control representing a simple button.
+    
+    The class is extending :class:`ButtonControlBase` by adding a default :attr:`color`
+    to the button.
+    """
 
     class State(ButtonControlBase.State):
+        """
+        State-full representation of the Control.
+        """
         color = control_color('DefaultButton.On')
 
         def __init__(self, color = None, *a, **k):
@@ -197,10 +241,15 @@ class ButtonControl(ButtonControlBase):
 
 class PlayableControl(ButtonControl):
     """
-    Control that will make the elements MIDI go into Live, to make it playable.
+    Button that will make the elements MIDI go into Live, to make it playable. If
+    :meth:`set_playable` is set to False, the Control with behave like a
+    :class:`ButtonControl`.
     """
 
     class State(ButtonControl.State):
+        """
+        State-full representation of the Control.
+        """
 
         def __init__(self, *a, **k):
             super(PlayableControl.State, self).__init__(*a, **k)
@@ -208,6 +257,9 @@ class PlayableControl(ButtonControl):
             self._playable = True
 
         def set_control_element(self, control_element):
+            """
+            Makes the Control Element send MIDI to Live, so it can be played.
+            """
             super(PlayableControl.State, self).set_control_element(control_element)
             self._update_script_forwarding()
 
@@ -217,6 +269,9 @@ class PlayableControl(ButtonControl):
 
         @property
         def enabled(self):
+            """
+            Defines if the Control is enabled and playable.
+            """
             return self._enabled
 
         @enabled.setter
@@ -229,6 +284,10 @@ class PlayableControl(ButtonControl):
                 self.set_control_element(self._control_element)
 
         def set_playable(self, value):
+            """
+            Make the Control playable in Live. If True is passed, the Control will
+            behave like a :class:`ButtonControl`.
+            """
             self._playable = value
             self._update_script_forwarding()
 

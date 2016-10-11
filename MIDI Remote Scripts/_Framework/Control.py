@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, with_statement
+from __future__ import absolute_import, print_function
 from functools import partial
 from itertools import izip_longest
 from . import Task

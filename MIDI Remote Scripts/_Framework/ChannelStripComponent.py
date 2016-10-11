@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from itertools import chain
 import Live
 from .ControlSurfaceComponent import ControlSurfaceComponent
@@ -71,7 +71,7 @@ class ChannelStripComponent(ControlSurfaceComponent):
         self._track_property_slots = [make_property_slot('mute'),
          make_property_slot('solo'),
          make_property_slot('arm'),
-         make_property_slot('current_input_routing', 'input_routing'),
+         make_property_slot('input_routing_type', 'input_routing'),
          make_property_slot('name', 'track_name')]
         self._mixer_device_property_slots = [make_property_slot('crossfade_assign', 'cf_assign'), make_property_slot('sends')]
 

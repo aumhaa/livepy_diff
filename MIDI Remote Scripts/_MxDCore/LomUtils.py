@@ -3,7 +3,7 @@ import sys
 import types
 from itertools import ifilter
 from MxDUtils import TupleWrapper
-from LomTypes import cs_base_classes, EXPOSED_TYPE_PROPERTIES, TUPLE_TYPES, PROPERTY_TYPES, ENUM_TYPES, ROOT_KEYS, LomObjectError, LomAttributeError, is_class, get_root_prop, is_lom_object, is_cplusplus_lom_object, is_object_iterable
+from LomTypes import cs_base_classes, TUPLE_TYPES, PROPERTY_TYPES, ENUM_TYPES, ROOT_KEYS, MFLPropertyFormats, LomObjectError, LomAttributeError, get_exposed_property_names_for_type, get_exposed_property_info, is_class, get_root_prop, is_lom_object, is_cplusplus_lom_object, is_object_iterable
 
 def create_lom_doc_string(lom_object):
     description = ''
@@ -15,14 +15,14 @@ def create_lom_doc_string(lom_object):
 class LomInformation(object):
     """ Class that extracts information from a given LOM object """
 
-    def __init__(self, lom_object, *a, **k):
+    def __init__(self, lom_object, epii_version, *a, **k):
         super(LomInformation, self).__init__(*a, **k)
         self._lists_of_children = []
         self._children = []
         self._functions = []
         self._properties = []
         self._description = create_lom_doc_string(lom_object)
-        self._generate_object_info(lom_object)
+        self._generate_object_info(lom_object, epii_version)
 
     @property
     def description(self):
@@ -52,21 +52,24 @@ class LomInformation(object):
         type_name = (real_prop.__class__ if real_prop != None else PROPERTY_TYPES[prop_name]).__name__
         self._children.append((prop_name, type_name))
 
-    def _generate_object_info(self, lom_object):
+    def _generate_object_info(self, lom_object, epii_version):
         property_names = []
         if isinstance(lom_object, cs_base_classes()):
             property_names = ifilter(lambda prop: not prop.startswith('_'), dir(lom_object))
         else:
-            property_names = EXPOSED_TYPE_PROPERTIES.get(type(lom_object), [])
+            property_names = get_exposed_property_names_for_type(type(lom_object), epii_version)
         for name in property_names:
-            self._generate_property_info(name, lom_object)
+            self._generate_property_info(name, lom_object, epii_version)
 
-    def _generate_property_info(self, prop_name, lom_object):
+    def _generate_property_info(self, prop_name, lom_object, epii_version):
         try:
             real_prop = getattr(lom_object, prop_name)
             if not is_class(real_prop):
+                prop_info = get_exposed_property_info(type(lom_object), prop_name, epii_version)
                 prop_type = real_prop.__class__.__name__
-                if prop_name in TUPLE_TYPES:
+                if prop_info and prop_info.format == MFLPropertyFormats.JSON:
+                    self._properties.append((prop_name, 'dict'))
+                elif prop_name in TUPLE_TYPES:
                     self._add_list_of_children(prop_name)
                 elif prop_name in PROPERTY_TYPES.keys():
                     self._add_child(real_prop, prop_name)

@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 import Live
 NavDirection = Live.Application.Application.View.NavDirection
 from .CompoundComponent import CompoundComponent

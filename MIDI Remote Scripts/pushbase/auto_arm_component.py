@@ -134,7 +134,7 @@ class AutoArmComponent(Component, Messenger):
     def _on_tracks_changed(self):
         tracks = filter(lambda t: t.can_be_armed, self.song.tracks)
         self._on_arm_changed.replace_subjects(tracks)
-        self._on_current_input_routing_changed.replace_subjects(tracks)
+        self._on_input_routing_type_changed.replace_subjects(tracks)
         self._on_frozen_state_changed.replace_subjects(tracks)
 
     @listens('exclusive_arm')
@@ -145,8 +145,8 @@ class AutoArmComponent(Component, Messenger):
     def _on_arm_changed(self, track):
         self.update()
 
-    @listens_group('current_input_routing')
-    def _on_current_input_routing_changed(self, track):
+    @listens_group('input_routing_type')
+    def _on_input_routing_type_changed(self, track):
         self.update()
 
     @listens_group('is_frozen')

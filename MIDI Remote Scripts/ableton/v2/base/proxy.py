@@ -20,8 +20,8 @@ class ProxyBase(object):
     
        - If the the attribute is present in the proxy_interface, but not
          in the proxy, set in the proxy_object.
-       - Else if the attribute is not preent in the proxy_interface, set it
-         in the proxy_object.
+       - Else if the attribute is not present in the proxy_interface, set it
+         in the proxy.
        - If the attribute is present in both the proxy_interface and
          the proxy_object, raise an AttributeError complaining about
          ambiguity.

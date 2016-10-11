@@ -8,7 +8,7 @@ class Setting(EventObject):
     Setting interface for writing to the preferences and all
     information for changing and displaying it.
     """
-    __events__ = (Event(name='value', doc=' Called when the value of the\n                                                 setting changes '),)
+    __events__ = (Event(name='value', doc=' Called when the value of the setting changes '),)
 
     def __init__(self, name = '', values = None, default_value = None, preferences = None, *a, **k):
         super(Setting, self).__init__(*a, **k)

@@ -8,7 +8,7 @@ from pushbase.actions import get_clip_name
 from pushbase.colors import Blink, Pulse
 from pushbase.special_session_component import ClipSlotCopyHandler, SpecialClipSlotComponent, SpecialSceneComponent, SpecialSessionComponent
 from .clip_decoration import ClipDecoratedPropertiesCopier
-from .colors import determine_shaded_color_index, IndexedColor, translate_color_index, WHITE_COLOR_INDEX_FROM_LIVE, WHITE_MIDI_VALUE
+from .colors import IndexedColor, translate_color_index
 from .skin_default import CLIP_PLAYING_COLOR, RECORDING_COLOR
 PLAYING_CLIP_PULSE_SPEED = 48
 TRIGGERED_CLIP_BLINK_SPEED = 24
@@ -60,13 +60,11 @@ class ClipSlotComponent(SpecialClipSlotComponent):
             return 'Session.EmptySlotTriggeredPlay'
         elif slot_or_clip.is_playing:
             animate_to_color = RECORDING_COLOR if slot_or_clip.is_recording else IndexedColor(clip_color)
-            return Pulse(color1=IndexedColor(determine_shaded_color_index(clip_color, 2)), color2=animate_to_color, speed=PLAYING_CLIP_PULSE_SPEED)
+            return Pulse(color1=IndexedColor.from_push_index(clip_color, 2), color2=animate_to_color, speed=PLAYING_CLIP_PULSE_SPEED)
         else:
             return super(ClipSlotComponent, self)._feedback_value(track, slot_or_clip)
 
     def _color_value(self, slot_or_clip):
-        if slot_or_clip.color_index == WHITE_COLOR_INDEX_FROM_LIVE:
-            return WHITE_MIDI_VALUE
         return translate_color_index(slot_or_clip.color_index)
 
     def _on_clip_duplicated(self, source_clip, destination_clip):

@@ -170,7 +170,7 @@ def make_pad_setting_message(scene_index, track_index, setting):
     """
     raise 0 <= scene_index <= 8 or AssertionError
     raise 0 <= track_index <= 8 or AssertionError
-    raise 0 <= setting <= 1 or AssertionError
+    raise 0 <= setting <= 2 or AssertionError
     return make_message(40, (scene_index, track_index, setting))
 
 

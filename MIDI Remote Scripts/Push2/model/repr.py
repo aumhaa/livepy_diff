@@ -66,6 +66,13 @@ def strip_formatted_string(str):
     return re.sub('\\s\\s+', ' ', str).strip()
 
 
+def convert_color_index(color_index):
+    from ..colors import UNCOLORED_INDEX
+    if color_index is None:
+        return UNCOLORED_INDEX
+    return color_index
+
+
 class ModelAdapter(EventObject):
 
     def __init__(self, adaptee = None, *a, **k):
@@ -401,7 +408,7 @@ class DeviceAdapter(ModelAdapter):
     @listenable_property
     def chain_color_index(self):
         if liveobj_valid(self._chain):
-            return self._chain.color_index
+            return convert_color_index(self._chain.color_index)
         return -1
 
     @listens('color_index')
@@ -411,7 +418,7 @@ class DeviceAdapter(ModelAdapter):
     @listenable_property
     def rack_color_index(self):
         if liveobj_valid(self._rack_chain):
-            return self._rack_chain.color_index
+            return convert_color_index(self._rack_chain.color_index)
         return -1
 
     @listens('color_index')
@@ -432,7 +439,11 @@ class TrackAdapter(ModelAdapter):
         self._update_has_playing_clip()
         if hasattr(self._adaptee, 'playing_slot_index'):
             self.__on_playing_slot_index_changed.subject = self._adaptee
-            self._update_playing_clip_listeners()
+        try:
+            self.__on_is_frozen_changed.subject = self._adaptee.parent_track
+        except AttributeError:
+            pass
+
         try:
             self.register_slot(self._adaptee, self.notify_colorIndex, 'color_index')
         except EventError:
@@ -454,7 +465,7 @@ class TrackAdapter(ModelAdapter):
             pass
 
         try:
-            self.register_slot(self._adaptee, self.notify_outputRouting, 'current_output_routing')
+            self.register_slot(self._adaptee, self.notify_outputRouting, 'output_routing_type')
         except EventError:
             pass
 
@@ -501,6 +512,17 @@ class TrackAdapter(ModelAdapter):
         except AttributeError:
             return False
 
+    @listenable_property
+    def parent_track_frozen(self):
+        try:
+            return self._adaptee.parent_track.is_frozen
+        except AttributeError:
+            return False
+
+    @listens('is_frozen')
+    def __on_is_frozen_changed(self):
+        self.notify_parent_track_frozen()
+
     @listens('mute')
     def __on_mute_changed(self):
         self.notify_activated()
@@ -515,27 +537,14 @@ class TrackAdapter(ModelAdapter):
 
     @listens('playing_slot_index')
     def __on_playing_slot_index_changed(self):
-        self.notify_playingClipPosition()
-        self._update_playing_clip_listeners()
         self._update_has_playing_clip()
+        self.notify_playingClip()
 
     def _update_has_playing_clip(self):
         has_playing_clip = self._adaptee.playing_slot_index >= 0 if hasattr(self._adaptee, 'playing_slot_index') else False
         if has_playing_clip != self.has_playing_clip:
             self.has_playing_clip = has_playing_clip
             self.notify_hasPlayingClip()
-
-    @listens('playing_position')
-    def __on_playing_clip_play_position_changed(self):
-        self.notify_playingClipPosition()
-
-    @listens('loop_start')
-    def __on_playing_clip_loop_start_changed(self):
-        self.notify_playingClipPosition()
-
-    @listens('loop_end')
-    def __on_playing_clip_loop_end_changed(self):
-        self.notify_playingClipPosition()
 
     def _playing_clip_slot(self):
         if hasattr(self._adaptee, 'playing_slot_index'):
@@ -550,29 +559,17 @@ class TrackAdapter(ModelAdapter):
         if playing_clip_slot is not None:
             return playing_clip_slot.clip
 
-    def _update_playing_clip_listeners(self):
-        self.__on_playing_clip_play_position_changed.subject = self._playing_clip()
-        self.__on_playing_clip_loop_start_changed.subject = self._playing_clip()
-        self.__on_playing_clip_loop_end_changed.subject = self._playing_clip()
-
-    @staticmethod
-    def _convert_color_index(color_index):
-        from ..colors import UNCOLORED_INDEX
-        if color_index is None:
-            return UNCOLORED_INDEX
-        return color_index
-
     @listenable_property
     def colorIndex(self):
         try:
-            return self._convert_color_index(self._adaptee.color_index)
+            return convert_color_index(self._adaptee.color_index)
         except AttributeError:
             return self.parentColorIndex
 
     @listenable_property
     def parentColorIndex(self):
         try:
-            return self._convert_color_index(self._adaptee.parent_track.color_index)
+            return convert_color_index(self._adaptee.parent_track.color_index)
         except AttributeError:
             return -1
 
@@ -599,19 +596,18 @@ class TrackAdapter(ModelAdapter):
 
     @listenable_property
     def outputRouting(self):
-        return getattr(self._adaptee, 'current_output_routing', '')
+        routing_type = getattr(self._adaptee, 'output_routing_type', None)
+        if routing_type is not None:
+            return routing_type.display_name
+        return ''
 
     @listenable_property
     def hasPlayingClip(self):
         return self.has_playing_clip
 
     @listenable_property
-    def playingClipPosition(self):
-        playing_clip = self._playing_clip()
-        if liveobj_valid(playing_clip):
-            return (playing_clip.playing_position - playing_clip.loop_start) / (playing_clip.loop_end - playing_clip.loop_start)
-        else:
-            return 0.0
+    def playingClip(self):
+        return self._playing_clip()
 
 
 class TrackListAdapter(VisibleAdapter):
@@ -674,9 +670,10 @@ class LiveDialogAdapter(VisibleAdapter):
 
 
 class RoutingAdapter(VisibleAdapter):
-    __events__ = ('routingTypeList', 'routingChannelList')
+    __events__ = ('routingTypeList', 'routingChannelList', 'routingChannelPositionList')
 
     def __init__(self, *a, **k):
         super(RoutingAdapter, self).__init__(*a, **k)
         self._alias_observable_property('routing_type_list', 'routingTypeList', lambda self_: [self_._adaptee.routing_type_list])
         self._alias_observable_property('routing_channel_list', 'routingChannelList', lambda self_: [self_._adaptee.routing_channel_list])
+        self._alias_observable_property('routing_channel_position_list', 'routingChannelPositionList', lambda self_: [self_._adaptee.routing_channel_position_list])

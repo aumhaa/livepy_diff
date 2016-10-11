@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from itertools import ifilter, izip, starmap, chain, imap
 from functools import partial
 from . import Task

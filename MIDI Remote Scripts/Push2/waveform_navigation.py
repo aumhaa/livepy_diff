@@ -6,7 +6,7 @@ from collections import namedtuple, OrderedDict
 from functools import partial
 from itertools import ifilter, imap
 import Live
-from ableton.v2.base import EventObject, const, clamp, depends, find_if, index_if, isclose, lazy_attribute, listenable_property, listens, listens_group, nop, task
+from ableton.v2.base import EventObject, const, clamp, depends, find_if, index_if, isclose, lazy_attribute, listenable_property, listens, listens_group, liveobj_valid, nop, task
 from ableton.v2.control_surface.control import EncoderControl
 logger = logging.getLogger(__name__)
 FocusMarker = namedtuple('FocusMarker', ['name', 'position'])
@@ -685,7 +685,7 @@ class SimplerWaveformNavigation(WaveformNavigation):
 
     def get_region_in_samples(self, region):
         sample = self._simpler.sample
-        if sample.warping:
+        if liveobj_valid(sample) and sample.warping:
             return Region(sample.beat_to_sample_time(region.start), sample.beat_to_sample_time(region.end))
         return region
 
@@ -803,12 +803,14 @@ class SimplerWaveformNavigation(WaveformNavigation):
         self.focus_region_of_interest('start_end_marker', self._simpler.get_parameter_by_name('Start'))
 
     def _get_selected_slice_index(self):
+        selected_slice_index = -1
         try:
-            return self._simpler.sample.slices.index(self._simpler.view.selected_slice)
+            if liveobj_valid(self._simpler.sample):
+                selected_slice_index = self._simpler.sample.slices.index(self._simpler.view.selected_slice)
         except ValueError:
             pass
 
-        return -1
+        return selected_slice_index
 
 
 class AudioClipWaveformNavigation(WaveformNavigation):

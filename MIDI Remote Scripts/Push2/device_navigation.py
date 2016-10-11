@@ -6,12 +6,12 @@ from functools import partial
 from multipledispatch import dispatch
 import Live
 from ableton.v2.base import find_if, first, index_if, listenable_property, listens, listens_group, liveobj_changed, liveobj_valid, EventObject, SlotGroup, task
-from ableton.v2.control_surface.components import device_to_appoint
+from ableton.v2.control_surface import device_to_appoint
 from ableton.v2.control_surface.control import control_list, StepEncoderControl
 from ableton.v2.control_surface.mode import Component, ModesComponent
 from pushbase.decoration import DecoratorFactory
 from pushbase.device_chain_utils import is_first_device_on_pad
-from .colors import IndexedColor, translate_color_index
+from .colors import DISPLAY_BUTTON_SHADE_LEVEL, IndexedColor
 from .device_util import is_drum_pad, find_chain_or_track
 from .item_lister_component import ItemListerComponent, ItemProvider
 
@@ -253,7 +253,7 @@ class MoveDeviceComponent(Component):
 class DeviceNavigationComponent(ItemListerComponent):
     __events__ = ('drum_pad_selection', 'mute_solo_stop_cancel_action_performed')
 
-    def __init__(self, device_bank_registry = None, banking_info = None, device_component = None, delete_handler = None, chain_selection = None, bank_selection = None, move_device = None, track_list_component = None, use_chain_color = False, *a, **k):
+    def __init__(self, device_bank_registry = None, banking_info = None, device_component = None, delete_handler = None, chain_selection = None, bank_selection = None, move_device = None, track_list_component = None, *a, **k):
         raise device_bank_registry is not None or AssertionError
         raise device_component is not None or AssertionError
         raise chain_selection is not None or AssertionError
@@ -272,7 +272,6 @@ class DeviceNavigationComponent(ItemListerComponent):
         self._move_device = self.register_component(move_device)
         self._last_pressed_button_index = -1
         self._selected_on_previous_press = None
-        self._use_chain_color = use_chain_color
         self._modes = self.register_component(ModesComponent())
         self._modes.add_mode('default', [partial(self._chain_selection.set_parent, None), partial(self._bank_selection.set_device, None)])
         self._modes.add_mode('chain_selection', [self._chain_selection])
@@ -368,8 +367,8 @@ class DeviceNavigationComponent(ItemListerComponent):
             return 'DefaultButton.Off'
         elif is_selected:
             return 'ItemNavigation.ItemSelected'
-        elif self._use_chain_color and liveobj_valid(chain):
-            return IndexedColor(translate_color_index(chain.color_index))
+        elif liveobj_valid(chain):
+            return IndexedColor.from_live_index(chain.color_index, DISPLAY_BUTTON_SHADE_LEVEL)
         else:
             return 'ItemNavigation.ItemNotSelected'
 

@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function
 from .background import BackgroundComponent, ModifierBackgroundComponent
 from .channel_strip import ChannelStripComponent
 from .clip_slot import ClipSlotComponent, find_nearest_color
-from .device import DeviceComponent, device_to_appoint, select_and_appoint_device
+from .device import DeviceComponent
 from .drum_group import DrumGroupComponent
 from .m4l_interface import M4LInterfaceComponent
 from .mixer import MixerComponent, right_align_return_tracks_track_assigner
@@ -19,33 +19,4 @@ from .slide import Slideable, SlideComponent
 from .toggle import ToggleComponent
 from .transport import TransportComponent
 from .view_control import BasicSceneScroller, SceneListScroller, SceneScroller, TrackScroller, ViewControlComponent
-__all__ = (BackgroundComponent,
- ModifierBackgroundComponent,
- ChannelStripComponent,
- ClipSlotComponent,
- find_nearest_color,
- device_to_appoint,
- DeviceComponent,
- DrumGroupComponent,
- M4LInterfaceComponent,
- MixerComponent,
- right_align_return_tracks_track_assigner,
- PlayableComponent,
- SceneComponent,
- Scrollable,
- ScrollComponent,
- select_and_appoint_device,
- SessionComponent,
- SessionNavigationComponent,
- SessionRecordingComponent,
- SessionRingComponent,
- SessionOverviewComponent,
- Slideable,
- SlideComponent,
- ToggleComponent,
- TransportComponent,
- BasicSceneScroller,
- SceneListScroller,
- SceneScroller,
- TrackScroller,
- ViewControlComponent)
+__all__ = ('BackgroundComponent', 'ModifierBackgroundComponent', 'ChannelStripComponent', 'ClipSlotComponent', 'find_nearest_color', 'DeviceComponent', 'DrumGroupComponent', 'M4LInterfaceComponent', 'MixerComponent', 'right_align_return_tracks_track_assigner', 'PlayableComponent', 'SceneComponent', 'Scrollable', 'ScrollComponent', 'SessionComponent', 'SessionNavigationComponent', 'SessionRecordingComponent', 'SessionRingComponent', 'SessionOverviewComponent', 'Slideable', 'SlideComponent', 'ToggleComponent', 'TransportComponent', 'BasicSceneScroller', 'SceneListScroller', 'SceneScroller', 'TrackScroller', 'ViewControlComponent')

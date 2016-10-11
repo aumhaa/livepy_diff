@@ -5,8 +5,8 @@ from functools import partial
 import Live.DrumPad
 import Live.Song
 import Live.Track
-from ableton.v2.base import compose, find_if, flatten, index_if, in_range, listens, liveobj_valid, second, EventObject
-from ableton.v2.control_surface.components import select_and_appoint_device
+from ableton.v2.base import compose, find_if, flatten, index_if, in_range, listens, liveobj_changed, liveobj_valid, second, EventObject
+from ableton.v2.control_surface import select_and_appoint_device
 from pushbase import consts
 DeviceType = Live.Device.DeviceType
 
@@ -415,7 +415,7 @@ class RackNode(ModelNode):
         return self._object.view.selected_chain
 
     def _set_selected_child_in_model(self, value):
-        if liveobj_valid(value):
+        if liveobj_valid(value) and liveobj_changed(self._object.view.selected_chain, value):
             self._object.view.selected_chain = value
 
     def _get_children_from_model(self):

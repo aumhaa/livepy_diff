@@ -72,7 +72,6 @@ class SimplerDeviceDecorator(EventObject, LiveObjectDecorator):
         self.slicing_style_param = EnumWrappingParameter(name='Slice by', parent=self, values_host=self, index_property_host=self._live_object.sample, values_property='available_slice_styles', index_property='slicing_style')
         self.slicing_beat_division_param = EnumWrappingParameter(name='Division', parent=self, values_host=self, index_property_host=self._live_object.sample, values_property='available_slicing_beat_divisions', index_property='slicing_beat_division')
         self.slicing_region_count_param = WrappingParameter(name='Regions', parent=self, property_host=self._live_object.sample, source_property='slicing_region_count', from_property_value=from_user_range(2, 64), to_property_value=to_user_range_quantized(2, 64))
-        self.secret_slicing_param = BoolWrappingParameter(name='Secret Slicing', parent=self, property_host=self, source_property='show_slicing_style')
         self._sample_based_parameters.extend([self.start,
          self.end,
          self.sensitivity,
@@ -95,8 +94,7 @@ class SimplerDeviceDecorator(EventObject, LiveObjectDecorator):
          self.pad_slicing_param,
          self.nudge,
          self.multi_sample_mode_param,
-         self.voices_param,
-         self.secret_slicing_param])
+         self.voices_param])
 
     def _decorated_parameters(self):
         return tuple(self._sample_based_parameters) + tuple(self._additional_parameters)
@@ -124,10 +122,6 @@ class SimplerDeviceDecorator(EventObject, LiveObjectDecorator):
     @property
     def available_resolutions(self):
         return (u'1 Bar', u'1/2', u'1/4', u'1/8', u'1/16', u'1/32', u'Transients')
-
-    @listenable_property
-    def show_slicing_style(self):
-        return Live.Application.get_application().has_option('_ShowSlicingStyle')
 
     @property
     def available_slice_styles(self):

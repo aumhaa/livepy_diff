@@ -10,7 +10,6 @@ from pushbase.melodic_pattern import ROOT_NOTES, SCALES, NOTE_NAMES
 Layout = namedtuple('Layout', ('name', 'interval'))
 
 class ScalesComponent(Component):
-    __events__ = ('close',)
     navigation_colors = dict(color='Scales.Navigation', disabled_color='Scales.NavigationDisabled')
     up_button = ButtonControl(repeat=True, **navigation_colors)
     down_button = ButtonControl(repeat=True, **navigation_colors)
@@ -20,7 +19,6 @@ class ScalesComponent(Component):
     in_key_toggle_button = ToggleButtonControl(toggled_color='Scales.OptionOn', untoggled_color='Scales.OptionOn')
     fixed_toggle_button = ToggleButtonControl(toggled_color='Scales.OptionOn', untoggled_color='Scales.OptionOff')
     scale_encoders = control_list(StepEncoderControl)
-    close_button = ButtonControl(color='Scales.Close')
     layout_encoder = StepEncoderControl()
     direction_encoder = StepEncoderControl()
     horizontal_navigation = listenable_property.managed(False)
@@ -136,10 +134,6 @@ class ScalesComponent(Component):
     @direction_encoder.value
     def direction_encoder(self, value, encoder):
         self._note_layout.is_horizontal = value < 0
-
-    @close_button.pressed
-    def close_button(self, button):
-        self.notify_close()
 
     @property
     def note_layout(self):

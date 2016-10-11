@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, with_statement
+from __future__ import absolute_import, print_function
 from .Util import BooleanContext
 
 class ProxyBase(object):

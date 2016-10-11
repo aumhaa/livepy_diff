@@ -2,6 +2,7 @@
 from __future__ import absolute_import, print_function
 playing_profile = 0
 default_profile = 1
+loop_selector_profile = 2
 
 def index_to_pad_coordinate(index):
     """

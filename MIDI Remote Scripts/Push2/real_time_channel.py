@@ -31,6 +31,10 @@ class RealTimeDataComponent(Component):
         self._valid = True
         register_real_time_data(self)
 
+    def disconnect(self):
+        super(RealTimeDataComponent, self).disconnect()
+        self._data = None
+
     @listenable_property
     def channel_id(self):
         return self._real_time_channel_id
@@ -38,6 +42,10 @@ class RealTimeDataComponent(Component):
     @listenable_property
     def object_id(self):
         return self._object_id
+
+    @property
+    def attached_object(self):
+        return self._data
 
     def on_enabled_changed(self):
         super(RealTimeDataComponent, self).on_enabled_changed()

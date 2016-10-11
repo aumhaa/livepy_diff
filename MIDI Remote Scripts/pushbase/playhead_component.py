@@ -1,6 +1,6 @@
 
 from __future__ import absolute_import, print_function
-from ableton.v2.base import listens
+from ableton.v2.base import listens, liveobj_valid
 from ableton.v2.control_surface import Component
 
 class PlayheadComponent(Component):
@@ -55,14 +55,13 @@ class PlayheadComponent(Component):
     def update(self):
         super(PlayheadComponent, self).update()
         if self._playhead:
-            if self.is_enabled() and self.song.is_playing and self._clip and self._clip.is_playing:
-                clip_slot = self._clip.canonical_parent
-                track = clip_slot.canonical_parent if clip_slot else None
-            else:
-                track = None
-            self._playhead.track = track
+            clip = None
+            if self.is_enabled() and self.song.is_playing and liveobj_valid(self._clip):
+                if self._clip.is_arrangement_clip or self._clip.is_playing:
+                    clip = self._clip
+            self._playhead.clip = clip
             self._playhead.set_feedback_channels(self._feedback_channels)
-            if track:
+            if clip:
                 is_triplet = self._grid_resolution.clip_grid[1]
                 notes = self._triplet_notes if is_triplet else self._notes
                 self._playhead.notes = list(notes)

@@ -1,7 +1,7 @@
 
 from __future__ import absolute_import, print_function
 from itertools import chain, starmap
-from ableton.v2.base import forward_property, listens
+from ableton.v2.base import forward_property, listens, liveobj_valid
 from ableton.v2.control_surface import CompoundComponent
 from ableton.v2.control_surface.elements import to_midi_value
 from .loop_selector_component import LoopSelectorComponent
@@ -25,7 +25,7 @@ class StepSeqComponent(CompoundComponent):
         raise instrument_component is not None or AssertionError
         raise note_editor_component is not None or AssertionError
         self._grid_resolution = grid_resolution
-        self._note_editor, self._loop_selector = self.register_components(note_editor_component, LoopSelectorComponent(clip_creator=clip_creator))
+        self._note_editor, self._loop_selector = self.register_components(note_editor_component, LoopSelectorComponent(clip_creator=clip_creator, default_size=16))
         self._instrument = instrument_component
         self._paginator = NoteEditorPaginator([self._note_editor])
         self._step_duplicator = self.register_component(StepDuplicatorComponent())
@@ -129,7 +129,7 @@ class StepSeqComponent(CompoundComponent):
     @listens('detail_clip')
     def _on_detail_clip_changed(self):
         clip = self.song.view.detail_clip
-        clip = clip if self.is_enabled() and clip and clip.is_midi_clip else None
+        clip = clip if liveobj_valid(clip) and clip.is_midi_clip else None
         self._detail_clip = clip
         self._note_editor.set_detail_clip(clip)
         self._loop_selector.set_detail_clip(clip)

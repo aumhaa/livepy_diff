@@ -2,7 +2,7 @@
 from __future__ import absolute_import, print_function
 from ableton.v2.base import CompoundDisconnectable, SerializableListenableProperties, EventObject, clamp, listenable_property
 from ableton.v2.control_surface import Component
-from ableton.v2.control_surface.control import ButtonControl, RadioButtonControl, StepEncoderControl, ToggleButtonControl, ButtonControl, control_list
+from ableton.v2.control_surface.control import RadioButtonControl, StepEncoderControl, ToggleButtonControl, ButtonControl, control_list
 from ableton.v2.control_surface.mode import ModesComponent
 from .pad_velocity_curve import PadVelocityCurveSettings
 PAD_SETTING_STEP_SIZE = 20
@@ -12,7 +12,6 @@ MIN_USER_FACING_DISPLAY_BRIGHTNESS = 2
 
 class GeneralSettings(EventObject):
     workflow = listenable_property.managed('scene')
-    advanced_coloring = listenable_property.managed(False)
 
 
 class HardwareSettings(SerializableListenableProperties):
@@ -223,11 +222,3 @@ class SetupComponent(ModesComponent):
     @category_radio_buttons.checked
     def category_radio_buttons(self, button):
         self.selected_mode = self.modes[button.index]
-
-    @property
-    def count_in_feature_enabled(self):
-        return self.application.has_option('_Push2CountIn')
-
-    @property
-    def record_phase_feature_enabled(self):
-        return self.application.has_option('_Push2RecordPhase')

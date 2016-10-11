@@ -24,6 +24,7 @@ class FixedLengthSetting(EventObject):
     option_names = LENGTH_OPTION_NAMES
     selected_index = listenable_property.managed(0)
     enabled = listenable_property.managed(False)
+    legato_launch = listenable_property.managed(False)
 
     def get_selected_length(self, song):
         index = self.selected_index
@@ -37,6 +38,7 @@ class FixedLengthSetting(EventObject):
 class FixedLengthSettingComponent(Component):
     length_option_buttons = control_list(RadioButtonControl, checked_color='Option.Selected', unchecked_color='Option.Unselected', control_count=len(LENGTH_OPTIONS))
     fixed_length_toggle_button = ToggleButtonControl(toggled_color='Option.On', untoggled_color='Option.Off')
+    legato_launch_toggle_button = ToggleButtonControl(toggled_color='FixedLength.PhraseAlignedOn', untoggled_color='FixedLength.PhraseAlignedOff')
     label_display_line = TextDisplayControl(LENGTH_LABELS)
     option_display_line = TextDisplayControl(LENGTH_OPTION_NAMES)
 
@@ -46,6 +48,7 @@ class FixedLengthSettingComponent(Component):
         self._fixed_length_setting = fixed_length_setting
         self.length_option_buttons.connect_property(fixed_length_setting, 'selected_index')
         self.fixed_length_toggle_button.connect_property(fixed_length_setting, 'enabled')
+        self.legato_launch_toggle_button.connect_property(fixed_length_setting, 'legato_launch')
         self.__on_setting_selected_index_changes.subject = fixed_length_setting
         self.__on_setting_selected_index_changes(fixed_length_setting.selected_index)
 

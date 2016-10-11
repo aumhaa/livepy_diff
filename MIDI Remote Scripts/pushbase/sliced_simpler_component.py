@@ -28,7 +28,6 @@ class SlicedSimplerComponent(PlayableComponent, SlideableTouchStripComponent, Sl
         self._position = 0
         super(SlicedSimplerComponent, self).__init__(touch_slideable=self, dragging_enabled=True, *a, **k)
         self._simpler = None
-        self._show_slicing_style = Live.Application.get_application().has_option('_ShowSlicingStyle')
         self._quantizer = quantizer or NullQuantizer()
 
     def _get_position(self):
@@ -84,8 +83,7 @@ class SlicedSimplerComponent(PlayableComponent, SlideableTouchStripComponent, Sl
         def set_pad_slicing():
             self._simpler.pad_slicing = self._simpler.sample.slicing_style == Live.Sample.SlicingStyle.manual
 
-        if self._show_slicing_style:
-            self._tasks.add(task.sequence(task.delay(1), task.run(set_pad_slicing)))
+        self._tasks.add(task.sequence(task.delay(1), task.run(set_pad_slicing)))
 
     def _slices(self):
         if liveobj_valid(self._simpler) and liveobj_valid(self._simpler.sample):
@@ -144,7 +142,7 @@ class SlicedSimplerComponent(PlayableComponent, SlideableTouchStripComponent, Sl
         return 'SlicedSimpler.NextSlice'
 
     def _should_show_next_slice(self, index, length_of_slices):
-        return index == length_of_slices and liveobj_valid(self._simpler) and self._simpler.pad_slicing and liveobj_valid(self._simpler.sample) and self._simpler.sample.slicing_style == Live.Sample.SlicingStyle.manual and self._show_slicing_style
+        return index == length_of_slices and liveobj_valid(self._simpler) and self._simpler.pad_slicing and liveobj_valid(self._simpler.sample) and self._simpler.sample.slicing_style == Live.Sample.SlicingStyle.manual
 
     @delete_button.value
     def delete_button(self, value, button):
@@ -153,7 +151,7 @@ class SlicedSimplerComponent(PlayableComponent, SlideableTouchStripComponent, Sl
     def _try_delete_notes_for_slice(self, index):
         clip = self.song.view.detail_clip
         pitch = BASE_SLICING_NOTE + index
-        has_notes = liveobj_valid(clip) and len(clip.get_notes(0, pitch, DISTANT_FUTURE, 1)) > 0
+        has_notes = liveobj_valid(clip) and not clip.is_audio_clip and len(clip.get_notes(0, pitch, DISTANT_FUTURE, 1)) > 0
         if has_notes:
             clip.remove_notes(0, pitch, DISTANT_FUTURE, 1)
             slice_label = 'Slice %d' % (index + 1)

@@ -19,6 +19,7 @@ from .SpecialMidiMap import SpecialMidiMap, make_button, make_multi_button, make
 from .BackgroundComponent import ModifierBackgroundComponent, BackgroundComponent
 from .ActionsComponent import ActionsComponent
 from .ClipActionsComponent import ClipActionsComponent
+from .LedLightingComponent import LedLightingComponent
 from .TranslationComponent import TranslationComponent
 from .TargetTrackComponent import TargetTrackComponent
 from .SpecialDeviceComponent import SpecialDeviceComponent
@@ -284,10 +285,14 @@ class Launchpad_Pro(IdentifiableControlSurface, OptimizedControlSurface):
     def _create_note_modes(self):
         note_mode_matrix_translation = self._create_translation('Note_Mode_Matrix_Translation', consts.CHROM_MAP_CHANNEL, Layer(button_matrix=self._midimap['Main_Button_Matrix'], note_button_matrix=self._midimap['Note_Button_Matrix'], drum_matrix=self._midimap['Drum_Button_Matrix'], mixer_button_matrix=self._midimap['Mixer_Button_Matrix']), should_enable=False)
         note_mode_scene_launch_translation = self._create_translation('Note_Mode_Scene_Launch_Translation', consts.CHROM_MAP_CHANNEL, Layer(scene_launch_buttons=self._midimap['Scene_Launch_Button_Matrix']))
+        scale_setup_mode_button_lighting = LedLightingComponent(name='LED_Lighting_Component', is_enabled=False, layer=Layer(button=self._midimap.with_shift('Note_Mode_Button')))
         drum_mode_note_matrix_translation = self._create_translation('Drum_Mode_Note_Button_Translation', 0, Layer(note_button_matrix=self._midimap['Note_Button_Matrix']), should_enable=False, should_reset=False)
         drum_group_layer_mode = LayerMode(self._drum_group, layer=Layer(scroll_up_button=self._midimap['Arrow_Left_Button'], scroll_down_button=self._midimap['Arrow_Right_Button'], scroll_page_up_button=self._midimap['Arrow_Up_Button'], scroll_page_down_button=self._midimap['Arrow_Down_Button'], drum_matrix=self._midimap['Drum_Button_Matrix'], select_button=self._midimap['Shift_Button'], delete_button=self._midimap['Delete_Button']))
         self._note_modes = SpecialModesComponent(name='Note_Modes')
-        self._note_modes.add_mode('chromatic_mode', [partial(self._layout_setup, consts.NOTE_LAYOUT_SYSEX_BYTE), self._clip_delete_layer_mode, note_mode_matrix_translation])
+        self._note_modes.add_mode('chromatic_mode', [partial(self._layout_setup, consts.NOTE_LAYOUT_SYSEX_BYTE),
+         self._clip_delete_layer_mode,
+         note_mode_matrix_translation,
+         scale_setup_mode_button_lighting])
         self._note_modes.add_mode('drum_mode', [partial(self._layout_setup, consts.DRUM_LAYOUT_SYSEX_BYTE),
          self._setup_drum_group,
          drum_group_layer_mode,
@@ -507,6 +512,10 @@ class Launchpad_Pro(IdentifiableControlSurface, OptimizedControlSurface):
             for control in self.controls:
                 control.clear_send_cache()
 
+    def _update_hardware(self):
+        self._clear_send_cache()
+        self.update()
+
     def _update_global_components(self):
         self._actions_component.update()
         self._session_record.update()
@@ -566,6 +575,8 @@ class Launchpad_Pro(IdentifiableControlSurface, OptimizedControlSurface):
             pass
         elif self._is_challenge_response(midi_bytes) and self._is_response_valid(midi_bytes):
             self._on_handshake_successful()
+        elif midi_bytes[6] == consts.SYSEX_STATUS_BYTE_LAYOUT and midi_bytes[7] == consts.NOTE_LAYOUT_SYSEX_BYTE[0]:
+            self._update_hardware()
         elif midi_bytes[6] in (consts.SYSEX_STATUS_BYTE_MODE, consts.SYSEX_STATUS_BYTE_LAYOUT):
             pass
         else:

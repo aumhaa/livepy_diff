@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, with_statement
+from __future__ import absolute_import, print_function
 from functools import partial, wraps
 from itertools import chain, ifilter, imap
 from contextlib import contextmanager
@@ -239,7 +239,7 @@ class ControlSurface(SlotManager):
         if debug_print != None:
             debug_print(console_message)
         else:
-            print console_message
+            print(console_message)
         if self._c_instance:
             self._c_instance.log_message(message)
 

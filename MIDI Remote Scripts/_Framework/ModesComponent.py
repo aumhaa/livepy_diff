@@ -2,7 +2,7 @@
 """
 Mode handling components.
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from functools import partial
 from itertools import imap
 from . import Defaults
