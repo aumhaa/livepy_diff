@@ -2,7 +2,7 @@
 from __future__ import absolute_import, print_function
 from ableton.v2.base import depends, in_range, listens, liveobj_valid, nop
 from ableton.v2.control_surface.elements.color import DynamicColorBase, DynamicColorFactory
-from pushbase.colors import Blink, FallbackColor, Pulse, PushColor
+from pushbase.colors import Blink, FallbackColor, Pulse, PushColor, TransparentColor
 from .device_util import find_chain_or_track
 WHITE_MIDI_VALUE = 122
 TRANSLATED_WHITE_INDEX = 4
@@ -28,15 +28,6 @@ def determine_shaded_color_index(color_index, shade_level):
         return color_index + shade_level
     else:
         return (color_index - 1) * 2 + 64 + shade_level
-
-
-class TransparentColor(object):
-    """
-    Color that does not transmit any MIDI data.
-    """
-
-    def draw(self, interface):
-        pass
 
 
 class IndexedColor(PushColor):

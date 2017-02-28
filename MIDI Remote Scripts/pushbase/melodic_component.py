@@ -72,7 +72,7 @@ class MelodicComponent(MessengerModesComponent):
         self._matrices = matrices
         for editor, matrix in izip_longest(self._note_editors, matrices or []):
             if editor:
-                editor.set_button_matrix(matrix)
+                editor.set_matrix(matrix)
 
         self._update_matrix_channels_for_playhead()
 
@@ -111,7 +111,7 @@ class MelodicComponent(MessengerModesComponent):
 
     def set_mute_button(self, button):
         for e in self._note_editors:
-            e.set_mute_button(button)
+            e.mute_button.set_control_element(button)
 
     @listens('position')
     def _on_notes_changed(self, *args):

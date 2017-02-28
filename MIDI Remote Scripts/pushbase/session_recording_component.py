@@ -44,7 +44,6 @@ class FixedLengthRecording(EventObject):
         self._song = song
         self._clip_creator = clip_creator
         self._fixed_length_setting = fixed_length_setting
-        self._clip_creator.fixed_length = 8.0
         self._clip_creator.legato_launch = self._fixed_length_setting.legato_launch
         self.__on_setting_selected_index_changes.subject = self._fixed_length_setting
         self.__on_setting_legato_launch_changes.subject = self._fixed_length_setting
@@ -80,6 +79,7 @@ class FixedLengthRecording(EventObject):
                 clip_slot.fire(record_length=length, launch_quantization=quant)
         elif not clip_slot.is_playing or not self._song.is_playing:
             if clip_slot.has_clip:
+                clip_slot.stop()
                 clip_slot.fire(force_legato=True, launch_quantization=Quantization.q_no_q)
             else:
                 clip_slot.fire()

@@ -33,7 +33,7 @@ def possible_conversions(track, decorator_factory = None):
             detail_clip = track.canonical_parent.view.detail_clip
             if liveobj_valid(detail_clip) and detail_clip.is_arrangement_clip:
                 if not detail_clip.is_recording:
-                    category = AudioTrackWithArrangementClip(actions=[CreateTrackWithSimpler(), CreateTrackWithClipInDrumRackPad()], song_view=track.canonical_parent.view)
+                    category = AudioTrackWithArrangementClip(actions=[CreateTrackWithSimpler(), CreateTrackWithClipInDrumRackPad()], song_view=track.canonical_parent.view, track=track)
             else:
                 highlighted_clip_slot = track.canonical_parent.view.highlighted_clip_slot
                 clip = find_if(lambda slot: slot.has_clip and highlighted_clip_slot == slot, track.clip_slots)
@@ -163,13 +163,16 @@ class AudioTrackWithSessionClip(ConvertCategory):
 class AudioTrackWithArrangementClip(ConvertCategory):
     internal_name = 'audio_arrangement_clip_to_simpler'
 
-    def __init__(self, song_view = None, *a, **k):
+    def __init__(self, song_view = None, track = None, *a, **k):
         raise liveobj_valid(song_view) or AssertionError
+        raise liveobj_valid(track) or AssertionError
         super(AudioTrackWithArrangementClip, self).__init__(name_source=song_view.detail_clip, color_source=song_view.detail_clip, *a, **k)
         self._clip = song_view.detail_clip
+        self._track = track
         self.__on_detail_clip_changed.subject = song_view
 
     def convert(self, song, action):
+        self._track.stop_all_clips()
         action.conversion(song, self._clip)
 
     @listens('detail_clip')
@@ -332,6 +335,7 @@ class ConvertEnabler(Component):
         song = self.song
         self.__on_devices_changed.subject = song.view
         self.__on_selected_scene_changed.subject = song.view
+        self.__on_detail_clip_updated.subject = song.view
         self._update_clip_slot_listener()
         self._update_drum_pad_listeners()
 
@@ -352,6 +356,10 @@ class ConvertEnabler(Component):
     def _disable_and_check_enabled_state(self):
         self._exit_dialog_mode()
         self.convert_toggle_button.enabled = self._can_enable_mode()
+
+    @listens('detail_clip')
+    def __on_detail_clip_updated(self):
+        self._disable_and_check_enabled_state()
 
     @listens('selected_track.devices')
     def __on_devices_changed(self):

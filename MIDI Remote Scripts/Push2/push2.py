@@ -593,7 +593,7 @@ class Push2(IdentifiableControlSurface, PushBase):
         return ScalesEnabler(enter_dialog_mode=self._enter_dialog_mode, exit_dialog_mode=self._exit_dialog_mode, is_enabled=False, is_root=True, layer=Layer(toggle_button='scale_presets_button'))
 
     def _create_clip_mode(self):
-        base_loop_layer = Layer(shift_button='shift_button', loop_button='track_state_buttons_raw[1]', zoom_encoder='fine_grain_param_controls_raw[0]', encoders=self.elements.global_param_controls.submatrix[1:4, :])
+        base_loop_layer = Layer(shift_button='shift_button', loop_button='track_state_buttons_raw[1]')
         self._loop_controller = LoopSettingsControllerComponent(is_enabled=False)
         self._model.loopSettingsView = self._loop_controller
         audio_clip_layer = Layer(warp_mode_encoder='parameter_controls_raw[5]', transpose_encoder='parameter_controls_raw[6]', detune_encoder=self._with_shift('parameter_controls_raw[6]'), gain_encoder='parameter_controls_raw[7]', shift_button='shift_button')
@@ -601,16 +601,12 @@ class Push2(IdentifiableControlSurface, PushBase):
         self._model.audioClipSettingsView = audio_clip_controller
         clip_control_mode_selector = ModesComponent(is_enabled=False)
         clip_control_mode_selector.add_mode('midi', [make_freeze_aware(self._loop_controller, base_loop_layer + Layer(encoders=self.elements.global_param_controls.submatrix[:3, :]))])
-        clip_control_mode_selector.add_mode('audio', [make_freeze_aware(self._loop_controller, base_loop_layer + Layer(encoders=self.elements.global_param_controls.submatrix[1:4, :])), make_freeze_aware(audio_clip_controller, audio_clip_layer)])
+        clip_control_mode_selector.add_mode('audio', [make_freeze_aware(self._loop_controller, base_loop_layer + Layer(encoders=self.elements.global_param_controls.submatrix[1:4, :], zoom_encoder='fine_grain_param_controls_raw[0]')), make_freeze_aware(audio_clip_controller, audio_clip_layer)])
         clip_control_mode_selector.add_mode('no_clip', [])
         clip_control_mode_selector.selected_mode = 'no_clip'
         clip_control = ClipControlComponent(loop_controller=self._loop_controller, audio_clip_controller=audio_clip_controller, mode_selector=clip_control_mode_selector, decorator_factory=self._clip_decorator_factory, is_enabled=False)
         self._model.clipView = clip_control
-        return [partial(self._view_control.show_view, 'Detail/Clip'),
-         clip_control_mode_selector,
-         make_freeze_aware(self._loop_controller, base_loop_layer),
-         make_freeze_aware(audio_clip_controller, audio_clip_layer),
-         clip_control]
+        return [partial(self._view_control.show_view, 'Detail/Clip'), clip_control_mode_selector, clip_control]
 
     def _init_quantize_actions(self):
         self._quantize_settings = QuantizationSettingsComponent(name='Quantization_Settings', quantization_names=QUANTIZATION_NAMES_UNICODE, is_enabled=False, layer=make_dialog_layer(swing_amount_encoder='parameter_controls_raw[0]', quantize_to_encoder='parameter_controls_raw[1]', quantize_amount_encoder='parameter_controls_raw[2]', record_quantization_encoder='parameter_controls_raw[4]', record_quantization_toggle_button='track_state_buttons_raw[4]', priority=consts.MOMENTARY_DIALOG_PRIORITY))
