@@ -6,6 +6,8 @@ from _Framework.ControlSurface import ControlSurface
 SETUP_MSG_PREFIX = (240, 0, 32, 107, 127, 66)
 SETUP_MSG_SUFFIX = (247,)
 WRITE_COMMAND = 2
+LOAD_MEMORY_COMMAND = 5
+STORE_IN_MEMORY_COMMAND = 6
 WORKING_MEMORY_ID = 0
 MODE_PROPERTY = 1
 CHANNEL_PROPERTY = 2
@@ -13,6 +15,9 @@ IDENTIFIER_PROPERTY = 3
 MINIMUM_PROPERTY = 4
 MAXIMUM_PROPERTY = 5
 MODE_OPTION_PROPERTY = 6
+COLOR_PROPERTY = 16
+LIVE_MODE_PROPERTY = 64
+MEMORY_SLOT_PROPERTY = 27
 ENCODER_CC_MODE = 1
 ENCODER_RELATIVE_CC_MODE = 2
 BUTTON_CC_MODE = 8
@@ -20,10 +25,17 @@ BUTTON_NOTE_MODE = 9
 BUTTON_MOMENTARY_MODE_OPTION = 1
 ENCODER_BINARY_OFFSET_MODE_OPTION = 1
 ENCODER_TWOS_COMPLEMENT_MODE_OPTION = 2
+ON_VALUE = 127
+OFF_VALUE = 0
+LIVE_MODE_MSG_HARDWARE_ID_BYTE = 16
 BUTTON_MSG_TYPES = {'note': BUTTON_NOTE_MODE,
  'cc': BUTTON_CC_MODE}
 SETUP_HARDWARE_DELAY = 1.0
 INDIVIDUAL_MESSAGE_DELAY = 0.001
+LIVE_MODE_MSG_HEAD = SETUP_MSG_PREFIX + (WRITE_COMMAND,
+ WORKING_MEMORY_ID,
+ LIVE_MODE_PROPERTY,
+ LIVE_MODE_MSG_HARDWARE_ID_BYTE)
 
 def split_list(l, size):
     for i in xrange(0, len(l), size):
@@ -37,9 +49,7 @@ class ArturiaControlSurface(ControlSurface):
         self._messages_to_send = []
         self._setup_hardware_task = self._tasks.add(Task.sequence(Task.run(self._collect_setup_messages), Task.wait(SETUP_HARDWARE_DELAY), Task.run(self._setup_hardware)))
         self._setup_hardware_task.kill()
-        with self.component_guard():
-            self._collect_setup_messages()
-            self._setup_hardware()
+        self._start_hardware_setup()
 
     def _collect_setup_messages(self):
         """
@@ -101,6 +111,12 @@ class ArturiaControlSurface(ControlSurface):
     def _set_value_maximum(self, hardware_id):
         self._collect_setup_message(MAXIMUM_PROPERTY, hardware_id, 127)
 
+    def _start_hardware_setup(self):
+        if self._setup_hardware_task.is_running:
+            self._setup_hardware_task.kill()
+            self._messages_to_send = []
+        self._setup_hardware_task.restart()
+
     def _collect_setup_message(self, property, hardware_id, value):
         raise property is not None or AssertionError
         raise hardware_id is not None or AssertionError
@@ -123,4 +139,4 @@ class ArturiaControlSurface(ControlSurface):
 
     def port_settings_changed(self):
         super(ArturiaControlSurface, self).port_settings_changed()
-        self._setup_hardware_task.restart()
+        self._start_hardware_setup()
