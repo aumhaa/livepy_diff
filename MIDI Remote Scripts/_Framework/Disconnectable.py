@@ -2,7 +2,7 @@
 """
 Interface for items that adquire resources.
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from .Util import find_if
 
 class Disconnectable(object):

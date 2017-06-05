@@ -124,8 +124,13 @@ class TrackListComponent(ModesComponent, Messenger):
         self.__on_selected_item_changed.subject = self._track_provider
         self.__on_tracks_changed.subject = self.song
         self.__on_selected_track_changed.subject = self.song.view
+        self.__on_is_playing_changed.subject = self.song
         self._update_track_and_chain_listeners()
         self._update_playheads_real_time_data()
+<<<<<<< HEAD
+=======
+        self._update_realtime_channels_ability()
+>>>>>>> master
 
     @listenable_property
     def playhead_real_time_channels(self):
@@ -195,13 +200,30 @@ class TrackListComponent(ModesComponent, Messenger):
         self._update_track_and_chain_listeners()
         self._update_playheads_real_time_data()
 
+<<<<<<< HEAD
+=======
+    @listens('is_playing')
+    def __on_is_playing_changed(self):
+        self._update_playheads_real_time_data()
+
+>>>>>>> master
     @listens_group('is_frozen')
     def __on_track_is_frozen_state_changed(self, track):
         self._update_all_button_colors()
 
     def _update_playheads_real_time_data(self):
+<<<<<<< HEAD
         for track, real_time_data in zip(self.tracks, self._playheads_real_time_data):
             real_time_data.set_data(self._playing_clip(track))
+=======
+        if self.song.is_playing:
+            for track, real_time_data in zip(self.tracks, self._playheads_real_time_data):
+                real_time_data.set_data(self._playing_clip(track))
+
+        else:
+            for track, real_time_data in zip(self.tracks, self._playheads_real_time_data):
+                real_time_data.set_data(None)
+>>>>>>> master
 
         self.notify_playhead_real_time_channels()
 
@@ -270,7 +292,7 @@ class TrackListComponent(ModesComponent, Messenger):
         return isinstance(unwrapped, Live.Track.Track) and unwrapped not in list(return_tracks)
 
     def _delete_mixable(self, track_or_chain):
-        if not is_chain(track_or_chain):
+        if liveobj_valid(track_or_chain) and not is_chain(track_or_chain):
             try:
                 name = track_or_chain.name
                 delete_track_or_return_track(self.song, track_or_chain)
@@ -304,8 +326,13 @@ class TrackListComponent(ModesComponent, Messenger):
         if self._color_chooser is not None:
             self._color_chooser.object = mixable
 
+    def _update_realtime_channels_ability(self):
+        for playhead in self._playheads_real_time_data:
+            playhead.set_enabled(self.is_enabled())
+
     def on_enabled_changed(self):
         super(TrackListComponent, self).on_enabled_changed()
+        self._update_realtime_channels_ability()
         if not self.is_enabled():
             self.selected_mode = 'select'
             self.pop_unselected_modes()

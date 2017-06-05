@@ -1,46 +1,256 @@
 
+import ast
+from collections import namedtuple
+import json
 import types
 import Live
 from _Framework.ControlSurface import ControlSurface
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.ControlElement import ControlElement
 from _Framework.Util import is_iterable
-_DEVICE_BASE_PROPS = ['canonical_parent',
- 'parameters',
- 'view',
- 'can_have_chains',
- 'can_have_drum_pads',
- 'class_display_name',
- 'class_name',
- 'is_active',
- 'name',
- 'type',
- 'store_chosen_bank']
-_DEVICE_VIEW_BASE_PROPS = ['canonical_parent', 'is_collapsed']
-_CHAIN_BASE_PROPS = ['canonical_parent',
- 'name',
- 'devices',
- 'delete_device',
- 'mute',
- 'solo',
- 'muted_via_solo',
- 'mixer_device',
- 'color',
- 'color_index',
- 'is_auto_colored',
- 'has_audio_input',
- 'has_audio_output',
- 'has_midi_input',
- 'has_midi_output']
-EXPOSED_TYPE_PROPERTIES = {Live.Application.Application: ('view', 'current_dialog_button_count', 'current_dialog_message', 'open_dialog_count', 'get_bugfix_version', 'get_document', 'get_major_version', 'get_minor_version', 'press_current_dialog_button'),
- Live.Application.Application.View: ('canonical_parent', 'browse_mode', 'available_main_views', 'focus_view', 'hide_view', 'is_view_visible', 'scroll_view', 'show_view', 'toggle_browse', 'zoom_view'),
+
+class MFLPropertyFormats:
+    Default, JSON = range(2)
+
+
+_MFLProperty = namedtuple('MFLProperty', 'name format to_json from_json min_epii_version')
+
+def MFLProperty(name, format = MFLPropertyFormats.Default, to_json = None, from_json = None, min_epii_version = (-1, -1)):
+    return _MFLProperty(name, format, to_json, from_json, min_epii_version)
+
+
+def data_dict_to_json(property_name, data_dict):
+    return json.dumps({property_name: data_dict})
+
+
+def json_to_data_dict(property_name, json_dict):
+    data_dict = ast.literal_eval(json_dict)
+    return data_dict.get(property_name, data_dict)
+
+
+def verify_routings_available_for_track(track, prop_name):
+    error_format = "'%s' not available on %s"
+    song = track.canonical_parent
+    if track == song.master_track:
+        raise RuntimeError(error_format % (prop_name, 'master track'))
+    elif 'input' in prop_name:
+        if track.is_foldable:
+            raise RuntimeError(error_format % (prop_name, 'group tracks'))
+        elif track in song.return_tracks:
+            raise RuntimeError(error_format % (prop_name, 'return tracks'))
+
+
+def routing_object_to_dict(routing_type):
+    return {'display_name': routing_type.display_name,
+     'identifier': hash(routing_type)}
+
+
+def available_routing_objects_to_json(track, property_name):
+    verify_routings_available_for_track(track, property_name)
+    property_value = getattr(track, property_name)
+    return data_dict_to_json(property_name, tuple([ routing_object_to_dict(t) for t in property_value ]))
+
+
+def available_routing_input_types_to_json(track):
+    return available_routing_objects_to_json(track, 'available_input_routing_types')
+
+
+def available_routing_output_types_to_json(track):
+    return available_routing_objects_to_json(track, 'available_output_routing_types')
+
+
+def available_routing_input_channels_to_json(track):
+    return available_routing_objects_to_json(track, 'available_input_routing_channels')
+
+
+def available_routing_output_channels_to_json(track):
+    return available_routing_objects_to_json(track, 'available_output_routing_channels')
+
+
+def routing_object_to_json(track, property_name):
+    verify_routings_available_for_track(track, property_name)
+    property_value = getattr(track, property_name)
+    return data_dict_to_json(property_name, routing_object_to_dict(property_value))
+
+
+def routing_input_type_to_json(track):
+    return routing_object_to_json(track, 'input_routing_type')
+
+
+def routing_output_type_to_json(track):
+    return routing_object_to_json(track, 'output_routing_type')
+
+
+def routing_input_channel_to_json(track):
+    return routing_object_to_json(track, 'input_routing_channel')
+
+
+def routing_output_channel_to_json(track):
+    return routing_object_to_json(track, 'output_routing_channel')
+
+
+def json_to_routing_object(track, property_name, json_dict):
+    verify_routings_available_for_track(track, property_name)
+    objects = getattr(track, 'available_%ss' % property_name, [])
+    identifier = json_to_data_dict(property_name, json_dict)['identifier']
+    for routing_object in objects:
+        if hash(routing_object) == identifier:
+            return routing_object
+
+
+def json_to_input_routing_type(track, json_dict):
+    return json_to_routing_object(track, 'input_routing_type', json_dict)
+
+
+def json_to_output_routing_type(track, json_dict):
+    return json_to_routing_object(track, 'output_routing_type', json_dict)
+
+
+def json_to_input_routing_channel(track, json_dict):
+    return json_to_routing_object(track, 'input_routing_channel', json_dict)
+
+
+def json_to_output_routing_channel(track, json_dict):
+    return json_to_routing_object(track, 'output_routing_channel', json_dict)
+
+
+_DEVICE_BASE_PROPS = [MFLProperty('canonical_parent'),
+ MFLProperty('parameters'),
+ MFLProperty('view'),
+ MFLProperty('can_have_chains'),
+ MFLProperty('can_have_drum_pads'),
+ MFLProperty('class_display_name'),
+ MFLProperty('class_name'),
+ MFLProperty('is_active'),
+ MFLProperty('name'),
+ MFLProperty('type'),
+ MFLProperty('store_chosen_bank')]
+_DEVICE_VIEW_BASE_PROPS = [MFLProperty('canonical_parent'), MFLProperty('is_collapsed')]
+_CHAIN_BASE_PROPS = [MFLProperty('canonical_parent'),
+ MFLProperty('devices'),
+ MFLProperty('mixer_device'),
+ MFLProperty('color'),
+ MFLProperty('color_index'),
+ MFLProperty('is_auto_colored'),
+ MFLProperty('has_audio_input'),
+ MFLProperty('has_audio_output'),
+ MFLProperty('has_midi_input'),
+ MFLProperty('has_midi_output'),
+ MFLProperty('mute'),
+ MFLProperty('muted_via_solo'),
+ MFLProperty('name'),
+ MFLProperty('solo'),
+ MFLProperty('delete_device')]
+EXPOSED_TYPE_PROPERTIES = {Live.Application.Application: (MFLProperty('view'),
+                                MFLProperty('current_dialog_button_count'),
+                                MFLProperty('current_dialog_message'),
+                                MFLProperty('open_dialog_count'),
+                                MFLProperty('get_bugfix_version'),
+                                MFLProperty('get_document'),
+                                MFLProperty('get_major_version'),
+                                MFLProperty('get_minor_version'),
+                                MFLProperty('press_current_dialog_button')),
+ Live.Application.Application.View: (MFLProperty('canonical_parent'),
+                                     MFLProperty('browse_mode'),
+                                     MFLProperty('focused_document_view'),
+                                     MFLProperty('available_main_views'),
+                                     MFLProperty('focus_view'),
+                                     MFLProperty('hide_view'),
+                                     MFLProperty('is_view_visible'),
+                                     MFLProperty('scroll_view'),
+                                     MFLProperty('show_view'),
+                                     MFLProperty('toggle_browse'),
+                                     MFLProperty('zoom_view')),
  Live.Chain.Chain: tuple(_CHAIN_BASE_PROPS),
- Live.ChainMixerDevice.ChainMixerDevice: ('canonical_parent', 'volume', 'panning', 'sends', 'chain_activator'),
- Live.Clip.Clip: ('canonical_parent', 'view', 'color', 'color_index', 'end_marker', 'has_envelopes', 'is_arrangement_clip', 'is_audio_clip', 'is_midi_clip', 'is_overdubbing', 'is_playing', 'is_recording', 'is_triggered', 'length', 'loop_end', 'loop_start', 'looping', 'muted', 'name', 'playing_position', 'position', 'signature_denominator', 'signature_numerator', 'start_marker', 'start_time', 'will_record_on_start', 'clear_all_envelopes', 'clear_envelope', 'deselect_all_notes', 'duplicate_loop', 'fire', 'get_notes', 'get_selected_notes', 'move_playing_pos', 'quantize', 'quantize_pitch', 'remove_notes', 'replace_selected_notes', 'scrub', 'select_all_notes', 'set_fire_button_state', 'set_notes', 'stop', 'stop_scrub', 'available_warp_modes', 'file_path', 'gain', 'gain_display_string', 'pitch_coarse', 'pitch_fine', 'ram_mode', 'warp_mode', 'warping'),
- Live.Clip.Clip.View: ('canonical_parent', 'grid_is_triplet', 'grid_quantization', 'hide_envelope', 'select_envelope_parameter', 'show_envelope', 'show_loop'),
- Live.ClipSlot.ClipSlot: ('canonical_parent', 'clip', 'color', 'color_index', 'controls_other_clips', 'duplicate_clip_to', 'has_clip', 'has_stop_button', 'is_group_slot', 'is_playing', 'is_recording', 'is_triggered', 'playing_status', 'will_record_on_start', 'create_clip', 'delete_clip', 'fire', 'set_fire_button_state', 'stop'),
+ Live.ChainMixerDevice.ChainMixerDevice: (MFLProperty('canonical_parent'),
+                                          MFLProperty('chain_activator'),
+                                          MFLProperty('panning'),
+                                          MFLProperty('sends'),
+                                          MFLProperty('volume')),
+ Live.Clip.Clip: (MFLProperty('canonical_parent'),
+                  MFLProperty('view'),
+                  MFLProperty('available_warp_modes'),
+                  MFLProperty('color'),
+                  MFLProperty('color_index'),
+                  MFLProperty('end_marker'),
+                  MFLProperty('end_time'),
+                  MFLProperty('gain'),
+                  MFLProperty('gain_display_string'),
+                  MFLProperty('file_path'),
+                  MFLProperty('has_envelopes'),
+                  MFLProperty('is_arrangement_clip'),
+                  MFLProperty('is_audio_clip'),
+                  MFLProperty('is_midi_clip'),
+                  MFLProperty('is_overdubbing'),
+                  MFLProperty('is_playing'),
+                  MFLProperty('is_recording'),
+                  MFLProperty('is_triggered'),
+                  MFLProperty('length'),
+                  MFLProperty('loop_end'),
+                  MFLProperty('loop_start'),
+                  MFLProperty('looping'),
+                  MFLProperty('muted'),
+                  MFLProperty('name'),
+                  MFLProperty('pitch_coarse'),
+                  MFLProperty('pitch_fine'),
+                  MFLProperty('playing_position'),
+                  MFLProperty('position'),
+                  MFLProperty('ram_mode'),
+                  MFLProperty('signature_denominator'),
+                  MFLProperty('signature_numerator'),
+                  MFLProperty('start_marker'),
+                  MFLProperty('start_time'),
+                  MFLProperty('warp_mode'),
+                  MFLProperty('warping'),
+                  MFLProperty('will_record_on_start'),
+                  MFLProperty('clear_all_envelopes'),
+                  MFLProperty('clear_envelope'),
+                  MFLProperty('deselect_all_notes'),
+                  MFLProperty('duplicate_loop'),
+                  MFLProperty('duplicate_region'),
+                  MFLProperty('fire'),
+                  MFLProperty('get_notes'),
+                  MFLProperty('get_selected_notes'),
+                  MFLProperty('move_playing_pos'),
+                  MFLProperty('quantize'),
+                  MFLProperty('quantize_pitch'),
+                  MFLProperty('remove_notes'),
+                  MFLProperty('replace_selected_notes'),
+                  MFLProperty('scrub'),
+                  MFLProperty('select_all_notes'),
+                  MFLProperty('set_fire_button_state'),
+                  MFLProperty('set_notes'),
+                  MFLProperty('stop'),
+                  MFLProperty('stop_scrub')),
+ Live.Clip.Clip.View: (MFLProperty('canonical_parent'),
+                       MFLProperty('grid_is_triplet'),
+                       MFLProperty('grid_quantization'),
+                       MFLProperty('hide_envelope'),
+                       MFLProperty('select_envelope_parameter'),
+                       MFLProperty('show_envelope'),
+                       MFLProperty('show_loop')),
+ Live.ClipSlot.ClipSlot: (MFLProperty('canonical_parent'),
+                          MFLProperty('clip'),
+                          MFLProperty('color'),
+                          MFLProperty('color_index'),
+                          MFLProperty('controls_other_clips'),
+                          MFLProperty('has_clip'),
+                          MFLProperty('has_stop_button'),
+                          MFLProperty('is_group_slot'),
+                          MFLProperty('is_playing'),
+                          MFLProperty('is_recording'),
+                          MFLProperty('is_triggered'),
+                          MFLProperty('playing_status'),
+                          MFLProperty('will_record_on_start'),
+                          MFLProperty('create_clip'),
+                          MFLProperty('delete_clip'),
+                          MFLProperty('duplicate_clip_to'),
+                          MFLProperty('fire'),
+                          MFLProperty('set_fire_button_state'),
+                          MFLProperty('stop')),
  Live.Device.Device: tuple(_DEVICE_BASE_PROPS),
  Live.Device.Device.View: tuple(_DEVICE_VIEW_BASE_PROPS),
+<<<<<<< HEAD
  Live.DeviceParameter.DeviceParameter: ('canonical_parent', 'automation_state', 'is_enabled', 'is_quantized', 'max', 'min', 'name', 'original_name', 'state', 'value', 'value_items', 're_enable_automation', 'str_for_value', '__str__'),
  Live.DrumChain.DrumChain: tuple(_CHAIN_BASE_PROPS + ['out_note', 'choke_group']),
  Live.DrumPad.DrumPad: ('canonical_parent', 'chains', 'mute', 'name', 'note', 'solo', 'delete_all_chains'),
@@ -84,6 +294,265 @@ EXPOSED_TYPE_PROPERTIES = {Live.Application.Application: ('view', 'current_dialo
  Live.Song.CuePoint: ('canonical_parent', 'name', 'time', 'jump'),
  Live.Track.Track: ('clip_slots', 'devices', 'canonical_parent', 'mixer_device', 'view', 'arm', 'can_be_armed', 'can_be_frozen', 'can_show_chains', 'color', 'color_index', 'current_input_routing', 'current_input_sub_routing', 'current_monitoring_state', 'current_output_routing', 'current_output_sub_routing', 'fired_slot_index', 'fold_state', 'has_audio_input', 'has_audio_output', 'has_midi_input', 'has_midi_output', 'implicit_arm', 'input_meter_level', 'input_routings', 'input_sub_routings', 'input_meter_left', 'input_meter_right', 'is_foldable', 'is_frozen', 'is_grouped', 'is_part_of_selection', 'is_showing_chains', 'is_visible', 'mute', 'muted_via_solo', 'name', 'output_meter_left', 'output_meter_level', 'output_meter_right', 'output_routings', 'output_sub_routings', 'playing_slot_index', 'solo', 'delete_device', 'duplicate_clip_slot', 'jump_in_running_session_clip', 'stop_all_clips'),
  Live.Track.Track.View: ('canonical_parent', 'selected_device', 'device_insert_mode', 'is_collapsed', 'select_instrument')}
+=======
+ Live.DeviceParameter.DeviceParameter: (MFLProperty('canonical_parent'),
+                                        MFLProperty('automation_state'),
+                                        MFLProperty('default_value'),
+                                        MFLProperty('is_enabled'),
+                                        MFLProperty('is_quantized'),
+                                        MFLProperty('max'),
+                                        MFLProperty('min'),
+                                        MFLProperty('name'),
+                                        MFLProperty('original_name'),
+                                        MFLProperty('state'),
+                                        MFLProperty('value'),
+                                        MFLProperty('value_items'),
+                                        MFLProperty('re_enable_automation'),
+                                        MFLProperty('str_for_value'),
+                                        MFLProperty('__str__')),
+ Live.DrumChain.DrumChain: tuple(_CHAIN_BASE_PROPS + [MFLProperty('out_note'), MFLProperty('choke_group')]),
+ Live.DrumPad.DrumPad: (MFLProperty('canonical_parent'),
+                        MFLProperty('chains'),
+                        MFLProperty('mute'),
+                        MFLProperty('name'),
+                        MFLProperty('note'),
+                        MFLProperty('solo'),
+                        MFLProperty('delete_all_chains')),
+ Live.MaxDevice.MaxDevice: tuple(_DEVICE_BASE_PROPS + [MFLProperty('get_bank_count'), MFLProperty('get_bank_name'), MFLProperty('get_bank_parameters')]),
+ Live.MixerDevice.MixerDevice: (MFLProperty('canonical_parent'),
+                                MFLProperty('sends'),
+                                MFLProperty('cue_volume'),
+                                MFLProperty('crossfader'),
+                                MFLProperty('panning'),
+                                MFLProperty('song_tempo'),
+                                MFLProperty('track_activator'),
+                                MFLProperty('volume'),
+                                MFLProperty('crossfade_assign')),
+ Live.PluginDevice.PluginDevice: tuple(_DEVICE_BASE_PROPS + [MFLProperty('presets'), MFLProperty('selected_preset_index')]),
+ Live.RackDevice.RackDevice: tuple(_DEVICE_BASE_PROPS + [MFLProperty('chains'),
+                              MFLProperty('drum_pads'),
+                              MFLProperty('return_chains'),
+                              MFLProperty('visible_drum_pads'),
+                              MFLProperty('has_macro_mappings'),
+                              MFLProperty('has_drum_pads'),
+                              MFLProperty('copy_pad')]),
+ Live.RackDevice.RackDevice.View: tuple(_DEVICE_VIEW_BASE_PROPS + [MFLProperty('selected_chain'),
+                                   MFLProperty('selected_drum_pad'),
+                                   MFLProperty('drum_pads_scroll_position'),
+                                   MFLProperty('is_showing_chain_devices')]),
+ Live.Sample.Sample: (MFLProperty('canonical_parent'),
+                      MFLProperty('beats_granulation_resolution'),
+                      MFLProperty('beats_transient_envelope'),
+                      MFLProperty('beats_transient_loop_mode'),
+                      MFLProperty('complex_pro_envelope'),
+                      MFLProperty('complex_pro_formants'),
+                      MFLProperty('end_marker'),
+                      MFLProperty('file_path'),
+                      MFLProperty('gain'),
+                      MFLProperty('length'),
+                      MFLProperty('slicing_sensitivity'),
+                      MFLProperty('start_marker'),
+                      MFLProperty('texture_flux'),
+                      MFLProperty('texture_grain_size'),
+                      MFLProperty('tones_grain_size'),
+                      MFLProperty('warp_mode'),
+                      MFLProperty('warping'),
+                      MFLProperty('slicing_style'),
+                      MFLProperty('slicing_beat_division'),
+                      MFLProperty('slicing_region_count'),
+                      MFLProperty('gain_display_string'),
+                      MFLProperty('insert_slice'),
+                      MFLProperty('move_slice'),
+                      MFLProperty('remove_slice'),
+                      MFLProperty('clear_slices'),
+                      MFLProperty('reset_slices')),
+ Live.Scene.Scene: (MFLProperty('canonical_parent'),
+                    MFLProperty('clip_slots'),
+                    MFLProperty('color'),
+                    MFLProperty('color_index'),
+                    MFLProperty('is_empty'),
+                    MFLProperty('is_triggered'),
+                    MFLProperty('name'),
+                    MFLProperty('tempo'),
+                    MFLProperty('fire'),
+                    MFLProperty('fire_as_selected'),
+                    MFLProperty('set_fire_button_state')),
+ Live.SimplerDevice.SimplerDevice: tuple(_DEVICE_BASE_PROPS + [MFLProperty('sample'),
+                                    MFLProperty('can_warp_as'),
+                                    MFLProperty('can_warp_double'),
+                                    MFLProperty('can_warp_half'),
+                                    MFLProperty('multi_sample_mode'),
+                                    MFLProperty('pad_slicing'),
+                                    MFLProperty('playback_mode'),
+                                    MFLProperty('playing_position'),
+                                    MFLProperty('playing_position_enabled'),
+                                    MFLProperty('retrigger'),
+                                    MFLProperty('slicing_playback_mode'),
+                                    MFLProperty('voices'),
+                                    MFLProperty('crop'),
+                                    MFLProperty('guess_playback_length'),
+                                    MFLProperty('reverse'),
+                                    MFLProperty('warp_as'),
+                                    MFLProperty('warp_double'),
+                                    MFLProperty('warp_half')]),
+ Live.SimplerDevice.SimplerDevice.View: tuple(_DEVICE_VIEW_BASE_PROPS + [MFLProperty('selected_slice')]),
+ Live.Song.Song: (MFLProperty('cue_points'),
+                  MFLProperty('return_tracks'),
+                  MFLProperty('scenes'),
+                  MFLProperty('tracks'),
+                  MFLProperty('visible_tracks'),
+                  MFLProperty('master_track'),
+                  MFLProperty('view'),
+                  MFLProperty('appointed_device'),
+                  MFLProperty('arrangement_overdub'),
+                  MFLProperty('back_to_arranger'),
+                  MFLProperty('can_jump_to_next_cue'),
+                  MFLProperty('can_jump_to_prev_cue'),
+                  MFLProperty('can_redo'),
+                  MFLProperty('can_undo'),
+                  MFLProperty('clip_trigger_quantization'),
+                  MFLProperty('count_in_duration'),
+                  MFLProperty('current_song_time'),
+                  MFLProperty('exclusive_arm'),
+                  MFLProperty('exclusive_solo'),
+                  MFLProperty('groove_amount'),
+                  MFLProperty('is_counting_in'),
+                  MFLProperty('is_playing'),
+                  MFLProperty('last_event_time'),
+                  MFLProperty('loop'),
+                  MFLProperty('loop_length'),
+                  MFLProperty('loop_start'),
+                  MFLProperty('metronome'),
+                  MFLProperty('midi_recording_quantization'),
+                  MFLProperty('nudge_down'),
+                  MFLProperty('nudge_up'),
+                  MFLProperty('overdub'),
+                  MFLProperty('punch_in'),
+                  MFLProperty('punch_out'),
+                  MFLProperty('re_enable_automation_enabled'),
+                  MFLProperty('record_mode'),
+                  MFLProperty('root_note'),
+                  MFLProperty('scale_name'),
+                  MFLProperty('select_on_launch'),
+                  MFLProperty('session_automation_record'),
+                  MFLProperty('session_record'),
+                  MFLProperty('session_record_status'),
+                  MFLProperty('signature_denominator'),
+                  MFLProperty('signature_numerator'),
+                  MFLProperty('song_length'),
+                  MFLProperty('swing_amount'),
+                  MFLProperty('tempo'),
+                  MFLProperty('capture_and_insert_scene'),
+                  MFLProperty('continue_playing'),
+                  MFLProperty('create_audio_track'),
+                  MFLProperty('create_midi_track'),
+                  MFLProperty('create_return_track'),
+                  MFLProperty('create_scene'),
+                  MFLProperty('delete_scene'),
+                  MFLProperty('delete_track'),
+                  MFLProperty('delete_return_track'),
+                  MFLProperty('duplicate_scene'),
+                  MFLProperty('duplicate_track'),
+                  MFLProperty('find_device_position'),
+                  MFLProperty('force_link_beat_time'),
+                  MFLProperty('get_beats_loop_length'),
+                  MFLProperty('get_beats_loop_start'),
+                  MFLProperty('get_current_beats_song_time'),
+                  MFLProperty('get_current_smpte_song_time'),
+                  MFLProperty('is_cue_point_selected'),
+                  MFLProperty('jump_by'),
+                  MFLProperty('jump_to_next_cue'),
+                  MFLProperty('jump_to_prev_cue'),
+                  MFLProperty('move_device'),
+                  MFLProperty('play_selection'),
+                  MFLProperty('re_enable_automation'),
+                  MFLProperty('redo'),
+                  MFLProperty('scrub_by'),
+                  MFLProperty('set_or_delete_cue'),
+                  MFLProperty('start_playing'),
+                  MFLProperty('stop_all_clips'),
+                  MFLProperty('stop_playing'),
+                  MFLProperty('tap_tempo'),
+                  MFLProperty('trigger_session_record'),
+                  MFLProperty('undo')),
+ Live.Song.Song.View: (MFLProperty('canonical_parent'),
+                       MFLProperty('detail_clip'),
+                       MFLProperty('highlighted_clip_slot'),
+                       MFLProperty('selected_chain'),
+                       MFLProperty('selected_parameter'),
+                       MFLProperty('selected_scene'),
+                       MFLProperty('selected_track'),
+                       MFLProperty('draw_mode'),
+                       MFLProperty('follow_song'),
+                       MFLProperty('select_device')),
+ Live.Song.CuePoint: (MFLProperty('canonical_parent'),
+                      MFLProperty('name'),
+                      MFLProperty('time'),
+                      MFLProperty('jump')),
+ Live.Track.Track: (MFLProperty('clip_slots'),
+                    MFLProperty('devices'),
+                    MFLProperty('canonical_parent'),
+                    MFLProperty('mixer_device'),
+                    MFLProperty('view'),
+                    MFLProperty('arm'),
+                    MFLProperty('available_input_routing_channels', format=MFLPropertyFormats.JSON, to_json=available_routing_input_channels_to_json, min_epii_version=(4, 3)),
+                    MFLProperty('available_input_routing_types', format=MFLPropertyFormats.JSON, to_json=available_routing_input_types_to_json, min_epii_version=(4, 3)),
+                    MFLProperty('available_output_routing_channels', format=MFLPropertyFormats.JSON, to_json=available_routing_output_channels_to_json, min_epii_version=(4, 3)),
+                    MFLProperty('available_output_routing_types', format=MFLPropertyFormats.JSON, to_json=available_routing_output_types_to_json, min_epii_version=(4, 3)),
+                    MFLProperty('can_be_armed'),
+                    MFLProperty('can_be_frozen'),
+                    MFLProperty('can_show_chains'),
+                    MFLProperty('color'),
+                    MFLProperty('color_index'),
+                    MFLProperty('current_input_routing'),
+                    MFLProperty('current_input_sub_routing'),
+                    MFLProperty('current_monitoring_state'),
+                    MFLProperty('current_output_routing'),
+                    MFLProperty('current_output_sub_routing'),
+                    MFLProperty('fired_slot_index'),
+                    MFLProperty('fold_state'),
+                    MFLProperty('has_audio_input'),
+                    MFLProperty('has_audio_output'),
+                    MFLProperty('has_midi_input'),
+                    MFLProperty('has_midi_output'),
+                    MFLProperty('implicit_arm'),
+                    MFLProperty('input_meter_left'),
+                    MFLProperty('input_meter_level'),
+                    MFLProperty('input_meter_right'),
+                    MFLProperty('input_routing_channel', format=MFLPropertyFormats.JSON, to_json=routing_input_channel_to_json, from_json=json_to_input_routing_channel, min_epii_version=(4, 3)),
+                    MFLProperty('input_routing_type', format=MFLPropertyFormats.JSON, to_json=routing_input_type_to_json, from_json=json_to_input_routing_type, min_epii_version=(4, 3)),
+                    MFLProperty('input_routings'),
+                    MFLProperty('input_sub_routings'),
+                    MFLProperty('is_foldable'),
+                    MFLProperty('is_frozen'),
+                    MFLProperty('is_grouped'),
+                    MFLProperty('is_part_of_selection'),
+                    MFLProperty('is_showing_chains'),
+                    MFLProperty('is_visible'),
+                    MFLProperty('mute'),
+                    MFLProperty('muted_via_solo'),
+                    MFLProperty('name'),
+                    MFLProperty('output_meter_left'),
+                    MFLProperty('output_meter_level'),
+                    MFLProperty('output_meter_right'),
+                    MFLProperty('output_routing_channel', format=MFLPropertyFormats.JSON, to_json=routing_output_channel_to_json, from_json=json_to_output_routing_channel, min_epii_version=(4, 3)),
+                    MFLProperty('output_routing_type', format=MFLPropertyFormats.JSON, to_json=routing_output_type_to_json, from_json=json_to_output_routing_type, min_epii_version=(4, 3)),
+                    MFLProperty('output_routings'),
+                    MFLProperty('output_sub_routings'),
+                    MFLProperty('playing_slot_index'),
+                    MFLProperty('solo'),
+                    MFLProperty('delete_clip'),
+                    MFLProperty('delete_device'),
+                    MFLProperty('duplicate_clip_slot'),
+                    MFLProperty('duplicate_clip_to_arrangement'),
+                    MFLProperty('jump_in_running_session_clip'),
+                    MFLProperty('stop_all_clips')),
+ Live.Track.Track.View: (MFLProperty('canonical_parent'),
+                         MFLProperty('selected_device'),
+                         MFLProperty('device_insert_mode'),
+                         MFLProperty('is_collapsed'),
+                         MFLProperty('select_instrument'))}
+>>>>>>> master
 HIDDEN_TYPE_PROPERTIES = {Live.Sample.Sample: ('slices',)}
 ENUM_TYPES = (Live.Song.Quantization,
  Live.Song.RecordingQuantization,
@@ -158,6 +627,30 @@ class LomNoteOperationError(AttributeError):
     pass
 
 
+def get_exposed_lom_types():
+    return EXPOSED_TYPE_PROPERTIES.keys()
+
+
+def get_exposed_properties_for_type(lom_type, epii_version):
+    return [ prop for prop in EXPOSED_TYPE_PROPERTIES.get(lom_type, []) if epii_version >= prop.min_epii_version ]
+
+
+def get_exposed_property_names_for_type(lom_type, epii_version):
+    return [ prop.name for prop in get_exposed_properties_for_type(lom_type, epii_version) ]
+
+
+def is_property_exposed_for_type(property_name, lom_type, epii_version):
+    return property_name in get_exposed_property_names_for_type(lom_type, epii_version)
+
+
+def get_exposed_property_info(lom_type, property_name, epii_version):
+    properties = get_exposed_properties_for_type(lom_type, epii_version)
+    prop = filter(lambda p: p.name == property_name, properties)
+    if not prop:
+        return None
+    return prop[0]
+
+
 def is_class(class_object):
     return isinstance(class_object, types.ClassType) or hasattr(class_object, '__bases__')
 
@@ -210,20 +703,16 @@ def is_object_iterable(obj):
     return not isinstance(obj, basestring) and is_iterable(obj) and not isinstance(obj, cs_base_classes())
 
 
-def is_property_exposed(lom_object, property_name):
-    return property_name in EXPOSED_TYPE_PROPERTIES.get(type(lom_object), [])
-
-
 def is_property_hidden(lom_object, property_name):
     return property_name in HIDDEN_TYPE_PROPERTIES.get(type(lom_object), [])
 
 
-def verify_object_property(lom_object, property_name):
+def verify_object_property(lom_object, property_name, epii_version):
     raise_error = False
     if isinstance(lom_object, cs_base_classes()):
         if not hasattr(lom_object, property_name):
             raise_error = True
-    elif not (is_property_exposed(lom_object, property_name) or is_property_hidden(lom_object, property_name)):
+    elif not is_property_exposed_for_type(property_name, type(lom_object), epii_version):
         raise_error = True
     if raise_error:
         raise LomAttributeError("'%s' object has no attribute '%s'" % (lom_object.__class__.__name__, property_name))

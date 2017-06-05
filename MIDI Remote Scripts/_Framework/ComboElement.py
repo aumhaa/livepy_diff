@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, with_statement
+from __future__ import absolute_import, print_function
 from itertools import imap
 from contextlib import contextmanager
 from . import Task, Defaults

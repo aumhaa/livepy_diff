@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from functools import wraps, partial
 ENABLE_PROFILING = False
 if ENABLE_PROFILING:
@@ -17,7 +17,7 @@ def profile(fn):
             if PROFILER:
                 return PROFILER.runcall(partial(fn, self, *a, **k))
             else:
-                print 'Can not profile (%s), it is probably reloaded' % fn.__name__
+                print('Can not profile (%s), it is probably reloaded' % fn.__name__)
                 return fn(*a, **k)
 
         return wrapper

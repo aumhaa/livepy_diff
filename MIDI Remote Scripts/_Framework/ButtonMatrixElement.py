@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from .CompoundElement import CompoundElement
 from .Util import in_range, product, const, slicer, to_slice
 

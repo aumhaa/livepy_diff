@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from .ButtonElement import ButtonElement
 from .InputControlElement import InputControlElement, MIDI_INVALID_TYPE
 from .SliderElement import SliderElement

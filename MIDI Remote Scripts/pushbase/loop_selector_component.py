@@ -15,7 +15,7 @@ def create_clip_in_selected_slot(creator, song, clip_length = None):
     """
     selected_slot = song.view.highlighted_clip_slot
     if creator and selected_slot and not selected_slot.has_clip:
-        creator.create(selected_slot, clip_length)
+        creator.create(selected_slot, clip_length, legato_launch=True)
         song.view.detail_clip = selected_slot.clip
     return selected_slot.clip
 

@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from functools import partial
 from .Proxy import Proxy
 from .Util import index_if, nop, first, NamedTuple

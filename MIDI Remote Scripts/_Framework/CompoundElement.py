@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, with_statement
+from __future__ import absolute_import, print_function
 from itertools import ifilter
 from .ControlElement import ControlElementClient
 from .SubjectSlot import subject_slot_group, SlotManager

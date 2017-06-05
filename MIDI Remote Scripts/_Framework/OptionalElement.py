@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from .ComboElement import ToggleElement
 from .SubjectSlot import SlotManager, subject_slot
 

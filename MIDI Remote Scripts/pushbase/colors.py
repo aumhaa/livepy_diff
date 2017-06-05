@@ -125,6 +125,15 @@ class Blink(AnimatedColor):
         super(Blink, self).__init__(color1=color1, color2=color2, channel2=channel2, *a, **k)
 
 
+class TransparentColor(object):
+    """
+    Color that does not transmit any MIDI data.
+    """
+
+    def draw(self, interface):
+        pass
+
+
 class Rgb:
     """
     Table of RgbColors for main matrix.
@@ -161,6 +170,7 @@ class Basic:
     FULL_BLINK_FAST = FallbackColor(Blink(Rgb.WHITE, Rgb.BLACK, 24), 6)
     OFF = FallbackColor(Rgb.BLACK, 0)
     ON = FallbackColor(Rgb.WHITE, 127)
+    TRANSPARENT = TransparentColor()
 
 
 class BiLed:

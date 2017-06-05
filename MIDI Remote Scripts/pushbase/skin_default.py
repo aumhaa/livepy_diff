@@ -21,6 +21,7 @@ class Colors:
         Off = Basic.HALF
         Disabled = Basic.OFF
         Alert = Basic.FULL_BLINK_SLOW
+        Transparent = Basic.TRANSPARENT
 
     class DefaultMatrix:
         On = Rgb.WHITE

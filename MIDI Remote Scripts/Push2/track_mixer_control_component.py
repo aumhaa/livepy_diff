@@ -1,7 +1,10 @@
 
 from __future__ import absolute_import, print_function
+<<<<<<< HEAD
 from itertools import izip_longest
 import Live
+=======
+>>>>>>> master
 from ableton.v2.base import clamp, depends, listens, liveobj_valid
 from ableton.v2.control_surface import CompoundComponent
 from ableton.v2.control_surface.mode import ModesComponent
@@ -9,7 +12,11 @@ from ableton.v2.control_surface.control import control_list, ButtonControl
 from pushbase.mapped_control import MappedControl
 from .real_time_channel import RealTimeDataComponent
 from .item_lister_component import SimpleItemSlot
+<<<<<<< HEAD
 from .mixer_control_component import find_parent_track, assign_parameters
+=======
+from .mixer_control_component import assign_parameters
+>>>>>>> master
 MAX_RETURN_TRACKS = 6
 
 class TrackMixerControlComponent(CompoundComponent):

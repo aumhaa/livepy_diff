@@ -76,7 +76,7 @@ class StepSeqComponent(CompoundComponent):
 
     def set_mute_button(self, button):
         self._instrument.set_mute_button(button)
-        self._note_editor.set_mute_button(button)
+        self._note_editor.mute_button.set_control_element(button)
 
     def set_solo_button(self, button):
         self._instrument.set_solo_button(button)
@@ -103,7 +103,7 @@ class StepSeqComponent(CompoundComponent):
         self._step_duplicator.button.set_control_element(button)
 
     def set_button_matrix(self, matrix):
-        self._note_editor.set_button_matrix(matrix)
+        self._note_editor.set_matrix(matrix)
 
     def set_quantization_buttons(self, buttons):
         self._grid_resolution.set_buttons(buttons)

@@ -2,7 +2,7 @@
 """
 Family of classes for maintaining connections with optional subjects.
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from itertools import izip, repeat
 from functools import partial, wraps
 from .Disconnectable import Disconnectable, CompoundDisconnectable

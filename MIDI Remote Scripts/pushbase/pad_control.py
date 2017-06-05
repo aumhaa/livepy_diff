@@ -6,9 +6,9 @@ class PadControl(PlayableControl):
 
     class State(PlayableControl.State):
 
-        def __init__(self, *a, **k):
+        def __init__(self, sensitivity_profile = None, *a, **k):
             super(PadControl.State, self).__init__(*a, **k)
-            self._sensitivity_profile = None
+            self._sensitivity_profile = sensitivity_profile
 
         def _get_sensitivity_profile(self):
             return self._sensitivity_profile

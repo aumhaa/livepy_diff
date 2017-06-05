@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from itertools import izip_longest
 from .ChannelStripComponent import ChannelStripComponent, release_control
 from .CompoundComponent import CompoundComponent

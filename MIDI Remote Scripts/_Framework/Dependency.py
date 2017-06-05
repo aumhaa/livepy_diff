@@ -9,7 +9,7 @@ Dependencies are identified by keys, that are valid Python
 identifiers.  Dependencies are provided via accessor functions, that
 in general will be called whenever they are needed.
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 __all__ = ('inject', 'depends', 'dependency')
 from functools import wraps
 from .Util import union

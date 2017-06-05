@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from .ClipSlotComponent import ClipSlotComponent, find_nearest_color
 from .CompoundComponent import CompoundComponent
 from .SubjectSlot import subject_slot

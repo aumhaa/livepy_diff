@@ -3,7 +3,7 @@
 Module implementing a way to resource-based access to controls in an
 unified interface dynamic.
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from itertools import repeat, izip
 from .ControlElement import ControlElementClient
 from .Util import nop

@@ -3,7 +3,11 @@ from __future__ import absolute_import, print_function
 from functools import partial
 from itertools import imap, izip
 import Live
+<<<<<<< HEAD
 from ableton.v2.base import EventObject, MultiSlot, const, depends, find_if, listenable_property, listens, liveobj_valid, nop, task
+=======
+from ableton.v2.base import EventObject, MultiSlot, const, depends, find_if, listenable_property, listens, listens_group, liveobj_valid, nop, task
+>>>>>>> master
 from ableton.v2.base.util import index_if
 from ableton.v2.control_surface import CompoundComponent
 from ableton.v2.control_surface.mode import ModesComponent, SetAttributeMode
@@ -534,8 +538,11 @@ class RoutingTargetList(EventObject):
         if self._selected_target is not None:
             index = self._targets.index(self._selected_target)
             self._router.current_target = self._router.routing_targets[index]
+<<<<<<< HEAD
         else:
             self._router.current_target = None
+=======
+>>>>>>> master
 
     def _make_targets(self):
         raise NotImplementedError
@@ -652,6 +659,18 @@ class RoutingChannelPositionList(EventObject):
     @listens('input_channel_position_index')
     def __on_input_channel_position_index_changed(self):
         self.notify_selected_index()
+<<<<<<< HEAD
+=======
+
+    def _update_targets(self):
+        original_targets = self._targets
+        if not self._input_channel_router.has_input_channel_position:
+            self._targets = []
+        else:
+            self._targets = self._input_channel_router.input_channel_positions
+        if self._targets != original_targets:
+            self.notify_targets()
+>>>>>>> master
 
     def _update_targets(self):
         original_targets = self._targets
@@ -662,7 +681,10 @@ class RoutingChannelPositionList(EventObject):
         if self._targets != original_targets:
             self.notify_targets()
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> master
 def can_set_input_routing(track, song):
     return not is_return_track(song, track) and not track.is_frozen and not track.is_foldable
 
@@ -670,8 +692,13 @@ def can_set_input_routing(track, song):
 class RoutingControlComponent(ModesComponent):
     monitor_state_encoder = ListValueEncoderControl(num_steps=10)
     input_output_choice_encoder = ListValueEncoderControl(num_steps=10)
+<<<<<<< HEAD
     routing_target_encoder = ListValueEncoderControl(num_steps=10)
     routing_sub_target_encoders = control_list(ListValueEncoderControl, control_count=4, num_steps=10)
+=======
+    routing_type_encoder = ListValueEncoderControl(num_steps=10)
+    routing_channel_encoders = control_list(ListValueEncoderControl, control_count=4, num_steps=10)
+>>>>>>> master
     routing_channel_position_encoder = ListIndexEncoderControl(num_steps=10)
     can_route = listenable_property.managed(False)
 
@@ -679,8 +706,11 @@ class RoutingControlComponent(ModesComponent):
     def __init__(self, real_time_mapper = None, register_real_time_data = None, *a, **k):
         super(RoutingControlComponent, self).__init__(*a, **k)
         self.__on_current_monitoring_state_changed.subject = self.song.view
+<<<<<<< HEAD
         self.__on_has_audio_input_changed.subject = self.song.view
         self.__on_has_audio_output_changed.subject = self.song.view
+=======
+>>>>>>> master
         self._real_time_channel_assigner = RoutingMeterRealTimeChannelAssigner(real_time_mapper=real_time_mapper, register_real_time_data=register_real_time_data, is_enabled=False)
         input_type_router = self.register_disconnectable(InputTypeRouter(song=self.song))
         output_type_router = self.register_disconnectable(OutputTypeRouter(song=self.song))
@@ -703,11 +733,18 @@ class RoutingControlComponent(ModesComponent):
         self._connect_monitoring_state_encoder()
         self.input_output_choice_encoder.connect_static_list(self, 'selected_mode', list_values=['input', 'output'])
         self.__on_selected_mode_changed.subject = self
+        self.__on_tracks_changed.subject = self.song
+        self.__on_return_tracks_changed.subject = self.song
+        self._update_track_listeners()
 
     @listenable_property
     def can_monitor(self):
         track = self.song.view.selected_track
+<<<<<<< HEAD
         return hasattr(track, 'current_monitoring_state') and not track.is_frozen
+=======
+        return hasattr(track, 'current_monitoring_state') and not track.is_frozen and track.can_be_armed
+>>>>>>> master
 
     @listenable_property
     def monitoring_state_index(self):
@@ -730,6 +767,17 @@ class RoutingControlComponent(ModesComponent):
     def routing_channel_position_list(self):
         return self._routing_channel_position_list
 
+<<<<<<< HEAD
+=======
+    @listens('tracks')
+    def __on_tracks_changed(self):
+        self._update_track_listeners()
+
+    @listens('return_tracks')
+    def __on_return_tracks_changed(self):
+        self._update_track_listeners()
+
+>>>>>>> master
     @listens('selected_mode')
     def __on_selected_mode_changed(self, _):
         self.notify_is_choosing_output()
@@ -738,6 +786,7 @@ class RoutingControlComponent(ModesComponent):
     def __on_current_monitoring_state_changed(self):
         self.notify_monitoring_state_index()
 
+<<<<<<< HEAD
     @listens('selected_track.has_audio_input')
     def __on_has_audio_input_changed(self):
         self._update_can_route()
@@ -750,11 +799,30 @@ class RoutingControlComponent(ModesComponent):
     def __on_selected_track_or_frozen_changed(self):
         self._connect_monitoring_state_encoder()
         self.notify_can_monitor()
+=======
+    @listens('selected_track')
+    def __on_selected_track_changed(self):
+        self._update_monitoring_state()
+>>>>>>> master
         self._update_can_route()
         self._update_routing_type_list()
         self._update_routing_channel_list()
         self._update_routing_channel_position_list()
+<<<<<<< HEAD
 
+=======
+        self._reconnect_selected_track_slots()
+
+    @listens_group('output_routing_type')
+    def __on_any_output_routing_type_changed(self, *_a):
+        self._update_monitoring_state()
+
+    @listens('is_frozen')
+    def __on_is_frozen_changed(self):
+        self._update_can_monitor()
+        self._update_can_route()
+
+>>>>>>> master
     @listens('input_channel_position_index')
     def __on_input_channel_position_index_changed(self):
         self._update_routing_channel_list()
@@ -764,10 +832,23 @@ class RoutingControlComponent(ModesComponent):
         self._update_routing_channel_position_list()
         self._connect_input_channel_position_encoder()
 
+<<<<<<< HEAD
+=======
+    @listens('input_routing_type')
+    def __on_input_routing_type_changed(self):
+        self._update_can_monitor()
+
+>>>>>>> master
     def _update_can_route(self):
         track = self.song.view.selected_track
         self.can_route = self._can_route(track, self.song) and track != self.song.master_track
-        self.routing_target_encoder.enabled = self.can_route
+        self._enable_encoders(self.can_route)
+
+    def _enable_encoders(self, enabled):
+        self.routing_type_encoder.enabled = enabled
+        self.routing_channel_position_encoder.enabled = enabled
+        for encoder in self.routing_channel_encoders:
+            encoder.enabled = enabled
 
     def _set_active_routers(self, type_router, channel_router):
         self._active_type_router = type_router
@@ -782,7 +863,11 @@ class RoutingControlComponent(ModesComponent):
     def _connect_input_channel_position_encoder(self):
         if self._active_channel_router.has_input_channel_position:
             self.routing_channel_position_encoder.connect_list_property(self._active_channel_router, current_index_property_name='input_channel_position_index', max_index=len(self._active_channel_router.input_channel_positions) - 1)
+<<<<<<< HEAD
             self.routing_channel_position_encoder.enabled = True
+=======
+            self.routing_channel_position_encoder.enabled = self.can_route
+>>>>>>> master
         else:
             self.routing_channel_position_encoder.enabled = False
             self.routing_channel_position_encoder.disconnect_property()
@@ -792,13 +877,18 @@ class RoutingControlComponent(ModesComponent):
         self._routing_type_list.disconnect()
         self._routing_type_list = self.register_disconnectable(RoutingTypeList(parent_task_group=self._tasks, router=self._active_type_router))
         self.notify_routing_type_list()
+<<<<<<< HEAD
         self.routing_target_encoder.connect_list_property(self._routing_type_list, current_value_property_name='selected_target', list_property_name='targets')
+=======
+        self.routing_type_encoder.connect_list_property(self._routing_type_list, current_value_property_name='selected_target', list_property_name='targets')
+>>>>>>> master
 
     def _update_routing_channel_list(self):
         self.unregister_disconnectable(self._routing_channel_list)
         self._routing_channel_list.disconnect()
         self._routing_channel_list = self.register_disconnectable(RoutingChannelList(parent_task_group=self._tasks, rt_channel_assigner=self._real_time_channel_assigner, router=self._active_channel_router))
         self.notify_routing_channel_list()
+<<<<<<< HEAD
         for encoder in self.routing_sub_target_encoders:
             if self.can_route:
                 encoder.connect_list_property(self._routing_channel_list, current_value_property_name='selected_target', list_property_name='targets')
@@ -806,6 +896,10 @@ class RoutingControlComponent(ModesComponent):
             else:
                 encoder.enabled = False
                 encoder.disconnect_property()
+=======
+        for encoder in self.routing_channel_encoders:
+            encoder.connect_list_property(self._routing_channel_list, current_value_property_name='selected_target', list_property_name='targets')
+>>>>>>> master
 
     def _update_routing_channel_position_list(self):
         if self._routing_channel_position_list is not None:
@@ -818,7 +912,22 @@ class RoutingControlComponent(ModesComponent):
         self.notify_routing_channel_position_list()
 
     def _connect_monitoring_state_encoder(self):
-        if self.can_monitor:
-            self.monitor_state_encoder.connect_static_list(self.song.view.selected_track, 'current_monitoring_state', list_values=[Live.Track.Track.monitoring_states.IN, Live.Track.Track.monitoring_states.AUTO, Live.Track.Track.monitoring_states.OFF])
-        else:
-            self.monitor_state_encoder.disconnect_property()
+        self.monitor_state_encoder.connect_static_list(self.song.view.selected_track, 'current_monitoring_state', list_values=[Live.Track.Track.monitoring_states.IN, Live.Track.Track.monitoring_states.AUTO, Live.Track.Track.monitoring_states.OFF])
+
+    def _update_monitoring_state(self):
+        self._connect_monitoring_state_encoder()
+        self._update_can_monitor()
+
+    def _update_can_monitor(self):
+        if self.monitor_state_encoder.enabled != self.can_monitor:
+            self.monitor_state_encoder.enabled = self.can_monitor
+            self.notify_can_monitor()
+
+    def _update_track_listeners(self):
+        self.__on_any_output_routing_type_changed.replace_subjects(list(self.song.tracks) + list(self.song.return_tracks))
+        self.__on_any_output_routing_type_changed()
+
+    def _reconnect_selected_track_slots(self):
+        selected_track = self.song.view.selected_track
+        self.__on_is_frozen_changed.subject = selected_track
+        self.__on_input_routing_type_changed.subject = selected_track

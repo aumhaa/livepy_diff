@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from .ControlSurface import ControlSurface
 from . import Task
 SYSEX_IDENTITY_REQUEST = (240, 126, 0, 6, 1, 247)

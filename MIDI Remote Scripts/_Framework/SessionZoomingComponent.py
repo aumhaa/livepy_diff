@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from .CompoundComponent import CompoundComponent
 from .ScrollComponent import ScrollComponent
 from .SubjectSlot import subject_slot, subject_slot_group

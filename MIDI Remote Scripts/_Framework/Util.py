@@ -2,7 +2,7 @@
 """
 Various utilities.
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from contextlib import contextmanager
 from functools import wraps, partial
 from itertools import chain, imap, izip_longest
@@ -62,7 +62,7 @@ def memoize(function):
     
         @memoize
         def fibonacci(n):
-            print "Computing fibonacci of:", n
+            print("Computing fibonacci of:", n)
             if n == 0:
                 return 0
             if n == 1:
@@ -136,7 +136,7 @@ def monkeypatch(target, name = None, override = False, doc = None):
     
         @monkeypatch(MyClass)
         def patched_method(self):
-            print "Lalala"
+            print("Lalala")
     
         MyClass().patched_method()
     
@@ -170,11 +170,11 @@ def monkeypatch_extend(target, name = None):
     Example::
        class MyClass(object):
            def some_method(self):
-               print "Original"
+               print("Original")
     
         @monkeypatch_extend(MyClass)
         def some_method(self):
-            print "Patch"
+            print("Patch")
     
         MyClass().some_method()
     
@@ -271,7 +271,7 @@ def forward_property(member):
             @forward_property('_nested_object')
             def parameter(): pass
     
-        print SomeClass().parameter
+        print(SomeClass().parameter)
     
     Output::
         0
@@ -302,12 +302,12 @@ class lazy_attribute(object):
     
             @lazy_attribute
             def my_attribute(self):
-                print "Computing"
+                print("Computing")
                 return 0
     
         obj = MyClass()
-        print obj.my_attribute
-        print obj.my_attribute
+        print(obj.my_attribute)
+        print(obj.my_attribute)
     
     Output::
         Computing
@@ -422,8 +422,8 @@ def recursive_map(fn, element, sequence_type = None):
     be the type of the root element.
     
     Example::
-        print recurse_map(lambda t: t + (0,),
-                          [[(0,), (1,)], [(3,), (4,)]])
+        print(recurse_map(lambda t: t + (0,),
+                          [[(0,), (1,)], [(3,), (4,)]]))
     
     Output::
         [[(0,0), (1,0)], [(3,0), (4,0)]]
@@ -478,7 +478,7 @@ def compose(*funcs):
         f = lambda x: x + 2
         g = lambda x: x * 2
         h = compose(f, g)
-        print h(3)
+        print(h(3))
     
     Output::
        8 # (3 * 2) + 2
@@ -694,7 +694,7 @@ def slicer(dimensions):
 
 
 def print_message(*messages):
-    print ' '.join(map(str, messages))
+    print(' '.join(map(str, messages)))
 
 
 class overlaymap(object):
@@ -738,7 +738,7 @@ def trace_value(value, msg = 'Value: '):
     Prints value and returns value. Useful when debugging the results
     of sub-expressions.
     """
-    print msg, value
+    print(msg, value)
     return value
 
 

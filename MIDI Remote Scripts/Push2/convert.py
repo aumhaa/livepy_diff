@@ -30,10 +30,15 @@ def possible_conversions(track, decorator_factory = None):
                 else:
                     category = MidiTrackWithoutSimpler(actions=[MoveDeviceChain()], device=simpler, track=track, decorator_factory=decorator_factory)
         elif is_audio_track(track):
-            highlighted_clip_slot = track.canonical_parent.view.highlighted_clip_slot
-            clip = find_if(lambda slot: slot.has_clip and highlighted_clip_slot == slot, track.clip_slots)
-            if liveobj_valid(clip) and not clip.is_recording:
-                category = AudioTrackWithClip(actions=[CreateTrackWithSimpler(), CreateTrackWithClipInDrumRackPad()], clip_slot=highlighted_clip_slot, track=track)
+            detail_clip = track.canonical_parent.view.detail_clip
+            if liveobj_valid(detail_clip) and detail_clip.is_arrangement_clip:
+                if not detail_clip.is_recording:
+                    category = AudioTrackWithArrangementClip(actions=[CreateTrackWithSimpler(), CreateTrackWithClipInDrumRackPad()], song_view=track.canonical_parent.view, track=track)
+            else:
+                highlighted_clip_slot = track.canonical_parent.view.highlighted_clip_slot
+                clip = find_if(lambda slot: slot.has_clip and highlighted_clip_slot == slot, track.clip_slots)
+                if liveobj_valid(clip) and not clip.is_recording:
+                    category = AudioTrackWithSessionClip(actions=[CreateTrackWithSimpler(), CreateTrackWithClipInDrumRackPad()], clip_slot=highlighted_clip_slot, track=track)
     return category
 
 
@@ -135,13 +140,13 @@ class CreateTrackWithClipInDrumRackPad(ConvertAction):
         Live.Conversions.create_drum_rack_from_audio_clip(song, clip)
 
 
-class AudioTrackWithClip(ConvertCategory):
+class AudioTrackWithSessionClip(ConvertCategory):
     internal_name = 'audio_clip_to_simpler'
 
     def __init__(self, clip_slot = None, track = None, *a, **k):
         raise liveobj_valid(clip_slot) or AssertionError
         raise liveobj_valid(track) or AssertionError
-        super(AudioTrackWithClip, self).__init__(name_source=clip_slot.clip, color_source=clip_slot.clip, *a, **k)
+        super(AudioTrackWithSessionClip, self).__init__(name_source=clip_slot.clip, color_source=clip_slot.clip, *a, **k)
         self._clip_slot = clip_slot
         self._track = track
         self.__on_has_clip_changed.subject = self._clip_slot
@@ -152,6 +157,26 @@ class AudioTrackWithClip(ConvertCategory):
 
     @listens('has_clip')
     def __on_has_clip_changed(self):
+        self.notify_action_invalidated()
+
+
+class AudioTrackWithArrangementClip(ConvertCategory):
+    internal_name = 'audio_arrangement_clip_to_simpler'
+
+    def __init__(self, song_view = None, track = None, *a, **k):
+        raise liveobj_valid(song_view) or AssertionError
+        raise liveobj_valid(track) or AssertionError
+        super(AudioTrackWithArrangementClip, self).__init__(name_source=song_view.detail_clip, color_source=song_view.detail_clip, *a, **k)
+        self._clip = song_view.detail_clip
+        self._track = track
+        self.__on_detail_clip_changed.subject = song_view
+
+    def convert(self, song, action):
+        self._track.stop_all_clips()
+        action.conversion(song, self._clip)
+
+    @listens('detail_clip')
+    def __on_detail_clip_changed(self):
         self.notify_action_invalidated()
 
 
@@ -310,6 +335,7 @@ class ConvertEnabler(Component):
         song = self.song
         self.__on_devices_changed.subject = song.view
         self.__on_selected_scene_changed.subject = song.view
+        self.__on_detail_clip_updated.subject = song.view
         self._update_clip_slot_listener()
         self._update_drum_pad_listeners()
 
@@ -330,6 +356,10 @@ class ConvertEnabler(Component):
     def _disable_and_check_enabled_state(self):
         self._exit_dialog_mode()
         self.convert_toggle_button.enabled = self._can_enable_mode()
+
+    @listens('detail_clip')
+    def __on_detail_clip_updated(self):
+        self._disable_and_check_enabled_state()
 
     @listens('selected_track.devices')
     def __on_devices_changed(self):

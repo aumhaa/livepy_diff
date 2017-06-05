@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 import Live
 from .ComboElement import WrapperElement
 from .CompoundElement import CompoundElement

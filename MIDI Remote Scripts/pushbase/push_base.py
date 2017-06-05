@@ -477,6 +477,8 @@ class PushBase(ControlSurface):
         self._fixed_length_settings_component = FixedLengthSettingComponent(fixed_length_setting=self._fixed_length_setting, is_enabled=False)
         self._fixed_length = FixedLengthComponent(settings_component=self._fixed_length_settings_component, fixed_length_setting=self._fixed_length_setting)
         self._fixed_length.layer = Layer(fixed_length_toggle_button='fixed_length_button')
+        length, _ = self._fixed_length_setting.get_selected_length(self.song)
+        self._clip_creator.fixed_length = length
 
     def _create_session_recording(self):
         raise NotImplementedError
@@ -560,7 +562,7 @@ class PushBase(ControlSurface):
         self._drum_velocity_levels = VelocityLevelsComponent(target_note_provider=self._drum_component, skin_base_key=self.drum_group_velocity_levels_skin, is_enabled=False, layer=Layer(velocity_levels='velocity_levels_element', select_button='select_button'))
         drum_note_editor = self.note_editor_class(clip_creator=self._clip_creator, grid_resolution=self._grid_resolution, skin_base_key=self.drum_group_note_editor_skin, velocity_provider=self._drum_velocity_levels, velocity_range_thresholds=self.note_editor_velocity_range_thresholds)
         self._note_editor_settings_component.add_editor(drum_note_editor)
-        self._drum_step_sequencer = StepSeqComponent(self._clip_creator, self._skin, name='Drum_Step_Sequencer', grid_resolution=self._grid_resolution, note_editor_component=drum_note_editor, instrument_component=self._drum_component)
+        self._drum_step_sequencer = StepSeqComponent(self._clip_creator, self._skin, name='Drum_Step_Sequencer', grid_resolution=self._grid_resolution, note_editor_component=drum_note_editor, instrument_component=self._drum_component, is_enabled=False)
         self._drum_step_sequencer.set_enabled(False)
         self._drum_step_sequencer.layer = self._create_drum_step_sequencer_layer()
         self._audio_loop = LoopSelectorComponent(follow_detail_clip=True, name='Loop_Selector')
