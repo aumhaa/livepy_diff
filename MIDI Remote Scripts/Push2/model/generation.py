@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from hashlib import md5
 from contextlib import contextmanager
 from collections import namedtuple
@@ -10,7 +10,7 @@ from .repr import ModelAdapter
 from .declaration import ViewModelsCantContainRefs, ViewModelCantContainListModels, UndeclaredReferenceClass, ModelVisitor
 
 class AdapterAwareSlot(Slot):
-    """
+    u"""
     A special Slot-subclass that delegates
     validation checking to the adapters that
     are wrapped around all bindable objects.
@@ -224,7 +224,7 @@ class NotifyingList(WrapperBase):
         return [ i.get() for i in self.data ]
 
     def __repr__(self):
-        return '<%s %r>' % (self.__class__.__name__, self.data)
+        return u'<%s %r>' % (self.__class__.__name__, self.data)
 
     def __setitem__(self, index, value):
         if not isinstance(index, slice):
@@ -290,11 +290,11 @@ def make_bound_child_wrapper(name = None, wrapper = None):
     return partial(apply_wrapper, name=name, wrapper=wrapper)
 
 
-ClassInfo = namedtuple('ClassInfo', ['class_',
- 'd',
- 'default_data',
- 'wrappers',
- 'children'])
+ClassInfo = namedtuple(u'ClassInfo', [u'class_',
+ u'd',
+ u'default_data',
+ u'wrappers',
+ u'children'])
 
 @contextmanager
 def pushpop(collection, item):
@@ -325,7 +325,7 @@ class BindingModelVisitor(ModelVisitor):
         if class_ not in self._decl2class:
             with self(ClassInfo(class_=class_, d=None, default_data=None, wrappers={}, children=None)) as ci:
                 super(BindingModelVisitor, self).visit_binding_class(class_)
-                self._decl2class[class_] = partial(BoundObjectWrapper, wrappers=ci.wrappers, adapter=class_.__dict__.get('ADAPTER', ModelAdapter))
+                self._decl2class[class_] = partial(BoundObjectWrapper, wrappers=ci.wrappers, adapter=class_.__dict__.get(u'ADAPTER', ModelAdapter))
                 self._name2class[class_.__name__] = self._decl2class[class_]
         return self._decl2class[class_]
 
@@ -404,10 +404,10 @@ class ViewModelVisitor(ModelVisitor):
     def visit_viewmodel_class(self, class_):
         with self(ClassInfo(class_=class_, d={}, default_data={}, wrappers={}, children={})) as ci:
             super(ViewModelVisitor, self).visit_viewmodel_class(class_)
-            ci.d['default_data'] = ci.default_data
-            ci.d['wrappers'] = ci.wrappers
-            ci.d['children'] = ci.children
-            generated_class = type('P2' + class_.__name__, (ModelMixin,), ci.d)
+            ci.d[u'default_data'] = ci.default_data
+            ci.d[u'wrappers'] = ci.wrappers
+            ci.d[u'children'] = ci.children
+            generated_class = type(str(u'P2' + class_.__name__), (ModelMixin,), ci.d)
             self._decl2class[class_] = generated_class
             return generated_class
 
@@ -470,7 +470,7 @@ class ModelFingerprintVisitor(ModelVisitor):
     @property
     def fingerprint(self):
         if self._fingerprint is None:
-            self._fingerprint = ';'.join(('%s(%s)' % (classname, ','.join(property_prints)) for classname, property_prints in sorted(self._class2proplist.iteritems(), key=lambda item: item[0])))
+            self._fingerprint = u';'.join((u'%s(%s)' % (classname, u','.join(property_prints)) for classname, property_prints in sorted(self._class2proplist.iteritems(), key=lambda item: item[0])))
         return self._fingerprint
 
     def visit_class(self, class_):
@@ -479,31 +479,31 @@ class ModelFingerprintVisitor(ModelVisitor):
             self._class2proplist[class_.__name__] = property_prints
 
     def visit_id_property(self, *_a):
-        self.property_prints.append('id')
+        self.property_prints.append(u'id')
 
     def visit_value_property(self, name, decl):
         super(ModelFingerprintVisitor, self).visit_value_property(name, decl)
-        self.property_prints.append('%s:%s' % (name, decl.property_type.__name__))
+        self.property_prints.append(u'%s:%s' % (name, decl.property_type.__name__))
 
     def visit_view_model_property(self, name, decl):
         super(ModelFingerprintVisitor, self).visit_view_model_property(name, decl)
-        self.property_prints.append('%s:%s' % (name, decl.property_type.__name__))
+        self.property_prints.append(u'%s:%s' % (name, decl.property_type.__name__))
 
     def visit_value_list_property(self, name, decl, property_type):
         super(ModelFingerprintVisitor, self).visit_value_list_property(name, decl, property_type)
-        self.property_prints.append('%s:listof(%s)' % (name, property_type.__name__))
+        self.property_prints.append(u'%s:listof(%s)' % (name, property_type.__name__))
 
     def visit_list_model_property(self, name, decl, property_type):
         super(ModelFingerprintVisitor, self).visit_list_model_property(name, decl, property_type)
-        self.property_prints.append('%s:listmodel(%s)' % (name, property_type.__name__))
+        self.property_prints.append(u'%s:listmodel(%s)' % (name, property_type.__name__))
 
     def visit_complex_list_property(self, name, decl, value_type):
         super(ModelFingerprintVisitor, self).visit_complex_list_property(name, decl, value_type)
-        self.property_prints.append('%s:listof(%s)' % (name, value_type.__name__))
+        self.property_prints.append(u'%s:listof(%s)' % (name, value_type.__name__))
 
     def visit_binding_property(self, name, decl):
         super(ModelFingerprintVisitor, self).visit_binding_property(name, decl)
-        self.property_prints.append('%s:%s' % (name, decl.property_type.__name__))
+        self.property_prints.append(u'%s:%s' % (name, decl.property_type.__name__))
 
 
 def generate_model_fingerprint(cls):

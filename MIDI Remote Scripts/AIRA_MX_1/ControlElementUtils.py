@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.Resource import PrioritizedResource
 from _Framework.Dependency import depends
@@ -17,4 +18,4 @@ def make_encoder(name, identifier, channel = 0):
 
 
 def with_modifier(control, modifier):
-    return ComboElement(control, modifiers=[modifier], name=control.name + '_With_Modifier')
+    return ComboElement(control, modifiers=[modifier], name=control.name + u'_With_Modifier')

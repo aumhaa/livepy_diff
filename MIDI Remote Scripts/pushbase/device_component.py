@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import depends, listens, liveobj_valid, liveobj_changed
 from ableton.v2.control_surface import CompoundComponent
 from .device_parameter_bank import create_device_bank
@@ -7,11 +7,11 @@ from .parameter_provider import ParameterProvider
 from .simpler_slice_nudging import SimplerSliceNudging
 
 class DeviceComponent(ParameterProvider, CompoundComponent):
-    """
+    u"""
     Device component that serves as parameter provider for the
     DeviceParameterComponent.
     """
-    __events__ = ('device',)
+    __events__ = (u'device',)
     _provided_parameters = tuple()
 
     @depends(device_provider=None)
@@ -41,7 +41,7 @@ class DeviceComponent(ParameterProvider, CompoundComponent):
     def parameters(self):
         return self._provided_parameters
 
-    @listens('device_bank')
+    @listens(u'device_bank')
     def __on_bank_changed(self, device, bank):
         self._set_bank_index(device, bank)
 
@@ -66,14 +66,14 @@ class DeviceComponent(ParameterProvider, CompoundComponent):
         return device
 
     def _device_changed(self, device):
-        current_device = getattr(self.device(), '_live_object', self.device())
+        current_device = getattr(self.device(), u'_live_object', self.device())
         return liveobj_changed(current_device, device)
 
-    @listens('device')
+    @listens(u'device')
     def __on_provided_device_changed(self):
         self._on_device_changed(self._device_provider.device)
 
-    @listens('parameters')
+    @listens(u'parameters')
     def __on_parameters_changed_in_device(self):
         self._update_parameters()
 
@@ -82,12 +82,13 @@ class DeviceComponent(ParameterProvider, CompoundComponent):
             self._set_device(device)
 
     def _set_decorated_device(self, decorated_device):
+        self._set_decorated_device_for_subcomponents(decorated_device)
         self._setup_bank(decorated_device)
         self._on_bank_parameters_changed.subject = self._bank
-        self._slice_nudging.set_device(decorated_device)
         self._decorated_device = decorated_device
 
     def _set_device(self, device):
+        self._set_device_for_subcomponents(device)
         decorated_device = self._get_decorated_device(device)
         self._set_decorated_device(decorated_device)
         bank_index_for_device = self._device_bank_registry.get_device_bank(device)
@@ -96,14 +97,20 @@ class DeviceComponent(ParameterProvider, CompoundComponent):
         self._update_parameters()
         self.__on_parameters_changed_in_device.subject = device
 
-    @listens('parameters')
+    def _set_device_for_subcomponents(self, device):
+        pass
+
+    def _set_decorated_device_for_subcomponents(self, decorated_device):
+        self._slice_nudging.set_device(decorated_device)
+
+    @listens(u'parameters')
     def _on_bank_parameters_changed(self):
         self._update_parameters()
 
     def _current_bank_details(self):
         if self._bank is not None:
             return (self._bank.name, self._bank.parameters)
-        return ('', [None] * 8)
+        return (u'', [None] * 8)
 
     def _number_of_parameter_banks(self):
         if self._bank is not None:
@@ -112,7 +119,7 @@ class DeviceComponent(ParameterProvider, CompoundComponent):
 
     def _get_provided_parameters(self):
         _, parameters = self._current_bank_details() if self.device() else (None, ())
-        return [ self._create_parameter_info(p) for p in parameters ]
+        return [ self._create_parameter_info(param, name) for param, name in parameters ]
 
     def _create_parameter_info(self, parameter, name):
         raise NotImplementedError()

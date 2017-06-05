@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from itertools import chain
 from ableton.v2.base import depends, const, liveobj_valid, EventObject
 from ableton.v2.control_surface.elements.color import is_dynamic_color_factory
@@ -9,7 +9,7 @@ class SkinColorMissingError(Exception):
 
 
 class DynamicColorNotAvailableError(Exception):
-    msg = 'In order to use dynamic colors, you need to inject the song while creating         the skin'
+    msg = u'In order to use dynamic colors, you need to inject the song while creating         the skin'
 
 
 class Skin(EventObject):
@@ -22,7 +22,7 @@ class Skin(EventObject):
         if colors is not None:
             self._fill_colors(colors, song=song)
 
-    def _fill_colors(self, colors, pathname = '', song = None):
+    def _fill_colors(self, colors, pathname = u'', song = None):
         try:
             self._fill_colors(super(colors), song=song, pathname=pathname)
         except TypeError:
@@ -30,9 +30,9 @@ class Skin(EventObject):
                 self._fill_colors(base, song=song, pathname=pathname)
 
         for k, v in colors.__dict__.iteritems():
-            if k[:1] != '_':
+            if k[:1] != u'_':
                 if callable(v):
-                    self._fill_colors(v, pathname + k + '.', song=song)
+                    self._fill_colors(v, pathname + k + u'.', song=song)
                 else:
                     if is_dynamic_color_factory(v):
                         v = self._get_dynamic_color(v, song)
@@ -42,7 +42,7 @@ class Skin(EventObject):
         try:
             return self._colors[key]
         except KeyError:
-            raise SkinColorMissingError('Skin color missing: %s' % str(key))
+            raise SkinColorMissingError(u'Skin color missing: %s' % str(key))
 
     def iteritems(self):
         return self._colors.iteritems()

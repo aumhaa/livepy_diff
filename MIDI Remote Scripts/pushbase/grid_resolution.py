@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from ableton.v2.base import EventObject, product, listens
 GridQuantization = Live.Clip.GridQuantization
@@ -27,7 +27,7 @@ CLIP_LENGTH_LIST = [2.0,
 DEFAULT_INDEX = 3
 
 class GridResolution(EventObject):
-    __events__ = ('index',)
+    __events__ = (u'index',)
 
     def __init__(self, *a, **k):
         super(GridResolution, self).__init__(*a, **k)
@@ -61,12 +61,12 @@ class GridResolution(EventObject):
         self._quantization_buttons = buttons or []
         for button in self._quantization_buttons:
             if button:
-                button.set_on_off_values('NoteEditor.QuantizationSelected', 'NoteEditor.QuantizationUnselected')
-            self._quantization_button_slots.register_slot(button, self._on_quantization_button_value, 'value', dict(identify_sender=True))
+                button.set_on_off_values(u'NoteEditor.QuantizationSelected', u'NoteEditor.QuantizationUnselected')
+            self._quantization_button_slots.register_slot(button, self._on_quantization_button_value, u'value', dict(identify_sender=True))
 
         self._update_quantization_buttons()
 
-    @listens('value')
+    @listens(u'value')
     def _on_quantization_button_value(self, value, sender):
         if value or not sender.is_momentary():
             self.index = list(self._quantization_buttons).index(sender)

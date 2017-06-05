@@ -1,10 +1,10 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from ...base import in_range, product, const, slicer, to_slice
 from ..compound_element import CompoundElement
 
 class ButtonMatrixElement(CompoundElement):
-    """
+    u"""
     Class representing a 2-dimensional set of buttons.
     
     When using as a resource, buttons might be individually grabbed at
@@ -88,7 +88,7 @@ class ButtonMatrixElement(CompoundElement):
             return self._do_get_item(index)
 
     def _do_get_item(self, index):
-        raise in_range(index, 0, len(self)) or AssertionError('Index out of range')
+        raise in_range(index, 0, len(self)) or AssertionError(u'Index out of range')
         row, col = divmod(index, self.width())
         return self.get_button(row, col)
 
@@ -103,7 +103,7 @@ class ButtonMatrixElement(CompoundElement):
     def on_nested_control_element_value(self, value, sender):
         x, y = self._button_coordinates[sender]
         raise self._buttons[y][x] or AssertionError
-        is_momentary = getattr(sender, 'is_momentary', const(None))()
+        is_momentary = getattr(sender, u'is_momentary', const(None))()
         self.notify_value(value, x, y, is_momentary)
 
     def on_nested_control_element_received(self, control):

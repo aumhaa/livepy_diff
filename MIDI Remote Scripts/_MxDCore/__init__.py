@@ -1,5 +1,6 @@
 
-from MxDCore import MxDCore as _MxDCore
+from __future__ import absolute_import, print_function, unicode_literals
+from .MxDCore import MxDCore as _MxDCore
 import sys, warnings
 
 def set_manager(manager):
@@ -27,11 +28,11 @@ def execute_command(device_id, object_id, command, arguments):
                     _MxDCore.instance._warn(device_id, object_id, str(warning.message))
 
         except:
-            if sys.exc_info()[0].__name__ == 'RuntimeError':
+            if sys.exc_info()[0].__name__ == u'RuntimeError':
                 assert_reason = str(sys.exc_info()[1])
             else:
-                assert_reason = 'Invalid syntax'
+                assert_reason = u'Invalid syntax'
             _MxDCore.instance._raise(device_id, object_id, assert_reason)
 
     else:
-        _MxDCore.instance._raise(device_id, object_id, 'Unknown command: ' + command)
+        _MxDCore.instance._raise(device_id, object_id, u'Unknown command: ' + command)

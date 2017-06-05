@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import group, in_range
 from pushbase.touch_strip_element import TouchStripModes, TouchStripStates
 START = (240, 71, 127, 21)
@@ -36,7 +36,7 @@ def to_sysex_int(number, unused_parameter_name):
      number & 15)
 
 
-CALIBRATION_SET = START + (87, 0, 20) + to_sysex_int(215, 'Preload Scale Factor') + to_sysex_int(1000, 'Recalibration Interval') + to_sysex_int(200, 'Stuck Pad Detection Threshold') + to_sysex_int(0, 'Stuck Pad NoteOff Threshold Adder') + to_sysex_int(200, 'Pad Ignore Time') + (247,)
+CALIBRATION_SET = START + (87, 0, 20) + to_sysex_int(215, u'Preload Scale Factor') + to_sysex_int(1000, u'Recalibration Interval') + to_sysex_int(200, u'Stuck Pad Detection Threshold') + to_sysex_int(0, u'Stuck Pad NoteOff Threshold Adder') + to_sysex_int(200, u'Pad Ignore Time') + (247,)
 IDENTITY_ENQUIRY = (240, 126, 0, 6, 1, 247)
 IDENTITY_PREFIX = (240, 126, 0, 6, 2, 71, 21, 0, 25)
 DONGLE_ENQUIRY_PREFIX = START + (80,)
@@ -84,7 +84,7 @@ def make_touch_strip_light_message(state):
 
 
 def to_bytes(number, size):
-    """
+    u"""
     turns the given value into tuple of 4bit bytes,
     ordered from most significant to least significant byte
     """

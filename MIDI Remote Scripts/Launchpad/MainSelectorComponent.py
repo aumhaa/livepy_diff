@@ -1,14 +1,15 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.SessionZoomingComponent import DeprecatedSessionZoomingComponent
-from SpecialSessionComponent import SpecialSessionComponent
-from SubSelectorComponent import *
+from .SpecialSessionComponent import SpecialSessionComponent
+from .SubSelectorComponent import *
 SESSION_MODE = 0
 USER_1_MODE = 1
 USER_2_MODE = 2
 MIXER_MODE = 3
 
 class MainSelectorComponent(ModeSelectorComponent):
-    """ Class that reassigns the button on the launchpad to different functions """
+    u""" Class that reassigns the button on the launchpad to different functions """
 
     def __init__(self, matrix, top_buttons, side_buttons, config_button):
         raise isinstance(matrix, ButtonMatrixElement) or AssertionError
@@ -21,8 +22,8 @@ class MainSelectorComponent(ModeSelectorComponent):
         ModeSelectorComponent.__init__(self)
         self._session = SpecialSessionComponent(matrix.width(), matrix.height())
         self._zooming = DeprecatedSessionZoomingComponent(self._session)
-        self._session.name = 'Session_Control'
-        self._zooming.name = 'Session_Overview'
+        self._session.name = u'Session_Control'
+        self._zooming.name = u'Session_Overview'
         self._matrix = matrix
         self._side_buttons = side_buttons
         self._nav_buttons = top_buttons[:4]
@@ -33,7 +34,7 @@ class MainSelectorComponent(ModeSelectorComponent):
             self._all_buttons.append(button)
 
         self._sub_modes = SubSelectorComponent(matrix, side_buttons, self._session)
-        self._sub_modes.name = 'Mixer_Modes'
+        self._sub_modes.name = u'Mixer_Modes'
         self._sub_modes.set_update_callback(self._update_control_channels)
         self._init_session()
         self._all_buttons = tuple(self._all_buttons)
@@ -218,7 +219,7 @@ class MainSelectorComponent(ModeSelectorComponent):
         for scene_index in range(self._matrix.height()):
             scene = self._session.scene(scene_index)
             scene.set_triggered_value(GREEN_BLINK)
-            scene.name = 'Scene_' + str(scene_index)
+            scene.name = u'Scene_' + str(scene_index)
             for track_index in range(self._matrix.width()):
                 clip_slot = scene.clip_slot(track_index)
                 clip_slot.set_triggered_to_play_value(GREEN_BLINK)
@@ -226,7 +227,7 @@ class MainSelectorComponent(ModeSelectorComponent):
                 clip_slot.set_stopped_value(AMBER_FULL)
                 clip_slot.set_started_value(GREEN_FULL)
                 clip_slot.set_recording_value(RED_FULL)
-                clip_slot.name = str(track_index) + '_Clip_Slot_' + str(scene_index)
+                clip_slot.name = str(track_index) + u'_Clip_Slot_' + str(scene_index)
                 self._all_buttons.append(self._matrix.get_button(track_index, scene_index))
 
         self._zooming.set_stopped_value(RED_FULL)

@@ -1,23 +1,24 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.EncoderElement import EncoderElement
 from _Generic.Devices import get_parameter_by_name
-FILTER_DEVICES = {'AutoFilter': {'Frequency': 'Frequency',
-                'Resonance': 'Resonance'},
- 'Operator': {'Frequency': 'Filter Freq',
-              'Resonance': 'Filter Res'},
- 'OriginalSimpler': {'Frequency': 'Filter Freq',
-                     'Resonance': 'Filter Res'},
- 'MultiSampler': {'Frequency': 'Filter Freq',
-                  'Resonance': 'Filter Res'},
- 'UltraAnalog': {'Frequency': 'F1 Freq',
-                 'Resonance': 'F1 Resonance'},
- 'StringStudio': {'Frequency': 'Filter Freq',
-                  'Resonance': 'Filter Reso'}}
+FILTER_DEVICES = {u'AutoFilter': {u'Frequency': u'Frequency',
+                 u'Resonance': u'Resonance'},
+ u'Operator': {u'Frequency': u'Filter Freq',
+               u'Resonance': u'Filter Res'},
+ u'OriginalSimpler': {u'Frequency': u'Filter Freq',
+                      u'Resonance': u'Filter Res'},
+ u'MultiSampler': {u'Frequency': u'Filter Freq',
+                   u'Resonance': u'Filter Res'},
+ u'UltraAnalog': {u'Frequency': u'F1 Freq',
+                  u'Resonance': u'F1 Resonance'},
+ u'StringStudio': {u'Frequency': u'Filter Freq',
+                   u'Resonance': u'Filter Reso'}}
 
 class TrackFilterComponent(ControlSurfaceComponent):
-    """ Class representing a track's filter, attaches to the last filter in the track """
+    u""" Class representing a track's filter, attaches to the last filter in the track """
 
     def __init__(self):
         ControlSurfaceComponent.__init__(self)
@@ -73,12 +74,12 @@ class TrackFilterComponent(ControlSurfaceComponent):
             device_dict = FILTER_DEVICES[self._device.class_name]
             if self._freq_control != None:
                 self._freq_control.release_parameter()
-                parameter = get_parameter_by_name(self._device, device_dict['Frequency'])
+                parameter = get_parameter_by_name(self._device, device_dict[u'Frequency'])
                 if parameter != None:
                     self._freq_control.connect_to(parameter)
             if self._reso_control != None:
                 self._reso_control.release_parameter()
-                parameter = get_parameter_by_name(self._device, device_dict['Resonance'])
+                parameter = get_parameter_by_name(self._device, device_dict[u'Resonance'])
                 if parameter != None:
                     self._reso_control.connect_to(parameter)
 

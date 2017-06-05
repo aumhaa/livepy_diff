@@ -1,7 +1,8 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.SliderElement import SliderElement as SliderElementBase
 from _Framework.Skin import Skin, SkinColorMissingError
-import consts
+from . import consts
 FADER_TYPES = (consts.FADER_TYPE_STANDARD, consts.FADER_TYPE_BIPOLAR)
 
 class SliderElement(SliderElementBase):

@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from itertools import islice
 from ableton.v2.base import EventObject, listenable_property, clamp, nop
@@ -82,7 +82,7 @@ class BrowserList(EventObject, UniqueIdMixin):
             raise AssertionError
             num_children = len(self._items)
             if value < -1 or value >= num_children:
-                raise IndexError('Index %i must be in [-1..%i]' % (value, num_children - 1))
+                raise IndexError(u'Index %i must be in [-1..%i]' % (value, num_children - 1))
             self._selected_index = value
             self.notify_selected_index()
             if self._selected_index >= self.LAZY_ACCESS_THRESHOLD and not self._access_all:

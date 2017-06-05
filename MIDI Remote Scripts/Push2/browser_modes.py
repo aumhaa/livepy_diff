@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from ableton.v2.base import depends, liveobj_valid
 from ableton.v2.control_surface.mode import LazyComponentMode, Mode, ModeButtonBehaviour
@@ -69,9 +69,9 @@ class HotswapBrowseMode(BrowseModeBase):
         hotswap_target = self._browser.hotswap_target
         if liveobj_valid(hotswap_target):
             if isinstance(hotswap_target, Live.DrumPad.DrumPad):
-                self._drum_group_component.hotswap_indication_mode = 'current_pad'
+                self._drum_group_component.hotswap_indication_mode = u'current_pad'
             elif isinstance(hotswap_target, Live.RackDevice.RackDevice) and hotswap_target.can_have_drum_pads and hotswap_target == self._drum_group_component.drum_group_device:
-                self._drum_group_component.hotswap_indication_mode = 'all_pads'
+                self._drum_group_component.hotswap_indication_mode = u'all_pads'
 
 
 class AddDeviceMode(HotswapBrowseMode):

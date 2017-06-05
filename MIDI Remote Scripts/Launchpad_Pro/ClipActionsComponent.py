@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.SubjectSlot import Subject, subject_slot
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
@@ -39,7 +40,7 @@ def double_clip(clip):
 
 
 class ClipActionsComponent(ControlSurfaceComponent, Subject):
-    """
+    u"""
     Component that provides control over the playing clip on a track
     and notifies listeners when this changes.
     """
@@ -48,7 +49,7 @@ class ClipActionsComponent(ControlSurfaceComponent, Subject):
     double_button = ButtonControl(**ACTION_BUTTON_COLORS)
     quantize_button = ButtonControl(**ACTION_BUTTON_COLORS)
     quantization_component = None
-    __subject_events__ = ('selected_clip',)
+    __subject_events__ = (u'selected_clip',)
 
     def __init__(self, target_track_component, *a, **k):
         super(ClipActionsComponent, self).__init__(*a, **k)
@@ -98,13 +99,13 @@ class ClipActionsComponent(ControlSurfaceComponent, Subject):
             self._track = self.song().view.selected_track
             self._on_selection_changed()
 
-    @subject_slot('target_track')
+    @subject_slot(u'target_track')
     def _on_track_changed(self):
         if not self._use_selected_track:
             self._track = self._target_track_component.target_track
             self._on_selection_changed()
 
-    @subject_slot('playing_slot_index')
+    @subject_slot(u'playing_slot_index')
     def _on_selection_changed(self):
         self._selected_clip = None
         if self._track in self.song().tracks:

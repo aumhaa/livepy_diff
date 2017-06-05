@@ -1,18 +1,18 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from ...base import clamp, listens, EventObject
 from ..compound_component import CompoundComponent
 from .scroll import ScrollComponent, Scrollable
 
 class Slideable(EventObject):
-    """
+    u"""
     Models of an entity that has a position in a 1-D discrete axis,
     and that has some natural steps (called pages) of this axis.
     """
-    __events__ = ('page_offset', 'page_length', 'position', 'position_count', 'contents')
+    __events__ = (u'page_offset', u'page_length', u'position', u'position_count', u'contents')
 
     def contents_range(self, pmin, pmax):
-        """
+        u"""
         Tells whether there are any contents in the (min, max) range,
         wheren min and max are floats in the (0, position_count)
         range. Can be left unimplemented.
@@ -115,7 +115,7 @@ class SlideComponent(CompoundComponent, Scrollable):
         self._position_scroll.update()
         self._page_scroll.update()
 
-    @listens('position')
+    @listens(u'position')
     def __on_position_changed(self):
         self._position_scroll.update()
         self._page_scroll.update()

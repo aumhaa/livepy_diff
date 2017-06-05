@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from collections import namedtuple
 from math import ceil
 from functools import partial
@@ -7,17 +7,17 @@ from ableton.v2.base import clamp, index_if, listens, listenable_property
 from ableton.v2.control_surface import Component
 from ableton.v2.control_surface.control import ButtonControl, RadioButtonControl, StepEncoderControl, ToggleButtonControl, control_list
 from pushbase.melodic_pattern import ROOT_NOTES, SCALES, NOTE_NAMES
-Layout = namedtuple('Layout', ('name', 'interval'))
+Layout = namedtuple(u'Layout', (u'name', u'interval'))
 
 class ScalesComponent(Component):
-    navigation_colors = dict(color='Scales.Navigation', disabled_color='Scales.NavigationDisabled')
+    navigation_colors = dict(color=u'Scales.Navigation', disabled_color=u'Scales.NavigationDisabled')
     up_button = ButtonControl(repeat=True, **navigation_colors)
     down_button = ButtonControl(repeat=True, **navigation_colors)
     right_button = ButtonControl(repeat=True, **navigation_colors)
     left_button = ButtonControl(repeat=True, **navigation_colors)
-    root_note_buttons = control_list(RadioButtonControl, control_count=len(ROOT_NOTES), checked_color='Scales.OptionOn', unchecked_color='Scales.OptionOff')
-    in_key_toggle_button = ToggleButtonControl(toggled_color='Scales.OptionOn', untoggled_color='Scales.OptionOn')
-    fixed_toggle_button = ToggleButtonControl(toggled_color='Scales.OptionOn', untoggled_color='Scales.OptionOff')
+    root_note_buttons = control_list(RadioButtonControl, control_count=len(ROOT_NOTES), checked_color=u'Scales.OptionOn', unchecked_color=u'Scales.OptionOff')
+    in_key_toggle_button = ToggleButtonControl(toggled_color=u'Scales.OptionOn', untoggled_color=u'Scales.OptionOn')
+    fixed_toggle_button = ToggleButtonControl(toggled_color=u'Scales.OptionOn', untoggled_color=u'Scales.OptionOff')
     scale_encoders = control_list(StepEncoderControl)
     layout_encoder = StepEncoderControl()
     direction_encoder = StepEncoderControl()
@@ -33,10 +33,10 @@ class ScalesComponent(Component):
         self._scale_name_list = map(lambda m: m.name, self._scale_list)
         self._selected_scale_index = -1
         self._selected_root_note_index = -1
-        self._layouts = (Layout('4ths', 3), Layout('3rds', 2), Layout('Sequential', None))
+        self._layouts = (Layout(u'4ths', 3), Layout(u'3rds', 2), Layout(u'Sequential', None))
         self._selected_layout_index = 0
-        self.in_key_toggle_button.connect_property(note_layout, 'is_in_key')
-        self.fixed_toggle_button.connect_property(note_layout, 'is_fixed')
+        self.in_key_toggle_button.connect_property(note_layout, u'is_in_key')
+        self.fixed_toggle_button.connect_property(note_layout, u'is_fixed')
         self.__on_root_note_changed.subject = self._note_layout
         self.__on_scale_changed.subject = self._note_layout
         self.__on_interval_changed.subject = self._note_layout
@@ -72,7 +72,7 @@ class ScalesComponent(Component):
     def root_note_buttons(self, button):
         self._note_layout.root_note = ROOT_NOTES[button.index]
 
-    @listens('root_note')
+    @listens(u'root_note')
     def __on_root_note_changed(self, root_note):
         self._selected_root_note_index = list(ROOT_NOTES).index(root_note)
         self.root_note_buttons.checked_index = self._selected_root_note_index
@@ -99,7 +99,7 @@ class ScalesComponent(Component):
     def selected_scale_index(self):
         return self._selected_scale_index
 
-    @listens('scale')
+    @listens(u'scale')
     def __on_scale_changed(self, scale):
         index = self._scale_list.index(scale) if scale in self._scale_list else -1
         if index != self._selected_scale_index:
@@ -142,21 +142,21 @@ class ScalesComponent(Component):
     def _update_horizontal_navigation(self):
         self.horizontal_navigation = self.right_button.is_pressed or self.left_button.is_pressed
 
-    @listens('interval')
+    @listens(u'interval')
     def __on_interval_changed(self, interval):
         index = index_if(lambda layout: layout.interval == interval, self._layouts)
         self.selected_layout_index = index
 
 
 class ScalesEnabler(Component):
-    toggle_button = ButtonControl(color='DefaultButton.On')
+    toggle_button = ButtonControl(color=u'DefaultButton.On')
 
     def __init__(self, enter_dialog_mode = None, exit_dialog_mode = None, *a, **k):
         raise enter_dialog_mode is not None or AssertionError
         raise exit_dialog_mode is not None or AssertionError
         super(ScalesEnabler, self).__init__(*a, **k)
-        self._enable_dialog_mode = partial(enter_dialog_mode, 'scales')
-        self._exit_dialog_mode = partial(exit_dialog_mode, 'scales')
+        self._enable_dialog_mode = partial(enter_dialog_mode, u'scales')
+        self._exit_dialog_mode = partial(exit_dialog_mode, u'scales')
 
     @toggle_button.pressed
     def toggle_button(self, button):

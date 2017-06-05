@@ -1,9 +1,10 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.MixerComponent import MixerComponent
 from _Framework.ButtonElement import ButtonElement
 
 class SpecialMixerComponent(MixerComponent):
-    """ Special mixer class that reassigns buttons to mute or solo based on a toggle """
+    u""" Special mixer class that reassigns buttons to mute or solo based on a toggle """
 
     def __init__(self, num_tracks):
         self._shift_button = None

@@ -1,11 +1,11 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
 class LogicalDisplaySegment(object):
-    """
+    u"""
     Class representing a specific segment of a display on the controller
     """
-    separator = ''
+    separator = u''
 
     def __init__(self, width = None, update_callback = None, *a, **k):
         super(LogicalDisplaySegment, self).__init__(*a, **k)
@@ -36,7 +36,7 @@ class LogicalDisplaySegment(object):
         return self._data_source
 
     def set_position_identifier(self, position_identifier):
-        """
+        u"""
         Sets position identifier as a tuple of HW related data.
         """
         self._position_identifier = position_identifier
@@ -56,7 +56,7 @@ class LogicalDisplaySegment(object):
             raise width >= 0 or AssertionError
             return self._data_source.adjust_string(width) + separator
         else:
-            return ' ' * self._width
+            return u' ' * self._width
 
     def display_string(self):
         if self._display_string is None:

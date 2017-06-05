@@ -1,9 +1,10 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.EncoderElement import EncoderElement
 from _Framework.InputControlElement import *
 
 class IdentifyingEncoderElement(EncoderElement):
-    """ Encoder with LED that can be connected and disconnected to a specific parameter
+    u""" Encoder with LED that can be connected and disconnected to a specific parameter
     and can send and receive on different channels """
 
     def __init__(self, msg_type, channel, identifier, map_mode, send_channel = None, identifier_send_offset = 0):

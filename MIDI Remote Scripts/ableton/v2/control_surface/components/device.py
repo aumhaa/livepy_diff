@@ -1,12 +1,12 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from _Generic.Devices import best_of_parameter_bank, device_parameters_to_map, number_of_parameter_banks, parameter_bank_names, parameter_banks
 from ...base import depends, listens, listens_group, liveobj_valid
 from ..component import Component
 from ..elements import DisplayDataSource
 
 class DeviceComponent(Component):
-    """ Class representing a device in Live """
+    u""" Class representing a device in Live """
 
     @depends(device_bank_registry=None)
     @depends(device_provider=None)
@@ -22,14 +22,14 @@ class DeviceComponent(Component):
         self._on_off_button = None
         self._device_name_data_source = None
         self._bank_index = 0
-        self._bank_name = '<No Bank>'
+        self._bank_name = u'<No Bank>'
 
         def make_button_slot(name):
-            return self.register_slot(None, getattr(self, '_%s_value' % name), 'value')
+            return self.register_slot(None, getattr(self, u'_%s_value' % name), u'value')
 
-        self._bank_up_button_slot = make_button_slot('bank_up')
-        self._bank_down_button_slot = make_button_slot('bank_down')
-        self._on_off_button_slot = make_button_slot('on_off')
+        self._bank_up_button_slot = make_button_slot(u'bank_up')
+        self._bank_down_button_slot = make_button_slot(u'bank_down')
+        self._on_off_button_slot = make_button_slot(u'on_off')
         self.__on_device_bank_changed.subject = self._device_bank_registry
         self.__on_provided_device_changed.subject = self._device_provider
         self.__on_provided_device_changed()
@@ -51,7 +51,7 @@ class DeviceComponent(Component):
     def on_enabled_changed(self):
         self.update()
 
-    @listens('device')
+    @listens(u'device')
     def __on_provided_device_changed(self):
         self._on_device_changed(self._get_device())
 
@@ -64,7 +64,7 @@ class DeviceComponent(Component):
         if liveobj_valid(device):
             self._bank_index = 0
         self._bank_index = self._device_bank_registry.get_device_bank(device)
-        self._bank_name = '<No Bank>'
+        self._bank_name = u'<No Bank>'
         self.__on_device_name_changed()
         self.update()
 
@@ -113,7 +113,7 @@ class DeviceComponent(Component):
                 old_bank_name = self._bank_name
                 self._assign_parameters()
                 if self._bank_name != old_bank_name:
-                    self._show_msg_callback(self._get_device().name + ' Bank: ' + self._bank_name)
+                    self._show_msg_callback(self._get_device().name + u' Bank: ' + self._bank_name)
         elif self._parameter_controls != None:
             self._release_parameters(self._parameter_controls)
         if self.is_enabled():
@@ -130,11 +130,11 @@ class DeviceComponent(Component):
                 if liveobj_valid(self._get_device()):
                     num_banks = self._number_of_parameter_banks()
                     if self._bank_down_button == None:
-                        self._bank_name = ''
+                        self._bank_name = u''
                         self._bank_index = (self._bank_index + 1) % num_banks if self._bank_index != None else 0
                         self.update()
                     elif self._bank_index == None or num_banks > self._bank_index + 1:
-                        self._bank_name = ''
+                        self._bank_name = u''
                         self._bank_index = self._bank_index + 1 if self._bank_index != None else 0
                         self.update()
 
@@ -145,7 +145,7 @@ class DeviceComponent(Component):
             if not isinstance(value, int):
                 raise AssertionError
                 if self.is_enabled():
-                    self._bank_name = (not self._bank_down_button.is_momentary() or value is not 0) and liveobj_valid(self._get_device()) and (self._bank_index == None or self._bank_index > 0) and ''
+                    self._bank_name = (not self._bank_down_button.is_momentary() or value is not 0) and liveobj_valid(self._get_device()) and (self._bank_index == None or self._bank_index > 0) and u''
                     self._bank_index = self._bank_index - 1 if self._bank_index != None else max(0, self._number_of_parameter_banks() - 1)
                     self.update()
 
@@ -157,7 +157,7 @@ class DeviceComponent(Component):
                 parameter = (not self._on_off_button.is_momentary() or value is not 0) and self._on_off_parameter()
                 parameter.value = parameter != None and parameter.is_enabled and float(int(parameter.value == 0.0))
 
-    @listens_group('value')
+    @listens_group(u'value')
     def __on_bank_value(self, value, button):
         self._bank_value(value, button)
 
@@ -167,11 +167,11 @@ class DeviceComponent(Component):
                 bank = list(self._bank_buttons).index(button)
                 if bank != self._bank_index:
                     if self._number_of_parameter_banks() > bank:
-                        self._bank_name = ''
+                        self._bank_name = u''
                         self._bank_index = bank
                         self.update()
                 else:
-                    self._show_msg_callback(self._get_device().name + ' Bank: ' + self._bank_name)
+                    self._show_msg_callback(self._get_device().name + u' Bank: ' + self._bank_name)
 
     def _is_banking_enabled(self):
         direct_banking = self._bank_buttons != None
@@ -193,16 +193,16 @@ class DeviceComponent(Component):
 
         self._release_parameters(self._parameter_controls[len(bank):])
 
-    @listens('value')
+    @listens(u'value')
     def __on_device_on_off_changed(self):
         self._update_on_off_button()
 
-    @listens('name')
+    @listens(u'name')
     def __on_device_name_changed(self):
         if self._device_name_data_source != None:
-            self._device_name_data_source.set_display_string(self._get_device().name if self.is_enabled() and liveobj_valid(self._get_device()) else 'No Device')
+            self._device_name_data_source.set_display_string(self._get_device().name if self.is_enabled() and liveobj_valid(self._get_device()) else u'No Device')
 
-    @listens('parameters')
+    @listens(u'parameters')
     def __on_parameters_changed(self):
         self.update()
 
@@ -210,7 +210,7 @@ class DeviceComponent(Component):
         result = None
         if liveobj_valid(self._get_device()):
             for parameter in self._get_device().parameters:
-                if str(parameter.name).startswith('Device On'):
+                if str(parameter.name).startswith(u'Device On'):
                     result = parameter
                     break
 
@@ -266,10 +266,10 @@ class DeviceComponent(Component):
                 bank_name = self._parameter_bank_names()[index]
             else:
                 bank = best_of
-                bank_name = 'Best of Parameters'
+                bank_name = u'Best of Parameters'
         return (bank_name, bank)
 
-    @listens('device_bank')
+    @listens(u'device_bank')
     def __on_device_bank_changed(self, device, new_bank_index):
         if device == self._get_device() and new_bank_index != self._bank_index and self._number_of_parameter_banks() > new_bank_index:
             self._bank_index = new_bank_index

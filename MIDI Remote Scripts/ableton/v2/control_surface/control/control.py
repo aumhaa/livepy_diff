@@ -1,11 +1,11 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial
 from ...base import lazy_attribute, mixin, nop, task, Disconnectable, EventObject, NamedTuple
-__all__ = ('Control', 'InputControl', 'ControlManager', 'control_event', 'control_color', 'Connectable')
+__all__ = (u'Control', u'InputControl', u'ControlManager', u'control_event', u'control_color', u'Connectable')
 
 class ControlManager(EventObject):
-    """
+    u"""
     Base class needed to define Controls. The Control Manager stores the state of the
     Controls.
     """
@@ -15,32 +15,32 @@ class ControlManager(EventObject):
         self._control_states = dict()
 
     def add_control(self, name, control):
-        """
+        u"""
         Dynamically adds a Control to the object. The Control will be added to the object
         as an attribute with the given `name`.
         """
         if hasattr(self, name):
-            raise AttributeError('Control would overwrite an existing property')
+            raise AttributeError(u'Control would overwrite an existing property')
         control_state = control._get_state(self)
         setattr(self, name, control_state)
         return control_state
 
     @lazy_attribute
     def _tasks(self):
-        """
+        u"""
         Task Group for Controls for time-based events and feedback.
         """
         return task.TaskGroup()
 
     def control_notifications_enabled(self):
-        """
+        u"""
         Override to enable/disable triggering events for all Controls in this
         Control Manager.
         """
         return True
 
     def update(self):
-        """
+        u"""
         Sends the current feedback to all Control Elements that are connected to Controls
         of this Control Manager.
         """
@@ -49,7 +49,7 @@ class ControlManager(EventObject):
 
 
 def control_event(event_name):
-    """
+    u"""
     Defines an event of a Control. The event can be used in two ways:
     
      * As a function-decorator on a class level
@@ -76,7 +76,7 @@ def control_event(event_name):
 
 
 class control_color(object):
-    """
+    u"""
     Defines a color of a Control. The color is created with a default color and will
     be update the Control every time a new color is set.
     
@@ -98,7 +98,7 @@ class control_color(object):
 
 
 class Control(object):
-    """
+    u"""
     Base class for all Controls. Controls are used to define a high level interface for
     low level Control Elements. They add a useful set of functionality to it:
     
@@ -124,7 +124,7 @@ class Control(object):
     """
 
     class State(EventObject):
-        """
+        u"""
         State-full representation of the Control.
         """
         enabled = True
@@ -148,7 +148,7 @@ class Control(object):
 
         @lazy_attribute
         def tasks(self):
-            """
+            u"""
             Returns a Task Group for this Control. The Task Group is created the first
             time the property is accessed.
             """
@@ -156,7 +156,7 @@ class Control(object):
             return self._manager._tasks.add(task.TaskGroup())
 
         def set_control_element(self, control_element):
-            """
+            u"""
             Connect a Control with a Control Element or disconnect the Control if
             None is passed. When connecting, the Control Element is reset and the
             Controls current color is sent. When disconnecting, the Control Element
@@ -204,7 +204,7 @@ class Control(object):
         return self
 
     def __set__(self, manager, owner):
-        raise RuntimeError('Cannot change control.')
+        raise RuntimeError(u'Cannot change control.')
 
     def _make_control_state(self, manager):
         return self.State(control=self, manager=manager, *self._extra_args, **self._extra_kws)
@@ -216,7 +216,7 @@ class Control(object):
             manager._control_states[self] = None
             manager._control_states[self] = state_factory(manager)
         if manager._control_states[self] is None:
-            raise RuntimeError('Cannot fetch state during construction of controls.')
+            raise RuntimeError(u'Cannot fetch state during construction of controls.')
         return manager._control_states[self]
 
     def _clear_state(self, manager):
@@ -225,13 +225,13 @@ class Control(object):
 
 
 class InputControl(Control):
-    """
+    u"""
     Base Class for Controls that react to a MIDI value event.
     """
-    value = control_event('value')
+    value = control_event(u'value')
 
     class State(Control.State):
-        """
+        u"""
         State-full representation of the Control.
         """
 
@@ -244,7 +244,7 @@ class InputControl(Control):
             self._manager.register_disconnectable(self)
 
         def set_control_element(self, control_element):
-            """
+            u"""
             Connects the Control to the value-event of the Control Element and sets the
             defined :attr:`channel` and :attr:`identifier`.
             """
@@ -259,14 +259,14 @@ class InputControl(Control):
 
         def _register_value_slot(self, manager, control):
             if self._event_listener_required():
-                self._value_slot = self.register_slot(None, self._on_value, 'value')
+                self._value_slot = self.register_slot(None, self._on_value, u'value')
 
         def _on_value(self, value, *a, **k):
-            self._call_listener('value', value)
+            self._call_listener(u'value', value)
 
         @property
         def channel(self):
-            """
+            u"""
             Translates the channel of the received MIDI when sent to Live.
             """
             return self._channel
@@ -279,7 +279,7 @@ class InputControl(Control):
 
         @property
         def identifier(self):
-            """
+            u"""
             Translates the identifier of the received MIDI when sent to Live.
             """
             return self._identifier
@@ -292,7 +292,7 @@ class InputControl(Control):
 
 
 class ProxyControl(object):
-    """
+    u"""
     Control that has its own event listeners, but forwards everything else from the
     proxied control. This way, a derived class can forward the control of its base class.
     """
@@ -300,10 +300,10 @@ class ProxyControl(object):
     def __init__(self, control = None, *a, **k):
         super(ProxyControl, self).__init__(*a, **k)
         self._control = control
-        raise not self._control._event_listeners or AssertionError('Cannot forward control that already has events.')
+        raise not self._control._event_listeners or AssertionError(u'Cannot forward control that already has events.')
 
     def _make_control_state(self, manager):
-        """
+        u"""
         Pass the proxy control to the state, as this one includes the event handlers
         """
         return self._control.State(control=self, manager=manager, *self._control._extra_args, **self._control._extra_kws)
@@ -324,7 +324,7 @@ class NullSlot(Disconnectable):
 
 
 class Connectable(EventObject):
-    """
+    u"""
     Mixin for connecting a property with a control.
     """
     requires_listenable_connected_property = False
@@ -334,7 +334,7 @@ class Connectable(EventObject):
         self._connection = self._make_empty_connection()
 
     def connect_property(self, subject, property_name, transform = nop):
-        """
+        u"""
         Create a bidirectional connection between a property and a Control.
         The `subject` is the host of the property with the given name.
         The connected property needs to be listenable in case
@@ -352,7 +352,7 @@ class Connectable(EventObject):
         self._connection = NamedTuple(slot=self._register_property_slot(subject, property_name), getter=partial(getattr, subject, property_name), setter=partial(setattr, subject, property_name), transform=transform)
 
     def disconnect_property(self):
-        """
+        u"""
         Disconnects a property that has been connected with :meth:`connect_property`.
         """
         self._connection.slot.disconnect()
@@ -369,7 +369,7 @@ class Connectable(EventObject):
 
     @property
     def connected_property_value(self):
-        """
+        u"""
         Get/set the property connected with :meth:`connect_property`
         """
         return self._connection.getter()
@@ -379,7 +379,7 @@ class Connectable(EventObject):
         self._connection.setter(self._connection.transform(value))
 
     def on_connected_property_changed(self, value):
-        """
+        u"""
         Called if the connected property changes.
         Has no effect if :attr:`requires_listenable_connected_property` is set to False.
         """

@@ -1,20 +1,26 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
+from ...base import listenable_property
 from .. import Component
 from ..control import PlayableControl, ButtonControl, control_matrix
 
+def apply_to_list(original_list, operation, item):
+    list_copy = original_list[:]
+    getattr(list_copy, operation)(item)
+    return list_copy
+
+
 class PlayableComponent(Component):
-    __events__ = ('pressed_pads',)
     matrix = control_matrix(PlayableControl)
     select_button = ButtonControl()
+    pressed_pads = listenable_property.managed([])
 
     def __init__(self, *a, **k):
         super(PlayableComponent, self).__init__(*a, **k)
         self._takeover_pads = False
-        self._selected_pads = []
 
     def _set_control_pads_from_script(self, takeover_pads):
-        """
+        u"""
         If takeover_pads, the matrix buttons will be controlled from
         the script. Otherwise they send midi notes to the track
         associated to the instrument.
@@ -24,9 +30,10 @@ class PlayableComponent(Component):
             self._update_control_from_script()
 
     def _update_control_from_script(self):
-        takeover_pads = self._takeover_pads or bool(self._selected_pads)
+        takeover_pads = self._takeover_pads or len(self.pressed_pads) > 0
+        mode = PlayableControl.Mode.listenable if takeover_pads else PlayableControl.Mode.playable
         for button in self.matrix:
-            button.set_playable(not takeover_pads)
+            button.set_mode(mode)
 
     def set_matrix(self, matrix):
         self.matrix.set_control_element(matrix)
@@ -43,17 +50,15 @@ class PlayableComponent(Component):
         self._on_matrix_released(button)
 
     def _on_matrix_pressed(self, button):
-        self._selected_pads.append(button)
-        if len(self._selected_pads) == 1:
+        self.pressed_pads = apply_to_list(self.pressed_pads, u'append', button)
+        if len(self.pressed_pads) == 1:
             self._update_control_from_script()
-        self.notify_pressed_pads()
 
     def _on_matrix_released(self, button):
-        if button in self._selected_pads:
-            self._selected_pads.remove(button)
-            if not self._selected_pads:
+        if button in self.pressed_pads:
+            self.pressed_pads = apply_to_list(self.pressed_pads, u'remove', button)
+            if not self.pressed_pads:
                 self._update_control_from_script()
-            self.notify_pressed_pads()
         self._update_led_feedback()
 
     @select_button.value
@@ -61,17 +66,16 @@ class PlayableComponent(Component):
         self._set_control_pads_from_script(bool(value))
 
     def _reset_selected_pads(self):
-        if self._selected_pads:
-            self._selected_pads = []
+        if self.pressed_pads:
+            self.pressed_pads = []
             self._update_control_from_script()
-            self.notify_pressed_pads()
 
     def _update_led_feedback(self):
         for button in self.matrix:
             self._update_button_color(button)
 
     def _update_button_color(self, button):
-        button.color = 'DefaultButton.Off'
+        button.color = u'DefaultButton.Off'
 
     def _button_should_be_enabled(self, button):
         identifier, _ = self._note_translation_for_button(button)
@@ -109,7 +113,3 @@ class PlayableComponent(Component):
         if self.matrix.height:
             return self.matrix.height
         return 4
-
-    @property
-    def pressed_pads(self):
-        return self._selected_pads

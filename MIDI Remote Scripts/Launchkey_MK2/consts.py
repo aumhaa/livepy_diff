@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 PRODUCT_ID_BYTE_PREFIX = (0, 32, 41)
 LAUNCHKEY_25_ID_BYTE = 123
 LAUNCHKEY_49_ID_BYTE = 124

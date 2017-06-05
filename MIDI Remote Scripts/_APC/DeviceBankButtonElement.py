@@ -1,8 +1,9 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.ComboElement import ComboElement
 
 class DeviceBankButtonElement(ComboElement):
-    """
+    u"""
     ComboElement that will change the channel, while the control is grabbed
     """
 

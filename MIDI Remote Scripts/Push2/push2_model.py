@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from pprint import pformat
 import logging
 import json
@@ -30,21 +30,21 @@ class Sender(object):
     def send(self, root_model, send_all = False):
 
         def send_data(data):
-            if data['command'] == 'full-model-update':
-                data['fingerprint'] = root_model.__fingerprint__
+            if data[u'command'] == u'full-model-update':
+                data[u'fingerprint'] = root_model.__fingerprint__
             raw = json.dumps(data)
             self._message_sink(raw)
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Model sent: %s', pformat(data))
+                logger.debug(u'Model sent: %s', pformat(data))
 
         if send_all:
-            send_data(dict(command='full-model-update', payload=root_model.to_json()))
+            send_data(dict(command=u'full-model-update', payload=root_model.to_json()))
         elif self._structural_change:
             root_keys = set((path[0][0] for path in self._attribute_paths))
-            data = dict(command='full-model-update', payload=root_model.to_json(root_keys))
+            data = dict(command=u'full-model-update', payload=root_model.to_json(root_keys))
             send_data(data)
         elif self._attribute_paths:
-            data = dict(command='path-model-update', payload=self._attribute_paths)
+            data = dict(command=u'path-model-update', payload=self._attribute_paths)
             send_data(data)
         self._attribute_paths = []
         self._structural_change = False
@@ -55,7 +55,7 @@ class Root(generate_mrs_model(RootModel)):
     def __init__(self, sender = None, *a, **k):
         self._sender = sender
         if sender is not None:
-            k['notifier'] = sender.notifier
+            k[u'notifier'] = sender.notifier
         super(Root, self).__init__(*a, **k)
 
     def commit_changes(self, send_all = False):

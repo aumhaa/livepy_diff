@@ -1,7 +1,8 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 import libInterprocessCommsAPIPython
-from PySCAClipControl import *
+from .PySCAClipControl import *
 from _Framework.DeviceComponent import DeviceComponent
 
 class SpecialDeviceComponent(DeviceComponent):
@@ -55,13 +56,13 @@ class SpecialDeviceComponent(DeviceComponent):
             if not index in range(len(self._parameter_controls)):
                 raise AssertionError
                 parameter = self._serato_interface != None and self._parameter_controls[index].mapped_parameter()
-                name = ''
+                name = u''
                 name = parameter != None and parameter.name
             self._serato_interface.PySCA_SetDeviceParamLabel(index + 1, name)
 
     def _on_device_name_changed(self):
         if self._serato_interface != None:
-            name = 'No Device'
+            name = u'No Device'
             if self._device != None:
                 name = self._device.name
             self._serato_interface.PySCA_SetDeviceLabel(name)
@@ -109,6 +110,6 @@ class SpecialDeviceComponent(DeviceComponent):
                         parameter.remove_value_listener(value_listener)
                 if self._serato_interface != None:
                     self._serato_interface.PySCA_SetDeviceParamValue(index + 1, 0)
-                    self._serato_interface.PySCA_SetDeviceParamLabel(index + 1, '')
+                    self._serato_interface.PySCA_SetDeviceParamLabel(index + 1, u'')
 
             self._parameter_listeners = []

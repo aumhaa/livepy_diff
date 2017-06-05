@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from ableton.v2.base import in_range, nop, NamedTuple, clamp
 from ableton.v2.control_surface import InputControlElement, MIDI_PB_TYPE
@@ -24,7 +24,7 @@ class TouchStripBehaviour(object):
 
 
 class SimpleBehaviour(TouchStripBehaviour):
-    """
+    u"""
     Behaviour with custom mode.
     """
 
@@ -49,7 +49,7 @@ class TouchStripHandle(NamedTuple):
 
 
 class SelectingBehaviour(TouchStripBehaviour):
-    """
+    u"""
     Behaviour for selecting objects at arbitrary parts of the touch-strip. A handle can
     be used to prevent jumping around the current value of the controlled parameter.
     """
@@ -72,7 +72,7 @@ class SelectingBehaviour(TouchStripBehaviour):
 
 
 class DraggingBehaviour(SelectingBehaviour):
-    """
+    u"""
     Can only be dragged when starting within the handle
     """
 
@@ -89,7 +89,7 @@ DEFAULT_BEHAVIOUR = SimpleBehaviour()
 MODWHEEL_BEHAVIOUR = SimpleBehaviour(mode=TouchStripModes.MODWHEEL)
 
 class TouchStripElement(InputControlElement):
-    """
+    u"""
     Represents the Push TouchStrip.
     """
 
@@ -111,7 +111,7 @@ class TouchStripElement(InputControlElement):
         self._mode_element = mode_element
         self._light_element = light_element
         self._touch_button = touch_button
-        self._touch_slot = self.register_slot(touch_button, None, 'value')
+        self._touch_slot = self.register_slot(touch_button, None, u'value')
         self._behaviour = None
         self.behaviour = None
 
@@ -125,7 +125,7 @@ class TouchStripElement(InputControlElement):
 
     def set_mode(self, mode):
         if not in_range(mode, 0, TouchStripModes.COUNT):
-            raise IndexError('Invalid Touch Strip Mode %d' % mode)
+            raise IndexError(u'Invalid Touch Strip Mode %d' % mode)
         self.behaviour = SimpleBehaviour(mode=mode)
 
     mode = property(_get_mode, set_mode)

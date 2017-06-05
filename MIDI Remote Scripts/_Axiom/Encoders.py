@@ -1,10 +1,11 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
-from consts import *
+from .consts import *
 from _Generic.Devices import *
 
 class Encoders:
-    """ Class representing the Encoder section on the Axiom controllers """
+    u""" Class representing the Encoder section on the Axiom controllers """
 
     def __init__(self, parent, extended):
         self.__parent = parent
@@ -70,9 +71,9 @@ class Encoders:
                                     bank_name = bank_names[self.__bank]
                                     self.__show_bank_select(bank_name)
                             else:
-                                self.__show_bank_select('Best of Parameters')
+                                self.__show_bank_select(u'Best of Parameters')
                         else:
-                            self.__show_bank_select('Bank' + str(self.__bank + 1))
+                            self.__show_bank_select(u'Bank' + str(self.__bank + 1))
                 free_encoders = 0
                 for encoder in range(8):
                     parameter_index = encoder + self.__bank * 8
@@ -83,7 +84,7 @@ class Encoders:
                         feedback_rule.delay_in_ms = -1.0
                         parameter = 0
                         if param_bank:
-                            if param_bank[encoder] != '':
+                            if param_bank[encoder] != u'':
                                 parameter = get_parameter_by_name(self.__selected_device, param_bank[encoder])
                             else:
                                 free_encoders += 1
@@ -136,7 +137,7 @@ class Encoders:
 
     def __show_bank_select(self, bank_name):
         if self.__selected_device:
-            self.__parent.show_message(str(self.__selected_device.name + ' Bank: ' + bank_name))
+            self.__parent.show_message(str(self.__selected_device.name + u' Bank: ' + bank_name))
 
     def __change_appointed_device(self, device):
         if not device == self.__selected_device:

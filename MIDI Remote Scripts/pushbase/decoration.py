@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from itertools import ifilter
 from ableton.v2.base import CompoundDisconnectable, Proxy
 
@@ -24,7 +24,7 @@ class LiveObjectDict(dict):
         return super(LiveObjectDict, self).get(self._transform_key(key), *default)
 
     def _transform_key(self, key):
-        raise hasattr(key, '_live_ptr') or AssertionError
+        raise hasattr(key, u'_live_ptr') or AssertionError
         return key._live_ptr
 
     def update(self, *a, **k):

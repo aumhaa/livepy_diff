@@ -1,9 +1,10 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.MixerComponent import MixerComponent
 from _Framework.Control import ButtonControl
 
 class NotifyingMixerComponent(MixerComponent):
-    """
+    u"""
     Special mixer class that uses return tracks alongside midi and
     audio tracks and includes controls for incrementing/decrementing
     between sends.
@@ -27,4 +28,4 @@ class NotifyingMixerComponent(MixerComponent):
         new_index = self.send_index + factor
         if 0 <= new_index < self.num_sends:
             self.send_index = new_index
-            self._show_msg_callback('Tone/Filter Controlling Send: %s' % self.song().return_tracks[self.send_index].name)
+            self._show_msg_callback(u'Tone/Filter Controlling Send: %s' % self.song().return_tracks[self.send_index].name)

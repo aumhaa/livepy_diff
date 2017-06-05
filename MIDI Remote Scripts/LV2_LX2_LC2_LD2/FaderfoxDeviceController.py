@@ -1,27 +1,28 @@
 
-import Live
-from FaderfoxComponent import FaderfoxComponent
-from consts import *
+from __future__ import absolute_import, print_function, unicode_literals
 import sys
-from Devices import *
-from DevicesXY import *
-from ParamMap import ParamMap
+import Live
+from .FaderfoxComponent import FaderfoxComponent
+from .consts import *
+from .Devices import *
+from .DevicesXY import *
+from .ParamMap import ParamMap
 
 class FaderfoxDeviceController(FaderfoxComponent):
     __module__ = __name__
-    __doc__ = 'Class representing the device controller section of Faderfox controllers'
-    __filter_funcs__ = ['update_display', 'log']
+    __doc__ = u'Class representing the device controller section of Faderfox controllers'
+    __filter_funcs__ = [u'update_display', u'log']
 
     def __init__(self, parent):
         FaderfoxDeviceController.realinit(self, parent)
 
     def realinit(self, parent):
         FaderfoxComponent.realinit(self, parent)
-        self.log('device controller %s' % parent)
+        self.log(u'device controller %s' % parent)
         self.device = None
-        if hasattr(self.parent.song(), 'appointed_device'):
+        if hasattr(self.parent.song(), u'appointed_device'):
             self.device = self.parent.song().appointed_device
-        self.log('device %s' % self.device)
+        self.log(u'device %s' % self.device)
         self.device_locked = False
         self.bank = 0
         self.show_bank = False
@@ -57,18 +58,18 @@ class FaderfoxDeviceController(FaderfoxComponent):
         for note in FX4_NOTES:
             forward_note(CHANNEL_SETUP2, note)
 
-        self.log('midi rebuild map')
+        self.log(u'midi rebuild map')
         tracks = tuple(self.parent.song().tracks) + tuple(self.parent.song().return_tracks)
         for idx in range(0, 16):
             if len(tracks) > idx:
                 track = tracks[idx]
                 eq = self.helper.track_find_last_eq(track)
-                self.log('found eq %s on track %s' % (eq, track))
+                self.log(u'found eq %s on track %s' % (eq, track))
                 if eq:
                     params = self.helper.eq_params(eq)
                     for i in range(0, 4):
                         if params[i] != None:
-                            self.log('map %s to %s' % (EQ_CCS[idx][i], params[i]))
+                            self.log(u'map %s to %s' % (EQ_CCS[idx][i], params[i]))
                             ParamMap.map_with_feedback(midi_map_handle, AUX_CHANNEL_SETUP2, EQ_CCS[idx][i], params[i], Live.MidiMap.MapMode.absolute)
 
             master_eq = self.helper.track_find_last_eq(self.parent.song().master_track)
@@ -111,28 +112,28 @@ class FaderfoxDeviceController(FaderfoxComponent):
                 channel = CHANNEL_SETUP2
             for encoder in range(8):
                 if len(params) >= encoder:
-                    if param_bank[encoder] == '':
+                    if param_bank[encoder] == u'':
                         continue
                     param_name = param_bank[encoder]
                     parameter = None
                     parameter = self.helper.get_parameter_by_name(self.device, param_bank[encoder])
                     if parameter:
                         mode2 = mode
-                        fullname = self.helper.device_name(device) + '.' + parameter.name
+                        fullname = self.helper.device_name(device) + u'.' + parameter.name
                         if parameter.is_quantized and not self.parent.is_lv1 and not INVERT_QUANT_PARAM.has_key(fullname):
                             mode2 = Live.MidiMap.MapMode.relative_binary_offset
-                        self.logfmt('parameter %s %s to %s (quant %s)', parameter, parameter.name, ccs[encoder], parameter.is_quantized)
+                        self.logfmt(u'parameter %s %s to %s (quant %s)', parameter, parameter.name, ccs[encoder], parameter.is_quantized)
                         ParamMap.map_with_feedback(midi_map_handle, channel, ccs[encoder], parameter, mode2)
                     else:
-                        self.log('Could not find parameter %s' % param_bank[encoder])
+                        self.log(u'Could not find parameter %s' % param_bank[encoder])
 
-        self.log('map device params %s' % self.device)
+        self.log(u'map device params %s' % self.device)
         if self.device:
             params = self.device.parameters
             device_bank = 0
             param_bank = 0
             device_name = self.helper.device_name(self.device)
-            self.log("device name '%s'" % device_name)
+            self.log(u"device name '%s'" % device_name)
             if device_name in XY_DEVICE_DICT.keys():
                 xys = XY_DEVICE_DICT[device_name]
                 if len(xys) > 0:
@@ -163,23 +164,23 @@ class FaderfoxDeviceController(FaderfoxComponent):
                     ParamMap.map_with_feedback(midi_map_handle, channel, ccy, param2, Live.MidiMap.MapMode.absolute)
             if device_name in DEVICE_BOB_DICT.keys():
                 param_bank = DEVICE_BOB_DICT[device_name]
-                if device_name == 'Compressor2' and self.helper.get_parameter_by_name(self.device, 'Ext. In Gain'):
+                if device_name == u'Compressor2' and self.helper.get_parameter_by_name(self.device, u'S/C Gain'):
                     param_bank = CP2_BANK1_LIVE7
-                self.log('class %s bank: %s' % (device_name, param_bank))
-                self.show_bank_select('Best of parameters')
+                self.log(u'class %s bank: %s' % (device_name, param_bank))
+                self.show_bank_select(u'Best of parameters')
                 map_params_by_name(self.device, param_bank)
             elif self.helper.device_is_plugin(self.device):
-                self.show_bank_select('First eight parameters')
+                self.show_bank_select(u'First eight parameters')
                 map_params_by_number(self.device)
             else:
-                self.log('Could not find %s in %s' % (device_name, DEVICE_BOB_DICT.keys()))
+                self.log(u'Could not find %s in %s' % (device_name, DEVICE_BOB_DICT.keys()))
                 return
 
     def show_bank_select(self, bank_name):
         if self.show_bank:
             self.show_bank = False
             if self.device:
-                self.parent.show_message(str(self.device.name + ' Bank: ' + bank_name))
+                self.parent.show_message(str(self.device.name + u' Bank: ' + bank_name))
 
     def receive_midi_note(self, channel, status, note_no, note_vel):
 
@@ -213,7 +214,7 @@ class FaderfoxDeviceController(FaderfoxComponent):
                         parameter.value += 1
                 else:
                     parameter.value = parameter.default_value
-            self.log('device %s, index %s, parameter %s' % (self.device, idx, parameter.name))
+            self.log(u'device %s, index %s, parameter %s' % (self.device, idx, parameter.name))
 
     def receive_midi_cc(self, chan, cc_no, cc_value):
 
@@ -258,7 +259,7 @@ class FaderfoxDeviceController(FaderfoxComponent):
     def unlock_from_device(self, device):
         if device and device == self.device:
             self.device_locked = False
-        if hasattr(self.parent.song(), 'appointed_device'):
+        if hasattr(self.parent.song(), u'appointed_device'):
             if not self.parent.song().appointed_device == self_device:
                 self.parent.request_rebuild_midi_map()
 
@@ -282,11 +283,11 @@ class FaderfoxDeviceController(FaderfoxComponent):
         self.parent.song().view.remove_detail_clip_listener(self.on_selected_clip)
 
     def on_device_selected(self):
-        self.log('selected device %s' % self.selected_track.view.selected_device)
+        self.log(u'selected device %s' % self.selected_track.view.selected_device)
         self.set_appointed_device(self.selected_track.view.selected_device)
 
     def on_track_selected(self):
         if self.parent.is_live_5():
-            self.log('add a listener to selected device on track %s' % self.parent.song().view.selected_track)
+            self.log(u'add a listener to selected device on track %s' % self.parent.song().view.selected_track)
             self.selected_track = self.parent.song().view.selected_track
         self.parent.request_rebuild_midi_map()
