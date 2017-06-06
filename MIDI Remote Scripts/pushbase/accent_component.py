@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from ableton.v2.control_surface.mode import ModesComponent
 
 class DummyFullVelocity(object):
@@ -11,9 +11,9 @@ class AccentComponent(ModesComponent):
     def __init__(self, *a, **k):
         super(AccentComponent, self).__init__(*a, **k)
         self._full_velocity = None
-        self.add_mode(u'disabled', None, u'Accent.Off')
-        self.add_mode(u'enabled', (self._on_accent_on, self._on_accent_off), u'Accent.On')
-        self.selected_mode = u'disabled'
+        self.add_mode('disabled', None, 'Accent.Off')
+        self.add_mode('enabled', (self._on_accent_on, self._on_accent_off), 'Accent.On')
+        self.selected_mode = 'disabled'
         self.set_full_velocity(None)
 
     def set_full_velocity(self, full_velocity):
@@ -21,7 +21,7 @@ class AccentComponent(ModesComponent):
         if self._full_velocity != None:
             self._full_velocity.enabled = False
         self._full_velocity = full_velocity
-        self._full_velocity.enabled = self.selected_mode == u'enabled'
+        self._full_velocity.enabled = self.selected_mode == 'enabled'
 
     @property
     def activated(self):

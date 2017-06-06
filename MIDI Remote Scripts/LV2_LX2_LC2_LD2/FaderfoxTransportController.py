@@ -1,13 +1,13 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 import Live
-from .FaderfoxComponent import FaderfoxComponent
-from .consts import *
+from FaderfoxComponent import FaderfoxComponent
+from FaderfoxHelper import FaderfoxHelper
+from consts import *
 
 class FaderfoxTransportController(FaderfoxComponent):
     __module__ = __name__
-    __doc__ = u'Class representing the transport section of faderfox controllers'
-    __filter_funcs__ = [u'update_display', u'log']
+    __doc__ = 'Class representing the transport section of faderfox controllers'
+    __filter_funcs__ = ['update_display', 'log']
 
     def __init__(self, parent):
         FaderfoxTransportController.realinit(self, parent)
@@ -53,22 +53,22 @@ class FaderfoxTransportController(FaderfoxComponent):
                     self.parent.song().stop_playing()
                 elif note_no == SESSION_ARRANGE_SWITCH_NOTE:
                     view = self.parent.application().view
-                    if view.is_view_visible(u'Session'):
-                        view.show_view(u'Arranger')
+                    if view.is_view_visible('Session'):
+                        view.show_view('Arranger')
                     else:
-                        view.show_view(u'Session')
+                        view.show_view('Session')
                 elif note_no == CLIP_TRACK_SWITCH_NOTE:
                     view = self.parent.application().view
-                    if view.is_view_visible(u'Detail/Clip'):
-                        view.show_view(u'Detail/DeviceChain')
+                    if view.is_view_visible('Detail/Clip'):
+                        view.show_view('Detail/DeviceChain')
                     else:
-                        view.show_view(u'Detail/Clip')
+                        view.show_view('Detail/Clip')
                 elif note_no == CLIP_SELECT_NOTE:
                     view = self.parent.application().view
-                    if view.is_view_visible(u'Detail'):
-                        view.hide_view(u'Detail')
+                    if view.is_view_visible('Detail'):
+                        view.hide_view('Detail')
                     else:
-                        view.show_view(u'Detail')
+                        view.show_view('Detail')
                 elif note_no in SCENE_LAUNCH_NOTES:
                     scene_idx = index_of(SCENE_LAUNCH_NOTES, note_no)
                     if scene_idx < len(self.parent.song().scenes):

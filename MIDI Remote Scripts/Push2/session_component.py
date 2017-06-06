@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 import Live
 from itertools import imap
 from ableton.v2.base import Proxy, liveobj_valid
@@ -57,7 +57,7 @@ class ClipSlotComponent(SpecialClipSlotComponent):
         if slot_or_clip.is_triggered and not slot_or_clip.will_record_on_start:
             if isinstance(slot_or_clip, Live.Clip.Clip):
                 return Blink(color1=CLIP_PLAYING_COLOR, color2=IndexedColor(clip_color), speed=TRIGGERED_CLIP_BLINK_SPEED)
-            return u'Session.EmptySlotTriggeredPlay'
+            return 'Session.EmptySlotTriggeredPlay'
         elif slot_or_clip.is_playing:
             animate_to_color = RECORDING_COLOR if slot_or_clip.is_recording else IndexedColor(clip_color)
             return Pulse(color1=IndexedColor.from_push_index(clip_color, 2), color2=animate_to_color, speed=PLAYING_CLIP_PULSE_SPEED)
@@ -87,7 +87,7 @@ class SceneComponent(SpecialSceneComponent):
         scene_index = list(self.song.scenes).index(self._scene)
 
         def slot_for_track(mixable):
-            if not hasattr(mixable, u'clip_slots') or len(mixable.clip_slots) == 0:
+            if not hasattr(mixable, 'clip_slots') or len(mixable.clip_slots) == 0:
                 return None
             else:
                 return mixable.clip_slots[scene_index]

@@ -1,5 +1,4 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from itertools import imap
 from _Framework.Util import find_if, first, clamp
 from _Framework.Dependency import depends
@@ -54,26 +53,26 @@ class ResettingScrollComponent(ScrollComponent):
 
     def _update_scroll_buttons(self):
         if self.can_scroll_up():
-            self.scroll_up_button.color = u'Scrolling.Enabled'
-            self.scroll_up_button.pressed_color = u'Scrolling.Pressed'
+            self.scroll_up_button.color = 'Scrolling.Enabled'
+            self.scroll_up_button.pressed_color = 'Scrolling.Pressed'
         else:
-            self.scroll_up_button.color = u'Scrolling.Disabled'
-            self.scroll_up_button.pressed_color = u'Scrolling.Disabled'
+            self.scroll_up_button.color = 'Scrolling.Disabled'
+            self.scroll_up_button.pressed_color = 'Scrolling.Disabled'
         if self.can_scroll_down():
-            self.scroll_down_button.color = u'Scrolling.Enabled'
-            self.scroll_down_button.pressed_color = u'Scrolling.Pressed'
+            self.scroll_down_button.color = 'Scrolling.Enabled'
+            self.scroll_down_button.pressed_color = 'Scrolling.Pressed'
         else:
-            self.scroll_down_button.color = u'Scrolling.Disabled'
-            self.scroll_down_button.pressed_color = u'Scrolling.Disabled'
+            self.scroll_down_button.color = 'Scrolling.Disabled'
+            self.scroll_down_button.pressed_color = 'Scrolling.Disabled'
 
 
 class DrumGroupComponent(ResettableSlideComponent, Slideable):
-    __subject_events__ = (u'pressed_pads',)
+    __subject_events__ = ('pressed_pads',)
     mute_button = ButtonControl()
     solo_button = ButtonControl()
     delete_button = ButtonControl(**ACTION_BUTTON_COLORS)
     quantize_button = ButtonControl()
-    select_button = ButtonControl(color=u'Misc.Shift', pressed_color=u'Misc.ShiftOn')
+    select_button = ButtonControl(color='Misc.Shift', pressed_color='Misc.ShiftOn')
     drum_matrix = control_matrix(PlayableControl)
 
     @depends(set_pad_translations=None)
@@ -169,7 +168,7 @@ class DrumGroupComponent(ResettableSlideComponent, Slideable):
             self._layout_set = bool(matrix)
             self._update_led_feedback()
 
-    @subject_slot(u'selected_clip')
+    @subject_slot('selected_clip')
     def _on_selected_clip_changed(self):
         if self.is_enabled():
             self.delete_button.enabled = self._pitch_deleter.can_perform_midi_clip_action()
@@ -189,7 +188,7 @@ class DrumGroupComponent(ResettableSlideComponent, Slideable):
             super(DrumGroupComponent, self).update()
 
     def _update_drum_pad_listeners(self):
-        u"""
+        """
         add and remove listeners for visible drum pads, including
         mute and solo state
         """
@@ -200,11 +199,11 @@ class DrumGroupComponent(ResettableSlideComponent, Slideable):
             self._on_mute_changed.replace_subjects(self._visible_drum_pads)
             self._update_identifier_translations()
 
-    @subject_slot_group(u'solo')
+    @subject_slot_group('solo')
     def _on_solo_changed(self, pad):
         self._update_led_feedback()
 
-    @subject_slot_group(u'mute')
+    @subject_slot_group('mute')
     def _on_mute_changed(self, pad):
         self._update_led_feedback()
 
@@ -217,30 +216,30 @@ class DrumGroupComponent(ResettableSlideComponent, Slideable):
                     self._update_pad_led(pad, button, soloed_pads)
 
     def _update_pad_led(self, pad, button, soloed_pads):
-        button_color = u'DrumGroup.PadEmpty'
+        button_color = 'DrumGroup.PadEmpty'
         if pad == self._selected_drum_pad:
             if soloed_pads and not pad.solo and not pad.mute:
-                button_color = u'DrumGroup.PadSelectedNotSoloed'
+                button_color = 'DrumGroup.PadSelectedNotSoloed'
             elif pad.mute and not pad.solo:
-                button_color = u'DrumGroup.PadMutedSelected'
+                button_color = 'DrumGroup.PadMutedSelected'
             elif soloed_pads and pad.solo:
-                button_color = u'DrumGroup.PadSoloedSelected'
+                button_color = 'DrumGroup.PadSoloedSelected'
             else:
-                button_color = u'DrumGroup.PadSelected'
+                button_color = 'DrumGroup.PadSelected'
         elif pad.chains:
             if soloed_pads and not pad.solo:
                 if not pad.mute:
-                    button_color = u'DrumGroup.PadFilled'
+                    button_color = 'DrumGroup.PadFilled'
                 else:
-                    button_color = u'DrumGroup.PadMuted'
+                    button_color = 'DrumGroup.PadMuted'
             elif not soloed_pads and pad.mute:
-                button_color = u'DrumGroup.PadMuted'
+                button_color = 'DrumGroup.PadMuted'
             elif soloed_pads and pad.solo:
-                button_color = u'DrumGroup.PadSoloed'
+                button_color = 'DrumGroup.PadSoloed'
             else:
-                button_color = u'DrumGroup.PadFilled'
+                button_color = 'DrumGroup.PadFilled'
         else:
-            button_color = u'DrumGroup.PadEmpty'
+            button_color = 'DrumGroup.PadEmpty'
         button.color = button_color
 
     def _button_coordinates_to_pad_index(self, first_note, coordinates):
@@ -279,10 +278,10 @@ class DrumGroupComponent(ResettableSlideComponent, Slideable):
         if self.solo_button.is_pressed:
             selected_drum_pad.solo = not selected_drum_pad.solo
         if self.quantize_button.is_pressed:
-            pad.color = u'DrumGroup.PadAction'
+            pad.color = 'DrumGroup.PadAction'
             self.quantize_pitch(selected_drum_pad.note)
         if self.delete_button.is_pressed:
-            pad.color = u'DrumGroup.PadAction'
+            pad.color = 'DrumGroup.PadAction'
             self.delete_pitch(selected_drum_pad)
         if self.select_button.is_pressed:
             self._drum_group_device.view.selected_drum_pad = selected_drum_pad
@@ -294,18 +293,18 @@ class DrumGroupComponent(ResettableSlideComponent, Slideable):
         if self.mute_button.is_pressed or self.solo_button.is_pressed:
             self._update_led_feedback()
 
-    @subject_slot(u'visible_drum_pads')
+    @subject_slot('visible_drum_pads')
     def _on_visible_drum_pads_changed(self):
         self._update_drum_pad_listeners()
         self._update_led_feedback()
 
-    @subject_slot(u'drum_pads_scroll_position')
+    @subject_slot('drum_pads_scroll_position')
     def _on_drum_pads_scroll_position_changed(self):
         self._update_identifier_translations()
         self._update_led_feedback()
         self.notify_position()
 
-    @subject_slot(u'selected_drum_pad')
+    @subject_slot('selected_drum_pad')
     def _on_selected_drum_pad_changed(self):
         self._selected_drum_pad = self._drum_group_device.view.selected_drum_pad if self._drum_group_device else None
         self._update_led_feedback()
@@ -331,7 +330,7 @@ class DrumGroupComponent(ResettableSlideComponent, Slideable):
         self._set_control_pads_from_script(bool(value))
 
     def _set_control_pads_from_script(self, takeover_drums):
-        u"""
+        """
         If takeover_drums, the matrix buttons will be controlled from
         the script. Otherwise they send midi notes to the track
         associated to this drum group.
@@ -392,11 +391,11 @@ class DrumGroupComponent(ResettableSlideComponent, Slideable):
         self._set_pad_translations(translations)
 
     def select_drum_pad(self, drum_pad):
-        u""" Override when you give it a select button """
+        """ Override when you give it a select button """
         pass
 
     def quantize_pitch(self, note):
-        u""" Override when you give it a quantize button """
+        """ Override when you give it a quantize button """
         raise NotImplementedError
 
     def delete_pitch(self, drum_pad):

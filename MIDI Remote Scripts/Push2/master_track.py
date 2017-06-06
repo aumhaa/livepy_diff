@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from ableton.v2.base import listens
 from ableton.v2.control_surface import Component
 from ableton.v2.control_surface.control import ToggleButtonControl
@@ -15,7 +15,7 @@ class MasterTrackComponent(Component):
         self._previous_selection = self._tracks_provider.selected_item
         self._update_button_state()
 
-    @listens(u'selected_item')
+    @listens('selected_item')
     def __on_selected_item_changed(self, *a):
         self._update_button_state()
         if not self._is_on_master():

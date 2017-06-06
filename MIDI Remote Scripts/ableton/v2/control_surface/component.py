@@ -1,16 +1,16 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 import Live
 from .control import ControlManager
 from ..base import depends, lazy_attribute, task, is_iterable
 from ..base.dependency import dependency
 
 class Component(ControlManager):
-    u"""
+    """
     Base class for all classes encapsulating functions in Live
     """
-    __events__ = (u'enabled',)
-    name = u''
+    __events__ = ('enabled',)
+    name = ''
     canonical_parent = None
     is_private = False
     _show_msg_callback = dependency(show_message=None)
@@ -18,7 +18,7 @@ class Component(ControlManager):
     _layer = None
 
     @depends(register_component=None, song=None)
-    def __init__(self, name = u'', register_component = None, song = None, layer = None, is_enabled = True, is_root = False, *a, **k):
+    def __init__(self, name = '', register_component = None, song = None, layer = None, is_enabled = True, is_root = False, *a, **k):
         raise callable(register_component) or AssertionError
         super(Component, self).__init__(*a, **k)
         self.name = name
@@ -119,7 +119,7 @@ class Component(ControlManager):
     def _grab_all_layers(self):
         for layer in self._get_layer_iterable():
             grabbed = layer.grab(self)
-            raise grabbed or AssertionError(u'Only one component can use a layer at atime')
+            raise grabbed or AssertionError('Only one component can use a layer at atime')
 
     def _release_all_layers(self):
         for layer in self._get_layer_iterable():
@@ -133,7 +133,7 @@ class Component(ControlManager):
         return (self._layer,)
 
     def is_enabled(self, explicit = False):
-        u"""
+        """
         Returns whether the component is enabled.
         If 'explicit' is True the parent state is ignored.
         """
@@ -143,7 +143,7 @@ class Component(ControlManager):
 
     @depends(parent_task_group=None)
     def _register_timer_callback(self, callback, parent_task_group = None):
-        u"""
+        """
         DEPRECATED. Use tasks instead
         """
         raise callable(callback) or AssertionError
@@ -157,7 +157,7 @@ class Component(ControlManager):
 
     @depends(parent_task_group=None)
     def _unregister_timer_callback(self, callback, parent_task_group = None):
-        u"""
+        """
         DEPRECATED. Use tasks instead
         """
         raise callable(callback) or AssertionError

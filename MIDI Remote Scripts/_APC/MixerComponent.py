@@ -1,11 +1,10 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.ChannelStripComponent import ChannelStripComponent as ChannelStripComponentBase
 from _Framework.MixerComponent import MixerComponent as MixerComponentBase
 TRACK_FOLD_DELAY = 5
 
 class ChanStripComponent(ChannelStripComponentBase):
-    u""" Subclass of channel strip component using select button for (un)folding tracks """
+    """ Subclass of channel strip component using select button for (un)folding tracks """
 
     def __init__(self, *a, **k):
         super(ChanStripComponent, self).__init__(*a, **k)
@@ -34,7 +33,7 @@ class ChanStripComponent(ChannelStripComponentBase):
 
 
 class MixerComponent(MixerComponentBase):
-    u""" Special mixer class that uses return tracks alongside midi and audio tracks """
+    """ Special mixer class that uses return tracks alongside midi and audio tracks """
 
     def tracks_to_use(self):
         return tuple(self.song().visible_tracks) + tuple(self.song().return_tracks)

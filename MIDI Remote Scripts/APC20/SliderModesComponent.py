@@ -1,10 +1,9 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.ButtonElement import ButtonElement
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 
 class SliderModesComponent(ModeSelectorComponent):
-    u""" SelectorComponent that assigns sliders to different functions """
+    """ SelectorComponent that assigns sliders to different functions """
 
     def __init__(self, mixer, sliders, *a, **k):
         raise len(sliders) == 8 or AssertionError

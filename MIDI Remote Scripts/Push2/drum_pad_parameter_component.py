@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from ableton.v2.base import clamp, listenable_property, listens, liveobj_valid
 from ableton.v2.control_surface import CompoundComponent
 from ableton.v2.control_surface.control import StepEncoderControl
@@ -23,7 +23,7 @@ class ChokeParameter(InternalParameterBase):
     max = MAX_CHOKE_GROUP
 
     def __init__(self, drum_pad = None, *a, **k):
-        super(ChokeParameter, self).__init__(name=u'Choke', *a, **k)
+        super(ChokeParameter, self).__init__(name='Choke', *a, **k)
         self.set_drum_pad(drum_pad)
 
     def set_drum_pad(self, drum_pad):
@@ -31,7 +31,7 @@ class ChokeParameter(InternalParameterBase):
         self._on_choke_group_changed.subject = get_first_chain(drum_pad)
         self.notify_value()
 
-    @listens(u'choke_group')
+    @listens('choke_group')
     def _on_choke_group_changed(self):
         self.notify_value()
 
@@ -61,7 +61,7 @@ DEFAULT_OUT_NOTE = 60
 class DrumPadTransposeParameter(EnumWrappingParameter):
 
     def __init__(self, drum_pad = None, *a, **k):
-        super(DrumPadTransposeParameter, self).__init__(name=u'Transpose', values_host=self, values_property=u'available_transpose_steps', index_property_host=get_first_chain(drum_pad), index_property=u'out_note', *a, **k)
+        super(DrumPadTransposeParameter, self).__init__(name='Transpose', values_host=self, values_property='available_transpose_steps', index_property_host=get_first_chain(drum_pad), index_property='out_note', *a, **k)
 
     @property
     def available_transpose_steps(self, steps = range(128)):
@@ -125,7 +125,7 @@ class DrumPadParameterComponent(CompoundComponent, ParameterProvider):
 
     drum_pad = property(_get_drum_pad, _set_drum_pad)
 
-    @listens(u'chains')
+    @listens('chains')
     def _on_chains_in_pad_changed(self):
         self._update_parameters()
 

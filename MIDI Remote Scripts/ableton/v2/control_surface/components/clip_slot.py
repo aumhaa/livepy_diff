@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 import Live
 from ...base import listens, liveobj_valid
 from ..component import Component
@@ -23,7 +23,7 @@ def is_button_pressed(button):
 
 
 class ClipSlotComponent(Component):
-    u"""
+    """
     Component representing a ClipSlot within Live.
     """
     launch_button = ButtonControl()
@@ -31,15 +31,15 @@ class ClipSlotComponent(Component):
     def __init__(self, *a, **k):
         super(ClipSlotComponent, self).__init__(*a, **k)
         self._clip_slot = None
-        self._triggered_to_play_color = u'Session.ClipTriggeredPlay'
-        self._triggered_to_record_color = u'Session.ClipTriggeredRecord'
-        self._started_value = u'Session.ClipStarted'
-        self._recording_color = u'Session.ClipRecording'
-        self._stopped_value = u'Session.ClipStopped'
+        self._triggered_to_play_color = 'Session.ClipTriggeredPlay'
+        self._triggered_to_record_color = 'Session.ClipTriggeredRecord'
+        self._started_value = 'Session.ClipStarted'
+        self._recording_color = 'Session.ClipRecording'
+        self._stopped_value = 'Session.ClipStopped'
         self._clip_palette = []
         self._clip_rgb_table = None
-        self._record_button_color = u'Session.RecordButton'
-        self._empty_slot_color = u'Session.ClipEmpty'
+        self._record_button_color = 'Session.RecordButton'
+        self._empty_slot_color = 'Session.ClipEmpty'
         self._delete_button = None
         self._select_button = None
         self._duplicate_button = None
@@ -77,7 +77,7 @@ class ClipSlotComponent(Component):
         self._clip_palette = palette
 
     def set_clip_rgb_table(self, rgb_table):
-        u""" A list of velocity, hex-rgb color pairs that is used, if the color could not
+        """ A list of velocity, hex-rgb color pairs that is used, if the color could not
         be matched to the clip palette """
         self._clip_rgb_table = rgb_table
 
@@ -122,7 +122,7 @@ class ClipSlotComponent(Component):
             return self._started_value
         if slot_or_clip.color != None:
             return self._color_value(slot_or_clip)
-        if getattr(slot_or_clip, u'controls_other_clips', True):
+        if getattr(slot_or_clip, 'controls_other_clips', True):
             return self._stopped_value
         if self._track_is_armed(track) and self._clip_slot.has_stop_button and self._record_button_color != None:
             return self._record_button_color
@@ -134,49 +134,49 @@ class ClipSlotComponent(Component):
         self.__on_recording_state_changed.subject = clip
         self.__on_clip_color_changed.subject = clip
 
-    @listens(u'has_clip')
+    @listens('has_clip')
     def __on_clip_state_changed(self):
         self._update_clip_property_slots()
         self._update_launch_button_color()
 
-    @listens(u'controls_other_clips')
+    @listens('controls_other_clips')
     def __on_controls_other_clips_changed(self):
         self._update_clip_property_slots()
         self._update_launch_button_color()
 
-    @listens(u'color')
+    @listens('color')
     def __on_clip_color_changed(self):
         self._update_launch_button_color()
 
-    @listens(u'color')
+    @listens('color')
     def __on_clip_slot_color_changed(self):
         self._update_launch_button_color()
 
-    @listens(u'playing_status')
+    @listens('playing_status')
     def __on_slot_playing_state_changed(self):
         self._update_launch_button_color()
 
-    @listens(u'playing_status')
+    @listens('playing_status')
     def __on_clip_playing_state_changed(self):
         self._update_launch_button_color()
 
-    @listens(u'is_recording')
+    @listens('is_recording')
     def __on_recording_state_changed(self):
         self._update_launch_button_color()
 
-    @listens(u'arm')
+    @listens('arm')
     def __on_arm_value_changed(self):
         self._update_launch_button_color()
 
-    @listens(u'implicit_arm')
+    @listens('implicit_arm')
     def __on_implicit_arm_value_changed(self):
         self._update_launch_button_color()
 
-    @listens(u'has_stop_button')
+    @listens('has_stop_button')
     def __on_has_stop_button_changed(self):
         self._update_launch_button_color()
 
-    @listens(u'is_triggered')
+    @listens('is_triggered')
     def __on_slot_triggered_changed(self):
         if not self.has_clip():
             self._update_launch_button_color()

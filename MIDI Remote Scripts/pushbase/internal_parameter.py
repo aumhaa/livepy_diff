@@ -1,7 +1,7 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from Live import DeviceParameter
-from ableton.v2.base import listenable_property, liveobj_valid, nop, EventError, EventObject, forward_property, Proxy, Slot
+from ableton.v2.base import listenable_property, liveobj_valid, nop, EventError, EventObject, Slot
 
 def identity(value, _parent):
     return value
@@ -9,12 +9,12 @@ def identity(value, _parent):
 
 def to_percentage_display(value):
     percentage = 100.0 * value
-    percentage_str = u'100'
+    percentage_str = '100'
     if percentage < 100.0:
         precision = 2 if percentage < 10.0 else 1
-        format_str = u'%.' + str(precision) + u'f'
+        format_str = '%.' + str(precision) + 'f'
         percentage_str = format_str % percentage
-    return unicode(percentage_str + u' %')
+    return unicode(percentage_str + ' %')
 
 
 class InternalParameterBase(EventObject):
@@ -78,11 +78,11 @@ class InternalParameterBase(EventObject):
 
 
 class InternalParameter(InternalParameterBase):
-    u"""
+    """
     Class implementing the DeviceParameter interface. Using instances of this class,
     we can mix script-internal values with DeviceParameter instances.
     """
-    __events__ = (u'value',)
+    __events__ = ('value',)
 
     def __init__(self, parent = None, display_value_conversion = None, *a, **k):
         super(InternalParameter, self).__init__(*a, **k)
@@ -109,7 +109,7 @@ class InternalParameter(InternalParameterBase):
         return self.min
 
     def _set_value(self, new_value):
-        raise self.min <= new_value <= self.max or AssertionError(u'Invalid value %f' % new_value)
+        raise self.min <= new_value <= self.max or AssertionError('Invalid value %f' % new_value)
         self.linear_value = self._to_internal(new_value, self._parent)
 
     value = property(_get_value, _set_value)
@@ -138,7 +138,7 @@ class InternalParameter(InternalParameterBase):
 
 
 class PropertyHostMixin(object):
-    u"""
+    """
     This is only used to document the set_property_host API
     """
 
@@ -176,7 +176,7 @@ class WrappingParameter(InternalParameter, PropertyHostMixin):
             return self.min
 
     def _set_value(self, new_value):
-        raise self.min <= new_value <= self.max or AssertionError(u'Invalid value %f' % new_value)
+        raise self.min <= new_value <= self.max or AssertionError('Invalid value %f' % new_value)
         if liveobj_valid(self._property_host):
             try:
                 setattr(self._property_host, self._source_property, self._to_internal(new_value, self._property_host))
@@ -190,7 +190,7 @@ class WrappingParameter(InternalParameter, PropertyHostMixin):
     def display_value(self):
         try:
             value = self._get_property_value()
-            return unicode(self._display_value_conversion(value) if liveobj_valid(self._property_host) else u'')
+            return unicode(self._display_value_conversion(value) if liveobj_valid(self._property_host) else '')
         except RuntimeError:
             return unicode()
 
@@ -249,8 +249,6 @@ class EnumWrappingParameter(InternalParameterBase, PropertyHostMixin):
 
     @value.setter
     def value(self, new_value):
-        if new_value < 0 or new_value >= len(self._get_values()):
-            raise IndexError
         self._set_index(new_value)
 
     def _get_values(self):
@@ -280,7 +278,7 @@ class EnumWrappingParameter(InternalParameterBase, PropertyHostMixin):
 
 
 class RelativeInternalParameter(InternalParameter):
-    __events__ = (u'delta',)
+    __events__ = ('delta',)
 
     @property
     def default_value(self):
@@ -297,58 +295,3 @@ class RelativeInternalParameter(InternalParameter):
 
     value = property(_get_value, _set_value)
     linear_value = property(_get_value, _set_value)
-
-
-class ConstantParameter(InternalParameterBase):
-    forward_from_original = forward_property(u'_original_parameter')
-
-    def __init__(self, original_parameter = None, *a, **k):
-        raise original_parameter is not None or AssertionError
-        super(InternalParameterBase, self).__init__(*a, **k)
-        self._original_parameter = original_parameter
-
-    add_value_listener = forward_from_original(u'add_value_listener')
-    remove_value_listener = forward_from_original(u'remove_value_listener')
-    value_has_listener = forward_from_original(u'value_has_listener')
-    canonical_parent = forward_from_original(u'canonical_parent')
-    min = forward_from_original(u'min')
-    max = forward_from_original(u'max')
-    name = forward_from_original(u'name')
-    original_name = forward_from_original(u'original_name')
-    default_value = forward_from_original(u'default_value')
-    automation_state = forward_from_original(u'automation_state')
-    state = forward_from_original(u'state')
-    _live_ptr = forward_from_original(u'_live_ptr')
-
-    @property
-    def display_value(self):
-        return str(self._original_parameter)
-
-    def _get_value(self):
-        return self._original_parameter.value
-
-    def _set_value(self, _):
-        pass
-
-    value = property(_get_value, _set_value)
-    linear_value = property(_get_value, _set_value)
-
-    def __str__(self):
-        return self.display_value
-
-
-class ProxyParameter(Proxy):
-    u"""
-    Behaves like Proxy, but with inverted logic of getting arguments from the passed
-    interface / proxied object. It means the proxied interface can override
-    proxied object's attributes.
-    """
-
-    def __getattr__(self, name):
-        if not self._skip_wrapper_lookup:
-            obj = self.proxied_object
-            return getattr(self.proxied_interface, name, getattr(obj, name))
-        raise AttributeError(u'Does not have attribute %s' % name)
-
-    def __str__(self):
-        return str(self.proxied_object)

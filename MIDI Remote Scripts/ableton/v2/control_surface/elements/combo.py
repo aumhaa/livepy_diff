@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from itertools import imap
 from contextlib import contextmanager
 from ...base import const, depends, find_if, is_iterable, lazy_attribute, nop, EventObject, ProxyBase, listens, task
@@ -11,7 +11,7 @@ from ..resource import DEFAULT_PRIORITY
 from .button import ButtonElementMixin
 
 class WrapperElement(CompoundElement, ProxyBase):
-    u"""
+    """
     Helper class for implementing a wrapper for a specific control,
     forwarding most basic operations to it.
     
@@ -22,7 +22,7 @@ class WrapperElement(CompoundElement, ProxyBase):
     class ProxiedInterface(CompoundElement.ProxiedInterface):
 
         def __getattr__(self, name):
-            wrapped = self.outer.__dict__[u'_wrapped_control']
+            wrapped = self.outer.__dict__['_wrapped_control']
             return getattr(wrapped.proxied_interface, name)
 
     def __init__(self, wrapped_control = None, *a, **k):
@@ -36,7 +36,7 @@ class WrapperElement(CompoundElement, ProxyBase):
             return self._wrapped_control
 
     def _is_initialized(self):
-        return u'_wrapped_control' in self.__dict__
+        return '_wrapped_control' in self.__dict__
 
     def register_wrapped(self):
         self.register_control_element(self._wrapped_control)
@@ -75,7 +75,7 @@ class WrapperElement(CompoundElement, ProxyBase):
 
 
 class ComboElement(WrapperElement):
-    u"""
+    """
     An element representing a combination of buttons.  It will forward
     the button values when all the modifiers have the specified state,
     and silently discard them when they are not. If no state is provided
@@ -107,7 +107,7 @@ class ComboElement(WrapperElement):
 
     def get_control_element_priority(self, element, priority):
         if element == self._wrapped_control:
-            raise priority is None or 1 - priority + int(priority) > self.priority_increment or AssertionError(u'Attempting to increase the priority over a whole unit. ' + u'Make sure the combo element is not inside another combo element')
+            raise priority is None or 1 - priority + int(priority) > self.priority_increment or AssertionError('Attempting to increase the priority over a whole unit. ' + 'Make sure the combo element is not inside another combo element')
             priority = DEFAULT_PRIORITY if priority is None else priority
             return priority + self.priority_increment
         return priority
@@ -145,7 +145,7 @@ class ComboElement(WrapperElement):
 
 
 class EventElement(NotifyingControlElement, ProxyBase, ButtonElementMixin):
-    u"""
+    """
     Translate an arbitrary subject event into a notifying control
     element interface.
     """
@@ -165,7 +165,7 @@ class EventElement(NotifyingControlElement, ProxyBase, ButtonElementMixin):
 
     @property
     def proxied_interface(self):
-        return getattr(self._subject, u'proxied_interface', self._subject)
+        return getattr(self._subject, 'proxied_interface', self._subject)
 
     def _on_event(self, *a, **k):
         self.notify_value(self.event_value)
@@ -174,11 +174,11 @@ class EventElement(NotifyingControlElement, ProxyBase, ButtonElementMixin):
         return False
 
     def reset(self):
-        getattr(self._subject, u'reset', nop)()
+        getattr(self._subject, 'reset', nop)()
 
     def send_value(self, *a, **k):
         try:
-            send_value = super(EventElement, self).__getattr__(u'send_value')
+            send_value = super(EventElement, self).__getattr__('send_value')
         except AttributeError:
             send_value = nop
 
@@ -186,7 +186,7 @@ class EventElement(NotifyingControlElement, ProxyBase, ButtonElementMixin):
 
     def set_light(self, *a, **k):
         try:
-            set_light = super(EventElement, self).__getattr__(u'set_light')
+            set_light = super(EventElement, self).__getattr__('set_light')
         except AttributeError:
             set_light = nop
 
@@ -194,13 +194,13 @@ class EventElement(NotifyingControlElement, ProxyBase, ButtonElementMixin):
 
 
 class DoublePressContext(EventObject):
-    u"""
+    """
     Determines the context of double press.  Every double press element
     in the same scope can not be interleaved -- i.e. let buttons B1
     and B2, the sequence press(B1), press(B2), press(B1) does not
     trigger a double press event regardless of how fast it happens.
     """
-    __events__ = (u'break_double_press',)
+    __events__ = ('break_double_press',)
 
     @contextmanager
     def breaking_double_press(self):
@@ -217,7 +217,7 @@ class DoublePressContext(EventObject):
 GLOBAL_DOUBLE_PRESS_CONTEXT_PROVIDER = const(DoublePressContext())
 
 class DoublePressElement(WrapperElement):
-    u"""
+    """
     Element wrapper that provides a facade with two events,
     single_press and double_press.
     
@@ -227,7 +227,7 @@ class DoublePressElement(WrapperElement):
     original DoublePressElement as a hidden element of the layer where
     these are used if ownership is to be taken into account.
     """
-    __events__ = (u'single_press', u'double_press')
+    __events__ = ('single_press', 'double_press')
     DOUBLE_PRESS_MAX_DELAY = defaults.MOMENTARY_DELAY
 
     @depends(double_press_context=GLOBAL_DOUBLE_PRESS_CONTEXT_PROVIDER)
@@ -249,7 +249,7 @@ class DoublePressElement(WrapperElement):
                 self._double_press_task.kill()
         super(DoublePressElement, self).on_nested_control_element_value(value, control)
 
-    @listens(u'break_double_press')
+    @listens('break_double_press')
     def __on_break_double_press(self):
         if not self._double_press_task.is_killed:
             self._double_press_task.kill()
@@ -265,15 +265,15 @@ class DoublePressElement(WrapperElement):
 
     @lazy_attribute
     def single_press(self):
-        return EventElement(self, u'single_press')
+        return EventElement(self, 'single_press')
 
     @lazy_attribute
     def double_press(self):
-        return EventElement(self, u'double_press')
+        return EventElement(self, 'double_press')
 
 
 class MultiElement(CompoundElement, ButtonElementMixin):
-    u"""
+    """
     Makes several elements behave as single one. Useful when it is
     desired to map several buttons to single one.
     """
@@ -303,10 +303,10 @@ class MultiElement(CompoundElement, ButtonElementMixin):
             self.notify_value(value)
 
     def is_pressed(self):
-        return find_if(lambda c: getattr(c, u'is_pressed', const(False))(), self.owned_control_elements()) != None
+        return find_if(lambda c: getattr(c, 'is_pressed', const(False))(), self.owned_control_elements()) != None
 
     def is_momentary(self):
-        return find_if(lambda c: getattr(c, u'is_momentary', const(False))(), self.nested_control_elements()) != None
+        return find_if(lambda c: getattr(c, 'is_momentary', const(False))(), self.nested_control_elements()) != None
 
     def on_nested_control_element_received(self, control):
         pass
@@ -316,7 +316,7 @@ class MultiElement(CompoundElement, ButtonElementMixin):
 
 
 class ToggleElement(WrapperElement):
-    u"""
+    """
     An Element wrapper that enables one of the nested elements based on
     a toggle state.
     """

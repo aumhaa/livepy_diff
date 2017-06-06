@@ -1,8 +1,8 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from ableton.v2.base import listenable_property, liveobj_valid, find_if
 from pushbase.device_parameter_bank import create_device_bank, DescribedDeviceParameterBank
-from .custom_bank_definitions import OPTIONS_KEY, VIEW_DESCRIPTION_KEY
+from .custom_bank_definitions import OPTIONS_KEY, SHOW_WAVEFORM_KEY
 OPTIONS_PER_BANK = 7
 
 class DescribedDeviceParameterBankWithOptions(DescribedDeviceParameterBank):
@@ -13,20 +13,20 @@ class DescribedDeviceParameterBankWithOptions(DescribedDeviceParameterBank):
         return self._options
 
     @property
-    def bank_view_description(self):
+    def wants_waveform_shown(self):
         bank = self._definition.value_by_index(self.index)
-        return unicode(bank.get(VIEW_DESCRIPTION_KEY, u''))
+        return bool(bank.get(SHOW_WAVEFORM_KEY))
 
     def _current_option_slots(self):
         bank = self._definition.value_by_index(self.index)
-        return bank.get(OPTIONS_KEY) or (u'',) * OPTIONS_PER_BANK
+        return bank.get(OPTIONS_KEY) or ('',) * OPTIONS_PER_BANK
 
     def _content_slots(self):
         return self._current_option_slots() + super(DescribedDeviceParameterBankWithOptions, self)._content_slots()
 
     def _collect_options(self):
         option_slots = self._current_option_slots()
-        options = getattr(self._device, u'options', [])
+        options = getattr(self._device, 'options', [])
         return [ find_if(lambda o: o.name == str(slot_definition), options) for slot_definition in option_slots ]
 
     def _update_parameters(self):

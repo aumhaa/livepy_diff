@@ -1,10 +1,10 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from functools import partial
 from ..component import Component
 
 class BackgroundComponent(Component):
-    u"""
+    """
     This component resets and adds a no-op listener to every control
     that it receives via arbitrary set_* methods.  It is specially
     useful to give it a layer with every control and low priority such
@@ -18,7 +18,7 @@ class BackgroundComponent(Component):
         self._control_map = {}
 
     def __getattr__(self, name):
-        if len(name) > 4 and name[:4] == u'set_':
+        if len(name) > 4 and name[:4] == 'set_':
             return partial(self._clear_control, name[4:])
         raise AttributeError(name)
 
@@ -44,7 +44,7 @@ class BackgroundComponent(Component):
 
 
 class ModifierBackgroundComponent(BackgroundComponent):
-    u"""
+    """
     This component lights up modifiers IFF they have other owners as
     well.  Only give configurable buttons with prioritized resources
     to this component.

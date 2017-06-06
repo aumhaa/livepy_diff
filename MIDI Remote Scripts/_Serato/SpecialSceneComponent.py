@@ -1,10 +1,9 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.SceneComponent import SceneComponent
 from _Framework.InputControlElement import *
 from _Framework.ButtonElement import ButtonElement
-from .SpecialClipSlotComponent import SpecialClipSlotComponent
+from SpecialClipSlotComponent import SpecialClipSlotComponent
 
 class SpecialSceneComponent(SceneComponent):
 
@@ -60,7 +59,7 @@ class SpecialSceneComponent(SceneComponent):
 
     def _on_name_changed(self):
         if self._serato_interface != None and self._index > -1:
-            name = u''
+            name = ''
             if self._scene != None:
                 name = self._scene.name
             if self._last_name_sent != name:

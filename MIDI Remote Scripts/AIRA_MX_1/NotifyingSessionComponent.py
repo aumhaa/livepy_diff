@@ -1,11 +1,10 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from itertools import count, izip_longest
 from _Framework.SubjectSlot import subject_slot, subject_slot_group
 from _Framework.SessionComponent import SessionComponent, SceneComponent
 
 class SpecialSceneComponent(SceneComponent):
-    u"""
+    """
     Special scene class that indicates whether any clips are
     playing/triggered on the scene.
     """
@@ -65,7 +64,7 @@ class SpecialSceneComponent(SceneComponent):
 
 
 class NotifyingSessionComponent(SessionComponent):
-    u"""
+    """
     Special session class that uses the status bar to display
     the scene name or number being controlled.
     """
@@ -86,7 +85,7 @@ class NotifyingSessionComponent(SessionComponent):
         super(NotifyingSessionComponent, self)._enable_skinning()
         for scene_index in xrange(self._num_scenes):
             scene = self.scene(scene_index)
-            scene.set_playing_value(u'Session.ScenePlaying')
+            scene.set_playing_value('Session.ScenePlaying')
 
     def _reassign_tracks(self):
         tracks_to_use = self.song().tracks
@@ -95,12 +94,12 @@ class NotifyingSessionComponent(SessionComponent):
         self._update_stop_track_clip_buttons()
         self._update_scene_launch_buttons()
 
-    @subject_slot_group(u'fired_slot_index')
+    @subject_slot_group('fired_slot_index')
     def _on_fired_slot_index_changed(self, track_index):
         super(NotifyingSessionComponent, self)._on_fired_slot_index_changed(track_index)
         self._update_scene_launch_buttons()
 
-    @subject_slot_group(u'playing_slot_index')
+    @subject_slot_group('playing_slot_index')
     def _on_playing_slot_index_changed(self, track_index):
         super(NotifyingSessionComponent, self)._on_playing_slot_index_changed(track_index)
         self._update_scene_launch_buttons()
@@ -109,11 +108,11 @@ class NotifyingSessionComponent(SessionComponent):
         for scene in self._scenes:
             scene.update_light()
 
-    @subject_slot(u'offset')
+    @subject_slot('offset')
     def _on_offset_changed(self):
         if self._last_scene_offset != self._scene_offset:
             name = self._scenes[0].scene_name()
             if not name:
                 name = self._scene_offset + 1
-            self._show_msg_callback(u'Controlling Scene %s' % name)
+            self._show_msg_callback('Controlling Scene %s' % name)
             self._last_scene_offset = self._scene_offset

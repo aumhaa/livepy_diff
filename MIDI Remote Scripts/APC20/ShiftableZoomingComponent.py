@@ -1,10 +1,9 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.ButtonElement import ButtonElement
 from _Framework.SessionZoomingComponent import DeprecatedSessionZoomingComponent
 
 class ShiftableZoomingComponent(DeprecatedSessionZoomingComponent):
-    u""" Special ZoomingComponent that uses clip stop buttons for stop all when zoomed """
+    """ Special ZoomingComponent that uses clip stop buttons for stop all when zoomed """
 
     def __init__(self, session, stop_buttons, *a, **k):
         super(ShiftableZoomingComponent, self).__init__(session, *a, **k)

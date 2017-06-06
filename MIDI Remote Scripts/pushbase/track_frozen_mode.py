@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from ableton.v2.base import listens
 from ableton.v2.control_surface.mode import ModesComponent
 
@@ -10,15 +10,15 @@ class TrackFrozenModesComponent(ModesComponent):
         raise default_mode is not None or AssertionError
         if not frozen_mode is not None:
             raise AssertionError
-            self.add_mode(u'default', default_mode)
-            self.add_mode(u'frozen', frozen_mode)
+            self.add_mode('default', default_mode)
+            self.add_mode('frozen', frozen_mode)
             self._on_selected_track_is_frozen_changed.subject = self.song.view
             self.is_enabled() and self._update_selected_mode()
 
     def _update_selected_mode(self):
-        self.selected_mode = u'frozen' if self.song.view.selected_track.is_frozen else u'default'
+        self.selected_mode = 'frozen' if self.song.view.selected_track.is_frozen else 'default'
 
-    @listens(u'selected_track.is_frozen')
+    @listens('selected_track.is_frozen')
     def _on_selected_track_is_frozen_changed(self):
         self._update_selected_mode()
 

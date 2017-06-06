@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface
 from _Framework.ControlElement import ControlElement
@@ -16,13 +16,13 @@ from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from _Framework.ClipSlotComponent import ClipSlotComponent
 from _Framework.SceneComponent import SceneComponent
 from _Framework.SessionComponent import SessionComponent
-from .TransportViewModeSelector import TransportViewModeSelector
-from .ShiftableMixerComponent import ShiftableMixerComponent
-from .ShiftableSessionComponent import ShiftableSessionComponent
-from .ShiftableTransportComponent import ShiftableTransportComponent
-from .PeekableEncoderElement import PeekableEncoderElement
-from .BestBankDeviceComponent import BestBankDeviceComponent
-from .DetailViewCntrlComponent import DetailViewCntrlComponent
+from TransportViewModeSelector import TransportViewModeSelector
+from ShiftableMixerComponent import ShiftableMixerComponent
+from ShiftableSessionComponent import ShiftableSessionComponent
+from ShiftableTransportComponent import ShiftableTransportComponent
+from PeekableEncoderElement import PeekableEncoderElement
+from BestBankDeviceComponent import BestBankDeviceComponent
+from DetailViewCntrlComponent import DetailViewCntrlComponent
 INITIAL_DISPLAY_DELAY = 20
 STANDARD_DISPLAY_DELAY = 10
 IS_MOMENTARY = True
@@ -37,14 +37,14 @@ PAD_TRANSLATIONS = ((0, 3, 60, 15),
  (3, 2, 72, 15))
 
 class Axiom_DirectLink(ControlSurface):
-    u""" Script for the M-Audio Axiom DirectLink """
+    """ Script for the M-Audio Axiom DirectLink """
 
     def __init__(self, c_instance):
         ControlSurface.__init__(self, c_instance)
         with self.component_guard():
             self.set_pad_translations(PAD_TRANSLATIONS)
-            self._suggested_input_port = u'DirectLink'
-            self._suggested_output_port = u'DirectLink'
+            self._suggested_input_port = 'DirectLink'
+            self._suggested_output_port = 'DirectLink'
             self._waiting_for_first_response = True
             self._has_sliders = True
             self._current_midi_map = None
@@ -56,10 +56,10 @@ class Axiom_DirectLink(ControlSurface):
             self._prev_nav_button = ButtonElement(IS_MOMENTARY, MIDI_CC_TYPE, 15, 110)
             self._device_bank_buttons = None
             self._device_navigation = None
-            self._shift_button.name = u'Shift_Button'
-            self._master_slider.name = u'Master_Volume_Control'
-            self._next_nav_button.name = u'Next_Track_Button'
-            self._prev_nav_button.name = u'Prev_Track_Button'
+            self._shift_button.name = 'Shift_Button'
+            self._master_slider.name = 'Master_Volume_Control'
+            self._next_nav_button.name = 'Next_Track_Button'
+            self._prev_nav_button.name = 'Prev_Track_Button'
             self._master_slider.add_value_listener(self._slider_value, identify_sender=True)
             self._shift_button.add_value_listener(self._shift_value)
             self._setup_mixer()
@@ -92,7 +92,7 @@ class Axiom_DirectLink(ControlSurface):
             self.request_rebuild_midi_map()
 
     def disconnect(self):
-        self._display_data_source.set_display_string(u'  ')
+        self._display_data_source.set_display_string('  ')
         self._shift_button.remove_value_listener(self._shift_value)
         self._inst_button.remove_value_listener(self._inst_value)
         for encoder in self._encoders:
@@ -135,29 +135,29 @@ class Axiom_DirectLink(ControlSurface):
         self._selected_mute_solo_button = ButtonElement(IS_MOMENTARY, MIDI_CC_TYPE, 15, 12)
         mute_solo_flip_button = ButtonElement(IS_MOMENTARY, MIDI_CC_TYPE, 15, 57)
         self._strip_buttons = []
-        self._selected_mute_solo_button.name = u'Selected_Mute_Button'
-        mute_solo_flip_button.name = u'Mute_Solo_Flip_Button'
+        self._selected_mute_solo_button.name = 'Selected_Mute_Button'
+        mute_solo_flip_button.name = 'Mute_Solo_Flip_Button'
         self._selected_mute_solo_button.add_value_listener(self._mixer_button_value, identify_sender=True)
         self._mixer = ShiftableMixerComponent(8)
-        self._mixer.name = u'Mixer'
+        self._mixer.name = 'Mixer'
         self._mixer.set_shift_button(self._shift_button)
         self._mixer.set_selected_mute_solo_button(self._selected_mute_solo_button)
         self._mixer.set_select_buttons(self._next_nav_button, self._prev_nav_button)
-        self._mixer.selected_strip().name = u'Selected_Channel_Strip'
-        self._mixer.master_strip().name = u'Master_Channel_Strip'
+        self._mixer.selected_strip().name = 'Selected_Channel_Strip'
+        self._mixer.master_strip().name = 'Master_Channel_Strip'
         self._mixer.master_strip().set_volume_control(self._master_slider)
         self._sliders = []
         for index in range(8):
             strip = self._mixer.channel_strip(index)
-            strip.name = u'Channel_Strip_' + str(index)
+            strip.name = 'Channel_Strip_' + str(index)
             strip.set_invert_mute_feedback(True)
             self._sliders.append(SliderElement(MIDI_CC_TYPE, 15, 33 + index))
-            self._sliders[-1].name = str(index) + u'_Volume_Control'
+            self._sliders[-1].name = str(index) + '_Volume_Control'
             self._sliders[-1].set_feedback_delay(-1)
             self._sliders[-1].add_value_listener(self._slider_value, identify_sender=True)
             strip.set_volume_control(self._sliders[-1])
             self._strip_buttons.append(ButtonElement(IS_MOMENTARY, MIDI_CC_TYPE, 15, 49 + index))
-            self._strip_buttons[-1].name = str(index) + u'_Mute_Button'
+            self._strip_buttons[-1].name = str(index) + '_Mute_Button'
             self._strip_buttons[-1].add_value_listener(self._mixer_button_value, identify_sender=True)
 
         self._mixer.set_strip_mute_solo_buttons(tuple(self._strip_buttons), mute_solo_flip_button)
@@ -169,14 +169,14 @@ class Axiom_DirectLink(ControlSurface):
         play_button = ButtonElement(IS_MOMENTARY, MIDI_CC_TYPE, 15, 117)
         stop_button = ButtonElement(IS_MOMENTARY, MIDI_CC_TYPE, 15, 116)
         rec_button = ButtonElement(IS_MOMENTARY, MIDI_CC_TYPE, 15, 118)
-        ffwd_button.name = u'FFwd_Button'
-        rwd_button.name = u'Rwd_Button'
-        loop_button.name = u'Loop_Button'
-        play_button.name = u'Play_Button'
-        stop_button.name = u'Stop_Button'
-        rec_button.name = u'Record_Button'
+        ffwd_button.name = 'FFwd_Button'
+        rwd_button.name = 'Rwd_Button'
+        loop_button.name = 'Loop_Button'
+        play_button.name = 'Play_Button'
+        stop_button.name = 'Stop_Button'
+        rec_button.name = 'Record_Button'
         transport = ShiftableTransportComponent()
-        transport.name = u'Transport'
+        transport.name = 'Transport'
         transport.set_shift_button(self._shift_button)
         transport.set_stop_button(stop_button)
         transport.set_play_button(play_button)
@@ -184,16 +184,16 @@ class Axiom_DirectLink(ControlSurface):
         pads = []
         for index in range(len(PAD_TRANSLATIONS)):
             pads.append(ButtonElement(IS_MOMENTARY, MIDI_NOTE_TYPE, 15, PAD_TRANSLATIONS[index][2]))
-            pads[-1].name = u'Pad_' + str(index)
+            pads[-1].name = 'Pad_' + str(index)
 
         self._session = ShiftableSessionComponent(8, 0)
-        self._session.name = u'Session_Control'
-        self._session.selected_scene().name = u'Selected_Scene'
+        self._session.name = 'Session_Control'
+        self._session.selected_scene().name = 'Selected_Scene'
         self._session.set_mixer(self._mixer)
         self._session.set_shift_button(self._shift_button)
         self._session.set_clip_slot_buttons(tuple(pads))
         transport_view_modes = TransportViewModeSelector(transport, self._session, ffwd_button, rwd_button, loop_button)
-        transport_view_modes.name = u'Transport_View_Modes'
+        transport_view_modes.name = 'Transport_View_Modes'
 
     def _setup_device(self):
         self._encoders = []
@@ -201,14 +201,14 @@ class Axiom_DirectLink(ControlSurface):
             self._encoders.append(PeekableEncoderElement(MIDI_CC_TYPE, 15, 17 + offset, Live.MidiMap.MapMode.relative_smooth_two_compliment))
             self._encoders[-1].set_feedback_delay(-1)
             self._encoders[-1].add_value_listener(self._encoder_value, identify_sender=True)
-            self._encoders[-1].name = u'Device_Control_' + str(offset)
+            self._encoders[-1].name = 'Device_Control_' + str(offset)
 
         prev_bank_button = ButtonElement(IS_MOMENTARY, MIDI_CC_TYPE, 15, 14)
         next_bank_button = ButtonElement(IS_MOMENTARY, MIDI_CC_TYPE, 15, 15)
-        prev_bank_button.name = u'Device_Bank_Down_Button'
-        next_bank_button.name = u'Device_Bank_Up_Button'
+        prev_bank_button.name = 'Device_Bank_Down_Button'
+        next_bank_button.name = 'Device_Bank_Up_Button'
         device = BestBankDeviceComponent(device_selection_follows_track_selection=True)
-        device.name = u'Device_Component'
+        device.name = 'Device_Component'
         self.set_device_component(device)
         device.set_parameter_controls(tuple(self._encoders))
         device.set_bank_nav_buttons(prev_bank_button, next_bank_button)
@@ -216,14 +216,14 @@ class Axiom_DirectLink(ControlSurface):
         prev_bank_button.add_value_listener(self._device_bank_value)
         next_bank_button.add_value_listener(self._device_bank_value)
         self._inst_button = ButtonElement(IS_MOMENTARY, MIDI_CC_TYPE, 15, 109)
-        self._inst_button.name = u'Inst_Button'
+        self._inst_button.name = 'Inst_Button'
         self._inst_button.add_value_listener(self._inst_value)
         self._device_navigation = DetailViewCntrlComponent()
-        self._device_navigation.name = u'Device_Navigation_Component'
+        self._device_navigation.name = 'Device_Navigation_Component'
 
     def _setup_display(self):
         self._display = PhysicalDisplayElement(5, 1)
-        self._display.name = u'Display'
+        self._display.name = 'Display'
         self._display.set_message_parts(SYSEX_START + (17, 1, 0, 0), (247,))
         self._display_data_source = DisplayDataSource()
         self._display.segment(0).set_data_source(self._display_data_source)
@@ -255,7 +255,7 @@ class Axiom_DirectLink(ControlSurface):
             raise AssertionError
             if not value in range(128):
                 raise AssertionError
-                display_string = self._device_component.is_enabled() and u' - '
+                display_string = self._device_component.is_enabled() and ' - '
                 display_string = sender.mapped_parameter() != None and sender.mapped_parameter().name
             self._display_data_source.set_display_string(display_string)
             self._set_display_data_source(self._display_data_source)
@@ -267,7 +267,7 @@ class Axiom_DirectLink(ControlSurface):
             if not value in range(128):
                 raise AssertionError
                 if self._mixer.is_enabled():
-                    display_string = u' - '
+                    display_string = ' - '
                     if sender.mapped_parameter() != None:
                         master = self.song().master_track
                         tracks = self.song().tracks
@@ -279,14 +279,14 @@ class Axiom_DirectLink(ControlSurface):
                             track = self.song().view.selected_track
                     else:
                         track = self._mixer.channel_strip(self._sliders.index(sender))._track
-                    display_string = track == master and u'Ma'
+                    display_string = track == master and 'Ma'
                 elif track in tracks:
                     display_string = str(list(tracks).index(track) + 1)
                 elif track in returns:
-                    display_string = str(chr(ord(u'A') + list(returns).index(track)))
+                    display_string = str(chr(ord('A') + list(returns).index(track)))
                 else:
                     raise False or AssertionError
-                display_string += u' Vol'
+                display_string += ' Vol'
             self._display_data_source.set_display_string(display_string)
             self._set_display_data_source(self._display_data_source)
             self._display_reset_delay = STANDARD_DISPLAY_DELAY
@@ -303,7 +303,7 @@ class Axiom_DirectLink(ControlSurface):
                     strip = self._mixer.channel_strip(self._strip_buttons.index(sender))
                 strip != None and self._set_display_data_source(strip.track_name_data_source())
             else:
-                self._display_data_source.set_display_string(u' - ')
+                self._display_data_source.set_display_string(' - ')
                 self._set_display_data_source(self._display_data_source)
             self._display_reset_delay = STANDARD_DISPLAY_DELAY
 
@@ -327,7 +327,7 @@ class Axiom_DirectLink(ControlSurface):
             self._set_display_data_source(self._mixer.selected_strip().track_name_data_source())
 
     def _show_startup_message(self):
-        self._display.display_message(u'LIVE')
+        self._display.display_message('LIVE')
         self._display_reset_delay = INITIAL_DISPLAY_DELAY
 
     def _set_display_data_source(self, data_source):

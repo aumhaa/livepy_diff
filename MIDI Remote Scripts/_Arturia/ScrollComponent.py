@@ -1,5 +1,4 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.ScrollComponent import ScrollComponent as ScrollComponentBase
 from _Framework.Control import EncoderControl
 

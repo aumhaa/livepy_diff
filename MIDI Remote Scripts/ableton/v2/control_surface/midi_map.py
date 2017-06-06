@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 import Live
 from .elements import ButtonMatrixElement, ButtonElement, EncoderElement, SliderElement
 
@@ -26,10 +26,10 @@ class MidiMap(dict):
         raise name not in self.keys() or AssertionError
 
         def one_dimensional_name(base_name, x, _y):
-            return u'%s[%d]' % (base_name, x)
+            return '%s[%d]' % (base_name, x)
 
         def two_dimensional_name(base_name, x, y):
-            return u'%s[%d,%d]' % (base_name, x, y)
+            return '%s[%d,%d]' % (base_name, x, y)
 
         name_factory = two_dimensional_name if len(numbers) > 1 else one_dimensional_name
         elements = [ [ element_factory(name_factory(name, column, row), channel, identifier, midi_message_type) for column, identifier in enumerate(identifiers) ] for row, identifiers in enumerate(numbers) ]

@@ -1,10 +1,10 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from ...base import in_range, listens, liveobj_valid
 from ..component import Component
 
 class SessionOverviewComponent(Component):
-    u"""
+    """
     Class using a matrix of buttons to choose blocks of clips in the
     session, as if you had zoomed out from session.
     """
@@ -25,12 +25,12 @@ class SessionOverviewComponent(Component):
             enable_skinning and self._enable_skinning()
 
     def _enable_skinning(self):
-        self.set_stopped_value(u'Zooming.Stopped')
-        self.set_selected_value(u'Zooming.Selected')
-        self.set_playing_value(u'Zooming.Playing')
-        self.set_empty_value(u'Zooming.Empty')
+        self.set_stopped_value('Zooming.Stopped')
+        self.set_selected_value('Zooming.Selected')
+        self.set_playing_value('Zooming.Playing')
+        self.set_empty_value('Zooming.Empty')
 
-    @listens(u'scenes')
+    @listens('scenes')
     def __on_scene_list_changed(self):
         self.update()
 
@@ -100,7 +100,7 @@ class SessionOverviewComponent(Component):
                     else:
                         self._buttons.set_light(x, y, value_to_send)
 
-    @listens(u'offset')
+    @listens('offset')
     def __on_session_offset_changes(self, _, scene_offset):
         self._update_bank_index(scene_offset)
 
@@ -109,7 +109,7 @@ class SessionOverviewComponent(Component):
             self._scene_bank_index = int(scene_offset / self._session_ring.num_scenes / self._buttons.height())
         self.update()
 
-    @listens(u'value')
+    @listens('value')
     def __on_matrix_value(self, value, x, y, is_momentary):
         if self.is_enabled():
             if value != 0 or not is_momentary:

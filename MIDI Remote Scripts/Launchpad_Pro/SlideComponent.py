@@ -1,19 +1,21 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+"""
+Component that navigates a series of pages.
+"""
 from _Framework.Util import clamp
 from _Framework.SubjectSlot import subject_slot, Subject
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.ScrollComponent import ScrollComponent, Scrollable
 
 class Slideable(Subject):
-    u"""
+    """
     Models of an entity that has a position in a 1-D discrete axis,
     and that has some natural steps (called pages) of this axis.
     """
-    __subject_events__ = (u'page_offset', u'page_length', u'position', u'position_count', u'contents')
+    __subject_events__ = ('page_offset', 'page_length', 'position', 'position_count', 'contents')
 
     def contents_range(self, pmin, pmax):
-        u"""
+        """
         Tells whether there are any contents in the (min, max) range,
         wheren min and max are floats in the (0, position_count)
         range. Can be left unimplemented.
@@ -115,7 +117,7 @@ class SlideComponent(CompoundComponent, Scrollable):
         self._position_scroll.update()
         self._page_scroll.update()
 
-    @subject_slot(u'position')
+    @subject_slot('position')
     def _on_position_changed(self):
         self._position_scroll.update()
         self._page_scroll.update()

@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from itertools import izip, izip_longest
 from ...base import clamp, listens, liveobj_valid
 from ..compound_component import CompoundComponent
@@ -14,7 +14,7 @@ def simple_track_assigner(song, tracks_provider):
 
 
 def right_align_return_tracks_track_assigner(song, tracks_provider):
-    u"""
+    """
     Track assigner which aligns return tracks to the right, leaving a gap
     between regular and return tracks (if applicable).
     """
@@ -35,7 +35,7 @@ def right_align_return_tracks_track_assigner(song, tracks_provider):
 
 
 class MixerComponent(CompoundComponent):
-    u""" Class encompassing several channel strips to form a mixer """
+    """ Class encompassing several channel strips to form a mixer """
 
     def __init__(self, tracks_provider = None, track_assigner = right_align_return_tracks_track_assigner, auto_name = False, invert_mute_feedback = False, *a, **k):
         if not tracks_provider is not None:
@@ -155,18 +155,18 @@ class MixerComponent(CompoundComponent):
         for strip in self._channel_strips or []:
             strip.set_shift_button(button)
 
-    @listens(u'offset')
+    @listens('offset')
     def __on_offset_changed(self, *a):
         self._reassign_tracks()
 
     def on_enabled_changed(self):
         self.update()
 
-    @listens(u'visible_tracks')
+    @listens('visible_tracks')
     def __on_track_list_changed(self):
         self._reassign_tracks()
 
-    @listens(u'selected_track')
+    @listens('selected_track')
     def __on_selected_track_changed(self):
         self._update_selected_strip()
 
@@ -178,7 +178,7 @@ class MixerComponent(CompoundComponent):
             else:
                 self._selected_strip.set_track(None)
 
-    @listens(u'return_tracks')
+    @listens('return_tracks')
     def __on_return_tracks_changed(self):
         self._update_send_index()
 
@@ -220,8 +220,8 @@ class MixerComponent(CompoundComponent):
         return self._create_strip()
 
     def _auto_name(self):
-        self.name = u'Mixer'
-        self.master_strip().name = u'Master_Channel_Strip'
-        self.selected_strip().name = u'Selected_Channel_Strip'
+        self.name = 'Mixer'
+        self.master_strip().name = 'Master_Channel_Strip'
+        self.selected_strip().name = 'Selected_Channel_Strip'
         for index, strip in enumerate(self._channel_strips):
-            strip.name = u'Channel_Strip_%d' % index
+            strip.name = 'Channel_Strip_%d' % index

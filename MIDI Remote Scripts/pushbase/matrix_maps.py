@@ -1,8 +1,8 @@
 
-u"""
+"""
 Pad Translations for Drum Rack (pad_x, pad_y, note, channel)
 """
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 PAD_TRANSLATIONS = ((0, 0, 60, 13),
  (1, 0, 61, 13),
  (2, 0, 62, 13),

@@ -1,5 +1,4 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from _Arturia.SessionComponent import SessionComponent as SessionComponentBase
 
 class SessionComponent(SessionComponentBase):

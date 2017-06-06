@@ -1,10 +1,10 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from ..input_control_element import InputControlElement, MIDI_SYSEX_TYPE
 from .. import midi
 
 class SysexElement(InputControlElement):
-    u"""
+    """
     Control element for sending and receiving sysex message.
     
     Set sysex_identifier to the unique static part of the sysex message, to notify
@@ -31,7 +31,7 @@ class SysexElement(InputControlElement):
     def send_value(self, *arguments):
         raise self._send_message_generator is not None or AssertionError
         message = self._send_message_generator(*arguments)
-        raise midi.is_valid_sysex(message) or AssertionError(u'Trying to send sysex message %r, which is not valid.' % map(hex, message))
+        raise midi.is_valid_sysex(message) or AssertionError('Trying to send sysex message %r, which is not valid.' % map(hex, message))
         self.send_midi(message)
 
     def enquire_value(self):

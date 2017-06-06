@@ -1,5 +1,4 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.Control import ButtonControl
 from _Framework.SubjectSlot import subject_slot
@@ -16,7 +15,7 @@ class TransportComponent(TransportComponentBase):
                 return False
             return val
 
-        k[u'play_toggle_model_transform'] = play_toggle_model_transform
+        k['play_toggle_model_transform'] = play_toggle_model_transform
         super(TransportComponent, self).__init__(*a, **k)
         self._tempo_encoder_control = None
 
@@ -27,7 +26,7 @@ class TransportComponent(TransportComponentBase):
             self._tempo_encoder_value.subject = control
             self.update()
 
-    @subject_slot(u'value')
+    @subject_slot('value')
     def _tempo_encoder_value(self, value):
         if self.is_enabled():
             step = 0.1 if self.shift_button.is_pressed else 1.0

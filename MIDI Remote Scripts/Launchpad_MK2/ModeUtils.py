@@ -1,10 +1,9 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.Dependency import depends
 from _Framework.ModesComponent import ModesComponent, ModeButtonBehaviour, ImmediateBehaviour
 
 def to_class_name(mode_name):
-    return u''.join(map(lambda s: s.capitalize(), mode_name.split(u'_')))
+    return ''.join(map(lambda s: s.capitalize(), mode_name.split('_')))
 
 
 class SkinableBehaviourMixin(ModeButtonBehaviour):
@@ -16,16 +15,16 @@ class SkinableBehaviourMixin(ModeButtonBehaviour):
         is_selected = mode == selected_mode
         is_in_group = bool(groups & selected_groups)
         mode_color = to_class_name(mode)
-        value_status = u'Off'
+        value_status = 'Off'
         if is_selected:
-            value_status = u'On'
+            value_status = 'On'
         elif is_in_group:
-            value_status = u'GroupOn'
-        button.set_light(u'Mode.%s.%s' % (mode_color, value_status))
+            value_status = 'GroupOn'
+        button.set_light('Mode.%s.%s' % (mode_color, value_status))
 
 
 class EnablingReenterBehaviour(SkinableBehaviourMixin, ImmediateBehaviour):
-    u"""
+    """
     Behaviour that enabled its component on reenter and
     disables it afterward
     """
@@ -54,7 +53,7 @@ class EnablingReenterBehaviour(SkinableBehaviourMixin, ImmediateBehaviour):
 
 
 class NotifyingModesComponent(ModesComponent):
-    u"""
+    """
     ModesComponent that receives a switch_layout method
     via a dependency injection, in order to physically switch
     layouts on the hardware unit whenever a mode changes
@@ -81,4 +80,4 @@ class NotifyingModesComponent(ModesComponent):
             layout_byte = self._modes_to_layout_bytes[mode]
             self._switch_layout(layout_byte)
         except KeyError:
-            print(u"Couldn't switch layout on hardware")
+            print "Couldn't switch layout on hardware"

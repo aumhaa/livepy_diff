@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from _Framework.SubjectSlot import SlotManager, subject_slot
 from _Framework.Util import nop
 
@@ -14,19 +14,19 @@ class DeviceAppointer(SlotManager):
         self.__on_selected_track_changed.subject = self._song.view
         self.__on_selected_track_changed()
 
-    @subject_slot(u'appointed_device')
+    @subject_slot('appointed_device')
     def __on_appointed_device_changed(self):
         if self._appointed_device != self._song.appointed_device:
             self._update_appointed_device(self._song.appointed_device)
 
-    @subject_slot(u'selected_device')
+    @subject_slot('selected_device')
     def __on_selected_device_changed(self):
         song = self._song
         device = song.view.selected_track.view.selected_device
         if device != None:
             self._update_appointed_device(device)
 
-    @subject_slot(u'selected_track')
+    @subject_slot('selected_track')
     def __on_selected_track_changed(self):
         track_view = self._song.view.selected_track.view
         self.__on_selected_device_changed.subject = track_view

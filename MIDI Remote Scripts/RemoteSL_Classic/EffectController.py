@@ -1,11 +1,10 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 import Live
-from .RemoteSLComponent import RemoteSLComponent
-from .consts import *
+from RemoteSLComponent import RemoteSLComponent
+from consts import *
 
 class EffectController(RemoteSLComponent):
-    u"""Representing the 'left side' of the RemoteSL:
+    """Representing the 'left side' of the RemoteSL:
     The upper two button rows with the encoders, and the row with the poties and drum pads.
     
     Only the First Button row with the Encoders are handled by this script. The rest will
@@ -46,17 +45,17 @@ class EffectController(RemoteSLComponent):
             strip = self.__strips[cc_no - FX_ENCODER_ROW_BASE_CC]
             strip.on_encoder_moved(cc_value)
         elif cc_no in fx_lower_button_row_ccs:
-            raise False or AssertionError(u'Lower Button CCS should be passed to Live!')
+            raise False or AssertionError('Lower Button CCS should be passed to Live!')
         elif cc_no in fx_poti_row_ccs:
-            raise False or AssertionError(u'Poti CCS should be passed to Live!')
+            raise False or AssertionError('Poti CCS should be passed to Live!')
         else:
-            raise False or AssertionError(u'unknown FX midi message')
+            raise False or AssertionError('unknown FX midi message')
 
     def receive_midi_note(self, note, velocity):
         if note in fx_drum_pad_row_notes:
-            raise False or AssertionError(u'DrumPad CCS should be passed to Live!')
+            raise False or AssertionError('DrumPad CCS should be passed to Live!')
         else:
-            raise False or AssertionError(u'unknown FX midi message')
+            raise False or AssertionError('unknown FX midi message')
 
     def build_midi_map(self, script_handle, midi_map_handle):
         needs_takeover = True
@@ -107,7 +106,7 @@ class EffectController(RemoteSLComponent):
             parameters = []
             for s in self.__strips:
                 param = None
-                name = u''
+                name = ''
                 new_index = param_index + self.__bank * 8
                 device_parameters = self.__assigned_device.parameters[1:]
                 if new_index < len(device_parameters):
@@ -128,7 +127,7 @@ class EffectController(RemoteSLComponent):
             for s in self.__strips:
                 s.set_assigned_parameter(None)
 
-            param_names = [u'Please select a Device in Live to edit it...']
+            param_names = ['Please select a Device in Live to edit it...']
             parameters = [ None for x in range(NUM_CONTROLS_PER_ROW) ]
         self.__display_controller.setup_left_display(param_names, parameters)
         self.request_rebuild_midi_map()
@@ -147,7 +146,7 @@ class EffectController(RemoteSLComponent):
                 new_bank = max(self.__bank - 1, 0)
             else:
                 if not False:
-                    raise AssertionError(u'unknown Display midi message')
+                    raise AssertionError('unknown Display midi message')
                 if not self.__bank == new_bank:
                     self.__show_bank = True
                     if not self.__assigned_device_is_locked:
@@ -175,7 +174,7 @@ class EffectController(RemoteSLComponent):
             if cc_value == CC_VAL_BUTTON_PRESSED:
                 self.song().stop_all_clips()
         else:
-            raise False or AssertionError(u'unknown select row midi message')
+            raise False or AssertionError('unknown select row midi message')
 
     def __update_select_row_leds(self):
         if self.__assigned_device_is_locked:
@@ -207,11 +206,11 @@ class EffectController(RemoteSLComponent):
     def __report_bank(self):
         if self.__show_bank:
             self.__show_bank = False
-            self.__show_bank_select(u'Bank' + str(self.__bank + 1))
+            self.__show_bank_select('Bank' + str(self.__bank + 1))
 
     def __show_bank_select(self, bank_name):
         if self.__assigned_device:
-            self.__parent.show_message(str(self.__assigned_device.name + u' Bank: ' + bank_name))
+            self.__parent.show_message(str(self.__assigned_device.name + ' Bank: ' + bank_name))
 
     def restore_bank(self, bank):
         if self.__assigned_device_is_locked:
@@ -240,7 +239,7 @@ class EffectController(RemoteSLComponent):
 
 
 class EffectChannelStrip():
-    u"""Represents one of the 8 strips in the Effect controls that we use for parameter
+    """Represents one of the 8 strips in the Effect controls that we use for parameter
     controlling (one button, one encoder)
     """
 
@@ -265,4 +264,4 @@ class EffectChannelStrip():
                 self.__assigned_parameter.value = self.__assigned_parameter.default_value
 
     def on_encoder_moved(self, cc_value):
-        raise self.__assigned_parameter == None or AssertionError(u'should only be reached when the encoder was not realtime mapped ')
+        raise self.__assigned_parameter == None or AssertionError('should only be reached when the encoder was not realtime mapped ')

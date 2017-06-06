@@ -1,11 +1,10 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.ButtonElement import ButtonElement
 from _Framework.ChannelStripComponent import ChannelStripComponent
-from .consts import *
+from consts import *
 
 class DisplayingChanStripComponent(ChannelStripComponent):
-    u""" Special channel strip class that displays Mute/Solo/Arm state"""
+    """ Special channel strip class that displays Mute/Solo/Arm state"""
 
     def __init__(self):
         ChannelStripComponent.__init__(self)
@@ -63,19 +62,19 @@ class DisplayingChanStripComponent(ChannelStripComponent):
         ChannelStripComponent._mute_value(self, value)
         if self._track != None and self._track != self.song().master_track and self._name_display != None and self._value_display != None:
             if value != 0:
-                self._name_display.display_message(u'Mute :')
+                self._name_display.display_message('Mute :')
                 self._value_display.send_midi(DISPLAY_WORD_ON) if self._track.mute else self._value_display.send_midi(DISPLAY_WORD_OFF)
 
     def _solo_value(self, value):
         ChannelStripComponent._solo_value(self, value)
         if self._track != None and self._track != self.song().master_track and self._name_display != None and self._value_display != None:
             if value != 0:
-                self._name_display.display_message(u'Solo :')
+                self._name_display.display_message('Solo :')
                 self._value_display.send_midi(DISPLAY_WORD_ON) if self._track.solo else self._value_display.send_midi(DISPLAY_WORD_OFF)
 
     def _arm_value(self, value):
         ChannelStripComponent._arm_value(self, value)
         if self._track != None and self._track != self.song().master_track and self._name_display != None and self._value_display != None and self._track not in self.song().return_tracks:
             if value != 0:
-                self._name_display.display_message(u'Arm :')
+                self._name_display.display_message('Arm :')
                 self._value_display.send_midi(DISPLAY_WORD_ON) if self._track.arm else self._value_display.send_midi(DISPLAY_WORD_OFF)

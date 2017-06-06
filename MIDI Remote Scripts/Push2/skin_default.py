@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from ableton.v2.control_surface import Skin
 from ableton.v2.control_surface.elements import SelectedClipColorFactory, SelectedTrackColorFactory
 from pushbase.colors import Blink, FallbackColor, Pulse
@@ -32,7 +32,6 @@ class Colors(ColorsBase):
         Feedback = Rgb.GREEN
         FeedbackRecord = Rgb.RED
         NoteAction = Rgb.RED
-        SelectedNote = make_selected_track_color(shade_level=2)
 
     class DrumGroup:
         PadSelected = Rgb.WHITE
@@ -170,7 +169,6 @@ class Colors(ColorsBase):
     class Clip:
         Option = Rgb.WHITE
         OptionDisabled = Rgb.DARK_GREY
-        Action = make_selected_clip_color()
 
     class Transport:
         PlayOn = Rgb.GREEN

@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from itertools import imap
 from functools import partial
 import Live.DrumPad
@@ -11,7 +11,7 @@ from pushbase import consts
 DeviceType = Live.Device.DeviceType
 
 def make_navigation_node(model_object, is_entering = True, session_ring = None, device_bank_registry = None, banking_info = None):
-    u"""
+    """
     Returns a proper navigation node wrapper for the model_object
     """
     node = None
@@ -35,7 +35,7 @@ def make_navigation_node(model_object, is_entering = True, session_ring = None, 
             else:
                 node = RackNode(model_object)
         else:
-            raise device_bank_registry or AssertionError(u'Navigating a device needs a bank registry')
+            raise device_bank_registry or AssertionError('Navigating a device needs a bank registry')
             node = SimpleDeviceNode(device_bank_registry, banking_info, model_object)
     if node and node.parent and not node.children:
         node.disconnect()
@@ -48,12 +48,12 @@ def make_navigation_node(model_object, is_entering = True, session_ring = None, 
 
 
 class NavigationNode(EventObject):
-    u"""
+    """
     Navigation nodes provide a generic and observable interface for
     tree-like datastructures in the model. It can be used to implement
     generic navigation and browsing components on top of them.
     """
-    __events__ = (u'children', u'selected_child', u'state')
+    __events__ = ('children', 'selected_child', 'state')
 
     def get_selected_child(self):
         return None
@@ -90,7 +90,7 @@ class NavigationNode(EventObject):
     object = property(lambda self: self.get_object())
 
     def preselect(self):
-        u"""
+        """
         Choose a default selection for the node if it does not have
         one. Also make sure that the model is consistent with
         selection.
@@ -240,7 +240,7 @@ class ChainNode(ModelNode):
         def expand_device(d):
             drum_pad = d.view.selected_drum_pad if d.can_have_drum_pads else None
             if drum_pad:
-                drum_pad_name = drum_pad.name if len(drum_pad.chains) > 0 else u'EmptyPad'
+                drum_pad_name = drum_pad.name if len(drum_pad.chains) > 0 else 'EmptyPad'
                 return [(d.name, d), (drum_pad_name, drum_pad)]
             else:
                 return [(d.name, d)]
@@ -298,13 +298,13 @@ class ChainNode(ModelNode):
                 return value
             return bool(on_off.value)
 
-    @listens(u'devices')
+    @listens('devices')
     def _on_devices_changed_in_live(self):
         self._update_children()
         self._update_selected_child()
         self._update_child_slots()
 
-    @listens(u'selected_device')
+    @listens('selected_device')
     def _on_selected_device_changed_in_live(self):
         self._update_selected_child()
 
@@ -320,14 +320,14 @@ class ChainNode(ModelNode):
         self._child_state_slots.disconnect()
         self._selected_drum_pad_slots.disconnect()
         for device in map(second, self.children):
-            self._child_name_slots.register_slot(device, self._update_children, u'name')
+            self._child_name_slots.register_slot(device, self._update_children, 'name')
             if isinstance(device, Live.DrumPad.DrumPad):
-                self._child_state_slots.register_slot(device, partial(self._update_state, device), u'mute')
+                self._child_state_slots.register_slot(device, partial(self._update_state, device), 'mute')
             elif isinstance(device, Live.Device.Device):
                 if device.can_have_drum_pads:
-                    self._selected_drum_pad_slots.register_slot(device.view, self._on_selected_drum_pad, u'selected_drum_pad')
+                    self._selected_drum_pad_slots.register_slot(device.view, self._on_selected_drum_pad, 'selected_drum_pad')
                 if device.parameters:
-                    self._child_state_slots.register_slot(device.parameters[0], partial(self._update_state, device), u'value')
+                    self._child_state_slots.register_slot(device.parameters[0], partial(self._update_state, device), 'value')
 
 
 class TrackNode(ChainNode):
@@ -343,9 +343,9 @@ class SongNode(ModelNode):
         super(SongNode, self).__init__(*a, **k)
         raise session_ring is not None or AssertionError
         self._session_ring = session_ring
-        self.register_slot(self._object, self._update_children, u'visible_tracks')
-        self.register_slot(self._object, self._update_children, u'return_tracks')
-        self.register_slot(self._object.view, self._update_selected_child, u'selected_track')
+        self.register_slot(self._object, self._update_children, 'visible_tracks')
+        self.register_slot(self._object, self._update_children, 'return_tracks')
+        self.register_slot(self._object.view, self._update_selected_child, 'selected_track')
         self._update_children()
         self._update_selected_child()
 
@@ -365,7 +365,7 @@ class SimpleDeviceNode(ModelNode):
 
     def __init__(self, device_bank_registry = None, banking_info = None, *a, **k):
         super(SimpleDeviceNode, self).__init__(*a, **k)
-        raise device_bank_registry or AssertionError(u'Need a device bank registry.')
+        raise device_bank_registry or AssertionError('Need a device bank registry.')
         self._mute_next_update = False
         self._device_bank_registry = device_bank_registry
         self._banking_info = banking_info
@@ -374,11 +374,11 @@ class SimpleDeviceNode(ModelNode):
         self._update_children()
         self._update_selected_child()
 
-    @listens(u'device_bank')
+    @listens('device_bank')
     def _on_device_bank_changed(self, device, bank):
         self._update_selected_child()
 
-    @listens(u'parameters')
+    @listens('parameters')
     def _on_device_parameters_changed(self):
         if self._children != self._get_children_from_model():
             self._update_children()
@@ -406,8 +406,8 @@ class RackNode(ModelNode):
 
     def __init__(self, *a, **k):
         super(RackNode, self).__init__(*a, **k)
-        self.register_slot(self._object, self._update_children, u'chains')
-        self.register_slot(self._object.view, self._update_selected_child, u'selected_chain')
+        self.register_slot(self._object, self._update_children, 'chains')
+        self.register_slot(self._object.view, self._update_selected_child, 'selected_chain')
         self._update_children()
         self._update_selected_child()
 

@@ -1,5 +1,4 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial
 from itertools import izip_longest
 from _Framework.Util import clamp
@@ -8,14 +7,14 @@ from _Framework.MixerComponent import MixerComponent
 from _Framework.ChannelStripComponent import ChannelStripComponent
 from _Framework.Control import RadioButtonControl, RadioButtonGroup, ControlList
 from .consts import FADER_TYPE_STANDARD, FADER_TYPE_BIPOLAR, VOLUME_MAP_CHANNEL, PAN_MAP_CHANNEL, SENDS_MAP_CHANNEL, FADER_LAYOUT_SYSEX_BYTE
-SEND_COLORS = ((u'Sends.A', u'Sends.AAvail'),
- (u'Sends.B', u'Sends.BAvail'),
- (u'Sends.C', u'Sends.CAvail'),
- (u'Sends.D', u'Sends.DAvail'),
- (u'Sends.E', u'Sends.EAvail'),
- (u'Sends.F', u'Sends.FAvail'),
- (u'Sends.G', u'Sends.GAvail'),
- (u'Sends.H', u'Sends.HAvail'))
+SEND_COLORS = (('Sends.A', 'Sends.AAvail'),
+ ('Sends.B', 'Sends.BAvail'),
+ ('Sends.C', 'Sends.CAvail'),
+ ('Sends.D', 'Sends.DAvail'),
+ ('Sends.E', 'Sends.EAvail'),
+ ('Sends.F', 'Sends.FAvail'),
+ ('Sends.G', 'Sends.GAvail'),
+ ('Sends.H', 'Sends.HAvail'))
 
 class SpecialRadioButtonGroup(ControlList, RadioButtonControl):
 
@@ -50,14 +49,14 @@ class SpecialMixerComponent(MixerComponent):
         for strip, control in izip_longest(self._channel_strips, controls or []):
             if control:
                 control.set_channel(VOLUME_MAP_CHANNEL)
-                control.set_light_and_type(u'Mixer.Volume', FADER_TYPE_STANDARD)
+                control.set_light_and_type('Mixer.Volume', FADER_TYPE_STANDARD)
             strip.set_volume_control(control)
 
     def set_pan_controls(self, controls):
         for strip, control in izip_longest(self._channel_strips, controls or []):
             if control:
                 control.set_channel(PAN_MAP_CHANNEL)
-                control.set_light_and_type(u'Mixer.Pan', FADER_TYPE_BIPOLAR)
+                control.set_light_and_type('Mixer.Pan', FADER_TYPE_BIPOLAR)
             strip.set_pan_control(control)
 
     def set_send_controls(self, controls):
@@ -75,28 +74,28 @@ class SpecialMixerComponent(MixerComponent):
         for strip, button in izip_longest(self._channel_strips, buttons or []):
             if button:
                 button.reset_state()
-                button.set_on_off_values(u'Mixer.ArmOn', u'Mixer.ArmOff')
+                button.set_on_off_values('Mixer.ArmOn', 'Mixer.ArmOff')
             strip.set_arm_button(button)
 
     def set_solo_buttons(self, buttons):
         for strip, button in izip_longest(self._channel_strips, buttons or []):
             if button:
                 button.reset_state()
-                button.set_on_off_values(u'Mixer.SoloOn', u'Mixer.SoloOff')
+                button.set_on_off_values('Mixer.SoloOn', 'Mixer.SoloOff')
             strip.set_solo_button(button)
 
     def set_mute_buttons(self, buttons):
         for strip, button in izip_longest(self._channel_strips, buttons or []):
             if button:
                 button.reset_state()
-                button.set_on_off_values(u'Mixer.MuteOff', u'Mixer.MuteOn')
+                button.set_on_off_values('Mixer.MuteOff', 'Mixer.MuteOn')
             strip.set_mute_button(button)
 
     def set_track_select_buttons(self, buttons):
         for strip, button in izip_longest(self._channel_strips, buttons or []):
             if button:
                 button.reset_state()
-                button.set_on_off_values(u'Mixer.Selected', u'Mixer.Unselected')
+                button.set_on_off_values('Mixer.Selected', 'Mixer.Unselected')
             strip.set_select_button(button)
 
     @send_select_buttons.checked
@@ -125,7 +124,7 @@ class SpecialChanStripComponent(ChannelStripComponent):
 
     def __init__(self, *a, **k):
         super(SpecialChanStripComponent, self).__init__(*a, **k)
-        self.empty_color = u'DefaultButton.Disabled'
+        self.empty_color = 'DefaultButton.Disabled'
 
     def _arm_value(self, value):
         super(SpecialChanStripComponent, self)._arm_value(value)
@@ -136,5 +135,5 @@ class SpecialChanStripComponent(ChannelStripComponent):
         super(SpecialChanStripComponent, self)._select_value(value)
         if self.is_enabled() and value and self._track:
             view = self.application().view
-            if view.is_view_visible(u'Detail') and not view.is_view_visible(u'Detail/DeviceChain'):
-                view.show_view(u'Detail/DeviceChain')
+            if view.is_view_visible('Detail') and not view.is_view_visible('Detail/DeviceChain'):
+                view.show_view('Detail/DeviceChain')

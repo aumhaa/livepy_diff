@@ -1,9 +1,9 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from os import path
-VERSION_PREFIX = str(u'10F4000041444139204E69636F6C6C73')
+VERSION_PREFIX = '10F4000041444139204E69636F6C6C73'
 NUM_VERSION_BYTES = 8
-PRESET_FILE_NAME = u'Preset.syx'
+PRESET_FILE_NAME = 'Preset.syx'
 
 def get_version_number_from_string(version_string):
     result = 0.0
@@ -26,7 +26,7 @@ def get_provided_firmware_version():
     result = 0.0
     try:
         mod_path = path.dirname(path.realpath(__file__))
-        with open(path.join(mod_path, PRESET_FILE_NAME), u'r') as f:
+        with open(path.join(mod_path, PRESET_FILE_NAME), 'r') as f:
             version_string = get_version_string_from_file_content(f.read())
             result = get_version_number_from_string(version_string)
     except IOError:

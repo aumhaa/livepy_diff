@@ -1,10 +1,9 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.SessionComponent import SessionComponent
 from _Framework.ButtonElement import ButtonElement
 
 class ShiftableSessionComponent(SessionComponent):
-    u""" Special session class that reassigns controls based on a shift button """
+    """ Special session class that reassigns controls based on a shift button """
 
     def __init__(self, num_tracks, num_scenes):
         self._shift_button = None

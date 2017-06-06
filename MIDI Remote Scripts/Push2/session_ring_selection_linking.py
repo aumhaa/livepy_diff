@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from ableton.v2.base.event import EventObject, listens
 from ableton.v2.base.dependency import depends
 from ableton.v2.base.util import index_if
@@ -16,7 +16,7 @@ class SessionRingSelectionLinking(EventObject):
         self._song = song
         self._on_selection_changed.subject = selection_changed_notifier
 
-    @listens(u'selection_changed')
+    @listens('selection_changed')
     def _on_selection_changed(self):
         if self._song.view.selected_track == self._song.master_track:
             return

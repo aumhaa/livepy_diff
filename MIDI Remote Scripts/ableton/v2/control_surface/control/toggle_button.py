@@ -1,10 +1,10 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from .control import Connectable, control_event, control_color
 from .button import ButtonControlBase
 
 class ToggleButtonControl(ButtonControlBase):
-    u"""
+    """
     A Control representing a button that can be toggled on and off.
     
     The class is extending
@@ -14,14 +14,14 @@ class ToggleButtonControl(ButtonControlBase):
     :meth:`State.connect_property` can be used to connect the Control with a boolean
     property.
     """
-    toggled = control_event(u'toggled')
+    toggled = control_event('toggled')
 
     class State(ButtonControlBase.State, Connectable):
-        u"""
+        """
         State-full representation of the Control.
         """
-        untoggled_color = control_color(u'DefaultButton.Off')
-        toggled_color = control_color(u'DefaultButton.On')
+        untoggled_color = control_color('DefaultButton.Off')
+        toggled_color = control_color('DefaultButton.On')
         requires_listenable_connected_property = True
 
         def __init__(self, untoggled_color = None, toggled_color = None, *a, **k):
@@ -34,7 +34,7 @@ class ToggleButtonControl(ButtonControlBase):
 
         @property
         def is_toggled(self):
-            u"""
+            """
             Represents the buttons toggled state. If a property is connected to the
             Control, it will not be affected by setting is_toggled.
             """
@@ -47,7 +47,7 @@ class ToggleButtonControl(ButtonControlBase):
                 self._send_current_color()
 
         def connect_property(self, *a):
-            u"""
+            """
             Creates a bidirectional binding between a boolean property and the buttons
             toggled state.
             """
@@ -63,5 +63,5 @@ class ToggleButtonControl(ButtonControlBase):
         def _on_pressed(self):
             super(ToggleButtonControl.State, self)._on_pressed()
             self._is_toggled = not self._is_toggled
-            self._call_listener(u'toggled', self._is_toggled)
+            self._call_listener('toggled', self._is_toggled)
             self.connected_property_value = self.is_toggled

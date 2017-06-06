@@ -1,5 +1,4 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from itertools import izip_longest
 from _Framework.MixerComponent import MixerComponent
 from _Framework.ModesComponent import ModesComponent, LayerMode, LatchingBehaviour
@@ -13,14 +12,14 @@ class SendSelectButtonBehaviour(LatchingBehaviour):
         self._mixer = mixer
 
     def press_immediate(self, component, mode):
-        if component.selected_mode == u'sends':
+        if component.selected_mode == 'sends':
             self._mixer.selected_send_index += 2
         else:
             super(SendSelectButtonBehaviour, self).press_immediate(component, mode)
 
 
 class SpecialMixerComponent(MixerComponent):
-    __subject_events__ = (u'selected_send_index', u'selected_mixer_mode')
+    __subject_events__ = ('selected_send_index', 'selected_mixer_mode')
 
     def __init__(self, num_tracks, mode_layer = None, pan_volume_layer = None, sends_layer = None, *a, **k):
         super(SpecialMixerComponent, self).__init__(num_tracks, *a, **k)
@@ -28,9 +27,9 @@ class SpecialMixerComponent(MixerComponent):
         self._send_controls = None
         self._selected_send_index = 0
         self._modes = self.register_component(ModesComponent())
-        self._modes.add_mode(u'pan_volume', [LayerMode(self, pan_volume_layer)])
-        self._modes.add_mode(u'sends', [LayerMode(self, sends_layer)], behaviour=SendSelectButtonBehaviour(self))
-        self._modes.selected_mode = u'pan_volume'
+        self._modes.add_mode('pan_volume', [LayerMode(self, pan_volume_layer)])
+        self._modes.add_mode('sends', [LayerMode(self, sends_layer)], behaviour=SendSelectButtonBehaviour(self))
+        self._modes.selected_mode = 'pan_volume'
         self._modes.layer = mode_layer
         self._on_visible_tracks.subject = self.song()
         self._on_selected_mixer_mode.subject = self._modes
@@ -79,11 +78,11 @@ class SpecialMixerComponent(MixerComponent):
             skipped_sends = [ None for _ in xrange(self._selected_send_index) ]
             channel_strip.set_send_controls(skipped_sends + send_controls)
 
-    @subject_slot(u'visible_tracks')
+    @subject_slot('visible_tracks')
     def _on_visible_tracks(self):
         self._clamp_send_index()
         self._update_send_controls()
 
-    @subject_slot(u'selected_mode')
+    @subject_slot('selected_mode')
     def _on_selected_mixer_mode(self, mode):
         self.notify_selected_mixer_mode(mode)

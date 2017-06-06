@@ -1,9 +1,8 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from .ConfigurableButtonElement import ConfigurableButtonElement
 
 class MultiButtonElement(ConfigurableButtonElement):
-    u"""
+    """
     Special button element for use with a button on a controller that sends
     the same MIDI message on different MIDI channels at different times.
     
@@ -11,10 +10,10 @@ class MultiButtonElement(ConfigurableButtonElement):
     and also receives values from.
     """
 
-    def __init__(self, slave_channels, is_momentary, msg_type, channel, identifier, skin = None, default_states = None, name = u'', color_slaves = False, *a, **k):
+    def __init__(self, slave_channels, is_momentary, msg_type, channel, identifier, skin = None, default_states = None, name = '', color_slaves = False, *a, **k):
         super(MultiButtonElement, self).__init__(is_momentary, msg_type, channel, identifier, skin, default_states, *a, **k)
         self.name = name
-        self._slave_buttons = [ SlaveButtonElement(self, is_momentary, msg_type, slave_channel, identifier, skin, (default_states if color_slaves else None), name=(name + u'_ch_' + str(slave_channel + 1)), *a, **k) for slave_channel in slave_channels ]
+        self._slave_buttons = [ SlaveButtonElement(self, is_momentary, msg_type, slave_channel, identifier, skin, (default_states if color_slaves else None), name=(name + '_ch_' + str(slave_channel + 1)), *a, **k) for slave_channel in slave_channels ]
 
     def reset(self):
         super(MultiButtonElement, self).reset()
@@ -38,7 +37,7 @@ class MultiButtonElement(ConfigurableButtonElement):
 
 
 class SlaveButtonElement(ConfigurableButtonElement):
-    u"""
+    """
     Special button element that forwards all values it receives back
     to its associated master button.
     """

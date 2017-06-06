@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 import Live
 from ableton.v2.base import clamp, listenable_property, listens
 from ableton.v2.control_surface import Component, CompoundComponent
@@ -16,14 +16,14 @@ QUANTIZATION_OPTIONS = [RecordingQuantization.rec_q_quarter,
  RecordingQuantization.rec_q_sixtenth_sixtenth_triplet,
  RecordingQuantization.rec_q_thirtysecond]
 DEFAULT_QUANTIZATION_INDEX = QUANTIZATION_OPTIONS.index(RecordingQuantization.rec_q_sixtenth)
-QUANTIZATION_NAMES = (u'1/4', u'1/8', u'1/8T', u'1/8+T', u'1/16', u'1/16T', u'1/16+T', u'1/32')
+QUANTIZATION_NAMES = ('1/4', '1/8', '1/8T', '1/8+T', '1/16', '1/16T', '1/16+T', '1/32')
 QUANTIZATION_NAMES_UNICODE = (u'\xbc', u'\u215b', u'\u215bT', u'\u215b+T', u'\ue001', u'\ue001T', u'\ue001+T', u'\ue002')
 
 def quantize_amount_to_string(amount):
-    u"""
+    """
     Converts a quantize amount [0. to 1.] into a string in percent
     """
-    return u'%i%%' % int(amount * 100.0)
+    return '%i%%' % int(amount * 100.0)
 
 
 class QuantizationSettingsComponent(Component):
@@ -31,7 +31,7 @@ class QuantizationSettingsComponent(Component):
     quantize_to_encoder = StepEncoderControl()
     quantize_amount_encoder = EncoderControl()
     record_quantization_encoder = StepEncoderControl()
-    record_quantization_toggle_button = ToggleButtonControl(toggled_color=u'Recording.FixedLengthRecordingOn', untoggled_color=u'Recording.FixedLengthRecordingOff')
+    record_quantization_toggle_button = ToggleButtonControl(toggled_color='Recording.FixedLengthRecordingOn', untoggled_color='Recording.FixedLengthRecordingOff')
     quantize_amount = listenable_property.managed(1.0)
     quantize_to_index = listenable_property.managed(DEFAULT_QUANTIZATION_INDEX)
     record_quantization_index = listenable_property.managed(DEFAULT_QUANTIZATION_INDEX)
@@ -88,11 +88,11 @@ class QuantizationSettingsComponent(Component):
     def record_quantization_toggle_button(self, value, button):
         self._update_record_quantization()
 
-    @listens(u'swing_amount')
+    @listens('swing_amount')
     def __on_swing_amount_changed(self):
         self.notify_swing_amount()
 
-    @listens(u'midi_recording_quantization')
+    @listens('midi_recording_quantization')
     def __on_record_quantization_changed(self):
         quant_value = self.song.midi_recording_quantization
         quant_on = quant_value != RecordingQuantization.rec_q_no_q

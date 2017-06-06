@@ -1,11 +1,11 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from ableton.v2.base import listens, task
 from ableton.v2.control_surface import Component
 from . import sysex
 
 class UserComponentBase(Component):
-    __events__ = (u'mode', u'before_mode_sent', u'after_mode_sent')
+    __events__ = ('mode', 'before_mode_sent', 'after_mode_sent')
     defer_sysex_sending = False
 
     def __init__(self, value_control = None, *a, **k):
@@ -58,7 +58,7 @@ class UserComponentBase(Component):
         self._value_control.send_value((mode,))
         self.notify_after_mode_sent(mode)
 
-    @listens(u'value')
+    @listens('value')
     def __on_value(self, value):
         mode = value[0]
         self._selected_mode = mode

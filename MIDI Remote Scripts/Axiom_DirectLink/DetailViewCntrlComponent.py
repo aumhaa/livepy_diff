@@ -1,11 +1,10 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.ButtonElement import ButtonElement
 
 class DetailViewCntrlComponent(ControlSurfaceComponent):
-    u""" Component that can navigate the selection of devices """
+    """ Component that can navigate the selection of devices """
 
     def __init__(self):
         ControlSurfaceComponent.__init__(self)
@@ -52,11 +51,11 @@ class DetailViewCntrlComponent(ControlSurfaceComponent):
         if self.is_enabled():
             if not sender.is_momentary() or value != 0:
                 modifier_pressed = True
-                if not self.application().view.is_view_visible(u'Detail') or not self.application().view.is_view_visible(u'Detail/DeviceChain'):
-                    self.application().view.show_view(u'Detail')
-                    self.application().view.show_view(u'Detail/DeviceChain')
+                if not self.application().view.is_view_visible('Detail') or not self.application().view.is_view_visible('Detail/DeviceChain'):
+                    self.application().view.show_view('Detail')
+                    self.application().view.show_view('Detail/DeviceChain')
                 else:
                     direction = Live.Application.Application.View.NavDirection.left
                     if sender == self._right_button:
                         direction = Live.Application.Application.View.NavDirection.right
-                    self.application().view.scroll_view(direction, u'Detail/DeviceChain', not modifier_pressed)
+                    self.application().view.scroll_view(direction, 'Detail/DeviceChain', not modifier_pressed)

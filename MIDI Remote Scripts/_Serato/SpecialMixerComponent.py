@@ -1,8 +1,7 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.MixerComponent import MixerComponent
-from .SpecialChanStripComponent import SpecialChanStripComponent
+from SpecialChanStripComponent import SpecialChanStripComponent
 
 class SpecialMixerComponent(MixerComponent):
 

@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface
 from _Framework.InputControlElement import *
@@ -12,13 +12,13 @@ from _Framework.ClipSlotComponent import ClipSlotComponent
 from _Framework.SceneComponent import SceneComponent
 from _Framework.SessionComponent import SessionComponent
 from _Framework.ChannelTranslationSelector import ChannelTranslationSelector
-from .ViewTogglerComponent import ViewTogglerComponent
-from .MixerComponent import MixerComponent
-from .TransportComponent import TransportComponent
+from ViewTogglerComponent import ViewTogglerComponent
+from MixerComponent import MixerComponent
+from TransportComponent import TransportComponent
 NUM_TRACKS = 12
 
 class VCM600(ControlSurface):
-    u""" Script for Vestax's VCM600 Controller """
+    """ Script for Vestax's VCM600 Controller """
 
     def __init__(self, c_instance):
         ControlSurface.__init__(self, c_instance)

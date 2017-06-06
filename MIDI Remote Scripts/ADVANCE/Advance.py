@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface
 from _Framework.Layer import Layer
@@ -29,16 +29,16 @@ class Advance(ControlSurface):
     def __init__(self, *a, **k):
         super(Advance, self).__init__(*a, **k)
         with self.component_guard():
-            encoders = ButtonMatrixElement(rows=[[ make_encoder(index + 22, u'Encoder_%d' % index) for index in xrange(8) ]])
-            pads = ButtonMatrixElement(rows=[ [ make_button(identifier, u'Pad_%d_%d' % (col, row)) for col, identifier in enumerate(row_ids) ] for row, row_ids in enumerate(PAD_IDS) ])
+            encoders = ButtonMatrixElement(rows=[[ make_encoder(index + 22, 'Encoder_%d' % index) for index in xrange(8) ]])
+            pads = ButtonMatrixElement(rows=[ [ make_button(identifier, 'Pad_%d_%d' % (col, row)) for col, identifier in enumerate(row_ids) ] for row, row_ids in enumerate(PAD_IDS) ])
             device = DeviceComponent(is_enabled=False, layer=Layer(parameter_controls=encoders), device_selection_follows_track_selection=True)
             device.set_enabled(True)
             self.set_device_component(device)
             drums = DrumRackComponent(is_enabled=False, layer=Layer(pads=pads))
             drums.set_enabled(True)
-            play_button = make_button(118, u'Play_Button', MIDI_CC_TYPE, 0)
-            stop_button = make_button(117, u'Stop_Button', MIDI_CC_TYPE, 0)
-            record_button = make_button(119, u'Record_Button', MIDI_CC_TYPE, 0)
-            loop_button = make_button(114, u'Loop_Button', MIDI_CC_TYPE, 0)
+            play_button = make_button(118, 'Play_Button', MIDI_CC_TYPE, 0)
+            stop_button = make_button(117, 'Stop_Button', MIDI_CC_TYPE, 0)
+            record_button = make_button(119, 'Record_Button', MIDI_CC_TYPE, 0)
+            loop_button = make_button(114, 'Loop_Button', MIDI_CC_TYPE, 0)
             transport = TransportComponent(is_enabled=False, layer=Layer(play_button=play_button, stop_button=stop_button, record_button=record_button, loop_button=loop_button))
             transport.set_enabled(True)

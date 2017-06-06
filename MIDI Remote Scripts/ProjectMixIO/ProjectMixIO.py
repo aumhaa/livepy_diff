@@ -1,5 +1,4 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from MackieControl.consts import *
 from MackieControl.MainDisplay import MainDisplay
 from MackieControl.MainDisplayController import MainDisplayController
@@ -11,7 +10,7 @@ from MackieControl.Transport import Transport
 import Live
 
 class ProjectMixIO:
-    u"""Subset of the Mackie Control Script, that works with the ProjectMix in
+    """Subset of the Mackie Control Script, that works with the ProjectMix in
        Live Mackie Control Mode.
     """
 
@@ -52,15 +51,15 @@ class ProjectMixIO:
         pass
 
     def application(self):
-        u"""returns a reference to the application that we are running in"""
+        """returns a reference to the application that we are running in"""
         return Live.Application.get_application()
 
     def song(self):
-        u"""returns a reference to the Live Song that we do interact with"""
+        """returns a reference to the Live Song that we do interact with"""
         return self.__c_instance.song()
 
     def handle(self):
-        u"""returns a handle to the c_interface that is needed when forwarding MIDI events
+        """returns a handle to the c_interface that is needed when forwarding MIDI events
            via the MIDI map
         """
         return self.__c_instance.handle()

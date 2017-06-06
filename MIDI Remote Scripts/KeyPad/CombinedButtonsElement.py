@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import with_statement
 from itertools import imap
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
 from _Framework.ButtonElement import OFF_VALUE
@@ -20,7 +20,7 @@ class CombinedButtonsElement(ButtonMatrixElement):
     def on_nested_control_element_value(self, value, sender):
         with self._is_pressed():
             self.notify_value(value)
-        if value != OFF_VALUE and not getattr(sender, u'is_momentary', const(False))():
+        if value != OFF_VALUE and not getattr(sender, 'is_momentary', const(False))():
             self.notify_value(OFF_VALUE)
 
     def send_value(self, value):

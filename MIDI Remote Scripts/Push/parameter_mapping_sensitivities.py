@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from pushbase.parameter_provider import is_parameter_quantized
 CONTINUOUS_MAPPING_SENSITIVITY = 2.0
 FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY = 0.01

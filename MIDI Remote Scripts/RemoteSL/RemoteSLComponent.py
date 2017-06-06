@@ -1,9 +1,8 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
-from .consts import *
+from consts import *
 
 class RemoteSLComponent:
-    u"""Baseclass for a subcomponent of the RemoteSL.
+    """Baseclass for a subcomponent of the RemoteSL.
     Just defines some handy shortcuts to the main scripts functions...
     for more details about the methods, see the RemoteSLs doc strings
     """

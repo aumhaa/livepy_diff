@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 import Live
 from ableton.v2.base import const, depends, forward_property, inject, listens, liveobj_valid
 from ableton.v2.control_surface import Component
@@ -96,7 +96,7 @@ class DuplicateSceneComponent(Component, Messenger):
         self._scene_buttons = buttons
         self._on_scene_value.subject = buttons
 
-    @listens(u'value')
+    @listens('value')
     def _on_scene_value(self, value, index, _, is_momentary):
         if self.is_enabled() and (value or not is_momentary):
             try:
@@ -168,7 +168,7 @@ class SpecialSceneComponent(SceneComponent, Messenger):
 
 
 class SpecialSessionComponent(SessionComponent):
-    u"""
+    """
     Special session subclass that handles ConfigurableButtons
     and has a button to fire the selected clip slot.
     """
@@ -187,15 +187,15 @@ class SpecialSessionComponent(SessionComponent):
         self._duplicate_enabler = self.register_component(EnablingModesComponent(component=self._duplicate))
         self._end_initialisation()
 
-    duplicate_layer = forward_property(u'_duplicate')(u'layer')
+    duplicate_layer = forward_property('_duplicate')('layer')
 
     @duplicate_button.pressed
     def duplicate_button(self, button):
-        self._duplicate_enabler.selected_mode = u'enabled'
+        self._duplicate_enabler.selected_mode = 'enabled'
 
     @duplicate_button.released
     def duplicate_button(self, button):
-        self._duplicate_enabler.selected_mode = u'disabled'
+        self._duplicate_enabler.selected_mode = 'disabled'
         self._clip_copy_handler.stop_copying()
 
     def set_slot_launch_button(self, button):
@@ -213,11 +213,11 @@ class SpecialSessionComponent(SessionComponent):
             touch_strip.send_state([ TouchStripStates.STATE_OFF for _ in xrange(touch_strip.state_count) ])
         self._on_touch_strip_value.subject = touch_strip
 
-    @listens(u'value')
+    @listens('value')
     def _on_touch_strip_value(self, value):
         pass
 
-    @listens(u'value')
+    @listens('value')
     def _on_slot_launch_value(self, value):
         if self.is_enabled():
             if value != 0 or not self._slot_launch_button.is_momentary():

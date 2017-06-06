@@ -1,5 +1,4 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 import libInterprocessCommsAPIPython
 
 class PySCAClipControl:
@@ -13,7 +12,7 @@ class PySCAClipControl:
         pass
 
     def interface_module(self):
-        u""" Simple getter to the module to avoid import conflicts in the unit tests """
+        """ Simple getter to the module to avoid import conflicts in the unit tests """
         return libInterprocessCommsAPIPython
 
     def PySCA_InitializeClipControl(self):

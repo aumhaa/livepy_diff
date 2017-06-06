@@ -1,10 +1,9 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
-from .MackieControlComponent import *
+from MackieControlComponent import *
 from itertools import chain
 
 class ChannelStrip(MackieControlComponent):
-    u"""Represets a Channel Strip of the Mackie Control, which consists out of the"""
+    """Represets a Channel Strip of the Mackie Control, which consists out of the"""
 
     def __init__(self, main_script, strip_index):
         MackieControlComponent.__init__(self, main_script)
@@ -55,7 +54,7 @@ class ChannelStrip(MackieControlComponent):
         return self.__stack_offset
 
     def set_stack_offset(self, offset):
-        u"""This is the offset that one gets by 'stacking' several MackieControl XTs:
+        """This is the offset that one gets by 'stacking' several MackieControl XTs:
            the first is at index 0, the second at 8, etc ...
         """
         self.__stack_offset = offset
@@ -280,7 +279,7 @@ class ChannelStrip(MackieControlComponent):
             all_tracks = tuple(self.song().visible_tracks) + tuple(self.song().return_tracks)
             if self.song().view.selected_track != all_tracks[self.__assigned_track_index()]:
                 self.song().view.selected_track = all_tracks[self.__assigned_track_index()]
-            elif self.application().view.is_view_visible(u'Arranger'):
+            elif self.application().view.is_view_visible('Arranger'):
                 if self.__assigned_track:
                     self.__assigned_track.view.is_collapsed = not self.__assigned_track.view.is_collapsed
 

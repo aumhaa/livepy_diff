@@ -1,11 +1,10 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from functools import partial
 from ableton.v2.base import find_if, nop, listens, liveobj_valid, listenable_property, NamedTuple
 from ableton.v2.control_surface.control import control_matrix, ButtonControl
 from ableton.v2.control_surface.components import DrumGroupComponent
 from .consts import MessageBoxText, DISTANT_FUTURE
-from .instrument_component import SelectedNotesProvider
 from .matrix_maps import PAD_FEEDBACK_CHANNEL, NON_FEEDBACK_CHANNEL
 from .message_box_component import Messenger
 from .pad_control import PadControl
@@ -50,7 +49,7 @@ class DrumPadCopyHandler(object):
 
 
 class DrumGroupComponent(SlideableTouchStripComponent, DrumGroupComponent, Messenger):
-    u"""
+    """
     Class representing a drum group pads in a matrix.
     """
     matrix = control_matrix(PadControl)
@@ -61,8 +60,6 @@ class DrumGroupComponent(SlideableTouchStripComponent, DrumGroupComponent, Messe
         self._copy_handler = self._make_copy_handler()
         self._notification_reference = partial(nop, None)
         self._quantizer = quantizer
-        self.selected_notes_provider = self.register_disconnectable(SelectedNotesProvider())
-        self._update_selected_drum_pad()
 
     position_count = 32
     page_length = 4
@@ -79,12 +76,11 @@ class DrumGroupComponent(SlideableTouchStripComponent, DrumGroupComponent, Messe
         self.notify_contents()
 
     def quantize_pitch(self, note):
-        self._quantizer.quantize_pitch(note, u'pad')
+        self._quantizer.quantize_pitch(note, 'pad')
 
     def _update_selected_drum_pad(self):
         super(DrumGroupComponent, self)._update_selected_drum_pad()
-        if liveobj_valid(self._selected_drum_pad):
-            self.selected_notes_provider.selected_notes = [self._selected_drum_pad.note]
+        self.notify_selected_note()
         self.notify_selected_target_note()
 
     def _update_assigned_drum_pads(self):
@@ -134,7 +130,7 @@ class DrumGroupComponent(SlideableTouchStripComponent, DrumGroupComponent, Messe
         if self._notification_reference() is not None:
             self._notification_reference().hide()
 
-    @listens(u'chains')
+    @listens('chains')
     def _on_chains_changed(self):
         self._update_led_feedback()
         self.notify_contents()
@@ -165,9 +161,15 @@ class DrumGroupComponent(SlideableTouchStripComponent, DrumGroupComponent, Messe
         self._update_sensitivity_profile()
 
     def _update_sensitivity_profile(self):
-        profile = u'default' if self._takeover_pads or self.pressed_pads else u'drums'
+        profile = 'default' if self._takeover_pads or self._selected_pads else 'drums'
         for button in self.matrix:
             button.sensitivity_profile = profile
+
+    @listenable_property
+    def selected_note(self):
+        if liveobj_valid(self._selected_drum_pad):
+            return self._selected_drum_pad.note
+        return -1
 
     @listenable_property
     def selected_target_note(self):

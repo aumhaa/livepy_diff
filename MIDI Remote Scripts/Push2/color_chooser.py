@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from ableton.v2.base import liveobj_changed, liveobj_valid, nop
 from ableton.v2.control_surface import Component
 from ableton.v2.control_surface.control import ButtonControl, control_matrix
@@ -43,15 +43,15 @@ class ColorChooserComponent(Component, Messenger):
             else:
                 self._render_color_palette(translate_color_index(obj.color_index))
                 self.set_enabled(True)
-                self._notification_ref = self.show_notification(u'Select a color for: %s' % obj.name, notification_time=-1)
+                self._notification_ref = self.show_notification('Select a color for: %s' % obj.name, notification_time=-1)
 
     @matrix.pressed
     def matrix(self, button):
         if liveobj_valid(self.object):
             if button.color_index is None:
-                if hasattr(self.object, u'is_auto_colored'):
+                if hasattr(self.object, 'is_auto_colored'):
                     self.object.is_auto_colored = True
-                    self.show_notification(u'Color automatically enabled for: %s' % self.object.name)
+                    self.show_notification('Color automatically enabled for: %s' % self.object.name)
             else:
                 self.object.color_index = inverse_translate_color_index(button.color_index)
             self.object = None

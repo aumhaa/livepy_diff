@@ -1,11 +1,11 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 playing_profile = 0
 default_profile = 1
 loop_selector_profile = 2
 
 def index_to_pad_coordinate(index):
-    u"""
+    """
     Maps a linear range to appropriate x and y coordinates of the pad matrix.
     The coordinates are 1-based, since the pad sensitivity sysex commands expect this
     when setting individual pads.
@@ -15,7 +15,7 @@ def index_to_pad_coordinate(index):
 
 
 def pad_parameter_sender(global_control, pad_control):
-    u"""
+    """
     Sends the sensitivity parameters for a given pad, or all pads
     (pad == None) over the given SysexElement.
     """

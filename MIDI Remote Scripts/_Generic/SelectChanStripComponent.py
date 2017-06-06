@@ -1,10 +1,9 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.ChannelStripComponent import ChannelStripComponent
 
 class SelectChanStripComponent(ChannelStripComponent):
-    u""" Subclass of channel strip component that selects tracks that it arms """
+    """ Subclass of channel strip component that selects tracks that it arms """
 
     def __init__(self):
         ChannelStripComponent.__init__(self)

@@ -1,10 +1,10 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from ableton.v2.base import lazy_attribute, NamedTuple
 from .sysex import to_bytes
 
 class PadParameters(NamedTuple):
-    u"""
+    """
     Describes the properties of pad parameters.
     """
     off_threshold = 0
@@ -12,7 +12,7 @@ class PadParameters(NamedTuple):
     gain = 0
     curve1 = 0
     curve2 = 0
-    name = u''
+    name = ''
 
     def __str__(self):
         return self.name
@@ -23,7 +23,7 @@ class PadParameters(NamedTuple):
 
 
 def pad_parameter_sender(global_control, pad_control):
-    u"""
+    """
     Sends the sensitivity parameters for a given pad, or all pads (pad
     == None) over the given ValueControl.
     """

@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 import Live
 from ableton.v2.base import clamp, listens, task
 from ableton.v2.control_surface import Component
@@ -55,12 +55,12 @@ class HardwareSettingsComponent(Component):
         else:
             self._led_brightness_timer.stop()
 
-    @listens(u'led_brightness')
+    @listens('led_brightness')
     def __on_led_brightness_changed(self, value):
         self.stop_fade_in_led_brightness()
         self._led_brightness_element.send_value(value)
 
-    @listens(u'display_brightness')
+    @listens('display_brightness')
     def __on_display_brightness_changed(self, value):
         self._display_brightness_element.send_value(value)
 

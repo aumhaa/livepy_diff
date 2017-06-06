@@ -1,9 +1,8 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
-from ableton.v2.base import depends, listens, liveobj_valid
-from .mixer_utils import is_set_to_split_stereo
+from __future__ import absolute_import, print_function
+from ableton.v2.base import depends, listens
 from .parameter_provider import ParameterProvider
-SEND_PARAMETER_NAMES = (u'Send A', u'Send B', u'Send C', u'Send D', u'Send E', u'Send F', u'Send G', u'Send H', u'Send I', u'Send J', u'Send K', u'Send L')
+TRACK_PARAMETER_NAMES = ('Volume', 'Pan', 'Send A', 'Send B', 'Send C', 'Send D', 'Send E', 'Send F', 'Send G', 'Send H', 'Send I', 'Send J', 'Send K', 'Send L')
 
 def toggle_arm(track_to_arm, song, exclusive = False):
     if track_to_arm.can_be_armed:
@@ -27,35 +26,18 @@ class SelectedTrackParameterProvider(ParameterProvider):
     @property
     def parameters(self):
         if self._track:
-            mixer = self._track.mixer_device
-            params = [mixer.volume]
-            if is_set_to_split_stereo(mixer):
-                params += [mixer.left_split_stereo, mixer.right_split_stereo]
-            else:
-                params += [mixer.panning]
-            params += list(mixer.sends)
-            return [ self._create_parameter_info(p, n) for n, p in zip(self._track_parameter_names(), params) ]
+            params = [self._track.mixer_device.volume, self._track.mixer_device.panning] + list(self._track.mixer_device.sends)
+            return [ self._create_parameter_info(p, n) for n, p in zip(TRACK_PARAMETER_NAMES, params) ]
         return []
-
-    def _track_parameter_names(self):
-        raise liveobj_valid(self._track) or AssertionError
-        names = (u'Volume',)
-        names += (u'L Split', u'R Split') if is_set_to_split_stereo(self._track.mixer_device) else (u'Pan',)
-        return names + SEND_PARAMETER_NAMES
 
     def _create_parameter_info(self, parameter, name):
         raise NotImplementedError()
 
-    @listens(u'visible_tracks')
+    @listens('visible_tracks')
     def _on_visible_tracks(self):
         self.notify_parameters()
 
-    @listens(u'selected_track')
+    @listens('selected_track')
     def _on_selected_track(self):
         self._track = self._on_selected_track.subject.selected_track
-        self._on_panning_mode_changed.subject = self._track.mixer_device if liveobj_valid(self._track) else None
-        self.notify_parameters()
-
-    @listens(u'panning_mode')
-    def _on_panning_mode_changed(self):
         self.notify_parameters()

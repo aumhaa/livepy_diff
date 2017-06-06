@@ -1,10 +1,9 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.MixerComponent import MixerComponent
 from _Framework.ButtonElement import ButtonElement
 
 class ShiftableMixerComponent(MixerComponent):
-    u""" Special mixer class that reassigns controls based on a shift button """
+    """ Special mixer class that reassigns controls based on a shift button """
 
     def __init__(self, num_tracks):
         self._shift_button = None

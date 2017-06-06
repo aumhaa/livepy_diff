@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from collections import OrderedDict
 from itertools import ifilter
 from .control_element import ControlElementClient, NotifyingControlElement
@@ -17,7 +17,7 @@ class NestedElementClient(ControlElementClient):
 
 
 class CompoundElement(NotifyingControlElement, ControlElementClient):
-    u"""
+    """
     Class for managing a set of ControlElements. It is used to take ownership of all its
     registered elements, once the CompoundElement's resource itself is grabbed. Changes
     to the ownership of the owned elements will be notified and the CompoundElement will
@@ -56,14 +56,14 @@ class CompoundElement(NotifyingControlElement, ControlElementClient):
             self.register_control_elements(*control_elements)
 
     def on_nested_control_element_received(self, control):
-        u"""
+        """
         Is called when the CompoundElement owns the registered Control Element.
         Can be overriden to react to ownership changes.
         """
         pass
 
     def on_nested_control_element_lost(self, control):
-        u"""
+        """
         Is called when the CompoundElement does no longer own the registered
         Control Element.
         Can be overriden to react to ownership changes.
@@ -71,7 +71,7 @@ class CompoundElement(NotifyingControlElement, ControlElementClient):
         pass
 
     def on_nested_control_element_value(self, value, control):
-        u"""
+        """
         Is called when an owned Control Element notifies its value event.
         
         By default, the notification is fowarded to the CompoundElements value event
@@ -80,7 +80,7 @@ class CompoundElement(NotifyingControlElement, ControlElementClient):
         self.notify_value(value, control)
 
     def get_control_element_priority(self, element, priority):
-        u"""
+        """
         Override to change priority for control element.
         """
         raise self._has_resource or AssertionError
@@ -152,7 +152,7 @@ class CompoundElement(NotifyingControlElement, ControlElementClient):
             self.unrequest_listen_nested_control_elements()
 
     def request_listen_nested_control_elements(self):
-        u"""
+        """
         By default, the compound control element will listen to its
         nested control elements IFF he himself has listeners.  This is
         important, because for nested InputControlElements, the
@@ -169,7 +169,7 @@ class CompoundElement(NotifyingControlElement, ControlElementClient):
         self._listen_nested_requests += 1
 
     def unrequest_listen_nested_control_elements(self):
-        u"""
+        """
         See request_listen_nested_control_elements()
         """
         if self._listen_nested_requests == 1:
@@ -194,7 +194,7 @@ class CompoundElement(NotifyingControlElement, ControlElementClient):
                 self._nested_control_elements[control] = False
         self.on_nested_control_element_lost(control)
 
-    @listens_group(u'value')
+    @listens_group('value')
     def __on_nested_control_element_value(self, value, sender):
         if self.owns_control_element(sender):
             self.on_nested_control_element_value(value, sender)

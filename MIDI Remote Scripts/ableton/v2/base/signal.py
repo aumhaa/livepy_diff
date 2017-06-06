@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from functools import partial
 from .util import find_if, nop
 
@@ -32,7 +32,7 @@ class IdentifyingSlot(Slot):
 
 
 class Signal(object):
-    u"""
+    """
     A signal object implements the observer pattern.  It can be
     connected to any number of slots (i.e. callbacks). Whenever the
     signal is called, all the slots are called.
@@ -48,7 +48,7 @@ class Signal(object):
         self._combiner = combiner
 
     def connect(self, slot, in_front = False, sender = None):
-        u"""
+        """
         Connects the signal to the slot. Does nothing if the slot is
         already connected. Returns the wrapper object that is used as
         a slot.

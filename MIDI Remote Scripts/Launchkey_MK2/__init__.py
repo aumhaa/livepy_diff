@@ -1,5 +1,4 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 import _Framework.Capabilities as caps
 from .Launchkey_MK2 import Launchkey_MK2
 
@@ -9,7 +8,7 @@ def get_capabilities():
                               32122,
                               123,
                               124,
-                              125], model_name=[u'Launchkey MK2 25', u'Launchkey MK2 49', u'Launchkey MK2 61']),
+                              125], model_name=['Launchkey MK2 25', 'Launchkey MK2 49', 'Launchkey MK2 61']),
      caps.PORTS_KEY: [caps.inport(props=[]),
                       caps.inport(props=[caps.NOTES_CC, caps.SCRIPT, caps.REMOTE]),
                       caps.outport(props=[]),

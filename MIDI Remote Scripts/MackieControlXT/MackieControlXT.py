@@ -1,12 +1,11 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from MackieControl.consts import *
 from MackieControl.MainDisplay import MainDisplay
 from MackieControl.ChannelStrip import ChannelStrip
 import Live
 
 class MackieControlXT:
-    u"""Extension for a Mackie Control.
+    """Extension for a Mackie Control.
        Only works hand in hand with a 'main' Mackie Control as master
     """
 
@@ -147,10 +146,10 @@ class MackieControlXT:
         return False
 
     def suggest_input_port(self):
-        return u''
+        return ''
 
     def suggest_output_port(self):
-        return u''
+        return ''
 
     def suggest_map_mode(self, cc_no, channel):
         result = Live.MidiMap.MapMode.absolute

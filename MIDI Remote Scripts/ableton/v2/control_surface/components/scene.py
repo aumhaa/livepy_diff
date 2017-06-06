@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from itertools import izip
 from ...base import listens, liveobj_valid, liveobj_changed
 from ..compound_component import CompoundComponent
@@ -7,7 +7,7 @@ from ..control import ButtonControl
 from .clip_slot import ClipSlotComponent, is_button_pressed, find_nearest_color
 
 class SceneComponent(CompoundComponent):
-    u"""
+    """
     Class representing a scene in Live
     """
     clip_slot_component_type = ClipSlotComponent
@@ -27,15 +27,15 @@ class SceneComponent(CompoundComponent):
             self._clip_slots.append(new_slot)
             self.register_components(new_slot)
 
-        self._triggered_color = u'Session.SceneTriggered'
-        self._scene_color = u'Session.Scene'
-        self._no_scene_color = u'Session.NoScene'
+        self._triggered_color = 'Session.SceneTriggered'
+        self._scene_color = 'Session.Scene'
+        self._no_scene_color = 'Session.NoScene'
         self._track_offset = 0
         self._select_button = None
         self._delete_button = None
         self.__on_track_list_changed.subject = session_ring
 
-    @listens(u'tracks')
+    @listens('tracks')
     def __on_track_list_changed(self):
         self.update()
 
@@ -163,12 +163,12 @@ class SceneComponent(CompoundComponent):
         if launched and self.song.select_on_launch:
             self.song.view.selected_scene = self._scene
 
-    @listens(u'is_triggered')
+    @listens('is_triggered')
     def __on_is_triggered_changed(self):
         raise liveobj_valid(self._scene) or AssertionError
         self._update_launch_button()
 
-    @listens(u'color')
+    @listens('color')
     def __on_scene_color_changed(self):
         raise liveobj_valid(self._scene) or AssertionError
         self._update_launch_button()

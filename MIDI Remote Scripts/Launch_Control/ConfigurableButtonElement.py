@@ -1,7 +1,6 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from Launchpad.ConfigurableButtonElement import ConfigurableButtonElement as LaunchpadButtonElement
-from . import Colors
+import Colors
 
 class ConfigurableButtonElement(LaunchpadButtonElement):
 

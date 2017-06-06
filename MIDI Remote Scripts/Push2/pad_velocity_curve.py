@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 import math
 from ableton.v2.base import SerializableListenableProperties, chunks, clamp, listenable_property, task
 from ableton.v2.control_surface import Component
@@ -190,9 +190,9 @@ class PadVelocityCurveSender(Component):
         self._chunk_size = chunk_size
         self._send_task = self._tasks.add(task.sequence(task.wait(self.SEND_RATE), task.run(self._on_send_task_finished))).kill()
         self._settings_changed = False
-        self.register_slot(settings, self._on_setting_changed, u'sensitivity')
-        self.register_slot(settings, self._on_setting_changed, u'gain')
-        self.register_slot(settings, self._on_setting_changed, u'dynamics')
+        self.register_slot(settings, self._on_setting_changed, 'sensitivity')
+        self.register_slot(settings, self._on_setting_changed, 'gain')
+        self.register_slot(settings, self._on_setting_changed, 'dynamics')
         self._update_curve_model()
 
     def send(self):

@@ -1,5 +1,4 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 PRODUCT_ID_BYTES = (0, 32, 41, 105, 0, 0, 0)
 IDENTITY_REQUEST = (240, 126, 127, 6, 1, 247)
 STANDARD_SYSEX_PREFIX = (240, 0, 32, 41, 2, 24)

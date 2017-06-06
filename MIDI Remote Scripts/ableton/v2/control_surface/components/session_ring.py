@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from ...base import const, depends, nop, listens
 from ..component import Component
 
@@ -32,7 +32,7 @@ class SessionRingModel(object):
 
 
 class SessionRingComponent(Component):
-    u"""
+    """
     Manages the set of controlled tracks and scenes from Live's session, aka
     the session ring.
     
@@ -40,7 +40,7 @@ class SessionRingComponent(Component):
     The session highlight's visibility is controlled by this component's
     enabled state.
     """
-    __events__ = (u'offset', u'tracks')
+    __events__ = ('offset', 'tracks')
 
     @depends(set_session_highlight=const(nop))
     def __init__(self, num_tracks = 0, num_scenes = 0, set_session_highlight = nop, tracks_to_use = None, always_snap_track_offset = False, *a, **k):
@@ -63,9 +63,6 @@ class SessionRingComponent(Component):
 
     def tracks_to_use(self):
         return self._cached_track_list
-
-    def scenes(self):
-        return self.song.scenes
 
     def set_offsets(self, track_offset, scene_offset):
         if not track_offset >= 0:
@@ -121,11 +118,11 @@ class SessionRingComponent(Component):
     def on_enabled_changed(self):
         self._update_highlight()
 
-    @listens(u'tracks')
+    @listens('tracks')
     def __on_track_list_changed(self):
         self._update_track_list()
 
-    @listens(u'visible_tracks')
+    @listens('visible_tracks')
     def __on_visible_tracks_changed(self):
         self._update_track_list()
 
@@ -138,7 +135,7 @@ class SessionRingComponent(Component):
             self._cached_track_list = current_track_list
             self.notify_tracks()
 
-    @listens(u'scenes')
+    @listens('scenes')
     def __on_scene_list_changed(self):
         new_offset = min(self.scene_offset, len(self.song.scenes) - 1)
         if new_offset != self.scene_offset:

@@ -1,9 +1,8 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
-from .MackieControlComponent import *
+from MackieControlComponent import *
 
 class TimeDisplay(MackieControlComponent):
-    u"""Represents the Mackie Controls Time-Display, plus the two LED's that show the"""
+    """Represents the Mackie Controls Time-Display, plus the two LED's that show the"""
 
     def __init__(self, main_script):
         MackieControlComponent.__init__(self, main_script)
@@ -35,7 +34,7 @@ class TimeDisplay(MackieControlComponent):
             self.show_beats()
 
     def clear_display(self):
-        time_string = [ u' ' for i in range(10) ]
+        time_string = [ ' ' for i in range(10) ]
         self.__send_time_string(time_string, show_points=False)
         self.send_midi((NOTE_ON_STATUS, SELECT_BEATS_NOTE, BUTTON_STATE_OFF))
         self.send_midi((NOTE_ON_STATUS, SELECT_SMPTE_NOTE, BUTTON_STATE_OFF))
@@ -45,12 +44,12 @@ class TimeDisplay(MackieControlComponent):
         self.__last_send_time = []
 
     def on_update_display_timer(self):
-        u"""Called by a timer which gets called every 100 ms. We will simply check if the"""
+        """Called by a timer which gets called every 100 ms. We will simply check if the"""
         if self.__show_beat_time:
             time_string = str(self.song().get_current_beats_song_time())
         else:
             time_string = str(self.song().get_current_smpte_song_time(self.__smpt_format))
-        time_string = [ c for c in time_string if c not in (u'.', u':') ]
+        time_string = [ c for c in time_string if c not in ('.', ':') ]
         if self.__last_send_time != time_string:
             self.__last_send_time = time_string
             self.__send_time_string(time_string, show_points=True)

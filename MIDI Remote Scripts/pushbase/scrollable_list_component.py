@@ -1,8 +1,8 @@
 
-u"""
+"""
 Scrollable list component.
 """
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from functools import partial
 from ableton.v2.base import EventObject, in_range, Event
 from ableton.v2.base.signal import short_circuit_signal
@@ -11,16 +11,16 @@ from ableton.v2.control_surface.elements import DisplayDataSource
 from . import consts
 
 class ScrollableListComponent(Component):
-    u"""
+    """
     Component for handling a list of options with a limtied set of
     buttons and display segments.
     """
-    __events__ = (Event(name=u'change_option', doc=u' Event signaled when the selected option changes '), Event(name=u'press_option', signal=short_circuit_signal, doc=u'\n       Event signaled when an option is pressed getting the option as\n       parameter.  The ScrollableListComponent is connected to it, if\n       you want to override selection behaviour, connect to the front\n       and return True from your handler.\n       '))
+    __events__ = (Event(name='change_option', doc=' Event signaled when the selected option changes '), Event(name='press_option', signal=short_circuit_signal, doc='\n       Event signaled when an option is pressed getting the option as\n       parameter.  The ScrollableListComponent is connected to it, if\n       you want to override selection behaviour, connect to the front\n       and return True from your handler.\n       '))
     num_segments = 8
     display_line = 3
     jump_size = 3
-    ARROW_LEFT = u'   <<   '
-    ARROW_RIGHT = u'   >>   '
+    ARROW_LEFT = '   <<   '
+    ARROW_RIGHT = '   >>   '
 
     def __init__(self, *a, **k):
         super(ScrollableListComponent, self).__init__(*a, **k)
@@ -30,7 +30,7 @@ class ScrollableListComponent(Component):
         self._option_names = []
         self._select_buttons = []
         self._select_button_slots = self.register_disconnectable(EventObject())
-        self.register_slot(self, self._set_selected_option, u'press_option')
+        self.register_slot(self, self._set_selected_option, 'press_option')
 
     def set_display_line(self, line):
         if line:
@@ -44,8 +44,8 @@ class ScrollableListComponent(Component):
         self._select_buttons = buttons or []
         for b in self._select_buttons:
             if b:
-                b.set_on_off_values(u'Option.Selected', u'Option.Unselected')
-            self._select_button_slots.register_slot(b, self._on_select_value, u'value', extra_kws=dict(identify_sender=True))
+                b.set_on_off_values('Option.Selected', 'Option.Unselected')
+            self._select_button_slots.register_slot(b, self._on_select_value, 'value', extra_kws=dict(identify_sender=True))
 
         self.update()
 
@@ -118,10 +118,10 @@ class ScrollableListComponent(Component):
 
     def _get_display_string(self, option_index):
         if option_index < len(self._option_names):
-            decorator = consts.CHAR_SELECT if option_index == self.selected_option else u''
+            decorator = consts.CHAR_SELECT if option_index == self.selected_option else ''
             return decorator + self._option_names[option_index]
         else:
-            return u''
+            return ''
 
     def update(self):
         super(ScrollableListComponent, self).update()
@@ -131,12 +131,12 @@ class ScrollableListComponent(Component):
         if self._offset_index > 0:
             self._data_sources[0].set_display_string(self.ARROW_LEFT)
             if self._has_select_button(0):
-                self._select_buttons[0].set_light(u'List.ScrollerOn')
+                self._select_buttons[0].set_light('List.ScrollerOn')
             first_segment = 1
         if self._offset_index < self._maximal_offset():
             self._data_sources[-1].set_display_string(self.ARROW_RIGHT)
             if self._has_select_button(-1):
-                self._select_buttons[-1].set_light(u'List.ScrollerOn')
+                self._select_buttons[-1].set_light('List.ScrollerOn')
             max_segment -= 1
         for i, j in zip(xrange(first_segment, max_segment), xrange(self._offset_index, self._offset_index + self.num_segments)):
             self._data_sources[i].set_display_string(self._get_display_string(j))
@@ -147,21 +147,21 @@ class ScrollableListComponent(Component):
                     else:
                         self._select_buttons[i].turn_off()
                 else:
-                    self._select_buttons[i].set_light(u'Option.Unused')
+                    self._select_buttons[i].set_light('Option.Unused')
 
 
 class ScrollableListWithTogglesComponent(ScrollableListComponent):
-    u"""
+    """
     Scrollable list that has a toggle button associated with every
     available option.
     """
-    __events__ = (u'toggle_option',)
+    __events__ = ('toggle_option',)
 
     def __init__(self, *a, **k):
         super(ScrollableListWithTogglesComponent, self).__init__(*a, **k)
 
         def create_state_slot(idx):
-            return self.register_slot(None, partial(self._on_state_button_value, idx), u'value')
+            return self.register_slot(None, partial(self._on_state_button_value, idx), 'value')
 
         self._state_button_slots = map(create_state_slot, xrange(self.num_segments))
         self._option_states = []
@@ -170,7 +170,7 @@ class ScrollableListWithTogglesComponent(ScrollableListComponent):
         state_buttons = state_buttons or [ None for _ in range(self.num_segments) ]
         for slot, button in zip(self._state_button_slots, state_buttons):
             if button:
-                button.set_on_off_values(u'Option.On', u'Option.Off')
+                button.set_on_off_values('Option.On', 'Option.Off')
             slot.subject = button
 
         self._update_state_buttons()
@@ -199,7 +199,7 @@ class ScrollableListWithTogglesComponent(ScrollableListComponent):
                 self.notify_press_option(None)
 
     def _set_option_names(self, names):
-        u""" overrides """
+        """ overrides """
         if self.option_names != names:
             self._option_states = [ False for _ in range(len(names)) ]
             super(ScrollableListWithTogglesComponent, self)._set_option_names(names)

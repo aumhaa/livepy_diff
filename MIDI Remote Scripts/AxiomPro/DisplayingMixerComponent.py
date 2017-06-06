@@ -1,11 +1,10 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.ButtonElement import ButtonElement
 from _Framework.MixerComponent import MixerComponent
 from _Framework.PhysicalDisplayElement import PhysicalDisplayElement
 
 class DisplayingMixerComponent(MixerComponent):
-    u""" Special mixer class that displays the Mute/Solo state of the selected track """
+    """ Special mixer class that displays the Mute/Solo state of the selected track """
 
     def __init__(self, num_tracks):
         MixerComponent.__init__(self, num_tracks)
@@ -91,10 +90,10 @@ class DisplayingMixerComponent(MixerComponent):
                 raise AssertionError
                 if self._display != None and self.song().view.selected_track not in (self.song().master_track, None):
                     track = value != 0 and self.song().view.selected_track
-                    display_string = str(track.name) + u': Solo '
-                    track.solo and display_string += u'On'
+                    display_string = str(track.name) + ': Solo '
+                    track.solo and display_string += 'On'
                 else:
-                    display_string += u'Off'
+                    display_string += 'Off'
                 self._display.display_message(display_string)
             else:
                 self._display.update()
@@ -106,10 +105,10 @@ class DisplayingMixerComponent(MixerComponent):
                 raise AssertionError
                 if self._display != None and self.song().view.selected_track not in (self.song().master_track, None):
                     track = value != 0 and self.song().view.selected_track
-                    display_string = str(track.name) + u': Mute '
-                    track.mute and display_string += u'On'
+                    display_string = str(track.name) + ': Mute '
+                    track.mute and display_string += 'On'
                 else:
-                    display_string += u'Off'
+                    display_string += 'Off'
                 self._display.display_message(display_string)
             else:
                 self._display.update()

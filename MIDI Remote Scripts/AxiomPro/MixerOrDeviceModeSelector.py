@@ -1,15 +1,15 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from _Framework.ButtonElement import ButtonElement
 from _Framework.DisplayDataSource import DisplayDataSource
 from _Framework.PhysicalDisplayElement import PhysicalDisplayElement
 from _Framework.LogicalDisplaySegment import LogicalDisplaySegment
-from .EncoderMixerModeSelector import EncoderMixerModeSelector
-from .PageableDeviceComponent import PageableDeviceComponent
+from EncoderMixerModeSelector import EncoderMixerModeSelector
+from PageableDeviceComponent import PageableDeviceComponent
+from PeekableEncoderElement import PeekableEncoderElement
 
 class MixerOrDeviceModeSelector(ModeSelectorComponent):
-    u""" Class that toggles between mixer and device modes """
+    """ Class that toggles between mixer and device modes """
 
     def __init__(self, mixer_modes, device, encoders, page_buttons):
         raise isinstance(mixer_modes, EncoderMixerModeSelector) or AssertionError
@@ -28,7 +28,7 @@ class MixerOrDeviceModeSelector(ModeSelectorComponent):
         self._page_displays = None
         self._device_dummy_source = DisplayDataSource()
         self._parameter_source = DisplayDataSource()
-        self._device_dummy_source.set_display_string(u'Mixer')
+        self._device_dummy_source.set_display_string('Mixer')
         self._clean_value_display_in = -1
         self._must_update_encoder_display = False
         self._register_timer_callback(self._on_timer)
@@ -118,7 +118,7 @@ class MixerOrDeviceModeSelector(ModeSelectorComponent):
                         self._page_displays[index].update()
 
             else:
-                print(u'Invalid mode index')
+                print 'Invalid mode index'
                 raise False or AssertionError
 
     def _parameter_value(self, value, control):
@@ -126,16 +126,16 @@ class MixerOrDeviceModeSelector(ModeSelectorComponent):
             raise AssertionError
             if self.is_enabled():
                 parameter = control.mapped_parameter()
-                parameter != None and self._parameter_source.set_display_string(parameter.name + u': ' + parameter.__str__())
+                parameter != None and self._parameter_source.set_display_string(parameter.name + ': ' + parameter.__str__())
             else:
-                self._parameter_source.set_display_string(u'<unmapped>')
+                self._parameter_source.set_display_string('<unmapped>')
             self._clean_value_display_in = 20
 
     def _on_timer(self):
         if self._clean_value_display_in > 0:
             self._clean_value_display_in -= 1
             if self._clean_value_display_in == 0:
-                self._parameter_source.set_display_string(u'')
+                self._parameter_source.set_display_string('')
                 self._clean_value_display_in = -1
         if self._must_update_encoder_display:
             self._encoders_display.update()

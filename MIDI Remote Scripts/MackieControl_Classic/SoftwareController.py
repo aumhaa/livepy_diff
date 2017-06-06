@@ -1,28 +1,27 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
-from .MackieControlComponent import *
+from MackieControlComponent import *
 
 class SoftwareController(MackieControlComponent):
-    u"""Representing the buttons above the transport, including the basic: """
+    """Representing the buttons above the transport, including the basic: """
 
     def __init__(self, main_script):
         MackieControlComponent.__init__(self, main_script)
         self.__last_can_undo_state = False
         self.__last_can_redo_state = False
         av = self.application().view
-        av.add_is_view_visible_listener(u'Session', self.__update_session_arranger_button_led)
-        av.add_is_view_visible_listener(u'Detail/Clip', self.__update_detail_sub_view_button_led)
-        av.add_is_view_visible_listener(u'Browser', self.__update_browser_button_led)
-        av.add_is_view_visible_listener(u'Detail', self.__update_detail_button_led)
+        av.add_is_view_visible_listener('Session', self.__update_session_arranger_button_led)
+        av.add_is_view_visible_listener('Detail/Clip', self.__update_detail_sub_view_button_led)
+        av.add_is_view_visible_listener('Browser', self.__update_browser_button_led)
+        av.add_is_view_visible_listener('Detail', self.__update_detail_button_led)
         self.song().view.add_draw_mode_listener(self.__update_draw_mode_button_led)
         self.song().add_back_to_arranger_listener(self.__update_back_to_arranger_button_led)
 
     def destroy(self):
         av = self.application().view
-        av.remove_is_view_visible_listener(u'Session', self.__update_session_arranger_button_led)
-        av.remove_is_view_visible_listener(u'Detail/Clip', self.__update_detail_sub_view_button_led)
-        av.remove_is_view_visible_listener(u'Browser', self.__update_browser_button_led)
-        av.remove_is_view_visible_listener(u'Detail', self.__update_detail_button_led)
+        av.remove_is_view_visible_listener('Session', self.__update_session_arranger_button_led)
+        av.remove_is_view_visible_listener('Detail/Clip', self.__update_detail_sub_view_button_led)
+        av.remove_is_view_visible_listener('Browser', self.__update_browser_button_led)
+        av.remove_is_view_visible_listener('Detail', self.__update_detail_button_led)
         self.song().view.remove_draw_mode_listener(self.__update_draw_mode_button_led)
         self.song().remove_back_to_arranger_listener(self.__update_back_to_arranger_button_led)
         for note in software_controls_switch_ids:
@@ -99,45 +98,45 @@ class SoftwareController(MackieControlComponent):
             self.__update_redo_button_led()
 
     def __toggle_session_arranger_is_visible(self):
-        if self.application().view.is_view_visible(u'Session'):
+        if self.application().view.is_view_visible('Session'):
             if self.shift_is_pressed():
-                self.application().view.focus_view(u'Session')
+                self.application().view.focus_view('Session')
             else:
-                self.application().view.hide_view(u'Session')
-        elif not self.application().view.is_view_visible(u'Arranger'):
+                self.application().view.hide_view('Session')
+        elif not self.application().view.is_view_visible('Arranger'):
             raise AssertionError
-            self.shift_is_pressed() and self.application().view.focus_view(u'Arranger')
+            self.shift_is_pressed() and self.application().view.focus_view('Arranger')
         else:
-            self.application().view.hide_view(u'Arranger')
+            self.application().view.hide_view('Arranger')
 
     def __toggle_detail_sub_view(self):
-        if self.application().view.is_view_visible(u'Detail/Clip'):
+        if self.application().view.is_view_visible('Detail/Clip'):
             if self.shift_is_pressed():
-                self.application().view.focus_view(u'Detail/Clip')
+                self.application().view.focus_view('Detail/Clip')
             else:
-                self.application().view.show_view(u'Detail/DeviceChain')
+                self.application().view.show_view('Detail/DeviceChain')
         elif self.shift_is_pressed():
-            self.application().view.focus_view(u'Detail/DeviceChain')
+            self.application().view.focus_view('Detail/DeviceChain')
         else:
-            self.application().view.show_view(u'Detail/Clip')
+            self.application().view.show_view('Detail/Clip')
 
     def __toggle_browser_is_visible(self):
-        if self.application().view.is_view_visible(u'Browser'):
+        if self.application().view.is_view_visible('Browser'):
             if self.shift_is_pressed():
-                self.application().view.focus_view(u'Browser')
+                self.application().view.focus_view('Browser')
             else:
-                self.application().view.hide_view(u'Browser')
+                self.application().view.hide_view('Browser')
         else:
-            self.application().view.show_view(u'Browser')
+            self.application().view.show_view('Browser')
 
     def __toggle_detail_is_visible(self):
-        if self.application().view.is_view_visible(u'Detail'):
+        if self.application().view.is_view_visible('Detail'):
             if self.shift_is_pressed():
-                self.application().view.focus_view(u'Detail')
+                self.application().view.focus_view('Detail')
             else:
-                self.application().view.hide_view(u'Detail')
+                self.application().view.hide_view('Detail')
         else:
-            self.application().view.show_view(u'Detail')
+            self.application().view.show_view('Detail')
 
     def __toggle_back_to_arranger(self):
         self.song().back_to_arranger = not self.song().back_to_arranger
@@ -149,25 +148,25 @@ class SoftwareController(MackieControlComponent):
         self.song().view.follow_song = not self.song().view.follow_song
 
     def __update_session_arranger_button_led(self):
-        if self.application().view.is_view_visible(u'Session'):
+        if self.application().view.is_view_visible('Session'):
             self.send_midi((NOTE_ON_STATUS, SID_AUTOMATION_ON, BUTTON_STATE_ON))
         else:
             self.send_midi((NOTE_ON_STATUS, SID_AUTOMATION_ON, BUTTON_STATE_OFF))
 
     def __update_detail_sub_view_button_led(self):
-        if self.application().view.is_view_visible(u'Detail/Clip'):
+        if self.application().view.is_view_visible('Detail/Clip'):
             self.send_midi((NOTE_ON_STATUS, SID_AUTOMATION_RECORD, BUTTON_STATE_ON))
         else:
             self.send_midi((NOTE_ON_STATUS, SID_AUTOMATION_RECORD, BUTTON_STATE_OFF))
 
     def __update_browser_button_led(self):
-        if self.application().view.is_view_visible(u'Browser'):
+        if self.application().view.is_view_visible('Browser'):
             self.send_midi((NOTE_ON_STATUS, SID_AUTOMATION_SNAPSHOT, BUTTON_STATE_ON))
         else:
             self.send_midi((NOTE_ON_STATUS, SID_AUTOMATION_SNAPSHOT, BUTTON_STATE_OFF))
 
     def __update_detail_button_led(self):
-        if self.application().view.is_view_visible(u'Detail'):
+        if self.application().view.is_view_visible('Detail'):
             self.send_midi((NOTE_ON_STATUS, SID_AUTOMATION_TOUCH, BUTTON_STATE_ON))
         else:
             self.send_midi((NOTE_ON_STATUS, SID_AUTOMATION_TOUCH, BUTTON_STATE_OFF))

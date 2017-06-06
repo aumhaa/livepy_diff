@@ -1,5 +1,4 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.Util import in_range
 from _Framework.SubjectSlot import subject_slot_group
 from _Framework.SessionComponent import SessionComponent as SessionComponentBase
@@ -13,7 +12,7 @@ class SessionComponent(SessionComponentBase):
 
     def _enable_skinning(self):
         super(SessionComponent, self)._enable_skinning()
-        self.set_stopped_clip_value(u'Session.StoppedClip')
+        self.set_stopped_clip_value('Session.StoppedClip')
         scroll_components = (self._horizontal_banking,
          self._horizontal_paginator,
          self._vertical_banking,

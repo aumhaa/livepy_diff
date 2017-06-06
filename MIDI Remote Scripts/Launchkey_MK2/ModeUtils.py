@@ -1,11 +1,10 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.Dependency import depends
 from _Framework.ModesComponent import ModesComponent, ModeButtonBehaviour
-from . import consts
+import consts
 
 def to_class_name(mode_name):
-    return u''.join(map(lambda s: s.capitalize(), mode_name.replace(u'_', u' ').split()))
+    return ''.join(map(lambda s: s.capitalize(), mode_name.replace('_', ' ').split()))
 
 
 class MomentaryBehaviour(ModeButtonBehaviour):
@@ -36,11 +35,11 @@ class SkinableBehaviourMixin(ModeButtonBehaviour):
         selected_groups = component.get_mode_groups(selected_mode)
         mode_color = to_class_name(mode)
         is_selected = mode == selected_mode or bool(groups & selected_groups)
-        button.set_light(u'Mode.%s%s' % (mode_color, u'On' if is_selected else u''))
+        button.set_light('Mode.%s%s' % (mode_color, 'On' if is_selected else ''))
 
 
 class DisablingModesComponent(ModesComponent):
-    u"""
+    """
     ModesComponent whose modes can be disabled, so that
     we can dynamically remove or add buttons, e.g. when
     the number of Return Tracks changes.
@@ -66,7 +65,7 @@ class DisablingModesComponent(ModesComponent):
                         self._get_mode_behaviour(name).update_button(self, name, selected)
                     else:
                         button = self.get_mode_button(name)
-                        button.set_light(u'Mode.Disabled')
+                        button.set_light('Mode.Disabled')
 
             if self._mode_toggle:
                 entry = self._mode_map.get(selected)

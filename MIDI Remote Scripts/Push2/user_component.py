@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from contextlib import contextmanager
 from ableton.v2.control_surface.mode import ModeButtonBehaviour
 from pushbase.user_component import UserComponentBase
@@ -14,9 +14,9 @@ class UserButtonBehavior(ModeButtonBehaviour):
         self._user_component = user_component
 
     def press_immediate(self, component, mode):
-        if component.selected_mode != u'user' and self._user_component.mode == sysex.LIVE_MODE:
+        if component.selected_mode != 'user' and self._user_component.mode == sysex.LIVE_MODE:
             self._previous_mode = component.selected_mode
-            component.selected_mode = u'user'
+            component.selected_mode = 'user'
         else:
             self._leave_user_mode(component)
 
@@ -24,7 +24,7 @@ class UserButtonBehavior(ModeButtonBehaviour):
         self._leave_user_mode(component)
 
     def _leave_user_mode(self, component):
-        if not (component.selected_mode == u'user' and self._user_component.mode == sysex.USER_MODE and self._previous_mode is not None):
+        if not (component.selected_mode == 'user' and self._user_component.mode == sysex.USER_MODE and self._previous_mode is not None):
             raise AssertionError
             component.selected_mode = self._previous_mode
             self._previous_mode = None

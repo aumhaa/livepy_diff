@@ -1,12 +1,12 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from ...base import task
 from .. import defaults
 from ..control import ButtonControl
 from ..component import Component
 
 class Scrollable(object):
-    u"""
+    """
     Abstract interface for an object that can be scrolled in discreet
     steps in one dimension.
     """
@@ -25,7 +25,7 @@ class Scrollable(object):
 
 
 class ScrollComponent(Component, Scrollable):
-    u"""
+    """
     A component that handles scrolling behavior over a Scrollable
     with a pair of buttons.
     """

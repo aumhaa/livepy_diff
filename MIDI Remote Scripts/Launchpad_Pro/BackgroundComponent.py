@@ -1,5 +1,4 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.SubjectSlot import SubjectSlotError
 from _Framework.BackgroundComponent import BackgroundComponent as BackgroundComponentBase
 
@@ -26,7 +25,7 @@ class ModifierBackgroundComponent(BackgroundComponentBase):
         super(ModifierBackgroundComponent, self)._clear_control(name, control)
         if control:
             try:
-                self._control_slots[name] = self.register_slot(control, lambda *a, **k: self._on_value_listener(control, *a, **k), u'value')
+                self._control_slots[name] = self.register_slot(control, lambda *a, **k: self._on_value_listener(control, *a, **k), 'value')
             except SubjectSlotError:
                 pass
 

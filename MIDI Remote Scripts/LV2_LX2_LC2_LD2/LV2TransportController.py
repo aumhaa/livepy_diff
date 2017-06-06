@@ -1,13 +1,13 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 import Live
-from .FaderfoxTransportController import FaderfoxTransportController
-from .consts import *
+from FaderfoxTransportController import FaderfoxTransportController
+from FaderfoxHelper import FaderfoxHelper
+from consts import *
 
 class LV2TransportController(FaderfoxTransportController):
     __module__ = __name__
-    __doc__ = u'Class representing the transport section of LV2 controllers'
-    __filter_funcs__ = [u'update_display', u'log']
+    __doc__ = 'Class representing the transport section of LV2 controllers'
+    __filter_funcs__ = ['update_display', 'log']
     __use_slot_led__ = True
 
     def __init__(self, parent):
@@ -48,7 +48,7 @@ class LV2TransportController(FaderfoxTransportController):
                 self.set_slot_launch_led(track_idx, clip_idx, False)
 
     def set_slot_launch_led(self, track_idx, clip_idx, playing):
-        self.log(u'set slot launch led %s %s %s' % (track_idx, clip_idx, playing))
+        self.log('set slot launch led %s %s %s' % (track_idx, clip_idx, playing))
         channel = AUX_CHANNEL_SETUP2
         note_no = 0
         if clip_idx > 7:

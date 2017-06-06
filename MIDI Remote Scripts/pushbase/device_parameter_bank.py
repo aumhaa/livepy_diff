@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from ableton.v2.base import EventObject, find_if, listens, listens_group, listenable_property, liveobj_valid, clamp
 from .banking_util import PARAMETERS_KEY, MAIN_KEY, BANK_FORMAT, all_parameters
 
@@ -36,7 +36,7 @@ class DeviceParameterBank(EventObject):
 
     index = property(_get_index, _set_index)
 
-    @listens(u'parameters')
+    @listens('parameters')
     def _on_parameters_changed(self):
         self._index = self._adjust_index(self._index)
         self._update_parameters()
@@ -52,7 +52,7 @@ class DeviceParameterBank(EventObject):
     def name(self):
         if liveobj_valid(self._device):
             return self._calc_name()
-        return u''
+        return ''
 
     @property
     def device(self):
@@ -63,7 +63,7 @@ class DeviceParameterBank(EventObject):
         offset = self._index * self._size
         params = parameters[offset:]
         params.extend([None] * (self._size - len(params)))
-        return [ (param, None) for param in params ]
+        return params
 
     def _update_parameters(self):
         parameters = self._collect_parameters()[:self._size]
@@ -80,7 +80,7 @@ class DescribedDeviceParameterBank(DeviceParameterBank):
         super(DescribedDeviceParameterBank, self).__init__(device=device, banking_info=banking_info, *a, **k)
         self._update_parameters()
 
-    @listens_group(u'content')
+    @listens_group('content')
     def _on_slot_content_changed(self, _slot):
         self._update_parameters()
 
@@ -95,7 +95,7 @@ class DescribedDeviceParameterBank(DeviceParameterBank):
             slot.set_parameter_host(None)
             self.unregister_disconnectable(slot)
 
-        self._dynamic_slots = filter(lambda s: hasattr(s, u'notify_content'), self._content_slots())
+        self._dynamic_slots = filter(lambda s: hasattr(s, 'notify_content'), self._content_slots())
         for slot in self._dynamic_slots:
             self.register_disconnectable(slot)
             slot.set_parameter_host(self.device)
@@ -108,7 +108,7 @@ class DescribedDeviceParameterBank(DeviceParameterBank):
     def _collect_parameters(self):
         parameters = self._device.parameters
         bank_slots = self._current_parameter_slots()
-        return [ (find_if(lambda p: p.original_name == str(slot_definition), parameters), getattr(slot_definition, u'display_name', None)) for slot_definition in bank_slots ]
+        return [ find_if(lambda p: p.original_name == str(slot_definition), parameters) for slot_definition in bank_slots ]
 
     def _update_parameters(self):
         self._setup_dynamic_slots()
@@ -119,7 +119,7 @@ class MaxDeviceParameterBank(DeviceParameterBank):
 
     def __init__(self, *a, **k):
         super(MaxDeviceParameterBank, self).__init__(*a, **k)
-        raise hasattr(self._device, u'get_bank_count') or AssertionError
+        raise hasattr(self._device, 'get_bank_count') or AssertionError
 
     def _calc_name(self):
         if self.bank_count() == 0:
@@ -132,12 +132,11 @@ class MaxDeviceParameterBank(DeviceParameterBank):
 
     def _collect_parameters(self):
         if self.bank_count() == 0:
-            return [(None, None)] * self._size
+            return [None] * self._size
         parameters = self._device.parameters
         mx_index = self.index - int(self._banking_info.has_main_bank(self._device))
         indices = self.device.get_bank_parameters(mx_index)
-        parameters = [ (parameters[index] if index >= 0 else None) for index in indices ]
-        return [ (param, None) for param in parameters ]
+        return [ (parameters[index] if index >= 0 else None) for index in indices ]
 
 
 def create_device_bank(device, banking_info):

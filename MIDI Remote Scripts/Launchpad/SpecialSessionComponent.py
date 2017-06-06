@@ -1,9 +1,8 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.SessionComponent import SessionComponent
 
 class SpecialSessionComponent(SessionComponent):
-    u""" Special session subclass that handles ConfigurableButtons """
+    """ Special session subclass that handles ConfigurableButtons """
 
     def _update_stop_clips_led(self, index):
         if self.is_enabled() and self._stop_track_clip_buttons != None and index < len(self._stop_track_clip_buttons):

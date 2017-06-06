@@ -1,10 +1,10 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from ableton.v2.base import EventObject, Slot
 
 class ObservablePropertyAlias(EventObject):
 
-    def __init__(self, alias_host, property_host = None, property_name = u'', alias_name = None, getter = None, *a, **k):
+    def __init__(self, alias_host, property_host = None, property_name = '', alias_name = None, getter = None, *a, **k):
         super(ObservablePropertyAlias, self).__init__(*a, **k)
         self._alias_host = alias_host
         self._alias_name = alias_name or property_name
@@ -25,7 +25,7 @@ class ObservablePropertyAlias(EventObject):
     def _setup_alias(self, getter):
         aliased_prop = property(getter or self._get_property)
         setattr(self._alias_host.__class__, self._alias_name, aliased_prop)
-        notifier = getattr(self._alias_host, u'notify_' + self._alias_name)
+        notifier = getattr(self._alias_host, 'notify_' + self._alias_name)
         self._property_slot = self.register_slot(Slot(self.property_host, notifier, self._property_name))
 
     def _get_property(self, _):

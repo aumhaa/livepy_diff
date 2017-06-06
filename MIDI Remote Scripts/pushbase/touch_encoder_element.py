@@ -1,9 +1,9 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from ableton.v2.control_surface.elements import TouchEncoderElement as TouchEncoderElementBase
 
 class TouchEncoderObserver(object):
-    u""" Interface for observing the state of one or more TouchEncoderElements """
+    """ Interface for observing the state of one or more TouchEncoderElements """
 
     def on_encoder_touch(self, encoder):
         pass
@@ -13,7 +13,7 @@ class TouchEncoderObserver(object):
 
 
 class TouchEncoderElement(TouchEncoderElementBase):
-    u""" Class representing an encoder that is touch sensitive """
+    """ Class representing an encoder that is touch sensitive """
 
     def __init__(self, undo_step_handler = None, delete_handler = None, *a, **k):
         super(TouchEncoderElement, self).__init__(*a, **k)

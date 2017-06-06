@@ -1,9 +1,8 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
-from .MackieControlComponent import *
+from MackieControlComponent import *
 
 class MainDisplayController(MackieControlComponent):
-    u""" Controlling all available main displays (the display above the channel strips),
+    """ Controlling all available main displays (the display above the channel strips),
         which will be only one when only using the 'main' Mackie Control, and severals
         when using at least one Mackie Control XT, attached to the main Mackie Control
     
@@ -22,7 +21,7 @@ class MainDisplayController(MackieControlComponent):
         self.__displays = [display]
         self.__own_display = display
         self.__parameters = [ [] for x in range(NUM_CHANNEL_STRIPS) ]
-        self.__channel_strip_strings = [ u'' for x in range(NUM_CHANNEL_STRIPS) ]
+        self.__channel_strip_strings = [ '' for x in range(NUM_CHANNEL_STRIPS) ]
         self.__channel_strip_mode = True
         self.__show_parameter_names = False
         self.__bank_channel_offset = 0
@@ -34,7 +33,7 @@ class MainDisplayController(MackieControlComponent):
         MackieControlComponent.destroy(self)
 
     def set_controller_extensions(self, left_extensions, right_extensions):
-        u""" Called from the main script (after all scripts where initialized), to let us
+        """ Called from the main script (after all scripts where initialized), to let us
             know where and how many MackieControlXT are installed.
         """
         self.__left_extensions = left_extensions
@@ -55,7 +54,7 @@ class MainDisplayController(MackieControlComponent):
             stack_offset += NUM_CHANNEL_STRIPS
 
         self.__parameters = [ [] for x in range(len(self.__displays) * NUM_CHANNEL_STRIPS) ]
-        self.__channel_strip_strings = [ u'' for x in range(len(self.__displays) * NUM_CHANNEL_STRIPS) ]
+        self.__channel_strip_strings = [ '' for x in range(len(self.__displays) * NUM_CHANNEL_STRIPS) ]
         self.refresh_state()
 
     def enable_meters(self, enabled):
@@ -109,29 +108,29 @@ class MainDisplayController(MackieControlComponent):
                         if self.__parameters[strip_index]:
                             upper_string += self.__generate_6_char_string(self.__parameters[strip_index][1])
                         else:
-                            upper_string += self.__generate_6_char_string(u'')
+                            upper_string += self.__generate_6_char_string('')
                     elif t < len(tracks):
                         upper_string += self.__generate_6_char_string(tracks[t].name)
                     else:
-                        upper_string += self.__generate_6_char_string(u'')
-                    upper_string += u' '
+                        upper_string += self.__generate_6_char_string('')
+                    upper_string += ' '
                     if self.__parameters and self.__parameters[strip_index]:
                         if self.__parameters[strip_index][0]:
                             lower_string += self.__generate_6_char_string(unicode(self.__parameters[strip_index][0]))
                         else:
-                            lower_string += self.__generate_6_char_string(u'')
+                            lower_string += self.__generate_6_char_string('')
                     elif self.__channel_strip_strings and self.__channel_strip_strings[strip_index]:
                         lower_string += self.__generate_6_char_string(self.__channel_strip_strings[strip_index])
                     else:
-                        lower_string += self.__generate_6_char_string(u'')
-                    lower_string += u' '
+                        lower_string += self.__generate_6_char_string('')
+                    lower_string += ' '
                     strip_index += 1
 
                 display.send_display_string(upper_string, 0, 0)
                 if not self.__meters_enabled:
                     display.send_display_string(lower_string, 1, 0)
             else:
-                ascii_message = u'< _1234 guck ma #!?:;_ >'
+                ascii_message = '< _1234 guck ma #!?:;_ >'
                 if not self.__test:
                     self.__test = 0
                 self.__test = self.__test + 1
@@ -141,16 +140,16 @@ class MainDisplayController(MackieControlComponent):
 
     def __generate_6_char_string(self, display_string):
         if not display_string:
-            return u'      '
-        if len(display_string.strip()) > 6 and display_string.endswith(u'dB') and display_string.find(u'.') != -1:
+            return '      '
+        if len(display_string.strip()) > 6 and display_string.endswith('dB') and display_string.find('.') != -1:
             display_string = display_string[:-2]
         if len(display_string) > 6:
-            for um in [u' ',
-             u'i',
-             u'o',
-             u'u',
-             u'e',
-             u'a']:
+            for um in [' ',
+             'i',
+             'o',
+             'u',
+             'e',
+             'a']:
                 while len(display_string) > 6 and display_string.rfind(um, 1) != -1:
                     um_pos = display_string.rfind(um, 1)
                     display_string = display_string[:um_pos] + display_string[um_pos + 1:]

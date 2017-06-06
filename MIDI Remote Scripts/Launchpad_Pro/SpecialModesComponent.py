@@ -1,5 +1,4 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.ModesComponent import ReenterBehaviour, ModesComponent
 
 class SpecialModesComponent(ModesComponent):
@@ -11,7 +10,7 @@ class SpecialModesComponent(ModesComponent):
 
 
 class SpecialReenterBehaviour(ReenterBehaviour):
-    u"""
+    """
     When a mode with this behaviour is reentered, enters on_reenter_mode instead
     """
 

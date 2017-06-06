@@ -1,13 +1,12 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from itertools import izip_longest
 from _Framework.Control import control_list, ButtonControl
 from _Framework.ChannelStripComponent import ChannelStripComponent as ChannelStripComponentBase
 from _Framework.MixerComponent import MixerComponent as MixerComponentBase
 
 class ChannelStripComponent(ChannelStripComponentBase):
-    send_lights = control_list(ButtonControl, control_count=2, color=u'Mixer.Sends', disabled_color=u'Mixer.NoTrack')
-    pan_light = ButtonControl(color=u'Mixer.Pans', disabled_color=u'Mixer.NoTrack')
+    send_lights = control_list(ButtonControl, control_count=2, color='Mixer.Sends', disabled_color='Mixer.NoTrack')
+    pan_light = ButtonControl(color='Mixer.Pans', disabled_color='Mixer.NoTrack')
 
     def set_track(self, track):
         super(ChannelStripComponent, self).set_track(track)
@@ -75,23 +74,23 @@ class MixerComponent(MixerComponentBase):
     def set_track_select_buttons(self, buttons):
         for strip, button in izip_longest(self._channel_strips, buttons or []):
             if button:
-                button.set_on_off_values(u'Mixer.TrackSelected', u'Mixer.TrackUnselected')
+                button.set_on_off_values('Mixer.TrackSelected', 'Mixer.TrackUnselected')
             strip.set_select_button(button)
 
     def set_solo_buttons(self, buttons):
         for strip, button in izip_longest(self._channel_strips, buttons or []):
             if button:
-                button.set_on_off_values(u'Mixer.SoloOn', u'Mixer.SoloOff')
+                button.set_on_off_values('Mixer.SoloOn', 'Mixer.SoloOff')
             strip.set_solo_button(button)
 
     def set_mute_buttons(self, buttons):
         for strip, button in izip_longest(self._channel_strips, buttons or []):
             if button:
-                button.set_on_off_values(u'Mixer.MuteOn', u'Mixer.MuteOff')
+                button.set_on_off_values('Mixer.MuteOn', 'Mixer.MuteOff')
             strip.set_mute_button(button)
 
     def set_arm_buttons(self, buttons):
         for strip, button in izip_longest(self._channel_strips, buttons or []):
             if button:
-                button.set_on_off_values(u'Mixer.ArmSelected', u'Mixer.ArmUnselected')
+                button.set_on_off_values('Mixer.ArmSelected', 'Mixer.ArmUnselected')
             strip.set_arm_button(button)

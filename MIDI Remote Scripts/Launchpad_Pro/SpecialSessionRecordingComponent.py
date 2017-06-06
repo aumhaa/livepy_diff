@@ -1,11 +1,10 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.ClipCreator import ClipCreator
 from _Framework.SessionRecordingComponent import SessionRecordingComponent, track_playing_slot, track_is_recording, subject_slot
 
 class SpecialSessionRecordingComponent(SessionRecordingComponent):
-    u"""
+    """
     Specialized SessionRecordingComponent that combines the functionality of new and
     record when note mode is selected.
     """
@@ -22,7 +21,7 @@ class SpecialSessionRecordingComponent(SessionRecordingComponent):
     def set_note_mode_name(self, name):
         self._note_mode_name = name
 
-    @subject_slot(u'value')
+    @subject_slot('value')
     def _on_record_button_value(self, value):
         if self.is_enabled() and value:
             if self._modes_component.selected_mode == self._note_mode_name:

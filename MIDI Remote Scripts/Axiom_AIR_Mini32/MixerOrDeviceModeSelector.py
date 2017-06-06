@@ -1,9 +1,8 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 
 class MixerOrDeviceModeSelector(ModeSelectorComponent):
-    u""" Class that toggles between mixer and device modes """
+    """ Class that toggles between mixer and device modes """
 
     def __init__(self, encoders, select_button, up_button, down_button, left_button, right_button, mixer, session, device, mixer_modes, device_nav):
         ModeSelectorComponent.__init__(self)

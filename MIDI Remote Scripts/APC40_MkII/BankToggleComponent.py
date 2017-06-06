@@ -1,5 +1,4 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.ComboElement import ToggleElement
 from _Framework.Control import ToggleButtonControl
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent

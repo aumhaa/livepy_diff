@@ -1,10 +1,9 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 import Live
-from .consts import *
+from consts import *
 
 class Pads:
-    u""" Class representing the Pads section on the Axiom controllers """
+    """ Class representing the Pads section on the Axiom controllers """
 
     def __init__(self, parent):
         self.__parent = parent
@@ -23,13 +22,13 @@ class Pads:
             index = pad_index + channel * 8
             if cc_value > 0:
                 if channel in range(4):
-                    if self.__parent.application().view.is_view_visible(u'Session'):
+                    if self.__parent.application().view.is_view_visible('Session'):
                         tracks = self.__parent.song().visible_tracks
                         if len(tracks) > index:
                             current_track = tracks[index]
                             clip_index = list(self.__parent.song().scenes).index(self.__parent.song().view.selected_scene)
                             current_track.clip_slots[clip_index].fire()
-                    elif self.__parent.application().view.is_view_visible(u'Arranger'):
+                    elif self.__parent.application().view.is_view_visible('Arranger'):
                         if len(self.__parent.song().cue_points) > index:
                             self.__parent.song().cue_points[index].jump()
                 elif channel == 15:

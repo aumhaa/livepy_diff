@@ -1,10 +1,9 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.MixerComponent import MixerComponent
 from _Framework.PhysicalDisplayElement import PhysicalDisplayElement
 
 class NotifyingMixerComponent(MixerComponent):
-    u""" Special mixer class that notifies an observer when reassigning parameters """
+    """ Special mixer class that notifies an observer when reassigning parameters """
 
     def __init__(self, num_tracks):
         self._update_callback = None
@@ -16,7 +15,7 @@ class NotifyingMixerComponent(MixerComponent):
         self._update_callback = None
 
     def set_update_callback(self, callback):
-        raise callback == None or dir(callback).count(u'im_func') is 1 or AssertionError
+        raise callback == None or dir(callback).count('im_func') is 1 or AssertionError
         self._update_callback = callback
 
     def set_bank_display(self, display):
@@ -53,7 +52,7 @@ class NotifyingMixerComponent(MixerComponent):
             if value != 0 and old_offset != self._track_offset:
                 min_track = self._track_offset + 1
                 max_track = min(len(self._tracks_to_use()), min_track + len(self._channel_strips))
-                self._bank_display.display_message(u'Tracks ' + str(min_track) + u' - ' + str(max_track))
+                self._bank_display.display_message('Tracks ' + str(min_track) + ' - ' + str(max_track))
             else:
                 self._bank_display.update()
 
@@ -64,6 +63,6 @@ class NotifyingMixerComponent(MixerComponent):
             if value != 0 and old_offset != self._track_offset:
                 min_track = self._track_offset + 1
                 max_track = min(len(self._tracks_to_use()), min_track + len(self._channel_strips))
-                self._bank_display.display_message(u'Tracks ' + str(min_track) + u' - ' + str(max_track))
+                self._bank_display.display_message('Tracks ' + str(min_track) + ' - ' + str(max_track))
             else:
                 self._bank_display.update()

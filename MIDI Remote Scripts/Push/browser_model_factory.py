@@ -1,52 +1,46 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 import Live
 from .browser_model import filter_type_for_browser, EmptyBrowserModel, QueryingBrowserModel
-from .browser_query import TagBrowserQuery, PathBrowserQuery, PlacesBrowserQuery, SourceBrowserQuery, ColorTagsBrowserQuery
+from .browser_query import TagBrowserQuery, PathBrowserQuery, PlacesBrowserQuery, SourceBrowserQuery
 FilterType = Live.Browser.FilterType
-PLACES_LABEL = u'Places'
+PLACES_LABEL = 'Places'
 
 def make_plugins_query():
-    return TagBrowserQuery(include=[u'Plug-ins'], root_name=u'plugins', subfolder=u'Plug-ins')
+    return TagBrowserQuery(include=['Plug-ins'], root_name='plugins', subfolder='Plug-ins')
 
 
 def make_midi_effect_browser_model(browser):
-    midi_effects = TagBrowserQuery(include=[u'MIDI Effects'], root_name=u'midi_effects')
-    max = TagBrowserQuery(include=[[u'Max for Live', u'Max MIDI Effect']], subfolder=u'Max for Live', root_name=u'max_for_live')
+    midi_effects = TagBrowserQuery(include=['MIDI Effects'], root_name='midi_effects')
+    max = TagBrowserQuery(include=[['Max for Live', 'Max MIDI Effect']], subfolder='Max for Live', root_name='max_for_live')
     plugins = make_plugins_query()
     places = PlacesBrowserQuery(subfolder=PLACES_LABEL)
-    color_tags = ColorTagsBrowserQuery()
-    return QueryingBrowserModel(browser=browser, queries=[color_tags,
-     midi_effects,
+    return QueryingBrowserModel(browser=browser, queries=[midi_effects,
      max,
      plugins,
      places])
 
 
 def make_audio_effect_browser_model(browser):
-    audio_effects = TagBrowserQuery(include=[u'Audio Effects'], root_name=u'audio_effects')
-    max = TagBrowserQuery(include=[[u'Max for Live', u'Max Audio Effect']], subfolder=u'Max for Live', root_name=u'max_for_live')
+    audio_effects = TagBrowserQuery(include=['Audio Effects'], root_name='audio_effects')
+    max = TagBrowserQuery(include=[['Max for Live', 'Max Audio Effect']], subfolder='Max for Live', root_name='max_for_live')
     plugins = make_plugins_query()
     places = PlacesBrowserQuery(subfolder=PLACES_LABEL)
-    color_tags = ColorTagsBrowserQuery()
-    return QueryingBrowserModel(browser=browser, queries=[color_tags,
-     audio_effects,
+    return QueryingBrowserModel(browser=browser, queries=[audio_effects,
      max,
      plugins,
      places])
 
 
 def make_instruments_browser_model(browser):
-    instrument_rack = PathBrowserQuery(path=[u'Instruments', u'Instrument Rack'], root_name=u'instruments')
-    drums = SourceBrowserQuery(include=[u'Drums'], exclude=[u'Drum Hits'], subfolder=u'Drum Rack', root_name=u'drums')
-    instruments = TagBrowserQuery(include=[u'Instruments'], exclude=[u'Drum Rack', u'Instrument Rack'], root_name=u'instruments')
-    drum_hits = TagBrowserQuery(include=[[u'Drums', u'Drum Hits']], subfolder=u'Drum Hits', root_name=u'drums')
-    max = TagBrowserQuery(include=[[u'Max for Live', u'Max Instrument']], subfolder=u'Max for Live', root_name=u'max_for_live')
+    instrument_rack = PathBrowserQuery(path=['Instruments', 'Instrument Rack'], root_name='instruments')
+    drums = SourceBrowserQuery(include=['Drums'], exclude=['Drum Hits'], subfolder='Drum Rack', root_name='drums')
+    instruments = TagBrowserQuery(include=['Instruments'], exclude=['Drum Rack', 'Instrument Rack'], root_name='instruments')
+    drum_hits = TagBrowserQuery(include=[['Drums', 'Drum Hits']], subfolder='Drum Hits', root_name='drums')
+    max = TagBrowserQuery(include=[['Max for Live', 'Max Instrument']], subfolder='Max for Live', root_name='max_for_live')
     plugins = make_plugins_query()
     places = PlacesBrowserQuery(subfolder=PLACES_LABEL)
-    color_tags = ColorTagsBrowserQuery()
-    return QueryingBrowserModel(browser=browser, queries=[color_tags,
-     instrument_rack,
+    return QueryingBrowserModel(browser=browser, queries=[instrument_rack,
      drums,
      instruments,
      max,
@@ -56,15 +50,13 @@ def make_instruments_browser_model(browser):
 
 
 def make_drum_pad_browser_model(browser):
-    drums = TagBrowserQuery(include=[[u'Drums', u'Drum Hits']], root_name=u'drums')
-    samples = SourceBrowserQuery(include=[u'Samples'], subfolder=u'Samples', root_name=u'samples')
-    instruments = TagBrowserQuery(include=[u'Instruments'], root_name=u'instruments')
-    max = TagBrowserQuery(include=[[u'Max for Live', u'Max Instrument']], subfolder=u'Max for Live', root_name=u'max_for_live')
+    drums = TagBrowserQuery(include=[['Drums', 'Drum Hits']], root_name='drums')
+    samples = SourceBrowserQuery(include=['Samples'], subfolder='Samples', root_name='samples')
+    instruments = TagBrowserQuery(include=['Instruments'], root_name='instruments')
+    max = TagBrowserQuery(include=[['Max for Live', 'Max Instrument']], subfolder='Max for Live', root_name='max_for_live')
     plugins = make_plugins_query()
     places = PlacesBrowserQuery(subfolder=PLACES_LABEL)
-    color_tags = ColorTagsBrowserQuery()
-    return QueryingBrowserModel(browser=browser, queries=[color_tags,
-     drums,
+    return QueryingBrowserModel(browser=browser, queries=[drums,
      samples,
      instruments,
      max,
@@ -77,7 +69,7 @@ def make_fallback_browser_model(browser):
 
 
 def make_browser_model(browser, filter_type = None):
-    u"""
+    """
     Factory that returns an appropriate browser model depending on the
     browser filter type and hotswap target.
     """

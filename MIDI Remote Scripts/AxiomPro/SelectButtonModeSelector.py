@@ -1,12 +1,11 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from _Framework.ButtonElement import ButtonElement
 from _Framework.PhysicalDisplayElement import PhysicalDisplayElement
 from _Framework.MixerComponent import MixerComponent
 
 class SelectButtonModeSelector(ModeSelectorComponent):
-    u""" Class that reassigns buttons on the AxiomPro to different mixer functions """
+    """ Class that reassigns buttons on the AxiomPro to different mixer functions """
 
     def __init__(self, mixer, buttons):
         raise isinstance(mixer, MixerComponent) or AssertionError
@@ -56,7 +55,7 @@ class SelectButtonModeSelector(ModeSelectorComponent):
                     self._mixer.channel_strip(index).set_mute_button(None)
                     self._mixer.channel_strip(index).set_solo_button(self._buttons[index])
                 else:
-                    print(u'Invalid mode index')
+                    print 'Invalid mode index'
                     raise False or AssertionError
 
     def _toggle_value(self, value):
@@ -64,14 +63,14 @@ class SelectButtonModeSelector(ModeSelectorComponent):
             raise AssertionError
             ModeSelectorComponent._toggle_value(self, value)
             if value != 0 and self._mode_display is not None:
-                mode_name = u''
-                mode_name = self._mode_index == 0 and u'Select'
+                mode_name = ''
+                mode_name = self._mode_index == 0 and 'Select'
             elif self._mode_index == 1:
-                mode_name = u'Arm'
+                mode_name = 'Arm'
             elif self._mode_index == 2:
-                mode_name = u'Mute'
+                mode_name = 'Mute'
             elif self._mode_index == 3:
-                mode_name = u'Solo'
+                mode_name = 'Solo'
             self._mode_display.display_message(mode_name)
         else:
             self._mode_display.update()

@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import with_statement
 from itertools import cycle, izip
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
 from _MPDMkIIBase.MPDMkIIBase import MPDMkIIBase
@@ -33,9 +33,9 @@ class MPD226(MPDMkIIBase):
 
     def _create_controls(self):
         super(MPD226, self)._create_controls()
-        self._encoders = ButtonMatrixElement(rows=[[ make_encoder(identifier, 0 if index < 4 else 1, u'Encoder_%d' % index) for index, identifier in izip(xrange(8), cycle(xrange(22, 26))) ]])
-        self._sliders = ButtonMatrixElement(rows=[[ make_slider(identifier, 0 if index < 4 else 1, u'Slider_%d' % index) for index, identifier in izip(xrange(8), cycle(xrange(12, 16))) ]])
-        self._control_buttons = ButtonMatrixElement(rows=[[ make_button(identifier, 0 if index < 4 else 1, u'Control_Button_%d' % index) for index, identifier in izip(xrange(8), cycle(xrange(32, 36))) ]])
-        self._play_button = make_button(118, 0, u'Play_Button')
-        self._stop_button = make_button(117, 0, u'Stop_Button')
-        self._record_button = make_button(119, 0, u'Record_Button')
+        self._encoders = ButtonMatrixElement(rows=[[ make_encoder(identifier, 0 if index < 4 else 1, 'Encoder_%d' % index) for index, identifier in izip(xrange(8), cycle(xrange(22, 26))) ]])
+        self._sliders = ButtonMatrixElement(rows=[[ make_slider(identifier, 0 if index < 4 else 1, 'Slider_%d' % index) for index, identifier in izip(xrange(8), cycle(xrange(12, 16))) ]])
+        self._control_buttons = ButtonMatrixElement(rows=[[ make_button(identifier, 0 if index < 4 else 1, 'Control_Button_%d' % index) for index, identifier in izip(xrange(8), cycle(xrange(32, 36))) ]])
+        self._play_button = make_button(118, 0, 'Play_Button')
+        self._stop_button = make_button(117, 0, 'Stop_Button')
+        self._record_button = make_button(119, 0, 'Record_Button')

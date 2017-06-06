@@ -1,12 +1,11 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.ChannelStripComponent import ChannelStripComponent
-from .ConfigurableButtonElement import ConfigurableButtonElement
+from ConfigurableButtonElement import ConfigurableButtonElement
 from itertools import chain
 
 class DefChannelStripComponent(ChannelStripComponent):
-    u""" Subclass of channel strip component offering defaultbuttons for the timeables """
+    """ Subclass of channel strip component offering defaultbuttons for the timeables """
 
     def __init__(self):
         ChannelStripComponent.__init__(self)
@@ -17,7 +16,7 @@ class DefChannelStripComponent(ChannelStripComponent):
         self._invert_mute_feedback = True
 
     def disconnect(self):
-        u""" releasing references and removing listeners"""
+        """ releasing references and removing listeners"""
         if self._track != None:
             volume = self._track.mixer_device.volume
             panning = self._track.mixer_device.panning

@@ -1,7 +1,6 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 import Live
-from .FaderfoxDeviceController import FaderfoxDeviceController
+from FaderfoxDeviceController import FaderfoxDeviceController
 
 class LV2DeviceController(FaderfoxDeviceController):
     __module__ = __name__

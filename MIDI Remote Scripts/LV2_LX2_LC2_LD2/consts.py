@@ -1,5 +1,4 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 TRACK_CHANNEL_SETUP1 = 9
 AUX_CHANNEL_SETUP1 = 10
 CHANNEL_SETUP1 = 11

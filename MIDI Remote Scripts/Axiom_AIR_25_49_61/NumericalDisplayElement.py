@@ -1,20 +1,19 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.PhysicalDisplayElement import PhysicalDisplayElement
-from .NumericalDisplaySegment import NumericalDisplaySegment
+from NumericalDisplaySegment import NumericalDisplaySegment
 
 class NumericalDisplayElement(PhysicalDisplayElement):
-    u""" Special display element that only displays numerical values """
-    _ascii_translations = {u'0': 48,
-     u'1': 49,
-     u'2': 50,
-     u'3': 51,
-     u'4': 52,
-     u'5': 53,
-     u'6': 54,
-     u'7': 55,
-     u'8': 56,
-     u'9': 57}
+    """ Special display element that only displays numerical values """
+    _ascii_translations = {'0': 48,
+     '1': 49,
+     '2': 50,
+     '3': 51,
+     '4': 52,
+     '5': 53,
+     '6': 54,
+     '7': 55,
+     '8': 56,
+     '9': 57}
 
     def __init__(self, width_in_chars, num_segments):
         PhysicalDisplayElement.__init__(self, width_in_chars, num_segments)
@@ -41,5 +40,5 @@ class NumericalDisplayElement(PhysicalDisplayElement):
             raise len(char_to_translate) == 1 or AssertionError
             result = char_to_translate in self._translation_table.keys() and self._translation_table[char_to_translate]
         else:
-            result = self._translation_table[u'0']
+            result = self._translation_table['0']
         return result

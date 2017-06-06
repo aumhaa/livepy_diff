@@ -1,9 +1,9 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from .util import BooleanContext
 
 class ProxyBase(object):
-    u"""
+    """
     Provides a general mechanism for building automatic proxy
     objects. The access is determined between the proxied_object, the
     proxied_interface and the proxy itself following the following rules:
@@ -33,7 +33,7 @@ class ProxyBase(object):
         self._skip_wrapper_lookup = BooleanContext()
 
     def proxy_hasattr(self, attr):
-        u"""
+        """
         Returns wether the proxy, not the proxied, has an attribute.
         """
         with self._skip_wrapper_lookup():
@@ -46,18 +46,18 @@ class ProxyBase(object):
             if obj and hasattr(interface, name):
                 return getattr(obj, name)
             return getattr(interface, name)
-        raise AttributeError(u'Does not have attribute %s' % name)
+        raise AttributeError('Does not have attribute %s' % name)
 
     def __setattr__(self, name, value):
         obj = self.proxied_object
         interface = self.proxied_interface
         if obj and hasattr(interface, name):
             if self.proxy_hasattr(name):
-                raise AttributeError(u'Ambiguous set attribute: %s proxied: %s' % (name, obj))
+                raise AttributeError('Ambiguous set attribute: %s proxied: %s' % (name, obj))
             setattr(obj, name, value)
         else:
             if hasattr(interface, name):
-                raise AttributeError(u'Ambiguous set attribute: %s proxied: %s' % (name, obj))
+                raise AttributeError('Ambiguous set attribute: %s proxied: %s' % (name, obj))
             self.__dict__[name] = value
 
     @property
@@ -67,7 +67,7 @@ class ProxyBase(object):
     @property
     def proxied_interface(self):
         obj = self.proxied_object
-        return getattr(obj, u'proxied_interface', obj)
+        return getattr(obj, 'proxied_interface', obj)
 
 
 class Proxy(ProxyBase):

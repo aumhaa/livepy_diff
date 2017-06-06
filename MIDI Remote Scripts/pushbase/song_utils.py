@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 
 def is_return_track(song, track):
     return track in list(song.return_tracks)

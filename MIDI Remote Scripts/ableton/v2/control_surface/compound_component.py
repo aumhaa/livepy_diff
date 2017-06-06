@@ -1,9 +1,9 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from .component import Component
 
 class CompoundComponent(Component):
-    u""" Base class for classes encompasing other components to form complex components """
+    """ Base class for classes encompasing other components to form complex components """
 
     def __init__(self, *a, **k):
         super(CompoundComponent, self).__init__(*a, **k)
@@ -28,7 +28,7 @@ class CompoundComponent(Component):
         return component in self._sub_components
 
     def set_enabled(self, enable):
-        u"""
+        """
         When disabling a compound component, its children are disabled. When
         enabled, these children are restored to whatever state they were
         explicitly set to.

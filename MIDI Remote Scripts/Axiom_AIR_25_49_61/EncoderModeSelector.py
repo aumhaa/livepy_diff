@@ -1,10 +1,9 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
-from .consts import *
+from consts import *
 
 class EncoderModeSelector(ModeSelectorComponent):
-    u""" SelectorComponent that assigns encoders to different functions """
+    """ SelectorComponent that assigns encoders to different functions """
 
     def __init__(self, mixer, device, encoders):
         ModeSelectorComponent.__init__(self)

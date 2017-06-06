@@ -1,13 +1,12 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
-from .consts import *
-TRANSPORT_CONTROLS = {u'STOP': GENERIC_STOP,
- u'PLAY': GENERIC_PLAY,
- u'REC': GENERIC_REC,
- u'LOOP': GENERIC_LOOP,
- u'RWD': GENERIC_RWD,
- u'FFWD': GENERIC_FFWD,
- u'NORELEASE': 0}
+from consts import *
+TRANSPORT_CONTROLS = {'STOP': GENERIC_STOP,
+ 'PLAY': GENERIC_PLAY,
+ 'REC': GENERIC_REC,
+ 'LOOP': GENERIC_LOOP,
+ 'RWD': GENERIC_RWD,
+ 'FFWD': GENERIC_FFWD,
+ 'NORELEASE': 0}
 DEVICE_CONTROLS = ((GENERIC_ENC1, 0),
  (GENERIC_ENC2, 0),
  (GENERIC_ENC3, 0),
@@ -32,18 +31,18 @@ TRACKARM_CONTROLS = (GENERIC_BUT1,
  GENERIC_BUT6,
  GENERIC_BUT7,
  GENERIC_BUT8)
-BANK_CONTROLS = {u'TOGGLELOCK': -1,
- u'BANKDIAL': -1,
- u'NEXTBANK': -1,
- u'PREVBANK': -1,
- u'BANK1': -1,
- u'BANK2': -1,
- u'BANK3': -1,
- u'BANK4': -1,
- u'BANK5': -1,
- u'BANK6': -1,
- u'BANK7': -1,
- u'BANK8': -1}
+BANK_CONTROLS = {'TOGGLELOCK': -1,
+ 'BANKDIAL': -1,
+ 'NEXTBANK': -1,
+ 'PREVBANK': -1,
+ 'BANK1': -1,
+ 'BANK2': -1,
+ 'BANK3': -1,
+ 'BANK4': -1,
+ 'BANK5': -1,
+ 'BANK6': -1,
+ 'BANK7': -1,
+ 'BANK8': -1}
 PAD_TRANSLATION = ((0, 0, 76, 1),
  (1, 0, 77, 1),
  (2, 0, 78, 1),
@@ -56,12 +55,12 @@ PAD_TRANSLATION = ((0, 0, 76, 1),
  (0, 3, 60, 1),
  (1, 3, 62, 1),
  (2, 3, 64, 1))
-CONTROLLER_DESCRIPTION = {u'INPUTPORT': u'Akai MPK25',
- u'OUTPUTPORT': u'Akai MPK25',
- u'CHANNEL': 0,
- u'PAD_TRANSLATION': PAD_TRANSLATION}
-MIXER_OPTIONS = {u'NUMSENDS': 2,
- u'SEND1': (-1, -1, -1, -1, -1, -1, -1, -1),
- u'SEND2': (-1, -1, -1, -1, -1, -1, -1, -1),
- u'MASTERVOLUME': -1,
- u'NOTOGGLE': 0}
+CONTROLLER_DESCRIPTION = {'INPUTPORT': 'Akai MPK25',
+ 'OUTPUTPORT': 'Akai MPK25',
+ 'CHANNEL': 0,
+ 'PAD_TRANSLATION': PAD_TRANSLATION}
+MIXER_OPTIONS = {'NUMSENDS': 2,
+ 'SEND1': (-1, -1, -1, -1, -1, -1, -1, -1),
+ 'SEND2': (-1, -1, -1, -1, -1, -1, -1, -1),
+ 'MASTERVOLUME': -1,
+ 'NOTOGGLE': 0}

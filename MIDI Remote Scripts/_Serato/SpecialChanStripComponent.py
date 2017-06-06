@@ -1,5 +1,4 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.ChannelStripComponent import ChannelStripComponent
 
 class SpecialChanStripComponent(ChannelStripComponent):
@@ -115,7 +114,7 @@ class SpecialChanStripComponent(ChannelStripComponent):
 
     def _on_track_name_changed(self):
         if self._serato_interface != None and self._index > -1:
-            name = u''
+            name = ''
             if self._track != None:
                 name = self._track.name
             self._serato_interface.PySCA_SetTrackLabel(self._index + 1, name)
@@ -221,14 +220,14 @@ class SpecialChanStripComponent(ChannelStripComponent):
         return result
 
     def _identifier(self):
-        track_id = u''
+        track_id = ''
         tracks = self.song().tracks
         returns = self.song().return_tracks
         if self._track != None:
             if self._track in tracks:
                 track_id = str(list(tracks).index(self._track) + 1)
             elif self._track in returns:
-                track_id = str(chr(ord(u'A') + list(returns).index(self._track)))
+                track_id = str(chr(ord('A') + list(returns).index(self._track)))
             elif self._track == self.song().master_track:
-                track_id = u'M'
+                track_id = 'M'
         return self._encode_track_identifier(track_id)

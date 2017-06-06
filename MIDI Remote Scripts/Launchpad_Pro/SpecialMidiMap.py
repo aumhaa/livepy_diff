@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import
 from _Framework.MidiMap import MidiMap
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
 from _Framework.Resource import PrioritizedResource
@@ -18,7 +18,7 @@ def make_button(name, channel, number, midi_message_type, skin = None, default_s
 
 @depends(skin=None)
 def make_multi_button(name, channel, number, midi_message_type, skin = None, default_states = None, **k):
-    u"""
+    """
     Creates a special button element that is actually multiple buttons;
     one for the default channel (1) and one for each of the channels
     used in user layouts. This allows the created buttons
@@ -44,10 +44,10 @@ class SpecialMidiMap(MidiMap):
         raise name not in self.keys() or AssertionError
 
         def one_dimensional_name(base_name, x, _y):
-            return u'%s_%d' % (base_name, x)
+            return '%s_%d' % (base_name, x)
 
         def two_dimensional_name(base_name, x, y):
-            return u'%s_%d_%d' % (base_name, x, y)
+            return '%s_%d_%d' % (base_name, x, y)
 
         name_factory = two_dimensional_name if len(numbers) > 1 else one_dimensional_name
         elements = []
@@ -60,8 +60,8 @@ class SpecialMidiMap(MidiMap):
 
             elements.append(element_row)
 
-        self[u'%s_Raw' % name] = elements
-        self[u'%s_Ids' % name] = id_dict
+        self['%s_Raw' % name] = elements
+        self['%s_Ids' % name] = id_dict
         self[name] = ButtonMatrixElement(rows=elements, name=name)
 
     def add_modifier_button(self, name, channel, number, midi_message_type, default_states = None, element_factory = make_button):

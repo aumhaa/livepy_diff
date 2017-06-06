@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from ableton.v2.base import NamedTuple, lazy_attribute, memoize, find_if
 from . import consts
 from .matrix_maps import FEEDBACK_CHANNELS
@@ -14,7 +14,7 @@ def pitch_index_to_string(index):
 
 
 class Scale(NamedTuple):
-    name = u''
+    name = ''
     notes = []
 
     def to_root_note(self, root_note):
@@ -28,59 +28,59 @@ class Scale(NamedTuple):
         return self.name
 
     def __str__(self):
-        return unicode(self).encode(u'utf-8')
+        return unicode(self).encode('utf-8')
 
 
-SCALES = (Scale(name=u'Major', notes=[0,
+SCALES = (Scale(name='Major', notes=[0,
   2,
   4,
   5,
   7,
   9,
   11]),
- Scale(name=u'Minor', notes=[0,
+ Scale(name='Minor', notes=[0,
   2,
   3,
   5,
   7,
   8,
   10]),
- Scale(name=u'Dorian', notes=[0,
+ Scale(name='Dorian', notes=[0,
   2,
   3,
   5,
   7,
   9,
   10]),
- Scale(name=u'Mixolydian', notes=[0,
+ Scale(name='Mixolydian', notes=[0,
   2,
   4,
   5,
   7,
   9,
   10]),
- Scale(name=u'Lydian', notes=[0,
+ Scale(name='Lydian', notes=[0,
   2,
   4,
   6,
   7,
   9,
   11]),
- Scale(name=u'Phrygian', notes=[0,
+ Scale(name='Phrygian', notes=[0,
   1,
   3,
   5,
   7,
   8,
   10]),
- Scale(name=u'Locrian', notes=[0,
+ Scale(name='Locrian', notes=[0,
   1,
   3,
   5,
   6,
   8,
   10]),
- Scale(name=u'Diminished', notes=[0,
+ Scale(name='Diminished', notes=[0,
   1,
   3,
   4,
@@ -88,7 +88,7 @@ SCALES = (Scale(name=u'Major', notes=[0,
   7,
   9,
   10]),
- Scale(name=u'Whole-half', notes=[0,
+ Scale(name='Whole-half', notes=[0,
   2,
   3,
   5,
@@ -96,97 +96,97 @@ SCALES = (Scale(name=u'Major', notes=[0,
   8,
   9,
   11]),
- Scale(name=u'Whole Tone', notes=[0,
+ Scale(name='Whole Tone', notes=[0,
   2,
   4,
   6,
   8,
   10]),
- Scale(name=u'Minor Blues', notes=[0,
+ Scale(name='Minor Blues', notes=[0,
   3,
   5,
   6,
   7,
   10]),
- Scale(name=u'Minor Pentatonic', notes=[0,
+ Scale(name='Minor Pentatonic', notes=[0,
   3,
   5,
   7,
   10]),
- Scale(name=u'Major Pentatonic', notes=[0,
+ Scale(name='Major Pentatonic', notes=[0,
   2,
   4,
   7,
   9]),
- Scale(name=u'Harmonic Minor', notes=[0,
+ Scale(name='Harmonic Minor', notes=[0,
   2,
   3,
   5,
   7,
   8,
   11]),
- Scale(name=u'Melodic Minor', notes=[0,
+ Scale(name='Melodic Minor', notes=[0,
   2,
   3,
   5,
   7,
   9,
   11]),
- Scale(name=u'Super Locrian', notes=[0,
+ Scale(name='Super Locrian', notes=[0,
   1,
   3,
   4,
   6,
   8,
   10]),
- Scale(name=u'Bhairav', notes=[0,
+ Scale(name='Bhairav', notes=[0,
   1,
   4,
   5,
   7,
   8,
   11]),
- Scale(name=u'Hungarian Minor', notes=[0,
+ Scale(name='Hungarian Minor', notes=[0,
   2,
   3,
   6,
   7,
   8,
   11]),
- Scale(name=u'Minor Gypsy', notes=[0,
+ Scale(name='Minor Gypsy', notes=[0,
   1,
   4,
   5,
   7,
   8,
   10]),
- Scale(name=u'Hirojoshi', notes=[0,
+ Scale(name='Hirojoshi', notes=[0,
   2,
   3,
   7,
   8]),
- Scale(name=u'In-Sen', notes=[0,
+ Scale(name='In-Sen', notes=[0,
   1,
   5,
   7,
   10]),
- Scale(name=u'Iwato', notes=[0,
+ Scale(name='Iwato', notes=[0,
   1,
   5,
   6,
   10]),
- Scale(name=u'Kumoi', notes=[0,
+ Scale(name='Kumoi', notes=[0,
   2,
   3,
   7,
   9]),
- Scale(name=u'Pelog', notes=[0,
+ Scale(name='Pelog', notes=[0,
   1,
   3,
   4,
   7,
   8]),
- Scale(name=u'Spanish', notes=[0,
+ Scale(name='Spanish', notes=[0,
   1,
   3,
   4,
@@ -202,7 +202,7 @@ def scale_by_name(name):
 class NoteInfo(NamedTuple):
     index = None
     channel = 0
-    color = u'NoteInvalid'
+    color = 'NoteInvalid'
 
 
 class MelodicPattern(NamedTuple):
@@ -253,11 +253,11 @@ class MelodicPattern(NamedTuple):
 
     def _color_for_note(self, note):
         if note == self.scale[0]:
-            return u'NoteBase'
+            return 'NoteBase'
         elif note in self.scale:
-            return u'NoteScale'
+            return 'NoteScale'
         else:
-            return u'NoteNotScale'
+            return 'NoteNotScale'
 
     def _get_note_info(self, (octave, note), root_note, channel = 0):
         note_index = 12 * octave + note + root_note

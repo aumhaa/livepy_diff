@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import with_statement
 from _Framework.ControlSurface import ControlSurface
 from _Framework.Layer import Layer
 from _Framework.DrumRackComponent import DrumRackComponent
@@ -13,13 +13,13 @@ class MidiMap(MidiMapBase):
 
     def __init__(self, *a, **k):
         super(MidiMap, self).__init__(*a, **k)
-        self.add_button(u'Play', 0, 118, MIDI_CC_TYPE)
-        self.add_button(u'Record', 0, 119, MIDI_CC_TYPE)
-        self.add_button(u'Stop', 0, 117, MIDI_CC_TYPE)
-        self.add_button(u'Loop', 0, 114, MIDI_CC_TYPE)
-        self.add_button(u'Forward', 0, 116, MIDI_CC_TYPE)
-        self.add_button(u'Backward', 0, 115, MIDI_CC_TYPE)
-        self.add_matrix(u'Sliders', make_slider, 0, [[12,
+        self.add_button('Play', 0, 118, MIDI_CC_TYPE)
+        self.add_button('Record', 0, 119, MIDI_CC_TYPE)
+        self.add_button('Stop', 0, 117, MIDI_CC_TYPE)
+        self.add_button('Loop', 0, 114, MIDI_CC_TYPE)
+        self.add_button('Forward', 0, 116, MIDI_CC_TYPE)
+        self.add_button('Backward', 0, 115, MIDI_CC_TYPE)
+        self.add_matrix('Sliders', make_slider, 0, [[12,
           13,
           14,
           15,
@@ -27,7 +27,7 @@ class MidiMap(MidiMapBase):
           17,
           18,
           19]], MIDI_CC_TYPE)
-        self.add_matrix(u'Encoders', make_encoder, 0, [[22,
+        self.add_matrix('Encoders', make_encoder, 0, [[22,
           23,
           24,
           25,
@@ -35,7 +35,7 @@ class MidiMap(MidiMapBase):
           27,
           28,
           29]], MIDI_CC_TYPE)
-        self.add_matrix(u'Arm_Buttons', make_button, 0, [[32,
+        self.add_matrix('Arm_Buttons', make_button, 0, [[32,
           33,
           34,
           35,
@@ -43,7 +43,7 @@ class MidiMap(MidiMapBase):
           37,
           38,
           39]], MIDI_CC_TYPE)
-        self.add_matrix(u'Drum_Pads', make_button, 1, [[81,
+        self.add_matrix('Drum_Pads', make_button, 1, [[81,
           83,
           84,
           86],
@@ -67,10 +67,10 @@ class MPK249(ControlSurface):
         super(MPK249, self).__init__(*a, **k)
         with self.component_guard():
             midimap = MidiMap()
-            drum_rack = DrumRackComponent(name=u'Drum_Rack', is_enabled=False, layer=Layer(pads=midimap[u'Drum_Pads']))
+            drum_rack = DrumRackComponent(name='Drum_Rack', is_enabled=False, layer=Layer(pads=midimap['Drum_Pads']))
             drum_rack.set_enabled(True)
-            transport = TransportComponent(name=u'Transport', is_enabled=False, layer=Layer(play_button=midimap[u'Play'], record_button=midimap[u'Record'], stop_button=midimap[u'Stop'], seek_forward_button=midimap[u'Forward'], seek_backward_button=midimap[u'Backward'], loop_button=midimap[u'Loop']))
+            transport = TransportComponent(name='Transport', is_enabled=False, layer=Layer(play_button=midimap['Play'], record_button=midimap['Record'], stop_button=midimap['Stop'], seek_forward_button=midimap['Forward'], seek_backward_button=midimap['Backward'], loop_button=midimap['Loop']))
             transport.set_enabled(True)
-            mixer_size = len(midimap[u'Sliders'])
-            mixer = MixerComponent(mixer_size, name=u'Mixer', is_enabled=False, layer=Layer(volume_controls=midimap[u'Sliders'], pan_controls=midimap[u'Encoders'], arm_buttons=midimap[u'Arm_Buttons']))
+            mixer_size = len(midimap['Sliders'])
+            mixer = MixerComponent(mixer_size, name='Mixer', is_enabled=False, layer=Layer(volume_controls=midimap['Sliders'], pan_controls=midimap['Encoders'], arm_buttons=midimap['Arm_Buttons']))
             mixer.set_enabled(True)

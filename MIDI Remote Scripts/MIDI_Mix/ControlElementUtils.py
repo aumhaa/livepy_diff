@@ -1,5 +1,4 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.Dependency import depends
 from _Framework.InputControlElement import MIDI_CC_TYPE, MIDI_NOTE_TYPE
@@ -22,4 +21,4 @@ def make_encoder(identifier, name):
 
 
 def make_button_row(identifier_sequence, element_factory, name):
-    return ButtonMatrixElement(rows=[ [element_factory(identifier, name + u'_%d' % index)] for index, identifier in enumerate(identifier_sequence) ])
+    return ButtonMatrixElement(rows=[ [element_factory(identifier, name + '_%d' % index)] for index, identifier in enumerate(identifier_sequence) ])

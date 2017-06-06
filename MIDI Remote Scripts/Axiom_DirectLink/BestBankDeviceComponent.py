@@ -1,13 +1,12 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.DeviceComponent import DeviceComponent
 from _Framework.DisplayDataSource import DisplayDataSource
 from _Generic.Devices import parameter_bank_names, parameter_banks, DEVICE_DICT, BANK_NAME_DICT, DEVICE_BOB_DICT
-BOP_BANK_NAME = u'Best of Parameters'
+BOP_BANK_NAME = 'Best of Parameters'
 
 class BestBankDeviceComponent(DeviceComponent):
-    u""" Special Device component that uses the best of bank of a device as default """
+    """ Special Device component that uses the best of bank of a device as default """
 
     def __init__(self, *a, **k):
         super(BestBankDeviceComponent, self).__init__(*a, **k)
@@ -18,8 +17,8 @@ class BestBankDeviceComponent(DeviceComponent):
         self._device_best_banks = DEVICE_BOB_DICT
         for device_name, current_banks in self._device_banks.iteritems():
             if len(current_banks) > 1:
-                raise device_name in self._device_best_banks.keys() or AssertionError(u"Could not find best-of-banks for '%s'" % device_name)
-                raise device_name in self._device_bank_names.keys() or AssertionError(u"Could not find bank names for '%s'" % device_name)
+                raise device_name in self._device_best_banks.keys() or AssertionError("Could not find best-of-banks for '%s'" % device_name)
+                raise device_name in self._device_bank_names.keys() or AssertionError("Could not find bank names for '%s'" % device_name)
                 current_banks = self._device_best_banks[device_name] + current_banks
                 new_bank_names[device_name] = (BOP_BANK_NAME,) + self._device_bank_names[device_name]
             new_banks[device_name] = current_banks
@@ -45,11 +44,11 @@ class BestBankDeviceComponent(DeviceComponent):
 
     def _update_bank_display(self):
         if self.is_enabled():
-            bank_name = u''
-            if self._device != None and self._bank_name != u'<No Bank>':
+            bank_name = ''
+            if self._device != None and self._bank_name != '<No Bank>':
                 bank_name = self._bank_name
-                if bank_name in (BOP_BANK_NAME, u'Bank 1'):
-                    bank_name = u'Home'
+                if bank_name in (BOP_BANK_NAME, 'Bank 1'):
+                    bank_name = 'Home'
             self._bank_name_data_source.set_display_string(bank_name)
 
     def _is_banking_enabled(self):

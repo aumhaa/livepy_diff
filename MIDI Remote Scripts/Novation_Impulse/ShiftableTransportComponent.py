@@ -1,11 +1,10 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.ButtonElement import ButtonElement
 from _Framework.TransportComponent import TransportComponent
 
 class ShiftableTransportComponent(TransportComponent):
-    u""" Special transport class handling the seek buttons differently based on a shift button"""
+    """ Special transport class handling the seek buttons differently based on a shift button"""
 
     def __init__(self):
         self._shift_button = None

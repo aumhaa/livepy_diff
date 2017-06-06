@@ -1,14 +1,14 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from .control import InputControl
 
 class MappedControl(InputControl):
-    u"""
+    """
     Control that is mapped to a parameter in Live.
     """
 
     class State(InputControl.State):
-        u"""
+        """
         State-full representation of the Control.
         """
 
@@ -19,7 +19,7 @@ class MappedControl(InputControl):
             self._direct_mapping = None
 
         def set_control_element(self, control_element):
-            u"""
+            """
             Connects the given Control Element with the Control. It will be mapped
             to the :attr:`mapped_parameter` in Live and follow the same rules as
             Live's MIDI mapping mechanism.
@@ -31,7 +31,7 @@ class MappedControl(InputControl):
 
         @property
         def mapped_parameter(self):
-            u"""
+            """
             The parameter that is controlled. Depending on the parameter, a different
             Control Element might be suited.
             """

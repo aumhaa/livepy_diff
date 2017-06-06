@@ -1,16 +1,16 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from math import fabs
 from ableton.v2.base import sign, clamp, EventObject, Event
 
 class Setting(EventObject):
-    u"""
+    """
     Setting interface for writing to the preferences and all
     information for changing and displaying it.
     """
-    __events__ = (Event(name=u'value', doc=u' Called when the value of the setting changes '),)
+    __events__ = (Event(name='value', doc=' Called when the value of the setting changes '),)
 
-    def __init__(self, name = u'', values = None, default_value = None, preferences = None, *a, **k):
+    def __init__(self, name = '', values = None, default_value = None, preferences = None, *a, **k):
         super(Setting, self).__init__(*a, **k)
         self.name = name
         self.values = values or []
@@ -39,7 +39,7 @@ class Setting(EventObject):
         pass
 
     def change_relative(self, value):
-        u""" Given a value between -1.0 and 1.0, this will decide on a new value. """
+        """ Given a value between -1.0 and 1.0, this will decide on a new value. """
         raise NotImplementedError
 
     def value_to_string(self, value):
@@ -47,10 +47,10 @@ class Setting(EventObject):
 
 
 class OnOffSetting(Setting):
-    u""" Simple on/off setting represented by a boolean value """
+    """ Simple on/off setting represented by a boolean value """
     THRESHOLD = 0.01
 
-    def __init__(self, value_labels = [u'On', u'Off'], *a, **k):
+    def __init__(self, value_labels = ['On', 'Off'], *a, **k):
         super(OnOffSetting, self).__init__(values=[True, False], *a, **k)
         self._value_labels = value_labels
 
@@ -64,7 +64,7 @@ class OnOffSetting(Setting):
 
 
 class EnumerableSetting(Setting):
-    u""" Setting to go through a list of values """
+    """ Setting to go through a list of values """
     STEP_SIZE = 0.1
 
     def __init__(self, value_formatter = str, *a, **k):

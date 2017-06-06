@@ -1,17 +1,17 @@
 
-u"""
+"""
 Component that automatically arms the selected track.
 """
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from functools import partial
 from itertools import ifilter
 from ableton.v2.base import mixin, nop, listens, listens_group
 from ableton.v2.control_surface import Component
-from ableton.v2.control_surface.mode import ModeButtonBehaviour
+from ableton.v2.control_surface.mode import LatchingBehaviour
 from .message_box_component import Messenger
 
-class AutoArmRestoreBehaviour(ModeButtonBehaviour):
-    u"""
+class AutoArmRestoreBehaviour(LatchingBehaviour):
+    """
     Mode button behaviour that auto-arm is enabled when the mode is
     activated. If it is not, then it will make the button blink and
     restore it in the second press.
@@ -25,36 +25,36 @@ class AutoArmRestoreBehaviour(ModeButtonBehaviour):
         super(AutoArmRestoreBehaviour, self).__init__(*a, **k)
         self._auto_arm = auto_arm
         self._last_update_params = None
-        self._should_call_super = True
+        self._skip_super = False
 
     def press_immediate(self, component, mode):
+        called_super = False
         if component.selected_mode != mode:
-            component.push_mode(mode)
-            self._should_call_super = False
-        else:
-            self._should_call_super = True
+            called_super = True
+            super(AutoArmRestoreBehaviour, self).press_immediate(component, mode)
         if self._auto_arm.needs_restore_auto_arm:
             self._auto_arm.restore_auto_arm()
-            self._should_call_super = False
+        elif not called_super:
+            called_super = True
+            super(AutoArmRestoreBehaviour, self).press_immediate(component, mode)
+        self._skip_super = not called_super
 
     def press_delayed(self, component, mode):
-        if self._should_call_super:
+        if not self._skip_super:
             super(AutoArmRestoreBehaviour, self).press_delayed(component, mode)
 
     def release_immediate(self, component, mode):
-        if self._should_call_super:
+        if not self._skip_super:
             super(AutoArmRestoreBehaviour, self).release_immediate(component, mode)
 
     def release_delayed(self, component, mode):
-        if not self._should_call_super or len(component.active_modes) > 1:
-            component.pop_mode(mode)
-        else:
+        if not self._skip_super:
             super(AutoArmRestoreBehaviour, self).release_delayed(component, mode)
 
     def update_button(self, component, mode, selected_mode):
         self._last_update_params = (component, mode, selected_mode)
         button = component.get_mode_button(mode)
-        button.mode_selected_color = u'DefaultButton.Alert' if self._auto_arm.needs_restore_auto_arm else u'DefaultButton.On'
+        button.mode_selected_color = 'DefaultButton.Alert' if self._auto_arm.needs_restore_auto_arm else 'DefaultButton.On'
 
     def update(self):
         if self._last_update_params:
@@ -62,7 +62,7 @@ class AutoArmRestoreBehaviour(ModeButtonBehaviour):
 
 
 class AutoArmComponent(Component, Messenger):
-    u"""
+    """
     Component that implictly arms tracks to keep the selected track
     always armed while there is no compatible red-armed track.
     """
@@ -89,13 +89,13 @@ class AutoArmComponent(Component, Messenger):
     def can_auto_arm_track(self, track):
         return self.track_can_be_armed(track)
 
-    @listens(u'selected_track')
+    @listens('selected_track')
     def _on_selected_track_changed(self):
         self.update()
 
     def _update_notification(self):
         if self.needs_restore_auto_arm:
-            self._notification_reference = self.show_notification(u'  Press [Note] to arm the track:    ' + self.song.view.selected_track.name, blink_text=u'  Press        to arm the track:    ' + self.song.view.selected_track.name, notification_time=10.0)
+            self._notification_reference = self.show_notification('  Press [Note] to arm the track:    ' + self.song.view.selected_track.name, blink_text='  Press        to arm the track:    ' + self.song.view.selected_track.name, notification_time=10.0)
         else:
             self._hide_notification()
 
@@ -130,25 +130,25 @@ class AutoArmComponent(Component, Messenger):
         exclusive_arm = song.exclusive_arm
         return self.is_enabled() and self.can_auto_arm_track(song.view.selected_track) and not song.view.selected_track.arm and any(ifilter(lambda track: (exclusive_arm or self.can_auto_arm_track(track)) and track.can_be_armed and track.arm, song.tracks))
 
-    @listens(u'tracks')
+    @listens('tracks')
     def _on_tracks_changed(self):
         tracks = filter(lambda t: t.can_be_armed, self.song.tracks)
         self._on_arm_changed.replace_subjects(tracks)
         self._on_input_routing_type_changed.replace_subjects(tracks)
         self._on_frozen_state_changed.replace_subjects(tracks)
 
-    @listens(u'exclusive_arm')
+    @listens('exclusive_arm')
     def _on_exclusive_arm_changed(self):
         self.update()
 
-    @listens_group(u'arm')
+    @listens_group('arm')
     def _on_arm_changed(self, track):
         self.update()
 
-    @listens_group(u'input_routing_type')
+    @listens_group('input_routing_type')
     def _on_input_routing_type_changed(self, track):
         self.update()
 
-    @listens_group(u'is_frozen')
+    @listens_group('is_frozen')
     def _on_frozen_state_changed(self, track):
         self.update()

@@ -1,5 +1,4 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 NOTE_OFF_STATUS = 128
 NOTE_ON_STATUS = 144
 CC_STATUS = 176

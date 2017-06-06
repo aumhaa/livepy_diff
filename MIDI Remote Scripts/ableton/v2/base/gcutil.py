@@ -1,21 +1,21 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from collections import defaultdict
 import gc
 
 def typename(obj):
-    u"""
+    """
     Robust class-name utility-function
     """
-    if hasattr(obj, u'__class__'):
+    if hasattr(obj, '__class__'):
         return obj.__class__.__name__
-    if hasattr(obj, u'__name__'):
+    if hasattr(obj, '__name__'):
         return obj.__name__
-    return u'<unknown>'
+    return '<unknown>'
 
 
 def histogram(name_filter = None, objs = None):
-    u"""
+    """
     Return a defaultdict of classname to count mappings.
     
     In the debugger, use e.g. pp dict(histogram()) to print this out.
@@ -41,7 +41,7 @@ def histogram(name_filter = None, objs = None):
 
 
 def instances_by_name(name_filter):
-    u"""
+    """
     Return the list of objects that exactly match the given
     name_filter.
     """
@@ -49,7 +49,7 @@ def instances_by_name(name_filter):
 
 
 def refget(objs, level = 1):
-    u"""
+    """
     Get the referrers to the sequence of objects passed in.
     
     As Python stores instance attributes within a dict, usually

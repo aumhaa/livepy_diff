@@ -1,15 +1,15 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from ...base import nop
 from .control import control_event, control_color
 from .button import ButtonControlBase
 
 class RadioButtonControl(ButtonControlBase):
-    checked = control_event(u'checked')
+    checked = control_event('checked')
 
     class State(ButtonControlBase.State):
-        unchecked_color = control_color(u'DefaultButton.Off')
-        checked_color = control_color(u'DefaultButton.On')
+        unchecked_color = control_color('DefaultButton.Off')
+        checked_color = control_color('DefaultButton.On')
 
         def __init__(self, unchecked_color = None, checked_color = None, *a, **k):
             super(RadioButtonControl.State, self).__init__(*a, **k)
@@ -43,5 +43,5 @@ class RadioButtonControl(ButtonControlBase):
 
         def _notify_checked(self):
             if self._checked:
-                self._call_listener(u'checked')
+                self._call_listener('checked')
                 self._on_checked()

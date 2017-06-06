@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from weakref import ref
 import Live
 from ableton.v2.base import nop, listenable_property
@@ -12,7 +12,7 @@ class NotificationComponent(Component):
     def __init__(self, default_notification_time = 2.5, *a, **k):
         super(NotificationComponent, self).__init__(*a, **k)
         self._visible = False
-        self._message = u''
+        self._message = ''
         self.show_notification = self._show_notification
         self._notification_timer = None
         self._default_notification_time = default_notification_time
@@ -58,13 +58,13 @@ class NotificationComponent(Component):
             self.notify_visible()
 
     def use_single_line(self, *a):
-        u"""
+        """
         Only for Push 1 compatibility
         """
         return self._dummy_control_element
 
     def use_full_display(self, *a):
-        u"""
+        """
         Only for Push 1 compatibility
         """
         return self._dummy_control_element

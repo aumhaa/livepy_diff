@@ -1,5 +1,4 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from itertools import ifilter, izip_longest
 from _Framework.Control import RadioButtonControl, control_list
 from _Framework.Dependency import depends
@@ -13,11 +12,11 @@ class ChannelStripComponent(ChannelStripComponentBase):
             state = self._track.mixer_device.crossfade_assign if self._track else 1
             value_to_send = None
             if state == 0:
-                value_to_send = u'Mixer.Crossfade.A'
+                value_to_send = 'Mixer.Crossfade.A'
             elif state == 1:
-                value_to_send = u'Mixer.Crossfade.Off'
+                value_to_send = 'Mixer.Crossfade.Off'
             elif state == 2:
-                value_to_send = u'Mixer.Crossfade.B'
+                value_to_send = 'Mixer.Crossfade.B'
             self._crossfade_toggle.set_light(value_to_send)
 
 
@@ -58,15 +57,15 @@ class MixerComponent(MixerComponentBase):
 
     def _show_controlled_sends_message(self):
         if self._send_index is not None:
-            send_name = chr(ord(u'A') + self._send_index)
-            self._show_message(u'Controlling Send %s' % send_name)
+            send_name = chr(ord('A') + self._send_index)
+            self._show_message('Controlling Send %s' % send_name)
 
     def set_pan_controls(self, controls):
         super(MixerComponent, self).set_pan_controls(controls)
         self._pan_controls = controls
         self._update_pan_controls()
         if self.is_enabled() and controls:
-            self._show_message(u'Controlling Pans')
+            self._show_message('Controlling Pans')
 
     def set_send_controls(self, controls):
         super(MixerComponent, self).set_send_controls(controls)
@@ -79,7 +78,7 @@ class MixerComponent(MixerComponentBase):
         self._user_controls = controls
         self._update_user_controls()
         if self.is_enabled() and controls:
-            self._show_message(u'Controlling User Mappings')
+            self._show_message('Controlling User Mappings')
 
     def set_crossfade_buttons(self, buttons):
         for strip, button in izip_longest(self._channel_strips, buttons or []):

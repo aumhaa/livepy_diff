@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from itertools import ifilter
 from ableton.v2.base import liveobj_valid, listenable_property, listens
 from pushbase.automation_component import AutomationComponent as AutomationComponentBase
@@ -65,7 +65,7 @@ def make_automation_parameter(parameter_info):
 
 class AutomationComponent(AutomationComponentBase):
     ENCODER_SENSITIVITY_FACTOR = 0.5
-    __events__ = (u'parameters',)
+    __events__ = ('parameters',)
 
     def __init__(self, *a, **k):
         self._parameter_infos = []
@@ -74,7 +74,7 @@ class AutomationComponent(AutomationComponentBase):
 
     @property
     def deviceType(self):
-        device_type = u'default'
+        device_type = 'default'
         device = self.device
         if liveobj_valid(device):
             device = self.parameter_provider.device()
@@ -84,13 +84,13 @@ class AutomationComponent(AutomationComponentBase):
     @listenable_property
     def device(self):
         device = None
-        if hasattr(self.parameter_provider, u'device'):
+        if hasattr(self.parameter_provider, 'device'):
             device = self.parameter_provider.device()
         return device
 
     def _on_parameter_provider_changed(self, provider):
         self.notify_device()
-        self.__on_device_changed.subject = provider if getattr(self.parameter_provider, u'device', None) is not None else None
+        self.__on_device_changed.subject = provider if getattr(self.parameter_provider, 'device', None) is not None else None
 
     @property
     def parameters(self):
@@ -137,6 +137,6 @@ class AutomationComponent(AutomationComponentBase):
         if parameters[index]:
             return parameters[index].original_parameter
 
-    @listens(u'device')
+    @listens('device')
     def __on_device_changed(self):
         self.notify_device()

@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import with_statement
 from itertools import imap, chain
 import Live
 from _Framework.Util import find_if
@@ -7,12 +7,12 @@ from _Framework.SubjectSlot import Subject, subject_slot_group, subject_slot
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 
 class DrumGroupFinderComponent(ControlSurfaceComponent, Subject):
-    u"""
+    """
     Looks in the hierarchy of devices of a track, looking
     for the first available drum-rack (deep-first), updating as the
     device list changes.
     """
-    __subject_events__ = (u'drum_group',)
+    __subject_events__ = ('drum_group',)
     _drum_group = None
 
     def __init__(self, target_track_component, layer = None, is_enabled = True, *a, **k):
@@ -23,27 +23,27 @@ class DrumGroupFinderComponent(ControlSurfaceComponent, Subject):
 
     @property
     def drum_group(self):
-        u"""
+        """
         The latest found drum rack.
         """
         return self._drum_group
 
     @property
     def root(self):
-        u"""
+        """
         The currently observed track.
         """
         return self._target_track_component.target_track
 
-    @subject_slot_group(u'devices')
+    @subject_slot_group('devices')
     def _on_devices_changed(self, chain):
         self.update()
 
-    @subject_slot_group(u'chains')
+    @subject_slot_group('chains')
     def _on_chains_changed(self, chain):
         self.update()
 
-    @subject_slot(u'target_track')
+    @subject_slot('target_track')
     def _on_track_changed(self):
         self.update()
 
@@ -68,7 +68,7 @@ class DrumGroupFinderComponent(ControlSurfaceComponent, Subject):
 
 
 def find_instrument_devices(track_or_chain):
-    u"""
+    """
     Returns a list with all instrument rack descendants from a track
     or chain.
     """
@@ -79,7 +79,7 @@ def find_instrument_devices(track_or_chain):
 
 
 def find_drum_group_device(track_or_chain):
-    u"""
+    """
     Looks up recursively for a drum_group device in the track.
     """
     instrument = find_if(lambda d: d.type == Live.Device.DeviceType.instrument, track_or_chain.devices)

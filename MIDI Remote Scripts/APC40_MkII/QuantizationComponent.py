@@ -1,5 +1,4 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.Control import RadioButtonControl, control_list
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
@@ -29,7 +28,7 @@ class QuantizationComponent(ControlSurfaceComponent):
             if quantization != self.song().clip_trigger_quantization:
                 self.song().clip_trigger_quantization = quantization
 
-    @subject_slot(u'clip_trigger_quantization')
+    @subject_slot('clip_trigger_quantization')
     def _on_clip_trigger_quantization_changed(self):
         self._get_button(self.song().clip_trigger_quantization).is_checked = True
 

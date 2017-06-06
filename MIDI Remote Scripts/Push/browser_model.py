@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 import os
 from functools import partial
 from itertools import imap, chain
@@ -16,14 +16,14 @@ def filter_type_for_browser(browser):
 
 
 class VirtualBrowserItem(object):
-    u"""
+    """
     Quacks like a Live.Browser.BrowserItem
     """
-    source = u''
+    source = ''
     is_device = False
     is_loadable = False
 
-    def __init__(self, name = u'', children_query = nop, is_folder = False):
+    def __init__(self, name = '', children_query = nop, is_folder = False):
         self.name = name
         self.is_folder = is_folder
         self.children_query = children_query
@@ -41,14 +41,14 @@ class VirtualBrowserItem(object):
 
 
 class BrowserListItem(ActionListItem):
-    u"""
+    """
     List item representing a browser element
     """
 
     def __str__(self):
         if self.content:
             return os.path.splitext(self.content.name)[0]
-        return u''
+        return ''
 
     def action(self):
         if self.container and self.container.browser:
@@ -64,7 +64,7 @@ class BrowserListItem(ActionListItem):
 
 
 class BrowserList(ActionList):
-    u"""
+    """
     Component for representing lists of browser items
     """
     browser = None
@@ -76,7 +76,7 @@ class BrowserList(ActionList):
 
 
 class BrowserModel(EventObject):
-    u"""
+    """
     A browser model provides the data to a browser component as a
     sequence of BrowserLists.
     
@@ -84,7 +84,7 @@ class BrowserModel(EventObject):
     models and prevent unnecessary updating, override it when
     neccesary.
     """
-    __events__ = (u'content_lists', u'selection_updated')
+    __events__ = ('content_lists', 'selection_updated')
     empty_list_messages = []
 
     def __init__(self, browser = None, *a, **k):
@@ -95,7 +95,7 @@ class BrowserModel(EventObject):
         return isinstance(model, BrowserModel)
 
     def exchange_model(self, model):
-        u"""
+        """
         Tries to replace itself with the settings of a given
         model. Returns true if it succeeds or false if the current
         model can not represent the same set of values.
@@ -107,20 +107,20 @@ class BrowserModel(EventObject):
 
     @property
     def content_lists(self):
-        u"""
+        """
         Returns a set of ActionLists that hold the hierarchy of
         content for the browser.
         """
         return NotImplementedError
 
     def update_content(self):
-        u"""
+        """
         Called when the browser contents have changed.
         """
         raise NotImplementedError
 
     def update_selection(self):
-        u"""
+        """
         Called when the browser selection might have changed.
         """
         raise NotImplementedError
@@ -134,11 +134,11 @@ class BrowserModel(EventObject):
 
 
 class EmptyBrowserModel(BrowserModel):
-    u"""
+    """
     A browser model that never returns anything, to be used for
     hotswap targets that do not make sense in Push.
     """
-    empty_list_messages = [u'Nothing to browse']
+    empty_list_messages = ['Nothing to browse']
 
     @property
     def content_lists(self):
@@ -155,16 +155,16 @@ class EmptyBrowserModel(BrowserModel):
 
 
 class FullBrowserModel(BrowserModel):
-    u"""
+    """
     A browser model that provides an abstract hierarchical query model
     for simpler implementation.  Note that this can result in endless
     nesting, which the BrowserComponent does not support so far.
     It always provides at least two columns.
     """
-    empty_list_messages = [u'<no tags>',
-     u'<no devices>',
-     u'<no presets>',
-     u'<no presets>']
+    empty_list_messages = ['<no tags>',
+     '<no devices>',
+     '<no presets>',
+     '<no presets>']
 
     def __init__(self, *a, **k):
         super(FullBrowserModel, self).__init__(*a, **k)
@@ -174,7 +174,7 @@ class FullBrowserModel(BrowserModel):
         self._inside_item_activated_notification = BooleanContext()
 
     def get_root_children(self):
-        u"""
+        """
         Query for the initial items.
         """
         return [self.browser.sounds,
@@ -188,7 +188,7 @@ class FullBrowserModel(BrowserModel):
          self.browser.samples]
 
     def get_children(self, item, level):
-        u"""
+        """
         Query for children of node.
         """
         return item.children
@@ -229,7 +229,7 @@ class FullBrowserModel(BrowserModel):
             raise self._num_contents == len(self._contents) or AssertionError
             content = self.make_content_list()
             level = len(self._contents)
-            slot = self.register_slot(content, partial(self._on_item_activated, level), u'item_activated')
+            slot = self.register_slot(content, partial(self._on_item_activated, level), 'item_activated')
             self._contents.append((content, slot))
             self._num_contents = len(self._contents)
         return content
@@ -239,7 +239,7 @@ class FullBrowserModel(BrowserModel):
         self._num_contents -= 1
 
     def _fit_content_lists(self, requested_lists):
-        u"""
+        """
         Ensures that there are exactly 'request_lists' number of
         content lists. Returns whether a change was needed or not.
         """
@@ -252,7 +252,7 @@ class FullBrowserModel(BrowserModel):
                 self._push_content_list()
 
     def _finalize_content_lists_change(self):
-        u"""
+        """
         After a series of push/pop/fit operations, this makes sure
         that we only have as many content lists referenced as
         necessary.
@@ -283,13 +283,13 @@ class FullBrowserModel(BrowserModel):
 
 
 class QueryingBrowserModel(FullBrowserModel):
-    u"""
+    """
     Browser model that takes query objects to build up the model hierarchy
     """
-    empty_list_messages = [u'<no devices>',
-     u'<no presets>',
-     u'<no presets>',
-     u'<no presets>']
+    empty_list_messages = ['<no devices>',
+     '<no presets>',
+     '<no presets>',
+     '<no presets>']
 
     def __init__(self, queries = [], *a, **k):
         super(QueryingBrowserModel, self).__init__(*a, **k)

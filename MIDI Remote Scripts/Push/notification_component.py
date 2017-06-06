@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 import re
 from functools import partial
 from weakref import ref
@@ -9,7 +9,7 @@ from ableton.v2.control_surface.elements import adjust_string
 from pushbase.consts import DISPLAY_LENGTH, MESSAGE_BOX_PRIORITY
 from pushbase.message_box_component import FORMAT_SPECIFIER_WITH_MARKUP_PATTERN, MessageBoxComponent, Notification
 from .special_physical_display import DISPLAY_BLOCK_LENGTH
-BLANK_BLOCK = u' ' * DISPLAY_BLOCK_LENGTH
+BLANK_BLOCK = ' ' * DISPLAY_BLOCK_LENGTH
 
 def adjust_arguments(format_string, original_arguments):
     adjusted_arguments = list(original_arguments)
@@ -20,17 +20,17 @@ def adjust_arguments(format_string, original_arguments):
         if has_markup is not None:
             desired_length = int(match.group(2))
             original_argument = original_arguments[index]
-            if original_format_specifier != u's':
-                if original_format_specifier.find(u'*') != -1:
-                    raise ValueError(u'Format specifiers using * for field width/precision are not supported')
-                original_argument = (u'%' + original_format_specifier) % original_argument
+            if original_format_specifier != 's':
+                if original_format_specifier.find('*') != -1:
+                    raise ValueError('Format specifiers using * for field width/precision are not supported')
+                original_argument = ('%' + original_format_specifier) % original_argument
             adjusted_arguments[index] = adjust_string(original_argument, desired_length)
 
     return tuple(adjusted_arguments)
 
 
 def apply_formatting(text_spec):
-    u"""
+    """
     Take a format string with arguments and format it. If given a plain string, just
     returns it.
     
@@ -56,7 +56,7 @@ def apply_formatting(text_spec):
         format_string = text_spec[0]
         original_arguments = text_spec[1:]
         adjusted_arguments = adjust_arguments(format_string, original_arguments)
-        format_string = re.sub(FORMAT_SPECIFIER_WITH_MARKUP_PATTERN, u'%s', format_string)
+        format_string = re.sub(FORMAT_SPECIFIER_WITH_MARKUP_PATTERN, '%s', format_string)
         return format_string % adjusted_arguments
     else:
         return text_spec
@@ -103,7 +103,7 @@ class _TokenControlElement(ControlElement):
 
 
 class NotificationComponent(CompoundComponent):
-    u"""
+    """
     Displays notifications to the user for a given amount of time. A notification time
     of -1 creates an infinite duration notification.
     
@@ -129,12 +129,12 @@ class NotificationComponent(CompoundComponent):
         self._blinking_time = blinking_time
         self._original_text = None
         self._blink_text = None
-        self._blink_text_task = self._tasks.add(task.loop(task.sequence(task.run(lambda : self._message_box.__setattr__(u'text', self._original_text)), task.wait(self._blinking_time), task.run(lambda : self._message_box.__setattr__(u'text', self._blink_text)), task.wait(self._blinking_time)))).kill()
+        self._blink_text_task = self._tasks.add(task.loop(task.sequence(task.run(lambda : self._message_box.__setattr__('text', self._original_text)), task.wait(self._blinking_time), task.run(lambda : self._message_box.__setattr__('text', self._blink_text)), task.wait(self._blinking_time)))).kill()
 
-    message_box_layer = forward_property(u'_message_box')(u'layer')
+    message_box_layer = forward_property('_message_box')('layer')
 
     def show_notification(self, text, blink_text = None, notification_time = None):
-        u"""
+        """
         Triggers a notification with the given text.
         If text is a tuple, it will treat it as a format string + arguments.
         """
@@ -153,14 +153,14 @@ class NotificationComponent(CompoundComponent):
         return ref(self._current_notification)
 
     def hide_notification(self):
-        u"""
+        """
         Hides the current notification, if any existing.
         """
         self._blink_text_task.kill()
         self._message_box.set_enabled(False)
 
     def use_single_line(self, line_index, line_slice = None, align = align_none):
-        u"""
+        """
         Returns a control, that will change the notification to a single line view,
         if it is grabbed.
         """
@@ -172,11 +172,11 @@ class NotificationComponent(CompoundComponent):
         return _CallbackControl(self._token_control, partial(self._set_message_box_layout, layer, maybe(partial(align, display.width))))
 
     def use_full_display(self, message_line_index = 2):
-        u"""
+        """
         Returns a control, that will change the notification to use the whole display,
         if it is grabbed.
         """
-        layer = Layer(priority=MESSAGE_BOX_PRIORITY, **dict([ (u'display_line1' if i == message_line_index else u'bg%d' % i, line) for i, line in enumerate(self._display_lines) ]))
+        layer = Layer(priority=MESSAGE_BOX_PRIORITY, **dict([ ('display_line1' if i == message_line_index else 'bg%d' % i, line) for i, line in enumerate(self._display_lines) ]))
         return _CallbackControl(self._token_control, partial(self._set_message_box_layout, layer))
 
     def _set_message_box_layout(self, layer, align_text_fn = None):

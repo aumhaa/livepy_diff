@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 import logging
 from ..base import task
 from . import midi
@@ -7,7 +7,7 @@ from .control_surface import ControlSurface
 logger = logging.getLogger(__name__)
 
 class IdentifiableControlSurface(ControlSurface):
-    u"""
+    """
     Control surface that sends an identity request to verify the right device is
     linked to it.
     If the data bytes of the response start with product_id_bytes, the device will
@@ -37,7 +37,7 @@ class IdentifiableControlSurface(ControlSurface):
                 self._request_task.kill()
                 self.on_identified(midi_bytes)
             else:
-                logger.error(u'MIDI device responded with wrong product id (%s != %s).', str(self._product_id_bytes), str(product_id_bytes))
+                logger.error('MIDI device responded with wrong product id (%s != %s).', str(self._product_id_bytes), str(product_id_bytes))
         else:
             super(IdentifiableControlSurface, self).process_midi_bytes(midi_bytes, midi_processor)
 

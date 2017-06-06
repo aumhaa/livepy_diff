@@ -1,11 +1,10 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.SessionComponent import SessionComponent
 from _Framework.InputControlElement import *
 from _Framework.ButtonElement import ButtonElement
 from _Framework.ClipSlotComponent import ClipSlotComponent
-from .SpecialSceneComponent import SpecialSceneComponent
+from SpecialSceneComponent import SpecialSceneComponent
 
 class SpecialSessionComponent(SessionComponent):
 
@@ -72,7 +71,7 @@ class SpecialSessionComponent(SessionComponent):
             SessionComponent.set_offsets(self, track_offset, scene_offset)
 
     def _on_control_surface_offset_changed(self):
-        u"""
+        """
         Updates offsets in serato to be the same as in control surface
         Called whenever control surface offsets are changed.
         """

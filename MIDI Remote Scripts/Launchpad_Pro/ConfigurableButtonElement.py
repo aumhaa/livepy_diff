@@ -1,10 +1,9 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.Skin import SkinColorMissingError
 from _Framework.ButtonElement import ButtonElement, ON_VALUE, OFF_VALUE
 
 class ConfigurableButtonElement(ButtonElement):
-    u"""
+    """
     Special button class (adapted from Push script for LP Pro)
     that can be configured with custom on- and off-values.
     
@@ -12,8 +11,8 @@ class ConfigurableButtonElement(ButtonElement):
     False, which can be defined by setting the 'states' property.
     Thus 'set_light' can take any state or skin color.
     """
-    default_states = {True: u'DefaultButton.On',
-     False: u'DefaultButton.Disabled'}
+    default_states = {True: 'DefaultButton.On',
+     False: 'DefaultButton.Disabled'}
     send_depends_on_forwarding = False
 
     def __init__(self, is_momentary, msg_type, channel, identifier, skin = None, default_states = None, *a, **k):
@@ -45,7 +44,7 @@ class ConfigurableButtonElement(ButtonElement):
             return value
 
     def reset(self):
-        self.set_light(u'DefaultButton.Disabled')
+        self.set_light('DefaultButton.Disabled')
         self.reset_state()
 
     def reset_state(self):

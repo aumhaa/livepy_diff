@@ -1,10 +1,10 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from ...base import listens
 from ..component import Component
 
 class ToggleComponent(Component):
-    u"""
+    """
     Maps a toggle button to a boolean property of the Live model.
     """
     is_private = True
@@ -71,7 +71,7 @@ class ToggleComponent(Component):
     def _on_property_changed_in_model(self):
         self._update_button()
 
-    @listens(u'value')
+    @listens('value')
     def __on_button_value(self, value):
         if self.is_enabled() and not self.read_only:
             if self.is_momentary:

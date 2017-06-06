@@ -1,8 +1,8 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+
 
 class TupleWrapper(object):
-    u""" Wrapper class for the access to volatile lists and tuples in the Python API """
+    """ Wrapper class for the access to volatile lists and tuples in the Python API """
     _tuple_wrapper_registry = {}
 
     def forget_tuple_wrapper_instances():
@@ -35,16 +35,16 @@ class TupleWrapper(object):
         return result
 
 
-STATE_NEUTRAL = u'neutral'
-STATE_QUOTED_STR = u'quoted'
-STATE_UNQUOTED_STR = u'unquoted'
-STATE_PENDING_NR = u'number'
-STATE_PENDING_FLOAT = u'float'
+STATE_NEUTRAL = 'neutral'
+STATE_QUOTED_STR = 'quoted'
+STATE_UNQUOTED_STR = 'unquoted'
+STATE_PENDING_NR = 'number'
+STATE_PENDING_FLOAT = 'float'
 QUOTE_ENTITY = u'&quot;'
 QUOTE_SIMPLE = u'"'
 
 class StringHandler(object):
-    u""" Class that can parse incoming strings and format outgoing strings """
+    """ Class that can parse incoming strings and format outgoing strings """
 
     def prepare_incoming(string):
         raise isinstance(string, (str, unicode)) or AssertionError
@@ -56,7 +56,7 @@ class StringHandler(object):
         if not isinstance(string, (str, unicode)):
             raise AssertionError
             result = string.replace(QUOTE_SIMPLE, QUOTE_ENTITY)
-            result = result.find(u' ') >= 0 and QUOTE_SIMPLE + result + QUOTE_SIMPLE
+            result = result.find(' ') >= 0 and QUOTE_SIMPLE + result + QUOTE_SIMPLE
         return result
 
     prepare_outgoing = staticmethod(prepare_outgoing)
@@ -80,23 +80,23 @@ class StringHandler(object):
         self._open_quote_index = -1
         for index in range(len(string)):
             char = string[index]
-            handle_selector = u'_' + str(self._state) + u'_handle_char'
+            handle_selector = '_' + str(self._state) + '_handle_char'
             if hasattr(self, handle_selector):
                 getattr(self, handle_selector)(char, index)
             else:
-                debug_print(u'Unknown state ' + str(self._state))
+                debug_print('Unknown state ' + str(self._state))
                 raise False or AssertionError
 
-        finalize_selector = u'_finalize_' + str(self._state)
+        finalize_selector = '_finalize_' + str(self._state)
         if len(self._sub_string) > 0 and hasattr(self, finalize_selector):
             getattr(self, finalize_selector)()
         return self._arguments
 
     def _neutral_handle_char(self, char, index):
-        if char == u'"':
+        if char == '"':
             self._open_quote_index = index
             self._state = STATE_QUOTED_STR
-        elif char != u' ':
+        elif char != ' ':
             self._sub_string += char
             if unicode(char).isdigit():
                 self._state = STATE_PENDING_NR
@@ -104,23 +104,23 @@ class StringHandler(object):
                 self._state = STATE_UNQUOTED_STR
 
     def _number_handle_char(self, char, index):
-        if char == u' ':
+        if char == ' ':
             if len(self._sub_string) > 0:
                 self._finalize_number()
             else:
                 self._state = STATE_NEUTRAL
         else:
-            if char == u'.':
+            if char == '.':
                 self._state = STATE_PENDING_FLOAT
             elif not unicode(char).isdigit():
                 self._state = STATE_UNQUOTED_STR
             self._sub_string += char
 
     def _float_handle_char(self, char, index):
-        if char == u' ':
+        if char == ' ':
             self._add_argument(float(self._sub_string))
         else:
-            if char in (u'.', u'e', u'E'):
+            if char in ('.', 'e', 'E'):
                 if char in self._sub_string:
                     self._state = STATE_UNQUOTED_STR
             elif not unicode(char).isdigit():
@@ -128,7 +128,7 @@ class StringHandler(object):
             self._sub_string += char
 
     def _unquoted_handle_char(self, char, index):
-        if char == u' ':
+        if char == ' ':
             self._add_argument(self._sub_string)
         else:
             if unicode(char).isdigit():
@@ -139,14 +139,14 @@ class StringHandler(object):
             self._sub_string += char
 
     def _quoted_handle_char(self, char, index):
-        if char == u'"':
+        if char == '"':
             self._open_quote_index = -1
             self._add_argument(self._sub_string)
         else:
             self._sub_string += char
 
     def _finalize_quoted(self):
-        raise RuntimeError(u'no match for quote at index %d found' % self._open_quote_index)
+        raise RuntimeError('no match for quote at index %d found' % self._open_quote_index)
 
     def _finalize_unquoted(self):
         self._add_argument(self._sub_string)

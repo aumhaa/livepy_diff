@@ -1,8 +1,8 @@
 
-u"""
+"""
 Component for handling the initialization process of Push.
 """
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from functools import partial
 import Live
 from ableton.v2.base import NamedTuple, listens, task
@@ -28,7 +28,7 @@ def make_dongle_message(dongle_prefix, random_generator = Live.Application):
 
 
 class HardwareIdentity(NamedTuple):
-    u"""
+    """
     Stores the identity of the hardware.
     """
     firmware = None
@@ -47,11 +47,11 @@ class HardwareIdentity(NamedTuple):
 
 
 class HandshakeComponent(Component):
-    u"""
+    """
     Component for retrieving the hardware identity and checking that
     it is a Ableton certified device.
     """
-    __events__ = (u'success', u'failure')
+    __events__ = ('success', 'failure')
     encryptor = partial(Live.Application.encrypt_challenge, key_index=1)
     _handshake_succeeded = None
     _hardware_identity = None
@@ -69,7 +69,7 @@ class HandshakeComponent(Component):
 
     @property
     def handshake_succeeded(self):
-        u"""
+        """
         This will return None if the handshake process has not
         finished, otherwise True or False.
         """
@@ -82,7 +82,7 @@ class HandshakeComponent(Component):
     @property
     def firmware_version(self):
         version_bytes = self._hardware_identity.firmware if self._hardware_identity != None else 4 * (0,)
-        return get_version_number_from_string(u' %d %d %d %d' % version_bytes)
+        return get_version_number_from_string(' %d %d %d %d' % version_bytes)
 
     def has_version_requirements(self, major_version, minor_version):
         if self._hardware_identity is None:
@@ -99,7 +99,7 @@ class HandshakeComponent(Component):
         self._identification_timeout_task.restart()
         self._identity_control.enquire_value()
 
-    @listens(u'value')
+    @listens('value')
     def _on_identity_value(self, value):
         if len(value) == 25:
             if value[9:] == tuple(range(1, 17)):
@@ -111,7 +111,7 @@ class HandshakeComponent(Component):
         else:
             self._do_fail()
 
-    @listens(u'value')
+    @listens('value')
     def _on_dongle_value(self, value):
         success = False
         if len(value) >= 18:
@@ -148,10 +148,10 @@ class MinimumFirmwareVersionElement(ToggleElement):
         self._on_handshake_success.subject = handshake_component
         self._on_handshake_failure.subject = handshake_component
 
-    @listens(u'success')
+    @listens('success')
     def _on_handshake_success(self):
         self.set_toggled(self._handshake_component.has_version_requirements(self._major_version, self._minor_version))
 
-    @listens(u'failure')
+    @listens('failure')
     def _on_handshake_failure(self, _):
         self.set_toggled(False)

@@ -1,11 +1,10 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.EncoderElement import EncoderElement
 from _Framework.InputControlElement import *
 
 class PeekableEncoderElement(EncoderElement):
-    u""" Encoder that can be connected and disconnected to a specific parameter """
+    """ Encoder that can be connected and disconnected to a specific parameter """
 
     def __init__(self, msg_type, channel, identifier, map_mode):
         EncoderElement.__init__(self, msg_type, channel, identifier, map_mode)

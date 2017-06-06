@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from functools import partial
 from ..base import Proxy, index_if, nop, first, NamedTuple
 DEFAULT_PRIORITY = 0
@@ -19,7 +19,7 @@ class Resource(object):
 
 
 class CompoundResource(Resource):
-    u"""
+    """
     A resource that composes two resources, making sure that both
     grabs have to be successfull for the compound to be adquired.
     """
@@ -62,7 +62,7 @@ def compose_resources(*resources):
 
 
 class ExclusiveResource(Resource):
-    u"""
+    """
     A resource that can not be grabbed any client if it is owned by
     someone else already.
     """
@@ -77,7 +77,7 @@ class ExclusiveResource(Resource):
 
     def grab(self, client, *a, **k):
         if not client is not None:
-            raise AssertionError(u'Someone has to adquire resource')
+            raise AssertionError('Someone has to adquire resource')
             self._owner == None and self.on_received(client, *a, **k)
             self._owner = client
         return self._owner == client
@@ -94,14 +94,14 @@ class ExclusiveResource(Resource):
         return self._owner
 
     def on_received(self, client, *a, **k):
-        raise NotImplementedError(u'Override or pass callback')
+        raise NotImplementedError('Override or pass callback')
 
     def on_lost(self, client):
-        raise NotImplementedError(u'Override or pass callback')
+        raise NotImplementedError('Override or pass callback')
 
 
 class SharedResource(Resource):
-    u"""
+    """
     A resource that has no owner and will always be grabbed.
     """
 
@@ -114,7 +114,7 @@ class SharedResource(Resource):
         self._clients = set()
 
     def grab(self, client, *a, **k):
-        raise client is not None or AssertionError(u'Someone has to adquire resource')
+        raise client is not None or AssertionError('Someone has to adquire resource')
         self.on_received(client, *a, **k)
         self._clients.add(client)
         return True
@@ -131,17 +131,17 @@ class SharedResource(Resource):
         return False
 
     def get_owner(self):
-        raise False or AssertionError(u'Shared resource has no owner')
+        raise False or AssertionError('Shared resource has no owner')
 
     def on_received(self, client, *a, **k):
-        raise NotImplementedError(u'Override or pass callback')
+        raise NotImplementedError('Override or pass callback')
 
     def on_lost(self, client):
-        raise NotImplementedError(u'Override or pass callback')
+        raise NotImplementedError('Override or pass callback')
 
 
 class StackingResource(Resource):
-    u"""
+    """
     A stacking resource is a special kind of resource that can preempt
     the current owner.  Resources are assigned to clients in order of
     arrival, this is, a new client attempting to grab will produce the
@@ -204,7 +204,7 @@ class StackingResource(Resource):
         return result
 
     def release_all(self):
-        u"""
+        """
         Releases all stacked clients.
         """
         for client, _ in list(self._clients):
@@ -249,10 +249,10 @@ class StackingResource(Resource):
         return self._owners
 
     def on_received(self, client):
-        raise NotImplementedError(u'Override or pass callback')
+        raise NotImplementedError('Override or pass callback')
 
     def on_lost(self, client):
-        raise NotImplementedError(u'Override or pass callback')
+        raise NotImplementedError('Override or pass callback')
 
     def release_stacked(self):
         clients = self.clients
@@ -263,7 +263,7 @@ class StackingResource(Resource):
 
 
 class PrioritizedResource(StackingResource):
-    u"""
+    """
     A prioritized resource shares the resource among all the clients
     with the same priority.
     """
@@ -279,7 +279,7 @@ class ClientWrapper(NamedTuple):
 
 
 class ProxyResource(Proxy):
-    u"""
+    """
     A resource that forwards to another resource.  One may specify a
     'proxy_client' function that can wrap the client to adapt it to
     the proxied resource requirements.
@@ -291,15 +291,15 @@ class ProxyResource(Proxy):
         self._client_wrapper = client_wrapper
 
     def grab(self, client, *a, **k):
-        self.__getattr__(u'grab')(self._client_wrapper.wrap(client), *a, **k)
+        self.__getattr__('grab')(self._client_wrapper.wrap(client), *a, **k)
 
     def release(self, client, *a, **k):
-        self.__getattr__(u'release')(self._client_wrapper.wrap(client), *a, **k)
+        self.__getattr__('release')(self._client_wrapper.wrap(client), *a, **k)
 
     @property
     def owner(self):
-        return self._client_wrapper.unwrap(self.__getattr__(u'owner'))
+        return self._client_wrapper.unwrap(self.__getattr__('owner'))
 
     @property
     def owners(self):
-        return map(self._client_wrapper.unwrap, self.__getattr__(u'owners'))
+        return map(self._client_wrapper.unwrap, self.__getattr__('owners'))

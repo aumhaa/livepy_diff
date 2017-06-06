@@ -1,9 +1,8 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.MixerComponent import MixerComponent
 
 class SpecialMixerComponent(MixerComponent):
-    u""" Special mixer class that toggles given buttons between mute and solo """
+    """ Special mixer class that toggles given buttons between mute and solo """
 
     def __init__(self, num_tracks):
         MixerComponent.__init__(self, num_tracks)

@@ -1,12 +1,12 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 import Live
 from ...base import BooleanContext, const, has_event, listens
 from ..input_control_element import InputControlElement, MIDI_CC_TYPE
 from ..skin import Skin
 
 class ButtonValue(object):
-    u"""
+    """
     Basic type for button values, so global constants are symbolically
     different from integers.
     """
@@ -46,7 +46,7 @@ class DummyUndoStepHandler(object):
 
 
 class ButtonElementMixin(object):
-    u"""
+    """
     Mixin for sending values to button-like control-elements elements.
     """
 
@@ -64,7 +64,7 @@ class ButtonElementMixin(object):
 
 
 class ButtonElement(InputControlElement, ButtonElementMixin):
-    u"""
+    """
     Class representing a button a the controller
     """
 
@@ -81,7 +81,7 @@ class ButtonElement(InputControlElement, ButtonElementMixin):
         self._drawing_via_skin = BooleanContext()
 
     def is_momentary(self):
-        u""" returns true if the buttons sends a message on being released """
+        """ returns true if the buttons sends a message on being released """
         return self.__is_momentary
 
     def message_map_mode(self):
@@ -92,7 +92,7 @@ class ButtonElement(InputControlElement, ButtonElementMixin):
         return self.__is_momentary and int(self._last_received_value) > 0
 
     def set_light(self, value):
-        if hasattr(value, u'draw'):
+        if hasattr(value, 'draw'):
             value.draw(self)
         elif isinstance(value, bool):
             super(ButtonElement, self).set_light(value)
@@ -105,7 +105,7 @@ class ButtonElement(InputControlElement, ButtonElementMixin):
             color = self._skin[value]
             self._do_draw(color)
         finally:
-            if has_event(color, u'midi_value'):
+            if has_event(color, 'midi_value'):
                 self.__on_midi_value_changed.subject = color
             else:
                 self._disconnect_color_listener()
@@ -114,7 +114,7 @@ class ButtonElement(InputControlElement, ButtonElementMixin):
         with self._drawing_via_skin():
             color.draw(self)
 
-    @listens(u'midi_value')
+    @listens('midi_value')
     def __on_midi_value_changed(self, *a):
         self._do_draw(self.__on_midi_value_changed.subject)
 

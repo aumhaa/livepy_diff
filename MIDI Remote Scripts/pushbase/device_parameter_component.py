@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from itertools import chain, repeat, izip_longest
 import Live
 from ableton.v2.base import listens_group, listens
@@ -27,12 +27,12 @@ def convert_parameter_value_to_graphic(param, param_to_value = lambda p: p.value
         value = int(float(param_to_value(param) - param.min) / param_range * graph_range)
         graphic_display_string = param_bar[value]
     else:
-        graphic_display_string = u' '
+        graphic_display_string = ' '
     return graphic_display_string
 
 
 def update_encoder_sensitivity(encoder, parameter_info):
-    if hasattr(encoder, u'set_sensitivities'):
+    if hasattr(encoder, 'set_sensitivities'):
         encoder.set_sensitivities(parameter_info.default_encoder_sensitivity, parameter_info.fine_grain_encoder_sensitivity)
     else:
         encoder.mapping_sensitivity = parameter_info.default_encoder_sensitivity
@@ -75,13 +75,13 @@ class DeviceParameterComponentBase(Component):
 
     @property
     def parameter_names(self):
-        return map(lambda p: p and p.name or u'', self.parameters)
+        return map(lambda p: p and p.name or '', self.parameters)
 
     def _update_parameters(self):
         if self.is_enabled():
             self._connect_parameters()
 
-    @listens(u'parameters')
+    @listens('parameters')
     def _on_parameters_changed(self):
         self._update_parameters()
 
@@ -94,15 +94,15 @@ class DeviceParameterComponentBase(Component):
 
 
 class DeviceParameterComponent(DeviceParameterComponentBase):
-    u"""
+    """
     Maps the display and encoders to the parameters provided by a
     ParameterProvider.
     """
 
     def __init__(self, *a, **k):
-        self._parameter_name_data_sources = map(DisplayDataSource, (u'', u'', u'', u'', u'', u'', u'', u''))
-        self._parameter_value_data_sources = map(DisplayDataSource, (u'', u'', u'', u'', u'', u'', u'', u''))
-        self._parameter_graphic_data_sources = map(DisplayDataSource, (u'', u'', u'', u'', u'', u'', u'', u''))
+        self._parameter_name_data_sources = map(DisplayDataSource, ('', '', '', '', '', '', '', ''))
+        self._parameter_value_data_sources = map(DisplayDataSource, ('', '', '', '', '', '', '', ''))
+        self._parameter_graphic_data_sources = map(DisplayDataSource, ('', '', '', '', '', '', '', ''))
         super(DeviceParameterComponent, self).__init__(*a, **k)
 
     def set_name_display_line(self, line):
@@ -122,7 +122,7 @@ class DeviceParameterComponent(DeviceParameterComponentBase):
 
     def clear_display(self):
         for source in chain(self._parameter_name_data_sources, self._parameter_value_data_sources, self._parameter_graphic_data_sources):
-            source.set_display_string(u'')
+            source.set_display_string('')
 
     def _update_parameters(self):
         super(DeviceParameterComponent, self)._update_parameters()
@@ -134,15 +134,15 @@ class DeviceParameterComponent(DeviceParameterComponentBase):
             self._update_parameter_names()
             self._update_parameter_values()
 
-    @listens_group(u'name')
+    @listens_group('name')
     def _on_parameter_name_changed(self, parameter):
         self._update_parameter_names()
 
-    @listens_group(u'value')
+    @listens_group('value')
     def _on_parameter_value_changed(self, parameter):
         self._update_parameter_values()
 
-    @listens_group(u'automation_state')
+    @listens_group('automation_state')
     def _on_parameter_automation_state_changed(self, parameter):
         self._update_parameter_names()
         self._update_parameter_values()
@@ -152,17 +152,17 @@ class DeviceParameterComponent(DeviceParameterComponentBase):
             params = zip(chain(self.parameter_provider.parameters, repeat(None)), self._parameter_name_data_sources)
             for info, name_data_source in params:
                 parameter = info and info.parameter
-                name = info and info.name or u''
+                name = info and info.name or ''
                 if parameter and parameter.automation_state != AutomationState.none:
                     name = consts.CHAR_FULL_BLOCK + name
-                name_data_source.set_display_string(name or u'')
+                name_data_source.set_display_string(name or '')
 
     def _update_parameter_values(self):
         if self.is_enabled():
             for parameter, data_source in izip_longest(self.parameters, self._parameter_value_data_sources):
                 value_string = self.parameter_to_string(parameter)
                 if parameter and parameter.automation_state == AutomationState.overridden:
-                    value_string = u'[%s]' % value_string
+                    value_string = '[%s]' % value_string
                 if data_source:
                     data_source.set_display_string(value_string)
 
@@ -173,7 +173,7 @@ class DeviceParameterComponent(DeviceParameterComponentBase):
 
     def parameter_to_string(self, parameter):
         if parameter == None:
-            return u''
+            return ''
         return unicode(parameter)
 
     def parameter_to_value(self, parameter):

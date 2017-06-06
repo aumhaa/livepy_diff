@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from itertools import count
 from ableton.v2.base import listens, listens_group, liveobj_valid
 from .colors import DISPLAY_BUTTON_SHADE_LEVEL, IndexedColor
@@ -39,11 +39,11 @@ class ChainProvider(ItemProvider):
     def select_chain(self, chain):
         self._rack.view.selected_chain = chain
 
-    @listens(u'chains')
+    @listens('chains')
     def __on_chains_changed(self):
         self.notify_items()
 
-    @listens(u'selected_chain')
+    @listens('selected_chain')
     def __on_selected_chain_changed(self):
         self.notify_selected_item()
 
@@ -62,7 +62,7 @@ class ChainSelectionComponent(ItemListerComponent):
 
     def _color_for_button(self, button_index, is_selected):
         if is_selected:
-            return self.color_class_name + u'.ItemSelected'
+            return self.color_class_name + '.ItemSelected'
         else:
             chain_color = self._chain_parent.chains[button_index].color_index
             return IndexedColor.from_live_index(chain_color, DISPLAY_BUTTON_SHADE_LEVEL)
@@ -71,10 +71,10 @@ class ChainSelectionComponent(ItemListerComponent):
         raise parent is None or parent.can_have_chains or AssertionError
         self._chain_parent.set_rack(parent)
 
-    @listens(u'items')
+    @listens('items')
     def __on_items_changed(self):
         self.__on_chain_color_index_changed.replace_subjects(self._chain_parent.chains, identifiers=count())
 
-    @listens_group(u'color_index')
+    @listens_group('color_index')
     def __on_chain_color_index_changed(self, chain_index):
         self.select_buttons[chain_index].color = self._color_for_button(chain_index, self._items_equal(self.items[chain_index], self._item_provider.selected_item))

@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import with_statement
 from itertools import izip
 import Live
 from _Arturia.ArturiaControlSurface import ArturiaControlSurface, MODE_PROPERTY, SETUP_MSG_PREFIX, SETUP_MSG_SUFFIX
@@ -27,17 +27,17 @@ PAD_HARDWARE_IDS = xrange(112, 128)
 ENCODER_MSG_IDS = (74, 71, 76, 77, 18, 19, 16, 17, 93, 91)
 SLIDER_MSG_IDS = (73, 75, 79, 72, 80, 81, 82, 83, 85)
 PAD_MSG_IDS = xrange(36, 52)
-BUTTON_HARDWARE_AND_MESSAGE_IDS = {u'session_record_button': (91, 5),
- u'stop_all_clips_button': (92, 4),
- u'stop_button': (89, 102),
- u'play_button': (88, 2),
- u'record_button': (90, 6),
- u'loop_button': (93, 55),
- u'device_left_button': (18, 22),
- u'device_right_button': (19, 23),
- u'scene_up_button': (25, 29),
- u'scene_down_button': (26, 30),
- u'scene_launch_button': (27, 31)}
+BUTTON_HARDWARE_AND_MESSAGE_IDS = {'session_record_button': (91, 5),
+ 'stop_all_clips_button': (92, 4),
+ 'stop_button': (89, 102),
+ 'play_button': (88, 2),
+ 'record_button': (90, 6),
+ 'loop_button': (93, 55),
+ 'device_left_button': (18, 22),
+ 'device_right_button': (19, 23),
+ 'scene_up_button': (25, 29),
+ 'scene_down_button': (26, 30),
+ 'scene_launch_button': (27, 31)}
 ENCODER_CHANNEL = 1
 PAD_CHANNEL = 9
 
@@ -63,9 +63,9 @@ class KeyLab(ArturiaControlSurface):
             self._create_mixer()
 
     def _create_controls(self):
-        self._device_encoders = ButtonMatrixElement(rows=[ [ EncoderElement(MIDI_CC_TYPE, ENCODER_CHANNEL, identifier, Live.MidiMap.MapMode.relative_smooth_binary_offset, name=u'Device_Encoder_%d_%d' % (col_index, row_index)) for col_index, identifier in enumerate(row) ] for row_index, row in enumerate((ENCODER_MSG_IDS[:4], ENCODER_MSG_IDS[4:8])) ])
-        self._horizontal_scroll_encoder = EncoderElement(MIDI_CC_TYPE, ENCODER_CHANNEL, ENCODER_MSG_IDS[-2], Live.MidiMap.MapMode.relative_smooth_binary_offset, name=u'Horizontal_Scroll_Encoder')
-        self._vertical_scroll_encoder = EncoderElement(MIDI_CC_TYPE, ENCODER_CHANNEL, ENCODER_MSG_IDS[-1], Live.MidiMap.MapMode.relative_smooth_binary_offset, name=u'Vertical_Scroll_Encoder')
+        self._device_encoders = ButtonMatrixElement(rows=[ [ EncoderElement(MIDI_CC_TYPE, ENCODER_CHANNEL, identifier, Live.MidiMap.MapMode.relative_smooth_binary_offset, name='Device_Encoder_%d_%d' % (col_index, row_index)) for col_index, identifier in enumerate(row) ] for row_index, row in enumerate((ENCODER_MSG_IDS[:4], ENCODER_MSG_IDS[4:8])) ])
+        self._horizontal_scroll_encoder = EncoderElement(MIDI_CC_TYPE, ENCODER_CHANNEL, ENCODER_MSG_IDS[-2], Live.MidiMap.MapMode.relative_smooth_binary_offset, name='Horizontal_Scroll_Encoder')
+        self._vertical_scroll_encoder = EncoderElement(MIDI_CC_TYPE, ENCODER_CHANNEL, ENCODER_MSG_IDS[-1], Live.MidiMap.MapMode.relative_smooth_binary_offset, name='Vertical_Scroll_Encoder')
         self._volume_sliders = ButtonMatrixElement(rows=[[ SliderElement(MIDI_CC_TYPE, ENCODER_CHANNEL, identifier) for identifier in SLIDER_MSG_IDS[:-1] ]])
         self._master_slider = SliderElement(MIDI_CC_TYPE, ENCODER_CHANNEL, SLIDER_MSG_IDS[-1])
 
@@ -74,9 +74,9 @@ class KeyLab(ArturiaControlSurface):
             return button
 
         for button_name in BUTTON_HARDWARE_AND_MESSAGE_IDS.keys():
-            setattr(self, u'_' + button_name, make_keylab_button(button_name))
+            setattr(self, '_' + button_name, make_keylab_button(button_name))
 
-        self._pads = ButtonMatrixElement(rows=[ [ ButtonElement(True, MIDI_CC_TYPE, PAD_CHANNEL, col_index + row_offset, name=u'Pad_%d_%d' % (col_index, row_index)) for col_index in xrange(4) ] for row_index, row_offset in enumerate(xrange(48, 35, -4)) ])
+        self._pads = ButtonMatrixElement(rows=[ [ ButtonElement(True, MIDI_CC_TYPE, PAD_CHANNEL, col_index + row_offset, name='Pad_%d_%d' % (col_index, row_index)) for col_index in xrange(4) ] for row_index, row_offset in enumerate(xrange(48, 35, -4)) ])
 
     def _create_display(self):
         self._display_line1, self._display_line2 = DisplayElement(16, 1), DisplayElement(16, 1)
@@ -85,39 +85,39 @@ class KeyLab(ArturiaControlSurface):
             display_line.segment(0).set_position_identifier((index + 1,))
 
         def adjust_null_terminated_string(string, width):
-            return string.ljust(width, u' ') + u'\x00'
+            return string.ljust(width, ' ') + '\x00'
 
         self._display_line1_data_source, self._display_line2_data_source = DisplayDataSource(adjust_string_fn=adjust_null_terminated_string), DisplayDataSource(adjust_string_fn=adjust_null_terminated_string)
         self._display_line1.segment(0).set_data_source(self._display_line1_data_source)
         self._display_line2.segment(0).set_data_source(self._display_line2_data_source)
-        self._display_line1_data_source.set_display_string(u'KeyLab')
-        self._display_line2_data_source.set_display_string(u'Ableton Live')
+        self._display_line1_data_source.set_display_string('KeyLab')
+        self._display_line2_data_source.set_display_string('Ableton Live')
 
     def _create_device(self):
-        self._device = DeviceComponent(name=u'Device', is_enabled=False, layer=Layer(parameter_controls=self._device_encoders), device_selection_follows_track_selection=True)
+        self._device = DeviceComponent(name='Device', is_enabled=False, layer=Layer(parameter_controls=self._device_encoders), device_selection_follows_track_selection=True)
         self._device.set_enabled(True)
         self.set_device_component(self._device)
-        self._device_navigation = DeviceNavigationComponent(name=u'Device_Navigation', is_enabled=False, layer=Layer(device_nav_left_button=self._device_left_button, device_nav_right_button=self._device_right_button))
+        self._device_navigation = DeviceNavigationComponent(name='Device_Navigation', is_enabled=False, layer=Layer(device_nav_left_button=self._device_left_button, device_nav_right_button=self._device_right_button))
         self._device_navigation.set_enabled(True)
 
     def _create_drums(self):
-        self._drums = DrumRackComponent(name=u'Drums', is_enabled=False, layer=Layer(pads=self._pads))
+        self._drums = DrumRackComponent(name='Drums', is_enabled=False, layer=Layer(pads=self._pads))
         self._drums.set_enabled(True)
 
     def _create_transport(self):
-        self._transport = TransportComponent(name=u'Transport', is_enabled=False, layer=Layer(play_button=self._play_button, stop_button=self._stop_button, record_button=self._record_button, loop_button=self._loop_button))
+        self._transport = TransportComponent(name='Transport', is_enabled=False, layer=Layer(play_button=self._play_button, stop_button=self._stop_button, record_button=self._record_button, loop_button=self._loop_button))
         self._transport.set_enabled(True)
 
     def _create_session(self):
-        self._session = SessionComponent(num_tracks=8, num_scenes=1, name=u'Session', is_enabled=False, layer=Layer(select_next_button=self._scene_down_button, select_prev_button=self._scene_up_button, selected_scene_launch_button=self._scene_launch_button, stop_all_clips_button=self._stop_all_clips_button, scene_select_encoder=self._vertical_scroll_encoder))
+        self._session = SessionComponent(num_tracks=8, num_scenes=1, name='Session', is_enabled=False, layer=Layer(select_next_button=self._scene_down_button, select_prev_button=self._scene_up_button, selected_scene_launch_button=self._scene_launch_button, stop_all_clips_button=self._stop_all_clips_button, scene_select_encoder=self._vertical_scroll_encoder))
         self._session.set_enabled(True)
 
     def _create_session_recording(self):
-        self._session_recording = SessionRecordingComponent(ClipCreator(), ViewControlComponent(), name=u'Session_Recording', is_enabled=False, layer=Layer(record_button=self._session_record_button))
+        self._session_recording = SessionRecordingComponent(ClipCreator(), ViewControlComponent(), name='Session_Recording', is_enabled=False, layer=Layer(record_button=self._session_record_button))
         self._session_recording.set_enabled(True)
 
     def _create_mixer(self):
-        self._mixer = MixerComponent(num_tracks=self._volume_sliders.width(), name=u'Mixer', is_enabled=False, layer=Layer(volume_controls=self._volume_sliders, track_select_encoder=self._horizontal_scroll_encoder))
+        self._mixer = MixerComponent(num_tracks=self._volume_sliders.width(), name='Mixer', is_enabled=False, layer=Layer(volume_controls=self._volume_sliders, track_select_encoder=self._horizontal_scroll_encoder))
         self._mixer.master_strip().layer = Layer(volume_control=self._master_slider)
         self._mixer.set_enabled(True)
 

@@ -1,10 +1,10 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from ..control_element import ControlElementClient
 from ..component import Component
 
 class M4LInterfaceComponent(Component, ControlElementClient):
-    u"""
+    """
     Simplified API for interaction from M4L as a high priority layer
     superposed on top of any functionality.
     """
@@ -23,7 +23,7 @@ class M4LInterfaceComponent(Component, ControlElementClient):
         super(M4LInterfaceComponent, self).disconnect()
 
     def set_control_element(self, control, grabbed):
-        if hasattr(control, u'release_parameter'):
+        if hasattr(control, 'release_parameter'):
             control.release_parameter()
         control.reset()
 

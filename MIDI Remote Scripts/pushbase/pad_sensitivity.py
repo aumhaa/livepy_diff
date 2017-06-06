@@ -1,11 +1,11 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from itertools import repeat
 from ableton.v2.base import find_if, second, nop, task
 from ableton.v2.control_surface import Component
 
 class PadUpdateComponent(Component):
-    u"""
+    """
     Sets a set of parameters for different pads.  It keeps a set of
     profiles, and maps a profile to each pad.  It caches all
     modifications to the pad profiles, updating later optimally.
@@ -24,9 +24,9 @@ class PadUpdateComponent(Component):
         self.parameter_sender = parameter_sender
         self._all_pads = set(all_pads)
         self._modified_pads = set(all_pads)
-        self._profiles = {u'default': default_profile}
-        self._profile_for = dict(zip(all_pads, repeat(u'default')))
-        self._profile_count = {u'default': len(all_pads)}
+        self._profiles = {'default': default_profile}
+        self._profile_for = dict(zip(all_pads, repeat('default')))
+        self._profile_count = {'default': len(all_pads)}
         self._update_task = self._tasks.add(task.sequence(task.wait(update_delay), task.run(self._update_modified)))
         self._update_task.restart()
 

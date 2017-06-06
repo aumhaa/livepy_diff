@@ -1,18 +1,17 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
-from .consts import *
-from .MainDisplay import MainDisplay
-from .MainDisplayController import MainDisplayController
-from .TimeDisplay import TimeDisplay
-from .ChannelStrip import ChannelStrip, MasterChannelStrip
-from .ChannelStripController import ChannelStripController
-from .SoftwareController import SoftwareController
-from .Transport import Transport
+from consts import *
+from MainDisplay import MainDisplay
+from MainDisplayController import MainDisplayController
+from TimeDisplay import TimeDisplay
+from ChannelStrip import ChannelStrip, MasterChannelStrip
+from ChannelStripController import ChannelStripController
+from SoftwareController import SoftwareController
+from Transport import Transport
 import Live
 import MidiRemoteScript
 
 class MackieControl:
-    u"""Main class that establishes the Mackie Control <-> Live interaction. It acts
+    """Main class that establishes the Mackie Control <-> Live interaction. It acts
        as a container/manager for all the Mackie Control sub-components like ChannelStrips,
        Displays and so on.
        Futher it is glued to Lives MidiRemoteScript C instance, which will forward some
@@ -54,14 +53,14 @@ class MackieControl:
             c.destroy()
 
     def connect_script_instances(self, instanciated_scripts):
-        u"""Called by the Application as soon as all scripts are initialized.
+        """Called by the Application as soon as all scripts are initialized.
            You can connect yourself to other running scripts here, as we do it
            connect the extension modules (MackieControlXTs).
         """
         try:
             from MackieControlXT.MackieControlXT import MackieControlXT
         except:
-            print(u'failed to load the MackieControl XT script (might not be installed)')
+            print 'failed to load the MackieControl XT script (might not be installed)'
 
         found_self = False
         right_extensions = []
@@ -92,15 +91,15 @@ class MackieControl:
              247))
 
     def application(self):
-        u"""returns a reference to the application that we are running in"""
+        """returns a reference to the application that we are running in"""
         return Live.Application.get_application()
 
     def song(self):
-        u"""returns a reference to the Live Song that we do interact with"""
+        """returns a reference to the Live Song that we do interact with"""
         return self.__c_instance.song()
 
     def handle(self):
-        u"""returns a handle to the c_interface that is needed when forwarding MIDI events
+        """returns a handle to the c_interface that is needed when forwarding MIDI events
            via the MIDI map
         """
         return self.__c_instance.handle()
@@ -116,7 +115,7 @@ class MackieControl:
         return False
 
     def request_rebuild_midi_map(self):
-        u""" To be called from any components, as soon as their internal state changed in a
+        """ To be called from any components, as soon as their internal state changed in a
         way, that we do need to remap the mappings that are processed directly by the
         Live engine.
         Dont assume that the request will immediately result in a call to
@@ -125,7 +124,7 @@ class MackieControl:
         self.__c_instance.request_rebuild_midi_map()
 
     def build_midi_map(self, midi_map_handle):
-        u"""New MIDI mappings can only be set when the scripts 'build_midi_map' function
+        """New MIDI mappings can only be set when the scripts 'build_midi_map' function
         is invoked by our C instance sibling. Its either invoked when we have requested it
         (see 'request_rebuild_midi_map' above) or when due to a change in Lives internal state,
         a rebuild is needed."""
@@ -151,7 +150,7 @@ class MackieControl:
             c.on_update_display_timer()
 
     def send_midi(self, midi_event_bytes):
-        u"""Use this function to send MIDI events through Live to the _real_ MIDI devices
+        """Use this function to send MIDI events through Live to the _real_ MIDI devices
         that this script is assigned to."""
         self.__c_instance.send_midi(midi_event_bytes)
 
@@ -197,10 +196,10 @@ class MackieControl:
         return False
 
     def suggest_input_port(self):
-        return u''
+        return ''
 
     def suggest_output_port(self):
-        return u''
+        return ''
 
     def suggest_map_mode(self, cc_no, channel):
         result = Live.MidiMap.MapMode.absolute

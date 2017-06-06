@@ -1,10 +1,10 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 from itertools import imap
 from ableton.v2.control_surface.mode import ModeButtonBehaviour
 
 class CancellableBehaviour(ModeButtonBehaviour):
-    u"""
+    """
     Acts a toggle for the mode -- when the button is pressed a second
     time, every mode in this mode group will be exited, going back to
     the last selected mode.  It also does mode latching.
@@ -34,7 +34,7 @@ class CancellableBehaviour(ModeButtonBehaviour):
 
 
 class AlternativeBehaviour(CancellableBehaviour):
-    u"""
+    """
     Relies in the alternative to be in the same group for cancellation
     to work properly. Also shows cancellable behaviour and the
     alternative is latched.
@@ -68,7 +68,7 @@ class AlternativeBehaviour(CancellableBehaviour):
 
 
 class DynamicBehaviourMixin(ModeButtonBehaviour):
-    u"""
+    """
     Chooses the mode to uses dynamically when the button is pressed.
     If no mode is returned, the default one is used instead.
     
@@ -95,7 +95,7 @@ class DynamicBehaviourMixin(ModeButtonBehaviour):
 
 
 class ExcludingBehaviourMixin(ModeButtonBehaviour):
-    u"""
+    """
     Button behaviour that excludes the mode/s when the currently
     selected mode is in any of the excluded groups.
     """

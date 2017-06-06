@@ -1,5 +1,4 @@
 
-from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.TransportComponent import TransportComponent
 from _Framework.InputControlElement import *
@@ -7,7 +6,7 @@ from _Framework.ButtonElement import ButtonElement
 from _Framework.EncoderElement import EncoderElement
 
 class SpecialTransportComponent(TransportComponent):
-    u""" Transport component that takes buttons for Undo and Redo """
+    """ Transport component that takes buttons for Undo and Redo """
 
     def __init__(self):
         TransportComponent.__init__(self)
