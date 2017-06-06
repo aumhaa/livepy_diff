@@ -1,10 +1,11 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 import libInterprocessCommsAPIPython
 from _Framework.ClipSlotComponent import ClipSlotComponent
 from _Framework.InputControlElement import *
 from _Framework.SubjectSlot import subject_slot
-from PySCAClipControl import *
+from .PySCAClipControl import *
 
 class SpecialClipSlotComponent(ClipSlotComponent):
 
@@ -79,7 +80,7 @@ class SpecialClipSlotComponent(ClipSlotComponent):
         else:
             self._update_requests += 1
 
-    @subject_slot('has_clip')
+    @subject_slot(u'has_clip')
     def _on_clip_state_changed(self):
         if not self._clip_slot != None:
             raise AssertionError
@@ -98,7 +99,7 @@ class SpecialClipSlotComponent(ClipSlotComponent):
 
     def _on_name_changed(self):
         if self._serato_interface != None and -1 not in (self._track_index, self._scene_index):
-            name = ''
+            name = u''
             if self._clip_slot != None and self.has_clip():
                 name = self._clip_slot.clip.name
             self._serato_interface.PySCA_SetClipLabel(self._track_index + 1, self._scene_index + 1, name)

@@ -1,5 +1,7 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
+from colorsys import rgb_to_hsv, hsv_to_rgb
+import MidiRemoteScript
 from ableton.v2.base import depends, in_range, listens, liveobj_valid, nop
 from ableton.v2.control_surface.elements.color import DynamicColorBase, DynamicColorFactory
 from pushbase.colors import Blink, FallbackColor, Pulse, PushColor, TransparentColor
@@ -47,7 +49,7 @@ class IndexedColor(PushColor):
 
 
 def translate_color_index(index):
-    """
+    u"""
     Translates a color index coming from Live into the reduced color palette of Push
     """
     try:
@@ -59,7 +61,7 @@ def translate_color_index(index):
 
 
 def inverse_translate_color_index(translated_index):
-    """
+    u"""
     Translates a color index coming with the reduced palette of Push [1..26] to the best
     matching color of Live [0..59].
     """
@@ -68,7 +70,7 @@ def inverse_translate_color_index(translated_index):
 
 
 class SelectedDrumPadColor(DynamicColorBase):
-    """
+    u"""
     Dynamic color that sets the color of the currently selected drum pad.
     The drum rack is used from the percussion_instrument_finder.
     """
@@ -83,14 +85,14 @@ class SelectedDrumPadColor(DynamicColorBase):
             self.__on_instrument_changed.subject = percussion_instrument_finder
             self.__on_instrument_changed()
 
-    @listens('instrument')
+    @listens(u'instrument')
     def __on_instrument_changed(self):
         drum_group = self.__on_instrument_changed.subject.drum_group
         if liveobj_valid(drum_group):
             self.__on_selected_drum_pad_chains_changed.subject = drum_group.view
             self.__on_selected_drum_pad_chains_changed()
 
-    @listens('selected_drum_pad.chains')
+    @listens(u'selected_drum_pad.chains')
     def __on_selected_drum_pad_chains_changed(self):
         drum_pad = self.__on_selected_drum_pad_chains_changed.subject.selected_drum_pad
         if liveobj_valid(drum_pad) and drum_pad.chains:
@@ -99,12 +101,12 @@ class SelectedDrumPadColor(DynamicColorBase):
         else:
             self._update_midi_value(self.song.view.selected_track)
 
-    @listens('color_index')
+    @listens(u'color_index')
     def __on_color_index_changed(self):
         chain = self.__on_color_index_changed.subject
         self._update_midi_value(chain)
 
-    @listens('selected_track.color_index')
+    @listens(u'selected_track.color_index')
     def __on_selected_track_color_index_changed(self):
         drum_group = self.__on_selected_drum_pad_chains_changed.subject
         drum_pad = drum_group.selected_drum_pad if liveobj_valid(drum_group) else None
@@ -127,14 +129,14 @@ class SelectedDeviceChainColor(DynamicColorBase):
             self.__on_device_changed.subject = device_provider
             self.__on_device_changed()
 
-    @listens('device')
+    @listens(u'device')
     def __on_device_changed(self):
         device = self.__on_device_changed.subject.device
         chain = find_chain_or_track(device)
         self.__on_chain_color_index_changed.subject = chain
         self.__on_chain_color_index_changed()
 
-    @listens('color_index')
+    @listens(u'color_index')
     def __on_chain_color_index_changed(self):
         chain = self.__on_chain_color_index_changed.subject
         if liveobj_valid(chain):
@@ -189,7 +191,123 @@ class Basic:
     TRANSPARENT = TransparentColor()
 
 
+class ScreenColor(object):
+    u"""
+    An RGB color intended for use on the Push 2 screen, with functions for
+    creating the various shades that are used.
+    """
+
+    def __init__(self, red, green, blue):
+        super(ScreenColor, self).__init__()
+        self.red = red
+        self.green = green
+        self.blue = blue
+
+    @staticmethod
+    def from_hsv(*hsv):
+        u"""
+        Creates a ScreenColor from an hsv triplet.
+        Each input component ranges from 0..1
+        """
+        return ScreenColor(*hsv_to_rgb(*hsv)).denormalise()
+
+    def as_hsv(self):
+        u"""
+        Creates an hsv triplet from a ScreenColor.
+        Each result component ranges from 0..1
+        """
+        return rgb_to_hsv(*self.normalise().as_tuple())
+
+    def as_tuple(self):
+        u"""
+        Returns the red, green and blue components as a triple
+        """
+        return (self.red, self.green, self.blue)
+
+    def as_remote_script_color(self, alpha = 255):
+        u"""
+        Creates a new C++ API color (internally a TColor)
+        """
+        return MidiRemoteScript.RgbaColor(self.red, self.green, self.blue, alpha)
+
+    def map_channels(self, map_function):
+        u"""
+        Applies map_function to each of the rgb channels and returns
+        a new color with the result
+        """
+        return ScreenColor(map_function(self.red), map_function(self.green), map_function(self.blue))
+
+    def shade(self, amount):
+        u"""
+        Returns a new colour which is this colour mixed with an
+        amount of black. When amount == 0, no black is mixed.
+        When amount == 0.5, then the colours components are
+        reduced by 50%. When amount == 1.0, then the result
+        is black.
+        """
+        scale = 1.0 - amount
+        return self.map_channels(lambda component: int(round(component * scale)))
+
+    def normalise(self):
+        u"""
+        Returns a new colour with this color's components normalised
+        with an assumed range 0..255
+        """
+        return self.map_channels(lambda component: float(component) / 255.0)
+
+    def denormalise(self):
+        u"""
+        Returns a new colour with this color's components denormalised
+        to a range of 0..255
+        """
+        return self.map_channels(lambda component: int(round(255 * component)))
+
+    def adjust_saturation(self, amount):
+        u"""
+        Returns a new colour which is this colour with its saturation increased
+        by amount. If amount == 0, the saturation is not changed.
+        If amount == -1.0, the saturation is reduced to 0.
+        If amount == 0.5, the saturation is increased by 50%.
+        """
+        h, s, v = self.as_hsv()
+        s *= 1.0 + amount
+        return ScreenColor.from_hsv(h, s, v)
+
+
 COLOR_INDEX_TO_PUSH_INDEX = (1, 4, 4, 10, 9, 13, 17, 16, 17, 18, 4, 4, 1, 5, 10, 10, 9, 12, 15, 16, 20, 22, 24, 4, 3, 7, 8, 8, 11, 14, 14, 15, 19, 20, 21, 25, 3, 6, 6, 6, 4, 9, 12, 15, 17, 2, 23, 2, 2, 5, 7, 10, 4, 11, 15, 19, 26, 4, 4, 4)
+PUSH_INDEX_TO_SCREEN_COLOR = (ScreenColor(255, 255, 255),
+ ScreenColor(255, 48, 0),
+ ScreenColor(237, 89, 56),
+ ScreenColor(255, 138, 0),
+ ScreenColor(112, 89, 36),
+ ScreenColor(237, 218, 60),
+ ScreenColor(228, 194, 0),
+ ScreenColor(148, 255, 24),
+ ScreenColor(0, 230, 49),
+ ScreenColor(0, 157, 50),
+ ScreenColor(51, 158, 19),
+ ScreenColor(0, 185, 85),
+ ScreenColor(0, 113, 78),
+ ScreenColor(0, 96, 48),
+ ScreenColor(0, 187, 173),
+ ScreenColor(0, 113, 164),
+ ScreenColor(0, 106, 202),
+ ScreenColor(0, 90, 98),
+ ScreenColor(73, 50, 179),
+ ScreenColor(82, 96, 221),
+ ScreenColor(171, 80, 255),
+ ScreenColor(225, 87, 227),
+ ScreenColor(136, 66, 91),
+ ScreenColor(255, 30, 50),
+ ScreenColor(159, 65, 61),
+ ScreenColor(255, 74, 150),
+ ScreenColor(255, 148, 208))
+COLOR_INDEX_TO_SCREEN_COLOR = tuple([ PUSH_INDEX_TO_SCREEN_COLOR[push_index] for push_index in COLOR_INDEX_TO_PUSH_INDEX ])
+COLOR_INDEX_TO_SCREEN_COLOR_SHADES = [tuple([ color.shade(0.2) for color in COLOR_INDEX_TO_SCREEN_COLOR ]),
+ tuple([ color.shade(0.5) for color in COLOR_INDEX_TO_SCREEN_COLOR ]),
+ tuple([ color.shade(0.7) for color in COLOR_INDEX_TO_SCREEN_COLOR ]),
+ tuple([ color.shade(0.7).adjust_saturation(-0.2) for color in COLOR_INDEX_TO_SCREEN_COLOR ]),
+ tuple([ color.adjust_saturation(-0.7) for color in COLOR_INDEX_TO_SCREEN_COLOR ])]
 PUSH_INDEX_TO_COLOR_INDEX = (1, 48, 37, 41, 50, 38, 26, 28, 17, 16, 29, 18, 6, 31, 19, 20, 7, 10, 33, 21, 35, 22, 47, 23, 36, 57)
 COLOR_TABLE = ((0, 0, 0),
  (1, 15865344, 2),

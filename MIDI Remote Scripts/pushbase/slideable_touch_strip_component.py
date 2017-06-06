@@ -1,8 +1,8 @@
 
-"""
+u"""
 Component that navigates a series of pages.
 """
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from math import ceil
 from itertools import imap
 from ableton.v2.base import clamp, listens
@@ -89,27 +89,27 @@ class SlideableTouchStripComponent(Component):
             array = [ (TouchStripStates.STATE_HALF if led_contents(i) else TouchStripStates.STATE_OFF) for i in xrange(num_leds) ]
             self._touch_strip_array = array
 
-    @listens('value')
+    @listens(u'value')
     def _on_touch_strip_value(self, value):
         if self.is_enabled():
             position = self._touch_strip_to_scroll_position(value)
             self._slideable.position = position
 
-    @listens('value')
+    @listens(u'value')
     def _on_page_touch_strip_value(self, value):
         if self.is_enabled():
             position = self._touch_strip_to_page_position(value)
             self._slideable.position = position
 
-    @listens('page_length')
+    @listens(u'page_length')
     def _on_page_length_changed(self):
         self._update_touch_strips()
 
-    @listens('position')
+    @listens(u'position')
     def _on_position_changed(self):
         self._update_touch_strips()
 
-    @listens('contents')
+    @listens(u'contents')
     def _on_contents_changed(self):
         self._touch_strip_array = []
         self._update_touch_strips()

@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import traceback
 import re
@@ -14,7 +14,7 @@ class ControlElementClient(object):
 
 
 class ElementOwnershipHandler(object):
-    """
+    u"""
     A ControlElementOwnershipHandler deals with the actual delivery of
     the control element to its clients.
     """
@@ -24,7 +24,7 @@ class ElementOwnershipHandler(object):
 
 
 class OptimizedOwnershipHandler(ElementOwnershipHandler):
-    """
+    u"""
     Control element ownership handler that delays notification of
     ownership changes and minimizes the number of actual owernship
     changes that are delivered.
@@ -52,18 +52,18 @@ class OptimizedOwnershipHandler(ElementOwnershipHandler):
                 try:
                     notify(control, client, status)
                 except Exception:
-                    logger.error('Error when trying to give control: %s', control.name)
+                    logger.error(u'Error when trying to give control: %s', control.name)
                     traceback.print_exc()
 
         self._ownership_changes.clear()
         self._sequence_number = 0
 
 
-_element_list_access_expr = re.compile('(\\w+)\\[([+-]?\\d+)\\]')
+_element_list_access_expr = re.compile(u'(\\w+)\\[([+-]?\\d+)\\]')
 
 @depends(element_container=const(None))
 def get_element(obj, element_container = None):
-    """
+    u"""
     Function for receiving a control element by name. Use this function for adressing
     elements consistently by name.
     If an element_container is injected, control elements can be adressed by string in
@@ -74,7 +74,7 @@ def get_element(obj, element_container = None):
     """
     if isinstance(obj, basestring):
         if element_container is None:
-            raise RuntimeError('Control elements can only be accessed by name, if an element container is available')
+            raise RuntimeError(u'Control elements can only be accessed by name, if an element container is available')
         match = _element_list_access_expr.match(obj)
         if match:
             name = match.group(1)
@@ -86,13 +86,13 @@ def get_element(obj, element_container = None):
 
 
 class ControlElement(Disconnectable):
-    """
+    u"""
     Base class for all classes representing control elements on a
     control surface
     """
 
     class ProxiedInterface(object):
-        """
+        u"""
         Declaration of the interface to be used when the
         ControlElement is wrapped in any form of Proxy object.
         """
@@ -112,14 +112,14 @@ class ControlElement(Disconnectable):
         return self.ProxiedInterface(outer=self)
 
     canonical_parent = None
-    name = ''
+    name = u''
     optimized_send_midi = True
     _has_resource = False
     _resource_type = StackingResource
     _has_task_group = False
 
     @depends(send_midi=None, register_control=None)
-    def __init__(self, name = '', resource_type = None, optimized_send_midi = None, send_midi = None, register_control = None, *a, **k):
+    def __init__(self, name = u'', resource_type = None, optimized_send_midi = None, send_midi = None, register_control = None, *a, **k):
         super(ControlElement, self).__init__(*a, **k)
         self._send_midi = send_midi
         self.name = name
@@ -174,7 +174,7 @@ class ControlElement(Disconnectable):
 
 
 class NotifyingControlElement(EventObject, ControlElement):
-    """
+    u"""
     Class representing control elements that can send values
     """
-    __events__ = (Event(name='value', doc=' Called when the control element receives a MIDI value\n                             from the hardware '),)
+    __events__ = (Event(name=u'value', doc=u' Called when the control element receives a MIDI value\n                             from the hardware '),)

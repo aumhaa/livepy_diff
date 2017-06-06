@@ -1,10 +1,10 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 _Q = Live.Song.Quantization
 
 class ClipCreator(object):
-    """
+    u"""
     Manages clip creation over all components.
     """
     grid_quantization = None

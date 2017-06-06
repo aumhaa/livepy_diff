@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.EncoderElement import EncoderElement
 from _Framework.ButtonElement import ButtonElement
 RING_OFF_VALUE = 0
@@ -7,7 +8,7 @@ RING_VOL_VALUE = 2
 RING_PAN_VALUE = 3
 
 class RingedEncoderElement(EncoderElement):
-    """
+    u"""
     Class representing a continuous control on the controller enclosed with an LED ring
     """
 

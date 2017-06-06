@@ -1,12 +1,12 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import liveobj_valid, NamedTuple, EventObject
-DISCRETE_PARAMETERS_DICT = {'GlueCompressor': ('Ratio', 'Attack', 'Release', 'Peak Clip In')}
+DISCRETE_PARAMETERS_DICT = {u'GlueCompressor': (u'Ratio', u'Attack', u'Release', u'Peak Clip In')}
 
 def is_parameter_quantized(parameter, parent_device):
     is_quantized = False
     if liveobj_valid(parameter):
-        device_class = getattr(parent_device, 'class_name', None)
+        device_class = getattr(parent_device, u'class_name', None)
         is_quantized = parameter.is_quantized or device_class in DISCRETE_PARAMETERS_DICT and parameter.name in DISCRETE_PARAMETERS_DICT[device_class]
     return is_quantized
 
@@ -21,11 +21,14 @@ class ParameterInfo(NamedTuple):
 
     @property
     def name(self):
-        return self._overriden_name or getattr(self.parameter, 'name', '')
+        return self._overriden_name or getattr(self.parameter, u'name', u'')
+
+    def __eq__(self, other_info):
+        return super(ParameterInfo, self).__eq__(other_info) and self.name == other_info.name
 
 
 class ParameterProvider(EventObject):
-    __events__ = ('parameters',)
+    __events__ = (u'parameters',)
 
     @property
     def parameters(self):

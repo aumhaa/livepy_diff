@@ -1,10 +1,11 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from _Framework.Layer import Layer
-from consts import NOTE_MODE, ABLETON_MODE
+from .consts import NOTE_MODE, ABLETON_MODE
 
 class ShiftableSelectorComponent(ModeSelectorComponent):
-    """ SelectorComponent that assigns buttons to functions based on the shift button """
+    u""" SelectorComponent that assigns buttons to functions based on the shift button """
 
     def __init__(self, select_buttons, master_button, arm_buttons, matrix, session, zooming, mixer, transport, slider_modes, mode_callback, note_matrix, background, *a, **k):
         raise len(select_buttons) == 8 or AssertionError

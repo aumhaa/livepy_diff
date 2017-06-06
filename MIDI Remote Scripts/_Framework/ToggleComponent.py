@@ -1,10 +1,10 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from .ControlSurfaceComponent import ControlSurfaceComponent
 from .SubjectSlot import subject_slot
 
 class ToggleComponent(ControlSurfaceComponent):
-    """
+    u"""
     Maps a toggle button to a boolean property of the Live model.
     """
     is_private = True
@@ -71,7 +71,7 @@ class ToggleComponent(ControlSurfaceComponent):
     def _on_property_changed_in_model(self):
         self._update_button()
 
-    @subject_slot('value')
+    @subject_slot(u'value')
     def _on_button_value(self, value):
         if self.is_enabled() and not self.read_only:
             if self.is_momentary:

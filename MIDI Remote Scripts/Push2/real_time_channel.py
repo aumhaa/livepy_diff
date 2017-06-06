@@ -1,10 +1,10 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.control_surface import Component
 from ableton.v2.base import depends, listenable_property, liveobj_changed, liveobj_valid
 
 def update_real_time_attachments(real_time_data_components):
-    """
+    u"""
     Updates all the real-time channels. We need to explicitly detach all
     channels before attaching them again, otherwise we could end up in a situation
     where we try to attach to a channel that's already occupied.
@@ -17,6 +17,7 @@ def update_real_time_attachments(real_time_data_components):
 
 
 class RealTimeDataComponent(Component):
+    __events__ = (u'attached',)
 
     @depends(real_time_mapper=None, register_real_time_data=None)
     def __init__(self, real_time_mapper = None, register_real_time_data = None, channel_type = None, *a, **k):
@@ -24,8 +25,8 @@ class RealTimeDataComponent(Component):
         raise liveobj_valid(real_time_mapper) or AssertionError
         super(RealTimeDataComponent, self).__init__(*a, **k)
         self._channel_type = channel_type
-        self._real_time_channel_id = ''
-        self._object_id = ''
+        self._real_time_channel_id = u''
+        self._object_id = u''
         self._real_time_mapper = real_time_mapper
         self._data = None
         self._valid = True
@@ -65,9 +66,12 @@ class RealTimeDataComponent(Component):
         self._valid = False
 
     def detach(self):
-        if not self._valid and self._real_time_channel_id != '':
+        if not self._valid and self._real_time_channel_id != u'':
             self._real_time_mapper.detach_channel(self._real_time_channel_id)
-            self._real_time_channel_id = ''
+            self._real_time_channel_id = u''
+
+    def device_visualisation(self):
+        return self._real_time_mapper.device_visualisation
 
     def attach(self):
         if not self._valid:
@@ -77,3 +81,4 @@ class RealTimeDataComponent(Component):
             self.notify_channel_id()
             self.notify_object_id()
             self._valid = True
+            self.notify_attached()

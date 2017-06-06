@@ -1,10 +1,10 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from .InputControlElement import InputControlElement
 from .ModeSelectorComponent import ModeSelectorComponent
 
 class ChannelTranslationSelector(ModeSelectorComponent):
-    """ Class switches modes by translating the given controls' message channel """
+    u""" Class switches modes by translating the given controls' message channel """
 
     def __init__(self, num_modes = 0, *a, **k):
         super(ChannelTranslationSelector, self).__init__(*a, **k)

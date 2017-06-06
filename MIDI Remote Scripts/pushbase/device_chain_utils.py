@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from itertools import imap, chain
 from functools import partial
@@ -14,7 +14,7 @@ def is_first_device_on_pad(device, drum_pad):
 
 
 def find_instrument_devices(track_or_chain):
-    """
+    u"""
     Returns a list with all instruments from a track or chain.
     """
     if liveobj_valid(track_or_chain):
@@ -38,4 +38,4 @@ def find_instrument_meeting_requirement(requirement, track_or_chain):
 
 
 def is_simpler(device):
-    return device and device.class_name == 'OriginalSimpler'
+    return device and device.class_name == u'OriginalSimpler'

@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial
 from itertools import imap, izip
 import Live
@@ -13,7 +13,7 @@ from .mixable_utilities import is_chain
 from .real_time_channel import RealTimeDataComponent
 MASTER_OUTPUT_TARGET_ID = u'Master'
 NO_INPUT_TARGET_ID = u'No Input'
-AUDIO_CHANNEL_POSITION_POSTFIXES = ['Pre FX', 'Post FX', 'Post Mixer']
+AUDIO_CHANNEL_POSITION_POSTFIXES = [u'Pre FX', u'Post FX', u'Post Mixer']
 MIDI_CHANNEL_POSITION_POSTFIXES = AUDIO_CHANNEL_POSITION_POSTFIXES[:2]
 
 class RoutingMeterRealTimeChannelAssigner(CompoundComponent):
@@ -28,7 +28,7 @@ class RoutingMeterRealTimeChannelAssigner(CompoundComponent):
         self._half_window_size = sliding_window_size // 2
         self._routing_channels = []
         self._selected_index = -1
-        self.real_time_channels = self.register_components(*[ RealTimeDataComponent(channel_type='meter', real_time_mapper=real_time_mapper, register_real_time_data=register_real_time_data) for _ in xrange(sliding_window_size) ])
+        self.real_time_channels = self.register_components(*[ RealTimeDataComponent(channel_type=u'meter', real_time_mapper=real_time_mapper, register_real_time_data=register_real_time_data) for _ in xrange(sliding_window_size) ])
 
     def disconnect(self):
         super(RoutingMeterRealTimeChannelAssigner, self).disconnect()
@@ -96,13 +96,13 @@ class TrackOrRoutingControlChooserComponent(ModesComponent):
         self._tracks_provider = tracks_provider
         self._track_mixer = track_mixer_component
         self._routing_control = routing_control_component
-        self.add_mode('mix', track_mixer_component)
-        self.add_mode('routing', routing_control_component)
-        self.selected_mode = 'mix'
-        for mode in ['mix', 'routing']:
+        self.add_mode(u'mix', track_mixer_component)
+        self.add_mode(u'routing', routing_control_component)
+        self.selected_mode = u'mix'
+        for mode in [u'mix', u'routing']:
             button = self.get_mode_button(mode)
-            button.mode_selected_color = 'MixOrRoutingChooser.ModeActive'
-            button.mode_unselected_color = 'MixOrRoutingChooser.ModeInactive'
+            button.mode_selected_color = u'MixOrRoutingChooser.ModeActive'
+            button.mode_unselected_color = u'MixOrRoutingChooser.ModeInactive'
 
         self._routing_previously_available = False
         self._update_buttons(False)
@@ -126,7 +126,7 @@ class TrackOrRoutingControlChooserComponent(ModesComponent):
         if self.is_enabled():
             self._update_routing_mode_availability()
 
-    @listens('selected_item')
+    @listens(u'selected_item')
     def __on_selected_item_changed(self):
         if self.is_enabled():
             self._update_routing_mode_availability()
@@ -135,10 +135,10 @@ class TrackOrRoutingControlChooserComponent(ModesComponent):
         is_available = self._can_enable_routing_mode()
         if is_available != self._routing_previously_available:
             self._update_buttons(enable_buttons=is_available)
-            if is_available and 'routing' in self.active_modes:
-                self.pop_mode('mix')
+            if is_available and u'routing' in self.active_modes:
+                self.pop_mode(u'mix')
             else:
-                self.push_mode('mix')
+                self.push_mode(u'mix')
             self.notify_routing_mode_available()
             self._routing_previously_available = is_available
 
@@ -146,7 +146,7 @@ class TrackOrRoutingControlChooserComponent(ModesComponent):
         return not is_chain(self._tracks_provider.selected_item)
 
     def _update_buttons(self, enable_buttons):
-        for mode in ['mix', 'routing']:
+        for mode in [u'mix', u'routing']:
             self.get_mode_button(mode).enabled = enable_buttons
 
 
@@ -169,10 +169,13 @@ class Router(EventObject):
         raise routing_direction is not None or AssertionError
         super(Router, self).__init__(*a, **k)
         self._song = song
-        self._current_target_property = '%s_routing_%s' % (routing_direction, routing_level)
-        self.register_slot(MultiSlot(subject=song.view, event_name_list=('selected_track', self._current_target_property), listener=self.__on_current_routing_changed))
-        self.register_slot(MultiSlot(subject=song.view, event_name_list=('selected_track', 'available_%s_routing_%ss' % (routing_direction, routing_level)), listener=self.__on_routings_changed))
+        self._current_target_property = u'%s_routing_%s' % (routing_direction, routing_level)
+        self._register_listeners()
         self.current_target_index = self._current_target_index()
+
+    def _register_listeners(self):
+        self.register_slot(MultiSlot(subject=self._song.view, event_name_list=(u'selected_track', self._current_target_property), listener=self.__on_current_routing_changed))
+        self.register_slot(MultiSlot(subject=self._song.view, event_name_list=(u'selected_track', u'available_%ss' % self._current_target_property), listener=self.__on_routings_changed))
 
     @listenable_property
     def routing_targets(self):
@@ -198,17 +201,17 @@ class Router(EventObject):
     def __on_routings_changed(self):
         self.notify_routing_targets()
 
-    def _track(self):
+    def _get_routing_host(self):
         return self._song.view.selected_track
 
     def _get_targets(self):
         raise NotImplementedError
 
     def _get_current_target(self):
-        return getattr(self._track(), self._current_target_property)
+        return getattr(self._get_routing_host(), self._current_target_property)
 
     def _set_current_target(self, new_target_id):
-        setattr(self._track(), self._current_target_property, new_target_id)
+        setattr(self._get_routing_host(), self._current_target_property, new_target_id)
 
     @listenable_property
     def has_input_channel_position(self):
@@ -218,28 +221,28 @@ class Router(EventObject):
 class InputTypeRouter(Router):
 
     def __init__(self, *a, **k):
-        super(InputTypeRouter, self).__init__(routing_direction='input', routing_level='type', *a, **k)
+        super(InputTypeRouter, self).__init__(routing_direction=u'input', routing_level=u'type', *a, **k)
 
     def _get_targets(self):
-        return reorder_routing_targets(self._track().available_input_routing_types, NO_INPUT_TARGET_ID)
+        return reorder_routing_targets(self._get_routing_host().available_input_routing_types, NO_INPUT_TARGET_ID)
 
 
 class OutputTypeRouter(Router):
 
     def __init__(self, *a, **k):
-        super(OutputTypeRouter, self).__init__(routing_direction='output', routing_level='type', *a, **k)
+        super(OutputTypeRouter, self).__init__(routing_direction=u'output', routing_level=u'type', *a, **k)
 
     def _get_targets(self):
-        return reorder_routing_targets(self._track().available_output_routing_types, MASTER_OUTPUT_TARGET_ID)
+        return reorder_routing_targets(self._get_routing_host().available_output_routing_types, MASTER_OUTPUT_TARGET_ID)
 
 
 class InputChannelRouter(Router):
 
     def __init__(self, *a, **k):
-        super(InputChannelRouter, self).__init__(routing_direction='input', routing_level='channel', *a, **k)
+        super(InputChannelRouter, self).__init__(routing_direction=u'input', routing_level=u'channel', *a, **k)
 
     def _get_targets(self):
-        return list(self._track().available_input_routing_channels)
+        return list(self._get_routing_host().available_input_routing_channels)
 
 
 def _target_has_postfix(target_and_postfix):
@@ -267,7 +270,7 @@ def targets_can_be_grouped(targets, postfixes):
 
 
 class InputChannelAndPositionRouter(EventObject):
-    """
+    u"""
     Adapts an InputChannelRouter (and InputTypeRouter).
     
     For non-track input types, the input channel interface is passed through
@@ -294,18 +297,18 @@ class InputChannelAndPositionRouter(EventObject):
         self.__on_current_target_index_changed.subject = input_channel_router
         self.__on_input_type_changed.subject = input_type_router
 
-    @listens('current_target_index')
+    @listens(u'current_target_index')
     def __on_input_type_changed(self, _):
         self._update_channel_grouping()
         self.notify_routing_targets()
         self.notify_input_channel_position_index()
 
-    @listens('routing_targets')
+    @listens(u'routing_targets')
     def __on_routing_targets_changed(self):
         self._update_channel_grouping()
         self.notify_routing_targets()
 
-    @listens('current_target_index')
+    @listens(u'current_target_index')
     def __on_current_target_index_changed(self, _):
         if self.has_input_channel_position and self._last_input_channel_position_index != self.input_channel_position_index:
             self.notify_input_channel_position_index()
@@ -314,7 +317,7 @@ class InputChannelAndPositionRouter(EventObject):
 
     @listenable_property
     def routing_targets(self):
-        """
+        u"""
         Input channels of wrapped InputChannelRouter if has_input_channel_position
         is false.
         Input channels of from wrapped InputChannelRouter that are in the "position"
@@ -330,7 +333,7 @@ class InputChannelAndPositionRouter(EventObject):
 
     @listenable_property
     def current_target_index(self):
-        """
+        u"""
         Index in routing_targets of the current_target
         """
         index_in_complete_list = self._input_channel_router.current_target_index
@@ -342,7 +345,7 @@ class InputChannelAndPositionRouter(EventObject):
 
     @listenable_property
     def current_target(self):
-        """
+        u"""
         Currently selected target
         """
         return self._input_channel_router.current_target
@@ -353,7 +356,7 @@ class InputChannelAndPositionRouter(EventObject):
 
     @listenable_property
     def input_channel_positions(self):
-        """
+        u"""
         List of strings naming the input channel positions.
         Only use if has_input_channel_position is true.
         """
@@ -361,7 +364,7 @@ class InputChannelAndPositionRouter(EventObject):
 
     @property
     def live_position_postfixes(self):
-        """
+        u"""
         List of postfixes found in the names of Live's routing channels with position.
         Only use if has_input_channel_position is true.
         """
@@ -370,7 +373,7 @@ class InputChannelAndPositionRouter(EventObject):
 
     @listenable_property
     def input_channel_position_index(self):
-        """
+        u"""
         Index into input_channel_positions of current channel position.
         Only use if has_input_channel_position is true.
         """
@@ -388,15 +391,18 @@ class InputChannelAndPositionRouter(EventObject):
 
     @property
     def input_type_name(self):
-        """
+        u"""
         Name of the input type.
         Only use if has_input_channel_position is true.
         """
-        raise self.has_input_channel_position or AssertionError
-        return self._input_type_router.current_target.attached_object.name
+        if not self.has_input_channel_position:
+            raise AssertionError
+            current_target = self._input_type_router.current_target
+            return current_target and getattr(current_target.attached_object, u'name', u'')
+        return u''
 
     def _update_channel_grouping(self):
-        attached_object = self._input_type_router.current_target.attached_object
+        attached_object = getattr(self._input_type_router.current_target, u'attached_object', None)
         original_channels = self._input_channel_router.routing_targets
         if can_combine_targets(original_channels[:len(AUDIO_CHANNEL_POSITION_POSTFIXES)], AUDIO_CHANNEL_POSITION_POSTFIXES):
             postfixes = AUDIO_CHANNEL_POSITION_POSTFIXES
@@ -411,10 +417,10 @@ class InputChannelAndPositionRouter(EventObject):
 class OutputChannelRouter(Router):
 
     def __init__(self, *a, **k):
-        super(OutputChannelRouter, self).__init__(routing_direction='output', routing_level='channel', *a, **k)
+        super(OutputChannelRouter, self).__init__(routing_direction=u'output', routing_level=u'channel', *a, **k)
 
     def _get_targets(self):
-        return list(self._track().available_output_routing_channels)
+        return list(self._get_routing_host().available_output_routing_channels)
 
 
 class RoutingTarget(EventObject):
@@ -429,7 +435,7 @@ class RoutingTarget(EventObject):
         return self._name
 
     def __eq__(self, other):
-        return other is not None and self._live_target == getattr(other, '_live_target', None)
+        return other is not None and self._live_target == getattr(other, u'_live_target', None)
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -442,7 +448,7 @@ class RoutingTarget(EventObject):
         return hash(self)
 
     def __repr__(self):
-        return '<%s name=%s>' % (self.__class__.__name__, self._name)
+        return u'<%s name=%s>' % (self.__class__.__name__, self._name)
 
 
 class RoutingChannel(RoutingTarget):
@@ -451,9 +457,9 @@ class RoutingChannel(RoutingTarget):
     def __init__(self, realtime_channel = None, *a, **k):
         super(RoutingChannel, self).__init__(*a, **k)
         self.realtime_channel = realtime_channel
-        self._layout_names = {Live.Track.RoutingChannelLayout.mono: 'mono',
-         Live.Track.RoutingChannelLayout.midi: 'midi',
-         Live.Track.RoutingChannelLayout.stereo: 'stereo'}
+        self._layout_names = {Live.Track.RoutingChannelLayout.mono: u'mono',
+         Live.Track.RoutingChannelLayout.midi: u'midi',
+         Live.Track.RoutingChannelLayout.stereo: u'stereo'}
 
     @property
     def layout(self):
@@ -500,11 +506,11 @@ class RoutingTargetList(EventObject):
             return self._targets.index(self._selected_target)
         return -1
 
-    @listens('routing_targets')
+    @listens(u'routing_targets')
     def __on_routing_targets_changed(self):
         self._update_targets()
 
-    @listens('current_target_index')
+    @listens(u'current_target_index')
     def __on_current_target_index_changed(self, *a):
         self._update_selected_target()
 
@@ -554,11 +560,11 @@ class RoutingTypeList(RoutingTargetList):
         if isinstance(attached_object, Live.Track.Track):
             return attached_object
 
-    @listens('routing_targets')
+    @listens(u'routing_targets')
     def __on_routing_targets_changed(self):
         self.notify_selected_track()
 
-    @listens('current_target_index')
+    @listens(u'current_target_index')
     def __on_current_target_index_changed(self, *a):
         self.notify_selected_track()
 
@@ -600,15 +606,15 @@ class RoutingChannelList(RoutingTargetList):
             pool_index = mapping[list_index]
             return self._rt_channel_assigner.real_time_channels[pool_index]
 
-    @listens('routing_targets')
+    @listens(u'routing_targets')
     def __on_routing_targets_changed(self):
         self._rt_channel_assigner.routing_channels = self._router.routing_targets
 
-    @listens('selected_index')
+    @listens(u'selected_index')
     def __on_selected_index_changed(self, *a):
         self._rt_channel_assigner.selected_index = self.selected_index
 
-    @listens('list_index_to_pool_index_mapping')
+    @listens(u'list_index_to_pool_index_mapping')
     def __on_list_index_to_pool_index_mapping_changed(self, *a):
         self._reassign_realtime_channels()
 
@@ -638,16 +644,16 @@ class RoutingChannelPositionList(EventObject):
             return -1
         return self._input_channel_router.input_channel_position_index
 
-    @listens('has_input_channel_position')
+    @listens(u'has_input_channel_position')
     def __on_has_input_channel_position_changed(self, _):
         self._update_targets()
         self.notify_selected_index()
 
-    @listens('input_channel_positions')
+    @listens(u'input_channel_positions')
     def __on_input_channel_positions_changed(self):
         self._update_targets()
 
-    @listens('input_channel_position_index')
+    @listens(u'input_channel_position_index')
     def __on_input_channel_position_index_changed(self):
         self.notify_selected_index()
 
@@ -691,13 +697,13 @@ class RoutingControlComponent(ModesComponent):
         self.__on_input_channel_position_index_changed.subject = input_channel_and_position_router
         self._routing_channel_position_list = None
         self._update_routing_channel_position_list()
-        self.add_mode('input', [SetAttributeMode(self, '_can_route', can_set_input_routing), partial(self._set_active_routers, input_type_router, input_channel_and_position_router), self._real_time_channel_assigner])
-        self.add_mode('output', [SetAttributeMode(self, '_can_route', lambda *a: True), partial(self._set_active_routers, output_type_router, output_channel_router), self._real_time_channel_assigner])
-        self.selected_mode = 'input'
+        self.add_mode(u'input', [SetAttributeMode(self, u'_can_route', can_set_input_routing), partial(self._set_active_routers, input_type_router, input_channel_and_position_router), self._real_time_channel_assigner])
+        self.add_mode(u'output', [SetAttributeMode(self, u'_can_route', lambda *a: True), partial(self._set_active_routers, output_type_router, output_channel_router), self._real_time_channel_assigner])
+        self.selected_mode = u'input'
         self.__on_selected_track_changed.subject = self.song.view
         self.__on_selected_track_changed()
         self._connect_monitoring_state_encoder()
-        self.input_output_choice_encoder.connect_static_list(self, 'selected_mode', list_values=['input', 'output'])
+        self.input_output_choice_encoder.connect_static_list(self, u'selected_mode', list_values=[u'input', u'output'])
         self.__on_selected_mode_changed.subject = self
         self.__on_tracks_changed.subject = self.song
         self.__on_return_tracks_changed.subject = self.song
@@ -706,7 +712,7 @@ class RoutingControlComponent(ModesComponent):
     @listenable_property
     def can_monitor(self):
         track = self.song.view.selected_track
-        return hasattr(track, 'current_monitoring_state') and not track.is_frozen and track.can_be_armed
+        return hasattr(track, u'current_monitoring_state') and not track.is_frozen and track.can_be_armed
 
     @listenable_property
     def monitoring_state_index(self):
@@ -715,7 +721,7 @@ class RoutingControlComponent(ModesComponent):
 
     @listenable_property
     def is_choosing_output(self):
-        return self.selected_mode == 'output'
+        return self.selected_mode == u'output'
 
     @listenable_property
     def routing_type_list(self):
@@ -729,23 +735,23 @@ class RoutingControlComponent(ModesComponent):
     def routing_channel_position_list(self):
         return self._routing_channel_position_list
 
-    @listens('tracks')
+    @listens(u'tracks')
     def __on_tracks_changed(self):
         self._update_track_listeners()
 
-    @listens('return_tracks')
+    @listens(u'return_tracks')
     def __on_return_tracks_changed(self):
         self._update_track_listeners()
 
-    @listens('selected_mode')
+    @listens(u'selected_mode')
     def __on_selected_mode_changed(self, _):
         self.notify_is_choosing_output()
 
-    @listens('selected_track.current_monitoring_state')
+    @listens(u'selected_track.current_monitoring_state')
     def __on_current_monitoring_state_changed(self):
         self.notify_monitoring_state_index()
 
-    @listens('selected_track')
+    @listens(u'selected_track')
     def __on_selected_track_changed(self):
         self._update_monitoring_state()
         self._update_can_route()
@@ -754,25 +760,25 @@ class RoutingControlComponent(ModesComponent):
         self._update_routing_channel_position_list()
         self._reconnect_selected_track_slots()
 
-    @listens_group('output_routing_type')
+    @listens_group(u'output_routing_type')
     def __on_any_output_routing_type_changed(self, *_a):
         self._update_monitoring_state()
 
-    @listens('is_frozen')
+    @listens(u'is_frozen')
     def __on_is_frozen_changed(self):
         self._update_can_monitor()
         self._update_can_route()
 
-    @listens('input_channel_position_index')
+    @listens(u'input_channel_position_index')
     def __on_input_channel_position_index_changed(self):
         self._update_routing_channel_list()
 
-    @listens('has_input_channel_position')
+    @listens(u'has_input_channel_position')
     def __on_has_input_channel_position_changed(self, *a):
         self._update_routing_channel_position_list()
         self._connect_input_channel_position_encoder()
 
-    @listens('input_routing_type')
+    @listens(u'input_routing_type')
     def __on_input_routing_type_changed(self):
         self._update_can_monitor()
 
@@ -799,7 +805,7 @@ class RoutingControlComponent(ModesComponent):
 
     def _connect_input_channel_position_encoder(self):
         if self._active_channel_router.has_input_channel_position:
-            self.routing_channel_position_encoder.connect_list_property(self._active_channel_router, current_index_property_name='input_channel_position_index', max_index=len(self._active_channel_router.input_channel_positions) - 1)
+            self.routing_channel_position_encoder.connect_list_property(self._active_channel_router, current_index_property_name=u'input_channel_position_index', max_index=len(self._active_channel_router.input_channel_positions) - 1)
             self.routing_channel_position_encoder.enabled = self.can_route
         else:
             self.routing_channel_position_encoder.enabled = False
@@ -810,7 +816,7 @@ class RoutingControlComponent(ModesComponent):
         self._routing_type_list.disconnect()
         self._routing_type_list = self.register_disconnectable(RoutingTypeList(parent_task_group=self._tasks, router=self._active_type_router))
         self.notify_routing_type_list()
-        self.routing_type_encoder.connect_list_property(self._routing_type_list, current_value_property_name='selected_target', list_property_name='targets')
+        self.routing_type_encoder.connect_list_property(self._routing_type_list, current_value_property_name=u'selected_target', list_property_name=u'targets')
 
     def _update_routing_channel_list(self):
         self.unregister_disconnectable(self._routing_channel_list)
@@ -818,7 +824,7 @@ class RoutingControlComponent(ModesComponent):
         self._routing_channel_list = self.register_disconnectable(RoutingChannelList(parent_task_group=self._tasks, rt_channel_assigner=self._real_time_channel_assigner, router=self._active_channel_router))
         self.notify_routing_channel_list()
         for encoder in self.routing_channel_encoders:
-            encoder.connect_list_property(self._routing_channel_list, current_value_property_name='selected_target', list_property_name='targets')
+            encoder.connect_list_property(self._routing_channel_list, current_value_property_name=u'selected_target', list_property_name=u'targets')
 
     def _update_routing_channel_position_list(self):
         if self._routing_channel_position_list is not None:
@@ -831,7 +837,7 @@ class RoutingControlComponent(ModesComponent):
         self.notify_routing_channel_position_list()
 
     def _connect_monitoring_state_encoder(self):
-        self.monitor_state_encoder.connect_static_list(self.song.view.selected_track, 'current_monitoring_state', list_values=[Live.Track.Track.monitoring_states.IN, Live.Track.Track.monitoring_states.AUTO, Live.Track.Track.monitoring_states.OFF])
+        self.monitor_state_encoder.connect_static_list(self.song.view.selected_track, u'current_monitoring_state', list_values=[Live.Track.Track.monitoring_states.IN, Live.Track.Track.monitoring_states.AUTO, Live.Track.Track.monitoring_states.OFF])
 
     def _update_monitoring_state(self):
         self._connect_monitoring_state_encoder()

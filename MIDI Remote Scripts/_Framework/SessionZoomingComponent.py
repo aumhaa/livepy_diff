@@ -1,12 +1,12 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from .CompoundComponent import CompoundComponent
 from .ScrollComponent import ScrollComponent
 from .SubjectSlot import subject_slot, subject_slot_group
 from .Util import in_range
 
 class SessionZoomingComponent(CompoundComponent):
-    """
+    u"""
     Class using a matrix of buttons to choose blocks of clips in the
     session, as if you had zoomed out from session.
     """
@@ -32,14 +32,14 @@ class SessionZoomingComponent(CompoundComponent):
             self._horizontal_scroll.can_scroll_down = self._can_scroll_right
             self._horizontal_scroll.scroll_up = self._scroll_left
             self._horizontal_scroll.scroll_down = self._scroll_right
-            self.register_slot(self._session, self._on_session_offset_changes, 'offset')
+            self.register_slot(self._session, self._on_session_offset_changes, u'offset')
             enable_skinning and self._enable_skinning()
 
     def _enable_skinning(self):
-        self.set_stopped_value('Zooming.Stopped')
-        self.set_selected_value('Zooming.Selected')
-        self.set_playing_value('Zooming.Playing')
-        self.set_empty_value('Zooming.Empty')
+        self.set_stopped_value(u'Zooming.Stopped')
+        self.set_selected_value(u'Zooming.Selected')
+        self.set_playing_value(u'Zooming.Playing')
+        self.set_empty_value(u'Zooming.Empty')
 
     def on_scene_list_changed(self):
         self.update()
@@ -150,7 +150,7 @@ class SessionZoomingComponent(CompoundComponent):
             self._scene_bank_index = int(self._session.scene_offset() / self._session.height() / self._buttons.height())
         self.update()
 
-    @subject_slot('value')
+    @subject_slot(u'value')
     def _on_matrix_value(self, value, x, y, is_momentary):
         if self.is_enabled():
             if value != 0 or not is_momentary:
@@ -159,7 +159,7 @@ class SessionZoomingComponent(CompoundComponent):
                 if track_offset in xrange(len(self._session.tracks_to_use())) and scene_offset in xrange(len(self.song().scenes)):
                     self._session.set_offsets(track_offset, scene_offset)
 
-    @subject_slot_group('value')
+    @subject_slot_group(u'value')
     def _on_scene_bank_value(self, value, sender):
         if self.is_enabled() and self._buttons:
             if value != 0 or not sender.is_momentary():
@@ -221,7 +221,7 @@ class SessionZoomingComponent(CompoundComponent):
 
 
 class DeprecatedSessionZoomingComponent(SessionZoomingComponent):
-    """
+    u"""
     Zooming component, that is controlling the sessions enabled state while holding the
     zoom button
     """
@@ -232,7 +232,7 @@ class DeprecatedSessionZoomingComponent(SessionZoomingComponent):
         self._is_zoomed_out = False
 
     def set_button_matrix(self, buttons):
-        """
+        u"""
         Overwrite to prevent resetting the buttons, as some old components
         don't like it.
         """
@@ -251,7 +251,7 @@ class DeprecatedSessionZoomingComponent(SessionZoomingComponent):
     def _session_set_enabled(self, is_enabled):
         self._session.set_enabled(is_enabled)
 
-    @subject_slot('value')
+    @subject_slot(u'value')
     def _on_zoom_value(self, value):
         if self.is_enabled():
             if self._zoom_button.is_momentary():
@@ -282,12 +282,12 @@ class DeprecatedSessionZoomingComponent(SessionZoomingComponent):
         if self._is_zoomed_out:
             super(DeprecatedSessionZoomingComponent, self)._on_session_offset_changes()
 
-    @subject_slot('value')
+    @subject_slot(u'value')
     def _on_matrix_value(self, *a, **k):
         if self._is_zoomed_out:
             super(DeprecatedSessionZoomingComponent, self)._on_matrix_value(*a, **k)
 
-    @subject_slot_group('value')
+    @subject_slot_group(u'value')
     def _on_scene_bank_value(self, *a, **k):
         if self._is_zoomed_out:
             super(DeprecatedSessionZoomingComponent, self)._on_scene_bank_value(*a, **k)

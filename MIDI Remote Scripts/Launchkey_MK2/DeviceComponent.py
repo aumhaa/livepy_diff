@@ -1,9 +1,10 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Generic.Devices import DEVICE_DICT, BANK_NAME_DICT, DEVICE_BOB_DICT, parameter_banks, parameter_bank_names
 from _Framework.Control import ButtonControl
 from _Framework.DeviceComponent import DeviceComponent as DeviceComponentBase
-BOB_BANK_NAME = 'Best of Parameters'
+BOB_BANK_NAME = u'Best of Parameters'
 NavDirection = Live.Application.Application.View.NavDirection
 
 class DeviceComponent(DeviceComponentBase):
@@ -19,8 +20,8 @@ class DeviceComponent(DeviceComponentBase):
         self._device_best_banks = DEVICE_BOB_DICT
         for device_name, current_banks in self._device_banks.iteritems():
             if len(current_banks) > 1:
-                raise device_name in self._device_best_banks.keys() or AssertionError("Could not find best-of-banks for '%s'" % device_name)
-                raise device_name in self._device_bank_names.keys() or AssertionError("Could not find bank names for '%s'" % device_name)
+                raise device_name in self._device_best_banks.keys() or AssertionError(u"Could not find best-of-banks for '%s'" % device_name)
+                raise device_name in self._device_bank_names.keys() or AssertionError(u"Could not find bank names for '%s'" % device_name)
                 current_banks = self._device_best_banks[device_name] + current_banks
                 new_bank_names[device_name] = (BOB_BANK_NAME,) + self._device_bank_names[device_name]
             new_banks[device_name] = current_banks
@@ -38,11 +39,11 @@ class DeviceComponent(DeviceComponentBase):
 
     def _scroll_device_chain(self, direction):
         view = self.application().view
-        if not view.is_view_visible('Detail') or not view.is_view_visible('Detail/DeviceChain'):
-            view.show_view('Detail')
-            view.show_view('Detail/DeviceChain')
+        if not view.is_view_visible(u'Detail') or not view.is_view_visible(u'Detail/DeviceChain'):
+            view.show_view(u'Detail')
+            view.show_view(u'Detail/DeviceChain')
         else:
-            view.scroll_view(direction, 'Detail/DeviceChain', False)
+            view.scroll_view(direction, u'Detail/DeviceChain', False)
 
     def _is_banking_enabled(self):
         return True
@@ -69,9 +70,9 @@ class DeviceComponent(DeviceComponentBase):
                 if button:
                     value_to_send = False
                     if index == self._bank_index and self._device:
-                        value_to_send = 'Device.BankSelected'
+                        value_to_send = u'Device.BankSelected'
                     elif index == 0:
-                        value_to_send = 'Device.BestOfBank'
+                        value_to_send = u'Device.BestOfBank'
                     elif index in xrange(bank_length):
-                        value_to_send = 'Device.Bank'
+                        value_to_send = u'Device.Bank'
                     button.set_light(value_to_send)

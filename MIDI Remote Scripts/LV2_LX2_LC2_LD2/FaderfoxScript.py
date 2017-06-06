@@ -1,21 +1,22 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
-from consts import *
 import sys
-from FaderfoxHelper import FaderfoxHelper
-from ParamMap import ParamMap
-from Devices import *
+from .consts import *
+from .FaderfoxHelper import FaderfoxHelper
+from .ParamMap import ParamMap
+from .Devices import *
 from _Generic.util import DeviceAppointer
 
 class FaderfoxScript:
-    __filter_funcs__ = ['update_display', 'log', 'song']
+    __filter_funcs__ = [u'update_display', u'log', u'song']
     __module__ = __name__
-    __doc__ = 'Automap script for Faderfox controllers'
-    __version__ = 'V1.1'
-    __name__ = 'Generic Faderfox Script'
+    __doc__ = u'Automap script for Faderfox controllers'
+    __version__ = u'V1.1'
+    __name__ = u'Generic Faderfox Script'
 
     def __init__(self, c_instance):
-        self.suffix = ''
+        self.suffix = u''
         self.is_lv1 = False
         FaderfoxScript.realinit(self, c_instance)
 
@@ -27,15 +28,15 @@ class FaderfoxScript:
         self.device_controller = None
         self.transport_controller = None
         self.components = []
-        live = 'Live 6 & 7'
+        live = u'Live 6 & 7'
         if self.is_live_5():
-            live = 'Live 5'
-        self.show_message(self.__name__ + ' ' + self.__version__ + ' for ' + live)
+            live = u'Live 5'
+        self.show_message(self.__name__ + u' ' + self.__version__ + u' for ' + live)
         self.is_lv1 = False
         self._device_appointer = DeviceAppointer(song=self.song(), appointed_device_setter=self._set_appointed_device)
 
     def is_live_5(self):
-        return hasattr(Live, 'is_live_5')
+        return hasattr(Live, u'is_live_5')
 
     def log(self, string):
         pass
@@ -56,10 +57,10 @@ class FaderfoxScript:
         return self.c_instance.song()
 
     def suggest_input_port(self):
-        return str('')
+        return str(u'')
 
     def suggest_output_port(self):
-        return str('')
+        return str(u'')
 
     def can_lock_to_devices(self):
         return True
@@ -86,7 +87,7 @@ class FaderfoxScript:
         pass
 
     def show_message(self, message):
-        if hasattr(self.c_instance, 'show_message'):
+        if hasattr(self.c_instance, u'show_message'):
             self.c_instance.show_message(message)
 
     def instance_identifier(self):
@@ -106,11 +107,11 @@ class FaderfoxScript:
             c.refresh_state()
 
     def build_midi_map(self, midi_map_handle):
-        self.log('script build midi map')
+        self.log(u'script build midi map')
         script_handle = self.c_instance.handle()
         self.param_map.remove_mappings()
         for c in self.components:
-            self.log('build midi map on %s' % c)
+            self.log(u'build midi map on %s' % c)
             c.build_midi_map(script_handle, midi_map_handle)
 
     def update_display(self):
@@ -135,4 +136,4 @@ class FaderfoxScript:
 
             self.param_map.receive_midi_note(channel, status, note_no, note_vel)
         else:
-            raise False or AssertionError('Unknown MIDI message %s' % str(midi_bytes))
+            raise False or AssertionError(u'Unknown MIDI message %s' % str(midi_bytes))

@@ -1,12 +1,12 @@
 
-"""
+u"""
 Interface for items that adquire resources.
 """
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from .Util import find_if
 
 class Disconnectable(object):
-    """
+    u"""
     Represents an entity that holds connections to other objects that
     should be explicitly cleared to avoid object lifetime problems or
     leaking listeners.
@@ -17,7 +17,7 @@ class Disconnectable(object):
 
 
 class CompoundDisconnectable(Disconnectable):
-    """
+    u"""
     Compound disconnectable. Collects other disconnectables and
     disconnects them recursively.
     """
@@ -55,7 +55,7 @@ class CompoundDisconnectable(Disconnectable):
 
 
 class disconnectable(object):
-    """
+    u"""
     Context manager that will disconnect the given disconnectable when
     the context is exited.  It returns the original disconnectable.
     """

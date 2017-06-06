@@ -1,8 +1,8 @@
 
-from __future__ import with_statement
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 import libInterprocessCommsAPIPython
-from PySCAClipControl import PySCAClipControl
+from .PySCAClipControl import PySCAClipControl
 from _Framework.ControlSurface import ControlSurface
 from _Framework.InputControlElement import *
 from _Framework.SliderElement import SliderElement
@@ -11,12 +11,12 @@ from _Framework.EncoderElement import EncoderElement
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
 from _Framework.ClipSlotComponent import ClipSlotComponent
 from _Framework.ChannelStripComponent import ChannelStripComponent
-from SpecialMixerComponent import SpecialMixerComponent
-from SpecialSessionComponent import SpecialSessionComponent
-from SpecialDeviceComponent import SpecialDeviceComponent
+from .SpecialMixerComponent import SpecialMixerComponent
+from .SpecialSessionComponent import SpecialSessionComponent
+from .SpecialDeviceComponent import SpecialDeviceComponent
 
 def fixed_value(value):
-    """ Small utility function to extract fixed float values from integers """
+    u""" Small utility function to extract fixed float values from integers """
     return float(value) / 65536L
 
 
@@ -58,7 +58,7 @@ class Serato(ControlSurface):
         self._serato_interface = None
 
     def connect_script_instances(self, instanciated_scripts):
-        """ Called by the Application as soon as all scripts are initialized.
+        u""" Called by the Application as soon as all scripts are initialized.
             You can connect yourself to other running scripts here, as we do it
             connect the extension modules (MackieControlXTs).
         """
@@ -79,7 +79,7 @@ class Serato(ControlSurface):
             if not self._handle_session_event(new_event):
                 if not self._handle_mixer_event(new_event):
                     if not self._handle_device_event(new_event):
-                        print 'Unhandled Event: ' + str(new_event)
+                        print(u'Unhandled Event: ' + str(new_event))
 
     def _setup_session_control(self):
         is_momentary = True
@@ -219,12 +219,12 @@ class Serato(ControlSurface):
         return result
 
     def _move_device_focus(self, increment):
-        if not self.application().view.is_view_visible('Detail') or not self.application().view.is_view_visible('Detail/DeviceChain'):
-            self.application().view.show_view('Detail')
-            self.application().view.show_view('Detail/DeviceChain')
+        if not self.application().view.is_view_visible(u'Detail') or not self.application().view.is_view_visible(u'Detail/DeviceChain'):
+            self.application().view.show_view(u'Detail')
+            self.application().view.show_view(u'Detail/DeviceChain')
         else:
             modifier_pressed = True
             direction = Live.Application.Application.View.NavDirection.left
             if increment > 0:
                 direction = Live.Application.Application.View.NavDirection.right
-            self.application().view.scroll_view(direction, 'Detail/DeviceChain', not modifier_pressed)
+            self.application().view.scroll_view(direction, u'Detail/DeviceChain', not modifier_pressed)

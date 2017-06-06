@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import traceback
 from . import Task
 from .Dependency import depends
@@ -14,7 +14,7 @@ class ControlElementClient(object):
 
 
 class ElementOwnershipHandler(object):
-    """
+    u"""
     A ControlElementOwnershipHandler deals with the actual delivery of
     the control element to its clients.
     """
@@ -24,7 +24,7 @@ class ElementOwnershipHandler(object):
 
 
 class OptimizedOwnershipHandler(ElementOwnershipHandler):
-    """
+    u"""
     Control element ownership handler that delays notification of
     ownership changes and minimizes the number of actual owernship
     changes that are delivered.
@@ -52,7 +52,7 @@ class OptimizedOwnershipHandler(ElementOwnershipHandler):
                 try:
                     notify(control, client, status)
                 except Exception:
-                    log_message('Error when trying to give control:', control.name)
+                    log_message(u'Error when trying to give control:', control.name)
                     traceback.print_exc()
 
         self._ownership_changes.clear()
@@ -60,13 +60,13 @@ class OptimizedOwnershipHandler(ElementOwnershipHandler):
 
 
 class ControlElement(Disconnectable):
-    """
+    u"""
     Base class for all classes representing control elements on a
     control surface
     """
 
     class ProxiedInterface(object):
-        """
+        u"""
         Declaration of the interface to be used when the
         ControlElement is wrapped in any form of Proxy object.
         """
@@ -86,14 +86,14 @@ class ControlElement(Disconnectable):
         return self.ProxiedInterface(outer=self)
 
     canonical_parent = None
-    name = ''
+    name = u''
     optimized_send_midi = True
     _has_resource = False
     _resource_type = StackingResource
     _has_task_group = False
 
     @depends(send_midi=None, register_control=None)
-    def __init__(self, name = '', resource_type = None, optimized_send_midi = None, send_midi = None, register_control = None, *a, **k):
+    def __init__(self, name = u'', resource_type = None, optimized_send_midi = None, send_midi = None, register_control = None, *a, **k):
         super(ControlElement, self).__init__(*a, **k)
         self._send_midi = send_midi
         self.name = name

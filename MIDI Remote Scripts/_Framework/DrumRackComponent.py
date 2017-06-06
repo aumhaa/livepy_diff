@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from itertools import ifilter
 from .ControlSurfaceComponent import ControlSurfaceComponent
 from .Dependency import depends
@@ -9,7 +9,7 @@ NUM_PADS_Y = 4
 
 def _validate_matrix(matrix):
     if matrix.width() > NUM_PADS_X or matrix.height() > NUM_PADS_Y:
-        raise RuntimeError('The provided button matrix should not be bigger than %dx%d' % (NUM_PADS_X, NUM_PADS_Y))
+        raise RuntimeError(u'The provided button matrix should not be bigger than %dx%d' % (NUM_PADS_X, NUM_PADS_Y))
 
 
 class DrumRackComponent(ControlSurfaceComponent):

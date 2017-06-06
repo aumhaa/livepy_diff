@@ -1,11 +1,12 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.MixerComponent import MixerComponent
-from DefChannelStripComponent import DefChannelStripComponent
+from .DefChannelStripComponent import DefChannelStripComponent
 from _Framework.ButtonElement import ButtonElement
 
 class SpecialMixerComponent(MixerComponent):
-    """ Class encompassing several defaultable channel strips to form a mixer """
+    u""" Class encompassing several defaultable channel strips to form a mixer """
 
     def __init__(self, num_tracks, num_returns = 0):
         MixerComponent.__init__(self, num_tracks, num_returns)

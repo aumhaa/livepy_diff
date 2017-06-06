@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from itertools import count
 import Live
 from .CompoundComponent import CompoundComponent
@@ -9,12 +9,12 @@ from .SubjectSlot import subject_slot, subject_slot_group
 from .Util import in_range, product
 
 class SessionComponent(CompoundComponent):
-    """
+    u"""
     Class encompassing several scene to cover a defined section of
     Live's session.  It controls the session ring and the set of tracks
     controlled by a given mixer.
     """
-    __subject_events__ = ('offset',)
+    __subject_events__ = (u'offset',)
     _linked_session_instances = []
     _minimal_track_offset = -1
     _minimal_scene_offset = -1
@@ -94,35 +94,35 @@ class SessionComponent(CompoundComponent):
         return self._selected_scene
 
     def _enable_skinning(self):
-        self.set_stop_clip_triggered_value('Session.StopClipTriggered')
-        self.set_stop_clip_value('Session.StopClip')
+        self.set_stop_clip_triggered_value(u'Session.StopClipTriggered')
+        self.set_stop_clip_value(u'Session.StopClip')
         for scene_index in xrange(self._num_scenes):
             scene = self.scene(scene_index)
-            scene.set_scene_value('Session.Scene')
-            scene.set_no_scene_value('Session.NoScene')
-            scene.set_triggered_value('Session.SceneTriggered')
+            scene.set_scene_value(u'Session.Scene')
+            scene.set_no_scene_value(u'Session.NoScene')
+            scene.set_triggered_value(u'Session.SceneTriggered')
             for track_index in xrange(self._num_tracks):
                 clip_slot = scene.clip_slot(track_index)
-                clip_slot.set_triggered_to_play_value('Session.ClipTriggeredPlay')
-                clip_slot.set_triggered_to_record_value('Session.ClipTriggeredRecord')
-                clip_slot.set_record_button_value('Session.RecordButton')
-                clip_slot.set_stopped_value('Session.ClipStopped')
-                clip_slot.set_started_value('Session.ClipStarted')
-                clip_slot.set_recording_value('Session.ClipRecording')
+                clip_slot.set_triggered_to_play_value(u'Session.ClipTriggeredPlay')
+                clip_slot.set_triggered_to_record_value(u'Session.ClipTriggeredRecord')
+                clip_slot.set_record_button_value(u'Session.RecordButton')
+                clip_slot.set_stopped_value(u'Session.ClipStopped')
+                clip_slot.set_started_value(u'Session.ClipStarted')
+                clip_slot.set_recording_value(u'Session.ClipRecording')
 
     def _auto_name(self):
-        self.name = 'Session_Control'
-        self.selected_scene().name = 'Selected_Scene'
+        self.name = u'Session_Control'
+        self.selected_scene().name = u'Selected_Scene'
         for track_index in xrange(self._num_tracks):
             clip_slot = self.selected_scene().clip_slot(track_index)
-            clip_slot.name = 'Selected_Scene_Clip_Slot_%d' % track_index
+            clip_slot.name = u'Selected_Scene_Clip_Slot_%d' % track_index
 
         for scene_index in xrange(self._num_scenes):
             scene = self.scene(scene_index)
-            scene.name = 'Scene_%d' % scene_index
+            scene.name = u'Scene_%d' % scene_index
             for track_index in xrange(self._num_tracks):
                 clip_slot = scene.clip_slot(track_index)
-                clip_slot.name = '%d_Clip_Slot_%d' % (track_index, scene_index)
+                clip_slot.name = u'%d_Clip_Slot_%d' % (track_index, scene_index)
 
     def set_scene_bank_buttons(self, down_button, up_button):
         self.set_scene_bank_up_button(up_button)
@@ -269,7 +269,7 @@ class SessionComponent(CompoundComponent):
                 scene.set_launch_button(None)
 
     def set_mixer(self, mixer):
-        """ Sets the MixerComponent to be controlled by this session """
+        u""" Sets the MixerComponent to be controlled by this session """
         self._mixer = mixer
         if self._mixer != None:
             self._mixer.set_track_offset(self.track_offset())
@@ -294,7 +294,7 @@ class SessionComponent(CompoundComponent):
             self._do_show_highlight()
 
     def set_rgb_mode(self, color_palette, color_table, clip_slots_only = False):
-        """
+        u"""
         Put the session into rgb mode by providing a color table and a color palette.
         color_palette is a dictionary, mapping custom Live colors to MIDI ids. This can be
         used to map a color directly to a CC value.
@@ -471,7 +471,7 @@ class SessionComponent(CompoundComponent):
         self._update_stop_all_clips_button()
         self._update_stop_track_clip_buttons()
 
-    @subject_slot('value')
+    @subject_slot(u'value')
     def _on_stop_all_value(self, value):
         self._stop_all_value(value)
 
@@ -481,7 +481,7 @@ class SessionComponent(CompoundComponent):
                 self.song().stop_all_clips()
             self._update_stop_all_clips_button()
 
-    @subject_slot('value')
+    @subject_slot(u'value')
     def _on_next_scene_value(self, value):
         if self.is_enabled():
             if value is not 0 or not self._next_scene_button.is_momentary():
@@ -491,7 +491,7 @@ class SessionComponent(CompoundComponent):
                     index = list(all_scenes).index(selected_scene)
                     self.song().view.selected_scene = all_scenes[index + 1]
 
-    @subject_slot('value')
+    @subject_slot(u'value')
     def _on_prev_scene_value(self, value):
         if self.is_enabled():
             if value is not 0 or not self._prev_scene_button.is_momentary():
@@ -501,7 +501,7 @@ class SessionComponent(CompoundComponent):
                     index = list(all_scenes).index(selected_scene)
                     self.song().view.selected_scene = all_scenes[index - 1]
 
-    @subject_slot_group('value')
+    @subject_slot_group(u'value')
     def _on_stop_track_value(self, value, button):
         if self.is_enabled():
             if value is not 0 or not button.is_momentary():
@@ -519,11 +519,11 @@ class SessionComponent(CompoundComponent):
             else:
                 self._highlighting_callback(-1, -1, -1, -1, include_returns)
 
-    @subject_slot_group('fired_slot_index')
+    @subject_slot_group(u'fired_slot_index')
     def _on_fired_slot_index_changed(self, controlled_track_index):
         self._update_stop_clips_led(controlled_track_index)
 
-    @subject_slot_group('playing_slot_index')
+    @subject_slot_group(u'playing_slot_index')
     def _on_playing_slot_index_changed(self, controlled_track_index):
         self._update_stop_clips_led(controlled_track_index)
 
@@ -560,7 +560,7 @@ class SessionComponent(CompoundComponent):
 
     @staticmethod
     def _perform_offset_change(track_increment, scene_increment):
-        """ Performs the given offset changes on all linked instances """
+        u""" Performs the given offset changes on all linked instances """
         if not len(SessionComponent._linked_session_instances) > 0:
             raise AssertionError
             scenes = Live.Application.get_application().get_document().scenes

@@ -1,8 +1,9 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 
 class EncoderMixerModeSelector(ModeSelectorComponent):
-    """ Class that reassigns encoders on the AxiomAirMini32 to different mixer functions """
+    u""" Class that reassigns encoders on the AxiomAirMini32 to different mixer functions """
 
     def __init__(self, mixer):
         ModeSelectorComponent.__init__(self)

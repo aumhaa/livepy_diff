@@ -1,5 +1,5 @@
 
-"""
+u"""
 Test implementation for an isclose() function, for possible inclusion in
 the Python standard library -- PEP0485
 This is the result of much discussion on the python-ideas list
@@ -10,11 +10,11 @@ in January, 2015:
 Copyright: Christopher H. Barker
 License: Apache License 2.0 http://opensource.org/licenses/apache2.0.php
 """
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import math
 
 def isclose(a, b, rel_tol = 1e-09, abs_tol = 0.0):
-    """
+    u"""
     returns True if a is close in value to b. False otherwise
     :param a: one of the values to be tested
     :param b: the other value to be tested
@@ -36,7 +36,7 @@ def isclose(a, b, rel_tol = 1e-09, abs_tol = 0.0):
     if a == b:
         return True
     if rel_tol < 0.0 or abs_tol < 0.0:
-        raise ValueError('error tolerances must be non-negative')
+        raise ValueError(u'error tolerances must be non-negative')
     if math.isinf(abs(a)) or math.isinf(abs(b)):
         return False
     diff = abs(b - a)

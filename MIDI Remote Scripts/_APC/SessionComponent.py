@@ -1,8 +1,9 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.SessionComponent import SessionComponent as SessionComponentBase
 
 class SessionComponent(SessionComponentBase):
-    """ Special SessionComponent for the APC controllers' combination mode """
+    u""" Special SessionComponent for the APC controllers' combination mode """
 
     def link_with_track_offset(self, track_offset):
         if not track_offset >= 0:

@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 from itertools import ifilter
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.DeviceComponent import DeviceComponent as DeviceComponentBase
@@ -14,7 +15,7 @@ class DeviceComponent(DeviceComponentBase, CompoundComponent):
         self._update_parameter_controls()
 
     def _current_bank_details(self):
-        bank_name = ''
+        bank_name = u''
         bank = []
         if self._bank_index in range(len(self._parameter_banks())):
             bank_name, bank = super(DeviceComponent, self)._current_bank_details()

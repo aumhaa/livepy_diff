@@ -1,9 +1,10 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
-from consts import *
+from .consts import *
 
 class Transport:
-    """ Class representing the transport section on the Axiom controllers """
+    u""" Class representing the transport section on the Axiom controllers """
 
     def __init__(self, parent):
         self.__parent = parent
@@ -25,7 +26,7 @@ class Transport:
         elif cc_no == AXIOM_REC:
             if cc_value > 0:
                 self.__parent.song().record_mode = not self.__parent.song().record_mode
-        elif self.__parent.application().view.is_view_visible('Session'):
+        elif self.__parent.application().view.is_view_visible(u'Session'):
             if cc_value > 0:
                 self.__cc_in_session(cc_no)
         else:

@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import functools
 import traceback
 from .Dependency import depends
@@ -93,7 +93,7 @@ class Task(object):
 
     def _set_parent(self, manager):
         if self._task_manager and manager:
-            raise TaskError('Already attached to: ' + str(self._task_manager))
+            raise TaskError(u'Already attached to: ' + str(self._task_manager))
         self._task_manager = manager
 
     def _task_equivalent(self, other):
@@ -217,7 +217,7 @@ class TaskGroup(Task):
                     task.update(timer)
                 except Exception:
                     task.kill()
-                    log_message('Error when executing task')
+                    log_message(u'Error when executing task')
                     traceback.print_exc()
 
         if self.auto_remove:
@@ -370,7 +370,7 @@ class SequenceTask(Task):
 def totask(task):
     if not isinstance(task, Task):
         if not callable(task):
-            raise TaskError('You can add either tasks or callables. ' + str(task))
+            raise TaskError(u'You can add either tasks or callables. ' + str(task))
         task = FuncTask(func=task)
     return task
 

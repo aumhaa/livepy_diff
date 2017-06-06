@@ -1,5 +1,5 @@
 
-"""
+u"""
 Dependency injection framework.
 
 The framework provides lously coupled passing of dependencies from
@@ -9,8 +9,8 @@ Dependencies are identified by keys, that are valid Python
 identifiers.  Dependencies are provided via accessor functions, that
 in general will be called whenever they are needed.
 """
-from __future__ import absolute_import, print_function
-__all__ = ('inject', 'depends', 'dependency')
+from __future__ import absolute_import, print_function, unicode_literals
+__all__ = (u'inject', u'depends', u'dependency')
 from functools import wraps
 from .Util import union
 
@@ -45,15 +45,15 @@ def get_dependency_for(obj, name, default = None):
     accessor = _global_injection_registry.get(name, default)
     if accessor is not None:
         return accessor()
-    raise DependencyError('Required dependency %s not provided for %s' % (name, str(obj)))
+    raise DependencyError(u'Required dependency %s not provided for %s' % (name, str(obj)))
 
 
 class dependency(object):
-    """
+    u"""
     Data descriptor that provides a given dependency looking as an
     attribute.  The depedency is specified as a keyword parameter,
     whose value can be a default accessor or None.  The attribute only
-    tries to fetch the dependency on deman when needed.  Example::
+    tries to fetch the dependency on demand when needed.  Example::
     
          class HttpServer(object):
              connection_port = dependency(http_port = const(80))
@@ -75,7 +75,7 @@ class dependency(object):
 
 
 def depends(**dependencies):
-    """
+    u"""
     Decorates a method where dependencies are passed as keyword
     parameters.  Dependencies are specified as keywords with an
     optional accessor function or None if required.  Dependencies can
@@ -167,7 +167,7 @@ class InjectionFactory(object):
 
 
 def inject(**k):
-    """
+    u"""
     Inject returns a InjectorFactory that can generate Injectors to
     inject the provided keys at different levels.  The values to
     inject are specified as keyword parameters mapping keys to given

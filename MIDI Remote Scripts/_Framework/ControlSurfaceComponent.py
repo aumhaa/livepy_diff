@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from . import Task
 from .Control import ControlManager
@@ -8,10 +8,10 @@ from .SubjectSlot import Subject
 from .Util import lazy_attribute
 
 class ControlSurfaceComponent(ControlManager, Subject):
-    """
+    u"""
     Base class for all classes encapsulating functions in Live
     """
-    name = ''
+    name = u''
     canonical_parent = None
     is_private = False
     _show_msg_callback = dependency(show_message=None)
@@ -19,7 +19,7 @@ class ControlSurfaceComponent(ControlManager, Subject):
     _layer = None
 
     @depends(register_component=None, song=None)
-    def __init__(self, name = '', register_component = None, song = None, layer = None, is_enabled = True, is_root = False, *a, **k):
+    def __init__(self, name = u'', register_component = None, song = None, layer = None, is_enabled = True, is_root = False, *a, **k):
         if not callable(register_component):
             raise AssertionError
             super(ControlSurfaceComponent, self).__init__(*a, **k)
@@ -50,7 +50,7 @@ class ControlSurfaceComponent(ControlManager, Subject):
             if self.is_enabled():
                 grabbed = self._layer.grab(self)
                 if not grabbed:
-                    raise AssertionError('Only one component can use a layer at atime')
+                    raise AssertionError(u'Only one component can use a layer at atime')
                 else:
                     self._layer.release(self)
             if self._has_task_group:
@@ -115,12 +115,12 @@ class ControlSurfaceComponent(ControlManager, Subject):
             self._layer = new_layer
             if new_layer and self.is_enabled():
                 grabbed = new_layer.grab(self)
-                raise grabbed or AssertionError('Only one component can use a layer at atime')
+                raise grabbed or AssertionError(u'Only one component can use a layer at atime')
 
     layer = property(_get_layer, _set_layer)
 
     def is_enabled(self, explicit = False):
-        """
+        u"""
         Returns whether the component is enabled.
         If 'explicit' is True the parent state is ignored.
         """
@@ -129,28 +129,28 @@ class ControlSurfaceComponent(ControlManager, Subject):
         return self._explicit_is_enabled
 
     def on_track_list_changed(self):
-        """
+        u"""
         Called by the control surface if tracks are added/removed,
         to be overridden
         """
         pass
 
     def on_scene_list_changed(self):
-        """
+        u"""
         Called by the control surface if scenes are added/removed, to
         be overridden
         """
         pass
 
     def on_selected_track_changed(self):
-        """
+        u"""
         Called by the control surface when a track is selected, to be
         overridden
         """
         pass
 
     def on_selected_scene_changed(self):
-        """
+        u"""
         Called by the control surface when a scene is selected, to be
         overridden
         """
@@ -158,7 +158,7 @@ class ControlSurfaceComponent(ControlManager, Subject):
 
     @depends(parent_task_group=None)
     def _register_timer_callback(self, callback, parent_task_group = None):
-        """
+        u"""
         DEPRECATED. Use tasks instead
         """
         raise callable(callback) or AssertionError
@@ -172,7 +172,7 @@ class ControlSurfaceComponent(ControlManager, Subject):
 
     @depends(parent_task_group=None)
     def _unregister_timer_callback(self, callback, parent_task_group = None):
-        """
+        u"""
         DEPRECATED. Use tasks instead
         """
         raise callable(callback) or AssertionError

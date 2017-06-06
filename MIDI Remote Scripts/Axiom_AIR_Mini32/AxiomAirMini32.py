@@ -1,5 +1,5 @@
 
-from __future__ import with_statement
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.ControlSurface import ControlSurface
 from _Framework.InputControlElement import MIDI_CC_TYPE
@@ -11,9 +11,9 @@ from _Framework.MixerComponent import MixerComponent
 from _Framework.ChannelStripComponent import ChannelStripComponent
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from Axiom_DirectLink.BestBankDeviceComponent import BestBankDeviceComponent
-from EncoderMixerModeSelector import EncoderMixerModeSelector
-from MixerOrDeviceModeSelector import MixerOrDeviceModeSelector
-from DeviceNavComponent import DeviceNavComponent
+from .EncoderMixerModeSelector import EncoderMixerModeSelector
+from .MixerOrDeviceModeSelector import MixerOrDeviceModeSelector
+from .DeviceNavComponent import DeviceNavComponent
 SYSEX_START = (240, 0, 1, 5, 32, 127)
 ENGAGE_HYPERCONTROL = (32, 60, 247)
 DISABLE_HYPERCONTROL = (32, 0, 247)
@@ -46,13 +46,13 @@ def make_encoder(cc_no):
 
 
 class AxiomAirMini32(ControlSurface):
-    """ Script for the M-Audio Axiom A.I.R. Mini 32 """
+    u""" Script for the M-Audio Axiom A.I.R. Mini 32 """
 
     def __init__(self, c_instance):
         ControlSurface.__init__(self, c_instance)
         with self.component_guard():
-            self._suggested_input_port = 'HyperControl'
-            self._suggested_output_port = 'HyperControl'
+            self._suggested_input_port = u'HyperControl'
+            self._suggested_output_port = u'HyperControl'
             self.set_pad_translations(PAD_TRANSLATIONS)
             stop_button = make_button(116)
             play_button = make_button(117)
@@ -97,7 +97,7 @@ class AxiomAirMini32(ControlSurface):
 
 
 class SpecialMixerComponent(MixerComponent):
-    """ Special mixer class that uses return tracks alongside midi and audio tracks """
+    u""" Special mixer class that uses return tracks alongside midi and audio tracks """
 
     def tracks_to_use(self):
         return tuple(self.song().visible_tracks) + tuple(self.song().return_tracks)
@@ -107,7 +107,7 @@ class SpecialMixerComponent(MixerComponent):
 
 
 class SpecialChanStripComponent(ChannelStripComponent):
-    """ Special channel strip class that allows arm button for master track,
+    u""" Special channel strip class that allows arm button for master track,
     for use with mixer.selected_strip() """
 
     def set_arm_button(self, button):

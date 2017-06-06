@@ -1,16 +1,16 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from ...base import EventObject, listenable_property, listens, liveobj_valid, nop
 
 def to_midi_value(int_or_color):
-    if hasattr(int_or_color, 'midi_value'):
+    if hasattr(int_or_color, u'midi_value'):
         return int_or_color.midi_value
     else:
         return int(int_or_color)
 
 
 class Color(object):
-    """
+    u"""
     Basic interface for showing a color.
     """
     midi_value = 0
@@ -21,7 +21,7 @@ class Color(object):
             self.midi_value = midi_value
 
     def draw(self, interface):
-        """
+        u"""
         Draws the color into the interface.  Depending on the color
         type, interface might be required special capabilities.
         """
@@ -64,7 +64,7 @@ class SelectedTrackColor(DynamicColorBase):
         self.__on_color_changed.subject = song_view
         self.__on_color_changed()
 
-    @listens('selected_track.color_index')
+    @listens(u'selected_track.color_index')
     def __on_color_changed(self, *a):
         self._update_midi_value(self.__on_color_changed.subject.selected_track)
 
@@ -77,7 +77,7 @@ class SelectedClipColor(DynamicColorBase):
         self.__on_color_changed.subject = song_view
         self.__on_color_changed()
 
-    @listens('detail_clip.color_index')
+    @listens(u'detail_clip.color_index')
     def __on_color_changed(self, *a):
         view = self.__on_color_changed.subject
         self._update_midi_value(view.detail_clip)

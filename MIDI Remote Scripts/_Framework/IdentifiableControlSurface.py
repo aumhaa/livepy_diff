@@ -1,11 +1,11 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from .ControlSurface import ControlSurface
 from . import Task
 SYSEX_IDENTITY_REQUEST = (240, 126, 0, 6, 1, 247)
 
 class IdentifiableControlSurface(ControlSurface):
-    """
+    u"""
     Control surface that sends an identity request to verify the right device is
     linked to it.
     If the data bytes of the response start with product_id_bytes, the device will
@@ -35,7 +35,7 @@ class IdentifiableControlSurface(ControlSurface):
                 self._request_task.kill()
                 self.on_identified()
             else:
-                self.log_message('MIDI device responded with wrong product id (%s != %s).' % (str(self._product_id_bytes), str(product_id_bytes)))
+                self.log_message(u'MIDI device responded with wrong product id (%s != %s).' % (str(self._product_id_bytes), str(product_id_bytes)))
         else:
             super(IdentifiableControlSurface, self).handle_sysex(midi_bytes)
 

@@ -1,10 +1,10 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import listens, liveobj_valid
 from ableton.v2.control_surface import Component
 
 class PlayheadComponent(Component):
-    """
+    u"""
     Updates the contents of the Live playhead object.
     """
 
@@ -32,23 +32,23 @@ class PlayheadComponent(Component):
         self._on_song_is_playing_changed.subject = self.song if clip else None
         self.update()
 
-    @listens('page')
+    @listens(u'page')
     def _on_page_changed(self):
         self.update()
 
-    @listens('playing_status')
+    @listens(u'playing_status')
     def _on_playing_status_changed(self):
         self.update()
 
-    @listens('is_playing')
+    @listens(u'is_playing')
     def _on_song_is_playing_changed(self):
         self.update()
 
-    @listens('index')
+    @listens(u'index')
     def _on_grid_resolution_changed(self):
         self.update()
 
-    @listens('is_following')
+    @listens(u'is_following')
     def _on_follower_is_following_changed(self, value):
         self.update()
 

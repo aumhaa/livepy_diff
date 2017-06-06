@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from itertools import izip_longest
 from ableton.v2.base import listens
 from ableton.v2.control_surface import components
@@ -7,7 +7,7 @@ from ableton.v2.control_surface.elements import DisplayDataSource
 from .special_chan_strip_component import SpecialChanStripComponent
 
 class SpecialMixerComponent(components.MixerComponent):
-    """
+    u"""
     Special mixer class that uses return tracks alongside midi and
     audio tracks.  This provides also a more convenient interface to
     set controls for the different modes of Push.
@@ -22,8 +22,8 @@ class SpecialMixerComponent(components.MixerComponent):
         self._pan_send_values_display = None
         self._pan_send_graphics_display = None
         self._pan_send_toggle_skip = False
-        self._selected_track_data_sources = map(DisplayDataSource, ('',) * self.num_label_segments)
-        self._selected_track_data_sources[0].set_display_string('Track Selection:')
+        self._selected_track_data_sources = map(DisplayDataSource, (u'',) * self.num_label_segments)
+        self._selected_track_data_sources[0].set_display_string(u'Track Selection:')
         self._selected_track_name_data_source = self._selected_track_data_sources[1]
         self._on_selected_track_changed.subject = self.song.view
         self._on_track_list_changed.subject = self.song
@@ -33,7 +33,7 @@ class SpecialMixerComponent(components.MixerComponent):
         return SpecialChanStripComponent()
 
     def set_pan_send_toggle(self, toggle):
-        """
+        u"""
         The pan_send_toggle cycles through the different pan, or send
         modes changing the bejhaviour of the pan_send display and
         controls.
@@ -49,19 +49,19 @@ class SpecialMixerComponent(components.MixerComponent):
     def set_track_select_buttons(self, buttons):
         for strip, button in izip_longest(self._channel_strips, buttons or []):
             if button:
-                button.set_on_off_values('Option.Selected', 'Option.Unselected')
+                button.set_on_off_values(u'Option.Selected', u'Option.Unselected')
             strip.set_select_button(button)
 
     def set_solo_buttons(self, buttons):
         for strip, button in izip_longest(self._channel_strips, buttons or []):
             if button:
-                button.set_on_off_values('Mixer.SoloOn', 'Mixer.SoloOff')
+                button.set_on_off_values(u'Mixer.SoloOn', u'Mixer.SoloOff')
             strip.set_solo_button(button)
 
     def set_mute_buttons(self, buttons):
         for strip, button in izip_longest(self._channel_strips, buttons or []):
             if button:
-                button.set_on_off_values('Mixer.MuteOff', 'Mixer.MuteOn')
+                button.set_on_off_values(u'Mixer.MuteOff', u'Mixer.MuteOn')
             strip.set_mute_button(button)
 
     def set_track_names_display(self, display):
@@ -108,7 +108,7 @@ class SpecialMixerComponent(components.MixerComponent):
             sends = self._pan_send_index - 1
             self.set_send_controls(map(lambda ctl: (None,) * sends + (ctl,), controls or []))
 
-    @listens('visible_tracks')
+    @listens(u'visible_tracks')
     def _on_track_list_changed(self):
         self._update_pan_sends()
 
@@ -135,7 +135,7 @@ class SpecialMixerComponent(components.MixerComponent):
             sources = [ strip.track_parameter_graphic_sources(parameter) for strip in self._channel_strips ]
             display.set_data_sources(sources)
 
-    @listens('value')
+    @listens(u'value')
     def _on_pan_send_value(self, value):
         if not self._pan_send_toggle_skip and self.is_enabled() and (value or not self._pan_send_toggle.is_momentary()):
             self._pan_send_index += 1
@@ -151,7 +151,7 @@ class SpecialMixerComponent(components.MixerComponent):
         if len(self.song.tracks) == 0 or self._pan_send_index > len(self.song.tracks[0].mixer_device.sends):
             self._pan_send_index = 0
 
-    @listens('selected_track.name')
+    @listens(u'selected_track.name')
     def _on_selected_track_changed(self):
         self._update_selected_track_name()
 

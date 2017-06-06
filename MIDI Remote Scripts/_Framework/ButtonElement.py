@@ -1,12 +1,12 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from .InputControlElement import InputControlElement, MIDI_CC_TYPE
 from .Skin import Skin, SkinColorMissingError
 from .Util import nop
 
 class ButtonValue(object):
-    """
+    u"""
     Basic type for button values, so global constants are symbolically
     different from integers.
     """
@@ -37,12 +37,12 @@ ON_VALUE = ButtonValue(127)
 OFF_VALUE = ButtonValue(0)
 
 class Color(ButtonValue):
-    """
+    u"""
     Basic interface for showing a color.
     """
 
     def draw(self, interface):
-        """
+        u"""
         Draws the color into the interface.  Depending on the color
         type, interface might be required special capabilities.
         """
@@ -59,7 +59,7 @@ class DummyUndoStepHandler(object):
 
 
 class ButtonElementMixin(object):
-    """
+    u"""
     Mixin for sending values to button-like control-elements elements.
     """
 
@@ -77,7 +77,7 @@ class ButtonElementMixin(object):
 
 
 class ButtonElement(InputControlElement, ButtonElementMixin):
-    """
+    u"""
     Class representing a button a the controller
     """
 
@@ -93,7 +93,7 @@ class ButtonElement(InputControlElement, ButtonElementMixin):
         self._skin = skin
 
     def is_momentary(self):
-        """ returns true if the buttons sends a message on being released """
+        u""" returns true if the buttons sends a message on being released """
         return self.__is_momentary
 
     def message_map_mode(self):

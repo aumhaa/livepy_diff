@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from .button import ButtonElement, ButtonElementMixin, ButtonValue, DummyUndoStepHandler, ON_VALUE, OFF_VALUE
 from .button_matrix import ButtonMatrixElement
 from .button_slider import ButtonSliderElement
@@ -12,4 +12,4 @@ from .optional import ChoosingElement, OptionalElement
 from .physical_display import DisplayElement, DisplayError, DisplaySegmentationError, PhysicalDisplayElement, SubDisplayElement
 from .slider import SliderElement
 from .sysex_element import SysexElement
-__all__ = ('ButtonElement', 'ButtonElementMixin', 'ButtonValue', 'Color', 'DummyUndoStepHandler', 'DynamicColorBase', 'OFF_VALUE', 'ON_VALUE', 'ButtonMatrixElement', 'ButtonSliderElement', 'ComboElement', 'DoublePressContext', 'DoublePressElement', 'EventElement', 'MultiElement', 'ToggleElement', 'WrapperElement', 'adjust_string', 'adjust_string_crop', 'DisplayDataSource', 'EncoderElement', 'FineGrainWithModifierEncoderElement', 'TouchEncoderElement', 'TouchEncoderElementBase', 'LogicalDisplaySegment', 'ChoosingElement', 'OptionalElement', 'DisplayElement', 'DisplayError', 'DisplaySegmentationError', 'PhysicalDisplayElement', 'SubDisplayElement', 'SelectedTrackColor', 'SelectedTrackColorFactory', 'SelectedClipColorFactory', 'SliderElement', 'SysexElement', 'to_midi_value')
+__all__ = (u'ButtonElement', u'ButtonElementMixin', u'ButtonValue', u'Color', u'DummyUndoStepHandler', u'DynamicColorBase', u'OFF_VALUE', u'ON_VALUE', u'ButtonMatrixElement', u'ButtonSliderElement', u'ComboElement', u'DoublePressContext', u'DoublePressElement', u'EventElement', u'MultiElement', u'ToggleElement', u'WrapperElement', u'adjust_string', u'adjust_string_crop', u'DisplayDataSource', u'EncoderElement', u'FineGrainWithModifierEncoderElement', u'TouchEncoderElement', u'TouchEncoderElementBase', u'LogicalDisplaySegment', u'ChoosingElement', u'OptionalElement', u'DisplayElement', u'DisplayError', u'DisplaySegmentationError', u'PhysicalDisplayElement', u'SubDisplayElement', u'SelectedTrackColor', u'SelectedTrackColorFactory', u'SelectedClipColorFactory', u'SliderElement', u'SysexElement', u'to_midi_value')

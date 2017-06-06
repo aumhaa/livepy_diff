@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 
 class Callable:
@@ -9,7 +10,7 @@ class Callable:
 
 class ParamMap:
     __module__ = __name__
-    __doc__ = 'Class to help with device mapping'
+    __doc__ = u'Class to help with device mapping'
 
     def __init__(self, parent):
         ParamMap.realinit(self, parent)

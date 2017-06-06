@@ -1,10 +1,10 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import Proxy
 
 class BrowserItem(object):
 
-    def __init__(self, name = '', icon = '', children = None, is_loadable = False, is_selected = False, is_device = False, contained_item = None, enable_wrapping = True, *a, **k):
+    def __init__(self, name = u'', icon = u'', children = None, is_loadable = False, is_selected = False, is_device = False, contained_item = None, enable_wrapping = True, *a, **k):
         super(BrowserItem, self).__init__(*a, **k)
         self._name = name
         self._icon = icon
@@ -60,7 +60,7 @@ class BrowserItem(object):
 
 class ProxyBrowserItem(Proxy):
 
-    def __init__(self, enable_wrapping = True, icon = '', *a, **k):
+    def __init__(self, enable_wrapping = True, icon = u'', *a, **k):
         super(ProxyBrowserItem, self).__init__(*a, **k)
         self._enable_wrapping = enable_wrapping
         self._icon = icon

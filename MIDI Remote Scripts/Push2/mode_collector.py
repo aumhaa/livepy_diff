@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import listenable_property, listens, EventObject
 
 class ModeCollector(EventObject):
@@ -19,7 +19,7 @@ class ModeCollector(EventObject):
     def main_mode(self):
         return self._main_modes.selected_mode
 
-    @listens('selected_mode')
+    @listens(u'selected_mode')
     def _on_selected_main_mode_changed(self, mode):
         self.notify_main_mode()
 
@@ -27,7 +27,7 @@ class ModeCollector(EventObject):
     def mix_mode(self):
         return self._mix_modes.selected_mode
 
-    @listens('selected_mode')
+    @listens(u'selected_mode')
     def _on_selected_mix_mode_changed(self, mode):
         self.notify_mix_mode()
 
@@ -35,7 +35,7 @@ class ModeCollector(EventObject):
     def global_mix_mode(self):
         return self._global_mix_modes.selected_mode
 
-    @listens('selected_mode')
+    @listens(u'selected_mode')
     def _on_selected_global_mix_mode_changed(self, mode):
         self.notify_global_mix_mode()
 
@@ -43,6 +43,6 @@ class ModeCollector(EventObject):
     def device_mode(self):
         return self._device_modes.selected_mode
 
-    @listens('selected_mode')
+    @listens(u'selected_mode')
     def _on_selected_device_mode_changed(self, mode):
         self.notify_device_mode()

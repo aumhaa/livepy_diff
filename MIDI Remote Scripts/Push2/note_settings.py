@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import listenable_property, listens
 from ableton.v2.control_surface.control import StepEncoderControl
 from ableton.v2.control_surface.elements.color import SelectedClipColor
@@ -96,9 +96,9 @@ class NoteSettingsComponent(NoteSettingsComponentBase):
         self.notify_color_index()
 
     def get_color_for_mode(self, color_mode):
-        if color_mode == 'drum_pad':
+        if color_mode == u'drum_pad':
             return self._selected_drum_pad_color
-        if color_mode == 'clip':
+        if color_mode == u'clip':
             return self._selected_clip_color
 
     @property
@@ -124,6 +124,6 @@ class NoteSettingsComponent(NoteSettingsComponentBase):
             return color_index
         return -1
 
-    @listens('midi_value')
+    @listens(u'midi_value')
     def __on_midi_value_changed(self, *a):
         self.notify_color_index()

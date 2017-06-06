@@ -1,11 +1,11 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from ..input_control_element import MIDI_NOTE_TYPE
 from .encoder import EncoderElement
 
 class SliderElement(EncoderElement):
-    """ Class representing a slider on the controller """
+    u""" Class representing a slider on the controller """
 
     def __init__(self, msg_type, channel, identifier, *a, **k):
         raise msg_type is not MIDI_NOTE_TYPE or AssertionError

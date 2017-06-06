@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial
 from itertools import izip
 import Live
@@ -31,14 +31,21 @@ def possible_conversions(track, decorator_factory = None):
                     category = MidiTrackWithoutSimpler(actions=[MoveDeviceChain()], device=simpler, track=track, decorator_factory=decorator_factory)
         elif is_audio_track(track):
             detail_clip = track.canonical_parent.view.detail_clip
+            song = track.canonical_parent
             if liveobj_valid(detail_clip) and detail_clip.is_arrangement_clip:
                 if not detail_clip.is_recording:
-                    category = AudioTrackWithArrangementClip(actions=[CreateTrackWithSimpler(), CreateTrackWithClipInDrumRackPad()], song_view=track.canonical_parent.view, track=track)
+                    actions = [CreateTrackWithSimpler(), CreateTrackWithClipInDrumRackPad()]
+                    if Live.Conversions.is_convertible_to_midi(song, detail_clip):
+                        actions.extend([ConvertAudioClipToHarmonyMidi(), ConvertAudioClipToMelodyMidi(), ConvertAudioClipToDrumsMidi()])
+                    category = AudioTrackWithArrangementClip(actions=actions, song_view=track.canonical_parent.view, track=track)
             else:
                 highlighted_clip_slot = track.canonical_parent.view.highlighted_clip_slot
-                clip = find_if(lambda slot: slot.has_clip and highlighted_clip_slot == slot, track.clip_slots)
-                if liveobj_valid(clip) and not clip.is_recording:
-                    category = AudioTrackWithSessionClip(actions=[CreateTrackWithSimpler(), CreateTrackWithClipInDrumRackPad()], clip_slot=highlighted_clip_slot, track=track)
+                clip_slot = find_if(lambda slot: slot.has_clip and highlighted_clip_slot == slot, track.clip_slots)
+                if liveobj_valid(clip_slot) and not clip_slot.is_recording:
+                    actions = [CreateTrackWithSimpler(), CreateTrackWithClipInDrumRackPad()]
+                    if Live.Conversions.is_convertible_to_midi(song, clip_slot.clip):
+                        actions.extend([ConvertAudioClipToHarmonyMidi(), ConvertAudioClipToMelodyMidi(), ConvertAudioClipToDrumsMidi()])
+                    category = AudioTrackWithSessionClip(actions=actions, clip_slot=highlighted_clip_slot, track=track)
     return category
 
 
@@ -51,7 +58,7 @@ class ConvertAction(object):
 
 
 class ConvertCategory(EventObject):
-    __events__ = ('action_invalidated',)
+    __events__ = (u'action_invalidated',)
     color_source = None
     name_source = None
 
@@ -68,7 +75,7 @@ class ConvertCategory(EventObject):
 class NullConvertCategory(ConvertCategory):
 
     def convert(self, song, action_index):
-        raise False or AssertionError('Cannot call convert on NullConvertCategory')
+        raise False or AssertionError(u'Cannot call convert on NullConvertCategory')
 
 
 class TrackBasedConvertCategory(ConvertCategory):
@@ -80,7 +87,7 @@ class TrackBasedConvertCategory(ConvertCategory):
 
 
 class MoveDeviceChain(ConvertAction):
-    label = 'Drum Pad'
+    label = u'Drum Pad'
 
     @staticmethod
     def conversion(song, track_index):
@@ -88,12 +95,12 @@ class MoveDeviceChain(ConvertAction):
 
 
 class MidiTrackWithoutSimpler(TrackBasedConvertCategory):
-    internal_name = 'midi_track_to_drum_pad'
+    internal_name = u'midi_track_to_drum_pad'
 
     def __init__(self, device = None, decorator_factory = None, *a, **k):
         super(MidiTrackWithoutSimpler, self).__init__(*a, **k)
         self._decorator_factory = decorator_factory
-        if hasattr(device, 'playback_mode'):
+        if hasattr(device, u'playback_mode'):
             self.__on_playback_mode_changed.subject = device
 
     def convert(self, song, action):
@@ -104,7 +111,7 @@ class MidiTrackWithoutSimpler(TrackBasedConvertCategory):
         if liveobj_valid(drum_pad) and copiers:
             self._apply_simpler_properties(drum_pad, song, copiers)
 
-    @listens('playback_mode')
+    @listens(u'playback_mode')
     def __on_playback_mode_changed(self):
         self.notify_action_invalidated()
 
@@ -125,7 +132,7 @@ class MidiTrackWithoutSimpler(TrackBasedConvertCategory):
 
 
 class CreateTrackWithSimpler(ConvertAction):
-    label = 'Simpler'
+    label = u'Simpler'
 
     @staticmethod
     def conversion(song, clip):
@@ -133,15 +140,37 @@ class CreateTrackWithSimpler(ConvertAction):
 
 
 class CreateTrackWithClipInDrumRackPad(ConvertAction):
-    label = 'Drum Pad'
+    label = u'Drum Pad'
 
     @staticmethod
     def conversion(song, clip):
         Live.Conversions.create_drum_rack_from_audio_clip(song, clip)
 
 
+class ConvertAudioClipToMidi(ConvertAction):
+    conversion_type = None
+
+    def conversion(self, song, clip):
+        Live.Conversions.audio_to_midi_clip(song, clip, self.conversion_type)
+
+
+class ConvertAudioClipToHarmonyMidi(ConvertAudioClipToMidi):
+    label = u'Harmony-MIDI'
+    conversion_type = Live.Conversions.AudioToMidiType.harmony_to_midi
+
+
+class ConvertAudioClipToMelodyMidi(ConvertAudioClipToMidi):
+    label = u'Melody-MIDI'
+    conversion_type = Live.Conversions.AudioToMidiType.melody_to_midi
+
+
+class ConvertAudioClipToDrumsMidi(ConvertAudioClipToMidi):
+    label = u'Drums-MIDI'
+    conversion_type = Live.Conversions.AudioToMidiType.drums_to_midi
+
+
 class AudioTrackWithSessionClip(ConvertCategory):
-    internal_name = 'audio_clip_to_simpler'
+    internal_name = u'audio_clip_to_simpler'
 
     def __init__(self, clip_slot = None, track = None, *a, **k):
         raise liveobj_valid(clip_slot) or AssertionError
@@ -155,13 +184,13 @@ class AudioTrackWithSessionClip(ConvertCategory):
         self._track.stop_all_clips()
         action.conversion(song, self._clip_slot.clip)
 
-    @listens('has_clip')
+    @listens(u'has_clip')
     def __on_has_clip_changed(self):
         self.notify_action_invalidated()
 
 
 class AudioTrackWithArrangementClip(ConvertCategory):
-    internal_name = 'audio_arrangement_clip_to_simpler'
+    internal_name = u'audio_arrangement_clip_to_simpler'
 
     def __init__(self, song_view = None, track = None, *a, **k):
         raise liveobj_valid(song_view) or AssertionError
@@ -175,13 +204,13 @@ class AudioTrackWithArrangementClip(ConvertCategory):
         self._track.stop_all_clips()
         action.conversion(song, self._clip)
 
-    @listens('detail_clip')
+    @listens(u'detail_clip')
     def __on_detail_clip_changed(self):
         self.notify_action_invalidated()
 
 
 class SlicesToDrumRack(ConvertAction):
-    label = 'Drum Rack'
+    label = u'Drum Rack'
     needs_deferred_invocation = True
 
     @staticmethod
@@ -190,7 +219,7 @@ class SlicesToDrumRack(ConvertAction):
 
 
 class MidiTrackWithSimpler(TrackBasedConvertCategory):
-    internal_name = 'sliced_simpler_to_drum_rack'
+    internal_name = u'sliced_simpler_to_drum_rack'
 
     def __init__(self, device = None, *a, **k):
         raise isinstance(device, Live.SimplerDevice.SimplerDevice) or AssertionError
@@ -202,17 +231,17 @@ class MidiTrackWithSimpler(TrackBasedConvertCategory):
     def convert(self, song, action):
         action.conversion(song, self._device)
 
-    @listens('playback_mode')
+    @listens(u'playback_mode')
     def __on_playback_mode_changed(self):
         self.notify_action_invalidated()
 
-    @listens('sample')
+    @listens(u'sample')
     def __on_sample_changed(self):
         self.notify_action_invalidated()
 
 
 class DrumPadToMidiTrack(ConvertAction):
-    label = 'MIDI track'
+    label = u'MIDI track'
 
     @staticmethod
     def conversion(song, drum_pad):
@@ -220,7 +249,7 @@ class DrumPadToMidiTrack(ConvertAction):
 
 
 class MidiTrackWithDrumRack(ConvertCategory):
-    internal_name = 'drum_pad_to_midi_track'
+    internal_name = u'drum_pad_to_midi_track'
 
     def __init__(self, drum_pad = None, track = None, *a, **k):
         raise liveobj_valid(drum_pad) or AssertionError
@@ -229,11 +258,11 @@ class MidiTrackWithDrumRack(ConvertCategory):
         self.__on_chains_changed.subject = drum_pad
         self._drum_pad = drum_pad
 
-    @listens('devices')
+    @listens(u'devices')
     def __on_devices_changed(self):
         self.notify_action_invalidated()
 
-    @listens('chains')
+    @listens(u'chains')
     def __on_chains_changed(self):
         self.notify_action_invalidated()
 
@@ -242,11 +271,11 @@ class MidiTrackWithDrumRack(ConvertCategory):
 
 
 class ConvertComponent(Component):
-    __events__ = ('cancel', 'success')
-    action_buttons = control_list(ButtonControl, color='Option.Unselected', pressed_color='Option.Selected')
-    cancel_button = ButtonControl(color='Option.Unselected', pressed_color='Option.Selected')
+    __events__ = (u'cancel', u'success')
+    action_buttons = control_list(ButtonControl, color=u'Option.Unselected', pressed_color=u'Option.Selected')
+    cancel_button = ButtonControl(color=u'Option.Unselected', pressed_color=u'Option.Selected')
     source_color_index = listenable_property.managed(UNCOLORED_INDEX)
-    source_name = listenable_property.managed(unicode(''))
+    source_name = listenable_property.managed(unicode(u''))
 
     def __init__(self, tracks_provider = None, conversions_provider = possible_conversions, decorator_factory = None, *a, **k):
         raise tracks_provider is not None or AssertionError
@@ -278,12 +307,12 @@ class ConvertComponent(Component):
         self.action_buttons.control_count = len(self._category.actions)
         self.notify_available_conversions()
 
-    @listens('color_index')
+    @listens(u'color_index')
     def __on_action_source_color_index_changed(self):
         color_source = self.__on_action_source_color_index_changed.subject
         self.source_color_index = color_source.color_index if color_source and color_source.color_index is not None else UNCOLORED_INDEX
 
-    @listens('name')
+    @listens(u'name')
     def __on_action_source_name_changed(self):
         name_source = self.__on_action_source_name_changed.subject
         self.source_name = name_source.name if name_source else unicode()
@@ -315,20 +344,20 @@ class ConvertComponent(Component):
     def cancel_button(self, button):
         self.notify_cancel()
 
-    @listens('action_invalidated')
+    @listens(u'action_invalidated')
     def __on_action_invalidated(self):
         self.notify_cancel()
 
 
 class ConvertEnabler(Component):
-    convert_toggle_button = ButtonControl(color='DefaultButton.On')
+    convert_toggle_button = ButtonControl(color=u'DefaultButton.On')
 
     def __init__(self, enter_dialog_mode = None, exit_dialog_mode = None, *a, **k):
         raise enter_dialog_mode is not None or AssertionError
         raise exit_dialog_mode is not None or AssertionError
         super(ConvertEnabler, self).__init__(*a, **k)
-        self._enter_dialog_mode = partial(enter_dialog_mode, 'convert')
-        self._exit_dialog_mode = partial(exit_dialog_mode, 'convert')
+        self._enter_dialog_mode = partial(enter_dialog_mode, u'convert')
+        self._exit_dialog_mode = partial(exit_dialog_mode, u'convert')
         self._selected_item = self.register_disconnectable(SelectedMixerTrackProvider(song=self.song))
         self.__on_selected_item_changed.subject = self._selected_item
         self.__on_selected_item_changed(None)
@@ -339,7 +368,7 @@ class ConvertEnabler(Component):
         self._update_clip_slot_listener()
         self._update_drum_pad_listeners()
 
-    @listens('selected_mixer_track')
+    @listens(u'selected_mixer_track')
     def __on_selected_item_changed(self, _):
         self._update_clip_slot_listener()
         self._disable_and_check_enabled_state()
@@ -357,11 +386,11 @@ class ConvertEnabler(Component):
         self._exit_dialog_mode()
         self.convert_toggle_button.enabled = self._can_enable_mode()
 
-    @listens('detail_clip')
+    @listens(u'detail_clip')
     def __on_detail_clip_updated(self):
         self._disable_and_check_enabled_state()
 
-    @listens('selected_track.devices')
+    @listens(u'selected_track.devices')
     def __on_devices_changed(self):
         self._disable_and_check_enabled_state()
         self._update_drum_pad_listeners()
@@ -372,7 +401,7 @@ class ConvertEnabler(Component):
         self.__on_selected_drum_pad_changed.subject = drum_rack_view_or_none
         self.__on_drum_pad_chains_changed.subject = drum_rack_view_or_none
 
-    @listens('selected_drum_pad')
+    @listens(u'selected_drum_pad')
     def __on_selected_drum_pad_changed(self):
         self._disable_and_check_enabled_state()
         drum_rack_view = self.__on_selected_drum_pad_changed.subject
@@ -383,15 +412,15 @@ class ConvertEnabler(Component):
                 first_chain_or_none = selected_drum_pad.chains[0] if len(selected_drum_pad.chains) > 0 else None
             self.__on_drum_pad_chain_devices_changed.subject = first_chain_or_none
 
-    @listens('selected_drum_pad.chains')
+    @listens(u'selected_drum_pad.chains')
     def __on_drum_pad_chains_changed(self):
         self._disable_and_check_enabled_state()
 
-    @listens('devices')
+    @listens(u'devices')
     def __on_drum_pad_chain_devices_changed(self):
         self._disable_and_check_enabled_state()
 
-    @listens('selected_scene')
+    @listens(u'selected_scene')
     def __on_selected_scene_changed(self):
         self._update_clip_slot_listener()
         self._disable_and_check_enabled_state()
@@ -400,7 +429,7 @@ class ConvertEnabler(Component):
         clip_slot = self.song.view.highlighted_clip_slot
         self.__on_clip_slot_has_clip_changed.subject = clip_slot
 
-    @listens('has_clip')
+    @listens(u'has_clip')
     def __on_clip_slot_has_clip_changed(self):
         self._disable_and_check_enabled_state()
         clip_slot = self.__on_clip_slot_has_clip_changed.subject
@@ -410,10 +439,10 @@ class ConvertEnabler(Component):
         self.__on_clip_playing_status_changed.subject = clip_slot.clip
         self.__on_clip_recording_status_changed.subject = clip_slot.clip
 
-    @listens('is_recording')
+    @listens(u'is_recording')
     def __on_clip_recording_status_changed(self):
         self._disable_and_check_enabled_state()
 
-    @listens('playing_status')
+    @listens(u'playing_status')
     def __on_clip_playing_status_changed(self):
         self._disable_and_check_enabled_state()

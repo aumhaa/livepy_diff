@@ -1,10 +1,10 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.control_surface.capabilities import CONTROLLER_ID_KEY, NOTES_CC, PORTS_KEY, REMOTE, SCRIPT, controller_id, inport, outport
 from .ctrl49 import Ctrl49
 
 def get_capabilities():
-    return {CONTROLLER_ID_KEY: controller_id(vendor_id=1891, product_ids=[12552], model_name=['CTRL49']),
+    return {CONTROLLER_ID_KEY: controller_id(vendor_id=1891, product_ids=[12552], model_name=[u'CTRL49']),
      PORTS_KEY: [inport(props=[NOTES_CC, REMOTE]),
                  inport(props=[]),
                  inport(props=[]),

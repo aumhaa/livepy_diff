@@ -1,11 +1,11 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from .ButtonElement import ButtonElement
 from .ControlSurfaceComponent import ControlSurfaceComponent
 from .MomentaryModeObserver import MomentaryModeObserver
 
 class ModeSelectorComponent(ControlSurfaceComponent):
-    """ Class for switching between modes, handle several functions with few controls """
+    u""" Class for switching between modes, handle several functions with few controls """
 
     def __init__(self, *a, **k):
         super(ModeSelectorComponent, self).__init__(*a, **k)

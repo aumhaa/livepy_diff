@@ -1,7 +1,7 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
-from ...base import Event, nop, const, clamp, listens
+from ...base import Event, in_range, nop, const, clamp, listens
 from ..input_control_element import InputControlElement, MIDI_CC_TYPE, InputSignal
 from ..compound_element import CompoundElement
 from .. import midi
@@ -12,9 +12,23 @@ def _not_implemented(value):
     raise NotImplementedError
 
 
+def signed_bit_delta(value):
+    delta = SIGNED_BIT_DEFAULT_DELTA
+    is_increment = value <= 64
+    index = value - 1 if is_increment else value - 64
+    if in_range(index, 0, len(SIGNED_BIT_VALUE_MAP)):
+        delta = SIGNED_BIT_VALUE_MAP[index]
+    if is_increment:
+        return delta
+    return -delta
+
+
+SIGNED_BIT_DEFAULT_DELTA = 20.0
+SIGNED_BIT_VALUE_MAP = (1, 2, 3, 4, 5, 8, 10, 20, 50)
 ENCODER_VALUE_NORMALIZER = {_map_modes.relative_smooth_two_compliment: lambda v: (v if v <= 64 else v - 128),
  _map_modes.relative_smooth_signed_bit: lambda v: (v if v <= 64 else 64 - v),
- _map_modes.relative_smooth_binary_offset: lambda v: v - 64}
+ _map_modes.relative_smooth_binary_offset: lambda v: v - 64,
+ _map_modes.relative_signed_bit: signed_bit_delta}
 
 def accumulate_relative_two_compliment_chunk(chunk):
     right = 0
@@ -34,7 +48,7 @@ def accumulate_relative_two_compliment_chunk(chunk):
 ENCODER_VALUE_ACCUMULATOR = {_map_modes.relative_smooth_two_compliment: accumulate_relative_two_compliment_chunk}
 
 class EncoderElement(InputControlElement):
-    """
+    u"""
     Class representing a continuous control on the controller.
     
     The normalized value notifies a delta in the range:
@@ -44,7 +58,7 @@ class EncoderElement(InputControlElement):
     class ProxiedInterface(InputControlElement.ProxiedInterface):
         normalize_value = nop
 
-    __events__ = (Event(name='normalized_value', signal=InputSignal),)
+    __events__ = (Event(name=u'normalized_value', signal=InputSignal),)
     encoder_sensitivity = 1.0
     allow_receiving_chunks = True
 
@@ -82,7 +96,7 @@ class EncoderElement(InputControlElement):
 
 
 class TouchEncoderElementBase(EncoderElement):
-    """
+    u"""
     Defines the interface necessary to implement a touch encoder, so that it works in
     combination with other parts of the framework (like the EncoderControl).
     """
@@ -91,7 +105,7 @@ class TouchEncoderElementBase(EncoderElement):
         is_pressed = const(False)
         touch_element = const(None)
 
-    __events__ = ('touch_value',)
+    __events__ = (u'touch_value',)
 
     @property
     def touch_element(self):
@@ -102,7 +116,7 @@ class TouchEncoderElementBase(EncoderElement):
 
 
 class TouchEncoderElement(CompoundElement, TouchEncoderElementBase):
-    """
+    u"""
     Encoder that implements the TouchEncoderElementBase interface, by taking a
     touch_element and forwarding its value event to the touch_event.
     The touch_element is registered as a nested element and respects ownership
@@ -159,12 +173,12 @@ class FineGrainWithModifierEncoderElement(WrapperElement):
     def normalized_value_has_listener(self, listener):
         return listener in self._normalized_value_listeners
 
-    @listens('normalized_value')
+    @listens(u'normalized_value')
     def __on_normalized_value(self, value):
         for listener in self._normalized_value_listeners:
             listener(value)
 
-    @listens('value')
+    @listens(u'value')
     def __on_modifier_value(self, value):
         if self.owns_control_element(self._modifier):
             self.on_nested_control_element_value(value, self._modifier)

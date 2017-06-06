@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from itertools import chain
 import Live
 from .ControlSurfaceComponent import ControlSurfaceComponent
@@ -17,7 +17,7 @@ def reset_button(button):
 
 
 class ChannelStripComponent(ControlSurfaceComponent):
-    """ Class attaching to the mixer of a given track """
+    u""" Class attaching to the mixer of a given track """
     _active_instances = []
 
     def number_of_arms_pressed():
@@ -66,27 +66,27 @@ class ChannelStripComponent(ControlSurfaceComponent):
 
         def make_property_slot(name, alias = None):
             alias = alias or name
-            return self.register_slot(None, getattr(self, '_on_%s_changed' % alias), name)
+            return self.register_slot(None, getattr(self, u'_on_%s_changed' % alias), name)
 
-        self._track_property_slots = [make_property_slot('mute'),
-         make_property_slot('solo'),
-         make_property_slot('arm'),
-         make_property_slot('input_routing_type', 'input_routing'),
-         make_property_slot('name', 'track_name')]
-        self._mixer_device_property_slots = [make_property_slot('crossfade_assign', 'cf_assign'), make_property_slot('sends')]
+        self._track_property_slots = [make_property_slot(u'mute'),
+         make_property_slot(u'solo'),
+         make_property_slot(u'arm'),
+         make_property_slot(u'input_routing_type', u'input_routing'),
+         make_property_slot(u'name', u'track_name')]
+        self._mixer_device_property_slots = [make_property_slot(u'crossfade_assign', u'cf_assign'), make_property_slot(u'sends')]
 
         def make_button_slot(name):
-            return self.register_slot(None, getattr(self, '_%s_value' % name), 'value')
+            return self.register_slot(None, getattr(self, u'_%s_value' % name), u'value')
 
-        self._select_button_slot = make_button_slot('select')
-        self._mute_button_slot = make_button_slot('mute')
-        self._solo_button_slot = make_button_slot('solo')
-        self._arm_button_slot = make_button_slot('arm')
-        self._shift_button_slot = make_button_slot('shift')
-        self._crossfade_toggle_slot = make_button_slot('crossfade_toggle')
+        self._select_button_slot = make_button_slot(u'select')
+        self._mute_button_slot = make_button_slot(u'mute')
+        self._solo_button_slot = make_button_slot(u'solo')
+        self._arm_button_slot = make_button_slot(u'arm')
+        self._shift_button_slot = make_button_slot(u'shift')
+        self._crossfade_toggle_slot = make_button_slot(u'crossfade_toggle')
 
     def disconnect(self):
-        """ releasing references and removing listeners"""
+        u""" releasing references and removing listeners"""
         ChannelStripComponent._active_instances.remove(self)
         for button in [self._select_button,
          self._mute_button,
@@ -99,7 +99,7 @@ class ChannelStripComponent(ControlSurfaceComponent):
         for control in self._all_controls():
             release_control(control)
 
-        self._track_name_data_source.set_display_string('')
+        self._track_name_data_source.set_display_string(u'')
         self._select_button = None
         self._mute_button = None
         self._solo_button = None
@@ -143,7 +143,7 @@ class ChannelStripComponent(ControlSurfaceComponent):
         reset_button(button)
 
     def _update_track_name_data_source(self):
-        self._track_name_data_source.set_display_string(self._track.name if self._track != None else ' - ')
+        self._track_name_data_source.set_display_string(self._track.name if self._track != None else u' - ')
 
     def set_send_controls(self, controls):
         for control in list(self._send_controls or []):
@@ -253,7 +253,7 @@ class ChannelStripComponent(ControlSurfaceComponent):
                         send_control.connect_to(self._track.mixer_device.sends[index])
                     else:
                         send_control.release_parameter()
-                        self._empty_control_slots.register_slot(send_control, nop, 'value')
+                        self._empty_control_slots.register_slot(send_control, nop, u'value')
                 index += 1
 
     def _all_controls(self):
@@ -262,7 +262,7 @@ class ChannelStripComponent(ControlSurfaceComponent):
     def _disconnect_parameters(self):
         for control in self._all_controls():
             release_control(control)
-            self._empty_control_slots.register_slot(control, nop, 'value')
+            self._empty_control_slots.register_slot(control, nop, u'value')
 
     def update(self):
         super(ChannelStripComponent, self).update()

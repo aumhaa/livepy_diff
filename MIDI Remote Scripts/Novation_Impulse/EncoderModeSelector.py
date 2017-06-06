@@ -1,9 +1,10 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 
 class EncoderModeSelector(ModeSelectorComponent):
-    """ Class that reassigns the given encoders to either device- or mixer control """
+    u""" Class that reassigns the given encoders to either device- or mixer control """
 
     def __init__(self, device, mixer, bank_up_button, bank_down_button, encoders):
         ModeSelectorComponent.__init__(self)

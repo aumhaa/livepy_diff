@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 SYSEX_START = (240, 0, 1, 5, 32, 127)
 IDENTITY_REQUEST = (240, 126, 127, 6, 1, 247)
 AXIOM_AIR_RESPONSE = (240, 126, 127, 6, 2, 0, 1, 5, 99, 14)
@@ -49,27 +50,27 @@ PAD_TRANSLATIONS = ((0, 0, 85, 14),
  (1, 3, 82, 15),
  (2, 3, 83, 15),
  (3, 3, 84, 15))
-ETCHINGS = ['track',
- 'inst_fx',
- 'memory',
- 'parameter',
- 'value',
- 'pan',
- 'l',
- 'r',
- 'program',
- 'volume',
- 'edit',
- 'channel',
- 'strip',
- 'hyper',
- 'page',
- 'send',
- 'bank',
- 'pad',
- 'knob',
- 'fader',
- 'button']
+ETCHINGS = [u'track',
+ u'inst_fx',
+ u'memory',
+ u'parameter',
+ u'value',
+ u'pan',
+ u'l',
+ u'r',
+ u'program',
+ u'volume',
+ u'edit',
+ u'channel',
+ u'strip',
+ u'hyper',
+ u'page',
+ u'send',
+ u'bank',
+ u'pad',
+ u'knob',
+ u'fader',
+ u'button']
 LED_OFF = 0
 GRN_LOW = 1
 RED_LOW = 2

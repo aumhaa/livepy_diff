@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial, wraps
 from itertools import chain, ifilter, imap
 from contextlib import contextmanager
@@ -17,7 +17,7 @@ from .SubjectSlot import SlotManager
 from .Util import BooleanContext, first, find_if, const, in_range
 
 def _scheduled_method(method):
-    """
+    u"""
     Methods from two control surfaces that use the component_guard can
     not live in the stack at the same time. Use this for methods that
     can be called implicitly by other control surfaces to delay
@@ -35,7 +35,7 @@ def _scheduled_method(method):
     return wrapper
 
 
-CS_LIST_KEY = 'control_surfaces'
+CS_LIST_KEY = u'control_surfaces'
 
 def publish_control_surface(control_surface):
     get_control_surfaces().append(control_surface)
@@ -53,23 +53,23 @@ def get_control_surfaces():
 
 
 class ControlSurface(SlotManager):
-    """
+    u"""
     Central base class for scripts based on the new Framework. New
     scripts need to subclass this class and add special behavior.
     """
 
     def __init__(self, c_instance = None, publish_self = True, *a, **k):
-        """ Define and Initialize standard behavior """
+        u""" Define and Initialize standard behavior """
         super(ControlSurface, self).__init__(*a, **k)
         if not c_instance:
             raise AssertionError
             self.canonical_parent = None
             publish_self and publish_control_surface(self)
         self._c_instance = c_instance
-        self.log_message('Initialising...')
+        self.log_message(u'Initialising...')
         self._pad_translations = None
-        self._suggested_input_port = str('')
-        self._suggested_output_port = str('')
+        self._suggested_input_port = str(u'')
+        self._suggested_output_port = str(u'')
         self._components = []
         self._displays = []
         self.controls = []
@@ -90,10 +90,10 @@ class ControlSurface(SlotManager):
         self._midi_message_list = []
         self._midi_message_count = 0
         self._control_surface_injector = inject(parent_task_group=const(self._task_group), show_message=const(self.show_message), log_message=const(self.log_message), register_component=const(self._register_component), register_control=const(self._register_control), request_rebuild_midi_map=const(self.request_rebuild_midi_map), set_pad_translations=const(self.set_pad_translations), send_midi=const(self._send_midi), song=self.song).everywhere()
-        self.register_slot(self.song(), self._on_track_list_changed, 'visible_tracks')
-        self.register_slot(self.song(), self._on_scene_list_changed, 'scenes')
-        self.register_slot(self.song().view, self._on_selected_track_changed, 'selected_track')
-        self.register_slot(self.song().view, self._on_selected_scene_changed, 'selected_scene')
+        self.register_slot(self.song(), self._on_track_list_changed, u'visible_tracks')
+        self.register_slot(self.song(), self._on_scene_list_changed, u'scenes')
+        self.register_slot(self.song().view, self._on_selected_track_changed, u'selected_track')
+        self.register_slot(self.song().view, self._on_selected_scene_changed, u'selected_scene')
 
     @property
     def components(self):
@@ -109,15 +109,15 @@ class ControlSurface(SlotManager):
     _tasks = property(_get_tasks)
 
     def application(self):
-        """ Returns a reference to the application that we are running in """
+        u""" Returns a reference to the application that we are running in """
         return Live.Application.get_application()
 
     def song(self):
-        """ Returns a reference to the Live song instance that we control """
+        u""" Returns a reference to the Live song instance that we control """
         return self._c_instance.song()
 
     def disconnect(self):
-        """
+        u"""
         Live -> Script: Called right before we get disconnected from Live
         """
         self._disconnect_and_unregister_all_components()
@@ -138,18 +138,18 @@ class ControlSurface(SlotManager):
         super(ControlSurface, self).disconnect()
 
     def _control_surfaces(self):
-        """ Returns list of registered control surfaces """
+        u""" Returns list of registered control surfaces """
         return get_control_surfaces()
 
     def can_lock_to_devices(self):
-        """
+        u"""
         Live -> Script
         """
         return self._device_component != None
 
     @_scheduled_method
     def lock_to_device(self, device):
-        """
+        u"""
         Live -> Script
         Live tells the script which device to control
         """
@@ -159,7 +159,7 @@ class ControlSurface(SlotManager):
 
     @_scheduled_method
     def unlock_from_device(self, device):
-        """
+        u"""
         Live -> Script
         Live tells the script to unlock from a certain device
         """
@@ -169,7 +169,7 @@ class ControlSurface(SlotManager):
 
     @_scheduled_method
     def restore_bank(self, bank_index):
-        """
+        u"""
         Live -> Script
         Live tells the script which bank to use.
         """
@@ -178,17 +178,17 @@ class ControlSurface(SlotManager):
             self._device_component.restore_bank(bank_index)
 
     def suggest_input_port(self):
-        """ Live -> Script: Live can ask for the name of the script's
+        u""" Live -> Script: Live can ask for the name of the script's
         prefered input port"""
         return self._suggested_input_port
 
     def suggest_output_port(self):
-        """ Live -> Script: Live can ask for the name of the script's
+        u""" Live -> Script: Live can ask for the name of the script's
         prefered output port"""
         return self._suggested_output_port
 
     def suggest_map_mode(self, cc_no, channel):
-        """ Live -> Script: Live can ask for a suitable mapping mode
+        u""" Live -> Script: Live can ask for a suitable mapping mode
         for a given CC"""
         raise in_range(cc_no, 0, 128) or AssertionError
         raise in_range(channel, 0, 16) or AssertionError
@@ -201,7 +201,7 @@ class ControlSurface(SlotManager):
         return suggested_map_mode
 
     def suggest_needs_takeover(self, cc_no, channel):
-        """ Live -> Script: Live can ask whether a given CC needs takeover """
+        u""" Live -> Script: Live can ask whether a given CC needs takeover """
         raise in_range(cc_no, 0, 128) or AssertionError
         raise in_range(channel, 0, 16) or AssertionError
         needs_takeover = True
@@ -224,18 +224,18 @@ class ControlSurface(SlotManager):
         self._highlighting_session_component = session_component
 
     def highlighting_session_component(self):
-        """ Return the session component showing the ring in Live session """
+        u""" Return the session component showing the ring in Live session """
         return self._highlighting_session_component
 
     def show_message(self, message):
-        """ Displays the given message in Live's status bar """
+        u""" Displays the given message in Live's status bar """
         raise isinstance(message, (str, unicode)) or AssertionError
         self._c_instance.show_message(message)
 
     def log_message(self, *message):
-        """ Writes the given message into Live's main log file """
-        message = '(%s) %s' % (self.__class__.__name__, ' '.join(map(str, message)))
-        console_message = 'LOG: ' + message
+        u""" Writes the given message into Live's main log file """
+        message = u'(%s) %s' % (self.__class__.__name__, u' '.join(map(str, message)))
+        console_message = u'LOG: ' + message
         if debug_print != None:
             debug_print(console_message)
         else:
@@ -247,14 +247,14 @@ class ControlSurface(SlotManager):
         return self._c_instance.instance_identifier()
 
     def connect_script_instances(self, instanciated_scripts):
-        """ Called by the Application as soon as all scripts are initialized.
+        u""" Called by the Application as soon as all scripts are initialized.
             You can connect yourself to other running scripts here, as we do it
             connect the extension modules (MackieControlXTs).
         """
         pass
 
     def request_rebuild_midi_map(self):
-        """ Script -> Live.
+        u""" Script -> Live.
             When the internal MIDI controller has changed in a way that
             you need to rebuild the MIDI mappings, request a rebuild
             by calling this function This is processed as a request,
@@ -268,7 +268,7 @@ class ControlSurface(SlotManager):
             self._c_instance.request_rebuild_midi_map()
 
     def build_midi_map(self, midi_map_handle):
-        """ Live -> Script
+        u""" Live -> Script
             Build DeviceParameter Mappings, that are processed in Audio time, or
             forward MIDI messages explicitly to our receive_midi_functions.
             Which means that when you are not forwarding MIDI, nor mapping parameters,
@@ -285,13 +285,13 @@ class ControlSurface(SlotManager):
                 self._c_instance.set_pad_translation(self._pad_translations)
 
     def toggle_lock(self):
-        """ Script -> Live
+        u""" Script -> Live
             Use this function to toggle the script's lock on devices
         """
         self._c_instance.toggle_lock()
 
     def port_settings_changed(self):
-        """ Live -> Script
+        u""" Live -> Script
             Is called when either the user changes the MIDI ports that are assigned
             to the script, or the ports state changes due to unplugging/replugging the
             device.
@@ -300,7 +300,7 @@ class ControlSurface(SlotManager):
         self.refresh_state()
 
     def refresh_state(self):
-        """ Live -> Script
+        u""" Live -> Script
             Send out MIDI to completely update the attached MIDI controller.
             Will be called when exiting MIDI map mode
         """
@@ -316,7 +316,7 @@ class ControlSurface(SlotManager):
 
     @profile
     def update_display(self):
-        """ Live -> Script
+        u""" Live -> Script
             Aka on_timer. Called every 100 ms and should be used to update display relevant
             parts of the controller
         """
@@ -326,7 +326,7 @@ class ControlSurface(SlotManager):
 
     @profile
     def receive_midi(self, midi_bytes):
-        """ Live -> Script
+        u""" Live -> Script
             MIDI messages are only received through this function, when explicitly
             forwarded in 'build_midi_map'.
         """
@@ -355,7 +355,7 @@ class ControlSurface(SlotManager):
         if recipient is not None:
             recipient.receive_value(value)
         else:
-            self.log_message('Got unknown message: ' + str(midi_bytes))
+            self.log_message(u'Got unknown message: ' + str(midi_bytes))
 
     def handle_sysex(self, midi_bytes):
         result = find_if(lambda (id, _): midi_bytes[:len(id)] == id, self._forwarding_long_identifier_registry.iteritems())
@@ -363,7 +363,7 @@ class ControlSurface(SlotManager):
             id, control = result
             control.receive_value(midi_bytes[len(id):-1])
         else:
-            self.log_message('Got unknown sysex message: ', midi_bytes)
+            self.log_message(u'Got unknown sysex message: ', midi_bytes)
 
     def set_device_component(self, device_component):
         if self._device_component is not None:
@@ -377,7 +377,7 @@ class ControlSurface(SlotManager):
 
     @contextmanager
     def suppressing_rebuild_requests(self):
-        """
+        u"""
         Delays requesting a MIDI map rebuild, if any, until the scope
         of the context manager is exited.
         """
@@ -421,7 +421,7 @@ class ControlSurface(SlotManager):
                     component._set_enabled_recursive(bool_enable)
 
     def schedule_message(self, delay_in_ticks, callback, parameter = None):
-        """ Schedule a callback to be called after a specified time """
+        u""" Schedule a callback to be called after a specified time """
         if not delay_in_ticks > 0:
             raise AssertionError
             if not callable(callback):
@@ -451,27 +451,27 @@ class ControlSurface(SlotManager):
         self._c_instance.set_feedback_channels(channels)
 
     def set_controlled_track(self, track):
-        """ Sets the track that will send its feedback to the control surface """
+        u""" Sets the track that will send its feedback to the control surface """
         raise track == None or isinstance(track, Live.Track.Track) or AssertionError
         self._c_instance.set_controlled_track(track)
 
     def release_controlled_track(self):
-        """ Sets that no track will send its feedback to the control surface """
+        u""" Sets that no track will send its feedback to the control surface """
         self._c_instance.release_controlled_track()
 
     def _register_control(self, control):
-        """ puts control into the list of controls for triggering updates """
+        u""" puts control into the list of controls for triggering updates """
         if not control != None:
             raise AssertionError
-            raise control not in self.controls or AssertionError('Control registered twice')
+            raise control not in self.controls or AssertionError(u'Control registered twice')
             self.controls.append(control)
             control.canonical_parent = self
             isinstance(control, PhysicalDisplayElement) and self._displays.append(control)
 
     def _register_component(self, component):
-        """ puts component into the list of controls for triggering updates """
+        u""" puts component into the list of controls for triggering updates """
         raise component != None or AssertionError
-        raise component not in self._components or AssertionError('Component registered twice')
+        raise component not in self._components or AssertionError(u'Component registered twice')
         self._components.append(component)
         component.canonical_parent = self
 
@@ -487,7 +487,7 @@ class ControlSurface(SlotManager):
 
     @contextmanager
     def component_guard(self):
-        """
+        u"""
         Context manager that guards user code.  This prevents
         unnecesary updating and enables several optimisations.  Should
         be used to guard calls to components or control elements.
@@ -528,7 +528,7 @@ class ControlSurface(SlotManager):
         return find_if(lambda c: c.name == control_name, self.controls)
 
     def _send_midi(self, midi_event_bytes, optimized = True):
-        """
+        u"""
         Script -> Live
         Use this function to send MIDI events through Live to the
         _real_ MIDI devices that this script is assigned to.
@@ -562,7 +562,7 @@ class ControlSurface(SlotManager):
         try:
             self._c_instance.send_midi(midi_event_bytes)
         except:
-            self.log_message('Error while sending midi message', midi_event_bytes)
+            self.log_message(u'Error while sending midi message', midi_event_bytes)
             traceback.print_exc()
             return False
 
@@ -619,7 +619,7 @@ class ControlSurface(SlotManager):
             forwarding_keys = success and control.identifier_bytes()
             for key in forwarding_keys:
                 registry = self._forwarding_registry if control.message_type() != MIDI_SYSEX_TYPE else self._forwarding_long_identifier_registry
-                raise key not in registry.keys() or AssertionError('Registry key %s registered twice. Check Midi messages!' % str(key))
+                raise key not in registry.keys() or AssertionError(u'Registry key %s registered twice. Check Midi messages!' % str(key))
                 registry[key] = control
 
         return success
@@ -669,7 +669,7 @@ class ControlSurface(SlotManager):
         self._c_instance.toggle_lock()
 
     def _refresh_displays(self):
-        """
+        u"""
         Make sure the displays of the control surface display current
         data.
         """
@@ -679,7 +679,7 @@ class ControlSurface(SlotManager):
 
 
 class OptimizedControlSurface(ControlSurface):
-    """
+    u"""
     Control Surface that makes use of the optimized ownership handler for controls.
     """
 
@@ -698,5 +698,5 @@ class OptimizedControlSurface(ControlSurface):
 
     def _register_control(self, control):
         super(OptimizedControlSurface, self)._register_control(control)
-        if hasattr(control, '_is_resource_based'):
+        if hasattr(control, u'_is_resource_based'):
             control._is_resource_based = True

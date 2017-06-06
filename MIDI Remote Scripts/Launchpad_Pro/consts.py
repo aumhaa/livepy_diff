@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 SYSEX_IDENTITY_REQUEST = (240, 126, 127, 6, 1, 247)
 DEVICE_CODE = (81, 0)
 MANUFACTURER_ID = (0, 32, 41)
@@ -26,7 +27,7 @@ BLINK_LED_CHANNEL = 1
 PULSE_LED_CHANNEL = 2
 FADER_TYPE_STANDARD = 0
 FADER_TYPE_BIPOLAR = 1
-ACTION_BUTTON_COLORS = dict(color='DefaultButton.Off', pressed_color='DefaultButton.On', disabled_color='DefaultButton.Disabled')
+ACTION_BUTTON_COLORS = dict(color=u'DefaultButton.Off', pressed_color=u'DefaultButton.On', disabled_color=u'DefaultButton.Disabled')
 USER_MODE_CHANNELS = (5, 6, 7, 13, 14, 15)
 USER_MATRIX_IDENTIFIERS = [[64,
   65,

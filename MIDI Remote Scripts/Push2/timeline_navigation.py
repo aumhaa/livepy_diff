@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import math
 from collections import namedtuple, OrderedDict
@@ -9,7 +9,7 @@ import Live
 from ableton.v2.base import EventObject, const, clamp, depends, find_if, index_if, isclose, lazy_attribute, listenable_property, listens, listens_group, liveobj_valid, nop, task
 from ableton.v2.control_surface.control import EncoderControl
 logger = logging.getLogger(__name__)
-FocusMarker = namedtuple('FocusMarker', ['name', 'position'])
+FocusMarker = namedtuple(u'FocusMarker', [u'name', u'position'])
 
 def ease_out(t, degree):
     return 1 - (1 - t) ** degree
@@ -22,7 +22,7 @@ def inverse_ease_out(t, degree):
 
 
 def interpolate(from_value, to_value, t, ease_out_degree):
-    """
+    u"""
     Interpolate between from_value and to_value given the value t [0..1]
     ease_out_degree alters the interpolation curve to ease out more, the higher
     the value, where 1 is no easing.
@@ -32,7 +32,7 @@ def interpolate(from_value, to_value, t, ease_out_degree):
 
 
 def interpolate_inverse(from_value, to_value, current_value, ease_out_degree):
-    """
+    u"""
     The inverse function of interpolate solved to t
     """
     t = 0.0 if from_value - to_value == 0 else -float(current_value - from_value) / float(from_value - to_value)
@@ -40,7 +40,7 @@ def interpolate_inverse(from_value, to_value, current_value, ease_out_degree):
 
 
 def calc_easing_degree_for_proportion(proportion):
-    """
+    u"""
     Calculates a reasonable easing degree for a given proportion.
     """
     return -math.log10(proportion) + 1
@@ -58,13 +58,13 @@ def inverse_interpolate_region(from_region, to_region, current_region, ease_out_
     return interpolate_inverse(from_region[index], to_region[index], current_region[index], ease_out_degree)
 
 
-class Region(namedtuple('Region', ['start', 'end'])):
-    """
+class Region(namedtuple(u'Region', [u'start', u'end'])):
+    u"""
     A region with a start and end position in sample time.
     """
 
     def __eq__(self, region):
-        """
+        u"""
         Regions are considered equal, if their samples are equal, ignoring the
         the decimal digits.
         """
@@ -88,7 +88,7 @@ class Region(namedtuple('Region', ['start', 'end'])):
 
 
 class RegionOfInterest(object):
-    """
+    u"""
     A region of interest is responsible of fetching the current region from the getter
     and which start and end objects are attached to it. If the start and end points are
     not focusable, the identifiers should be None.
@@ -118,7 +118,7 @@ class ObjectDescription(object):
 
     def __init__(self, regions, focus_name_or_getter, *a, **k):
         super(ObjectDescription, self).__init__(*a, **k)
-        self._regions = ('waveform',) + regions + ('focused_object',)
+        self._regions = (u'timeline',) + regions + (u'focused_object',)
         self._focus_name_or_getter = focus_name_or_getter
 
     @property
@@ -133,43 +133,44 @@ class ObjectDescription(object):
 
 
 class MarginType(object):
-    """ Enum for the zooming algorithm. """
+    u""" Enum for the zooming algorithm. """
     NONE, START, END = range(3)
 
 
-class WaveformNavigation(EventObject):
-    """ Class for managing a visible area of a waveform """
+class TimelineNavigation(EventObject):
+    u""" Class for managing a visible area of a timeline """
     visible_region = listenable_property.managed(Region(0, 1))
-    visible_region_in_samples = listenable_property.managed(Region(0, 1))
     animate_visible_region = listenable_property.managed(False)
-    focus_marker = listenable_property.managed(FocusMarker('', 0))
+    focus_marker = listenable_property.managed(FocusMarker(u'', 0))
     show_focus = listenable_property.managed(False)
     ZOOM_SENSITIVITY = 1.5
-    MIN_VISIBLE_SAMPLES = 49
-    WAVEFORM_WIDTH_IN_PX = 933
+    TIMELINE_WIDTH_IN_PX = 933
     MARGIN_IN_PX = 121
-    RELATIVE_FOCUS_MARGIN = float(MARGIN_IN_PX) / WAVEFORM_WIDTH_IN_PX
+    RELATIVE_FOCUS_MARGIN = float(MARGIN_IN_PX) / TIMELINE_WIDTH_IN_PX
     UNSNAPPING_THRESHOLD = 0.6
     CHANGE_OBJECT_TIME = 0.1
 
-    def __init__(self, *a, **k):
-        super(WaveformNavigation, self).__init__(*a, **k)
-        self._waveform_region = Region(0, 1)
-        self.waveform_roi = self.make_region_of_interest(getter=lambda : self._waveform_region, with_margin=False)
+    @depends(external_regions_of_interest_creator=const(None), external_focusable_object_descriptions=const(None))
+    def __init__(self, external_regions_of_interest_creator = None, external_focusable_object_descriptions = None, *a, **k):
+        super(TimelineNavigation, self).__init__(*a, **k)
+        self._timeline_region = Region(0, 1)
+        self.timeline_roi = self.make_region_of_interest(getter=lambda : self._timeline_region, with_margin=False)
         self.focused_object_roi = self.make_region_of_interest(getter=self._make_region_for_focused_object, with_margin=False)
+        self._external_regions_of_interest = external_regions_of_interest_creator(self.make_region_of_interest) if callable(external_regions_of_interest_creator) else {}
+        self._external_focusable_object_descriptions = external_focusable_object_descriptions if external_focusable_object_descriptions else {}
         self._focused_identifier = None
         self._touched_identifiers = set()
         self._changed_identifiers = set()
         self._has_tasks = False
-        self._target_roi = self.waveform_roi
-        self._source_roi = self.waveform_roi
+        self._target_roi = self.timeline_roi
+        self._source_roi = self.timeline_roi
         self._request_select_region = False
         self._unsnapping_value = 0
         self._locked_roi = None
         self._last_action = None
 
     def disconnect(self):
-        super(WaveformNavigation, self).disconnect()
+        super(TimelineNavigation, self).disconnect()
         if self._has_tasks:
             self._tasks.kill()
             self._tasks.clear()
@@ -180,36 +181,34 @@ class WaveformNavigation(EventObject):
     def get_zoom_object(self):
         raise NotImplementedError
 
-    def get_region_in_samples(self, region):
-        return region
-
     def get_min_visible_length(self):
-        return self.MIN_VISIBLE_SAMPLES
+        raise NotImplementedError
 
     @listenable_property
-    def waveform_region(self):
-        return self._waveform_region
+    def timeline_region(self):
+        return self._timeline_region
 
-    @waveform_region.setter
-    def waveform_region(self, region):
-        if region != self._waveform_region:
-            self._waveform_region = region
+    @timeline_region.setter
+    def timeline_region(self, region):
+        if region != self._timeline_region:
+            self._timeline_region = region
             self._request_select_region = True
-            self.set_visible_region(self._waveform_region)
-            self.notify_waveform_region()
+            self.set_visible_region(self._timeline_region)
+            self.notify_timeline_region()
 
     def make_region_of_interest(self, start_identifier = None, end_identifier = None, getter = None, with_margin = True):
         return RegionOfInterest(start_identifier, end_identifier, getter, add_margin=self._add_margin_to_region if with_margin else nop)
 
     @lazy_attribute
     def regions_of_interest(self):
-        """
-        The region of interests, that can be zoomed into. By default, the waveform
-        navigation zooms only between the full waveform and the focused objects
+        u"""
+        The region of interests, that can be zoomed into. By default, the timeline
+        navigation zooms only between the full timeline and the focused objects
         position. Override additional_regions_of_interest to add more regions to it.
         """
-        rois = {'waveform': self.waveform_roi,
-         'focused_object': self.focused_object_roi}
+        rois = {u'timeline': self.timeline_roi,
+         u'focused_object': self.focused_object_roi}
+        rois.update(self._external_regions_of_interest)
         rois.update(self.additional_regions_of_interest)
         return rois
 
@@ -218,7 +217,7 @@ class WaveformNavigation(EventObject):
         return {}
 
     def get_name_for_roi(self, roi):
-        """
+        u"""
         Returns the name for the given roi or None, if it doesn't have one
         """
         item = find_if(lambda i: i[1] == roi, self.regions_of_interest.iteritems())
@@ -227,10 +226,17 @@ class WaveformNavigation(EventObject):
 
     @lazy_attribute
     def focusable_object_descriptions(self):
-        """
+        u"""
         Describes focusable objects and how they zoom into regions.
         Returns a dictionary of identifier to ObjectDescriptions.
         """
+        focusable_object_descriptions = {}
+        focusable_object_descriptions.update(self._external_focusable_object_descriptions)
+        focusable_object_descriptions.update(self.additional_focusable_object_descriptions)
+        return focusable_object_descriptions
+
+    @lazy_attribute
+    def additional_focusable_object_descriptions(self):
         return {}
 
     def get_object_description(self, identifier):
@@ -238,32 +244,31 @@ class WaveformNavigation(EventObject):
 
     @property
     def visible_proportion(self):
-        """ Returns the proportion between the visible length and the sample length """
-        return self.visible_region.length / float(self._waveform_region.length)
+        u""" Returns the proportion between the visible length and the sample length """
+        return self.visible_region.length / float(self._timeline_region.length)
 
     def set_visible_region(self, region, source_action = None, force_animate = False):
-        """
+        u"""
         Set the current visible region in the current unit and samples.
         The region is animated, if source action changes.
         Animation is enforced, if force_animate is True.
         """
         self.animate_visible_region = force_animate or source_action != self._last_action
-        self.visible_region = region.clamp_to_region(self._waveform_region)
-        self.visible_region_in_samples = self.get_region_in_samples(self.visible_region)
+        self.visible_region = region.clamp_to_region(self._timeline_region)
         self._last_action = source_action
 
     def set_visible_length(self, length):
-        """
+        u"""
         Extends or reduces the visible end to show the given length.
-        If the end of the waveform is reached, the visible start is adapted.
+        If the end of the timeline is reached, the visible start is adapted.
         """
         start = self.visible_region.start
-        end = min(start + length, self.waveform_region.end)
+        end = min(start + length, self.timeline_region.end)
         start = end - length
         self.set_visible_region(Region(start, end))
 
     def zoom(self, value):
-        """ Zooms in or out of the waveform start
+        u""" Zooms in or out of the timeline start
             value should be between -1.0 and 1.0, where 1.0 will zoom in as much as
             possible and -1.0 will zoom out completely.
         """
@@ -278,14 +283,14 @@ class WaveformNavigation(EventObject):
         t = clamp(t + value * self.ZOOM_SENSITIVITY, 0.0, 1.0)
         region = interpolate_region(source, target, t, easing_degree)
         region = self._add_margin_to_zoomed_region(region, focused_region, margin_type)
-        self.set_visible_region(region, force_animate=animate, source_action='zoom')
+        self.set_visible_region(region, force_animate=animate, source_action=u'zoom')
         self.focus_marker = focus_marker
         self.show_focus = True
         self.try_hide_focus_delayed()
         self._try_lock_region()
 
     def _get_zoom_info_for_focused_object(self):
-        """
+        u"""
         Returns a tuple of the region for the focused object and weather a
         margin should be added to the zoom region.
         """
@@ -295,12 +300,12 @@ class WaveformNavigation(EventObject):
         region = None
         focus_marker = None
         if roi is not None:
-            margin = self.waveform_region.length * self.RELATIVE_FOCUS_MARGIN
+            margin = self.timeline_region.length * self.RELATIVE_FOCUS_MARGIN
             region = roi.region
             is_start = roi.start_identifier == identifier
             if is_start and region.start < margin:
                 margin_type = MarginType.START
-            elif not is_start and region.end > self.waveform_region.end - margin:
+            elif not is_start and region.end > self.timeline_region.end - margin:
                 margin_type = MarginType.END
             obj_description = self.focusable_object_descriptions.get(identifier, None)
             if obj_description is not None:
@@ -308,7 +313,7 @@ class WaveformNavigation(EventObject):
         return (region, focus_marker, margin_type)
 
     def _add_margin_to_zoomed_region(self, zoom_region, focused_region, margin_type):
-        """
+        u"""
         Adds a margin to a zoom region, so that the focused object is shown with a margin
         as soon as possible. This makes switching between zooming an focusing an object
         seamless, as focusing will always add the margin as well.
@@ -321,41 +326,41 @@ class WaveformNavigation(EventObject):
                 else:
                     zoom_region = self._add_margin_to_zoomed_region_end(zoom_region, position)
             else:
-                logger.warn("Focused object not visible. Couldn't add margin to zoomed region. %d not in %r" % (position, zoom_region))
+                logger.warn(u"Focused object not visible. Couldn't add margin to zoomed region. %d not in %r" % (position, zoom_region))
         return zoom_region
 
     def _add_margin_to_zoomed_region_start(self, region, focused_position):
-        p = focused_position - self.waveform_region.start
+        p = focused_position - self.timeline_region.start
         samples_per_pixel = p / self.MARGIN_IN_PX
-        length = self.WAVEFORM_WIDTH_IN_PX * samples_per_pixel
-        if self.waveform_region.start + length < region.end:
-            region = Region(self.waveform_region.start, region.end)
+        length = self.TIMELINE_WIDTH_IN_PX * samples_per_pixel
+        if self.timeline_region.start + length < region.end:
+            region = Region(self.timeline_region.start, region.end)
         else:
             p = region.end - focused_position
-            samples_per_pixel = p / (self.WAVEFORM_WIDTH_IN_PX - self.MARGIN_IN_PX)
-            length = self.WAVEFORM_WIDTH_IN_PX * samples_per_pixel
+            samples_per_pixel = p / (self.TIMELINE_WIDTH_IN_PX - self.MARGIN_IN_PX)
+            length = self.TIMELINE_WIDTH_IN_PX * samples_per_pixel
             start = region.end - length
             if start < region.start:
                 region = Region(start, region.end)
         return region
 
     def _add_margin_to_zoomed_region_end(self, region, focused_position):
-        p = self.waveform_region.end - focused_position
+        p = self.timeline_region.end - focused_position
         samples_per_pixel = p / self.MARGIN_IN_PX
-        length = self.WAVEFORM_WIDTH_IN_PX * samples_per_pixel
-        if self.waveform_region.end - length > region.start:
-            region = Region(region.start, self.waveform_region.end)
+        length = self.TIMELINE_WIDTH_IN_PX * samples_per_pixel
+        if self.timeline_region.end - length > region.start:
+            region = Region(region.start, self.timeline_region.end)
         else:
             p = focused_position - region.start
-            samples_per_pixel = p / (self.WAVEFORM_WIDTH_IN_PX - self.MARGIN_IN_PX)
-            length = self.WAVEFORM_WIDTH_IN_PX * samples_per_pixel
+            samples_per_pixel = p / (self.TIMELINE_WIDTH_IN_PX - self.MARGIN_IN_PX)
+            length = self.TIMELINE_WIDTH_IN_PX * samples_per_pixel
             end = region.start + length
             if end > region.end:
                 region = Region(region.start, end)
         return region
 
     def _process_unsnapping(self, value):
-        """
+        u"""
         Process unsnapping for the given normalized value.
         Returns true if the region should be unsnapped.
         """
@@ -365,7 +370,7 @@ class WaveformNavigation(EventObject):
         return False
 
     def _try_lock_region(self):
-        if self.visible_region == self._waveform_region:
+        if self.visible_region == self._timeline_region:
             self._locked_roi = None
         elif self.visible_region == self._target_roi.region_with_margin:
             self._locked_roi = self._target_roi
@@ -386,11 +391,11 @@ class WaveformNavigation(EventObject):
             objects_to_show = self._changed_identifiers & touched_identifiers
             if identifier in self.focusable_object_descriptions:
                 if len(objects_to_show) > 1:
-                    logger.debug('Focus all objects %r' % objects_to_show)
+                    logger.debug(u'Focus all objects %r' % objects_to_show)
                     self._focused_identifier = identifier
                     self._show_all_objects(objects_to_show)
                 else:
-                    logger.debug('Focus object %r' % identifier)
+                    logger.debug(u'Focus object %r' % identifier)
                     animate = len(touched_identifiers) <= 1 and self.object_changed(self._focused_identifier, identifier)
                     self._focused_identifier = identifier
                     self._focus_object_by_identifier(identifier, animate=animate)
@@ -411,7 +416,7 @@ class WaveformNavigation(EventObject):
             return roi.region.end
 
     def _zoom_out_or_move_region(self, source_region, target_region):
-        """
+        u"""
         Zooms out the source region, if it's contained in the target region
         or moves it left or right depending on where they overlap.
         """
@@ -425,8 +430,8 @@ class WaveformNavigation(EventObject):
         return new_region
 
     def _show_all_objects(self, identifiers):
-        start = self.waveform_region.end
-        end = self.waveform_region.start
+        start = self.timeline_region.end
+        end = self.timeline_region.start
         positions = imap(self._get_position_for_identifier, identifiers)
         for position in ifilter(None, positions):
             start = min(start, position)
@@ -437,13 +442,13 @@ class WaveformNavigation(EventObject):
         object_region = Region(start, end)
         new_region = self._zoom_out_or_move_region(visible_region_without_margin, object_region)
         if new_region is not None:
-            self.set_visible_region(self._add_margin_to_region(new_region), source_action='show_objects %r' % identifiers)
+            self.set_visible_region(self._add_margin_to_region(new_region), source_action=u'show_objects %r' % identifiers)
             self._request_select_region = True
             self._locked_roi = None
-        self.focus_marker = FocusMarker('', 0)
+        self.focus_marker = FocusMarker(u'', 0)
 
     def _focus_object_by_identifier(self, identifier, animate = False):
-        """ Focuses the object in the waveform and brings it into the visible range.
+        u""" Focuses the object in the timeline and brings it into the visible range.
             The visible length is preserved. The position is aligned to the left or right
             of the visible range, with a certain margin defined by RELATIVE_FOCUS_MARGIN.
             If the objects region boundary is already in the visible range, the visible
@@ -454,11 +459,11 @@ class WaveformNavigation(EventObject):
         roi = self._get_roi_for_object_identifier(identifier)
         region = roi.region
         if self._locked_roi is not None and self._locked_roi.bound_by(identifier):
-            if region.start < self.waveform_region.start:
-                start = self.waveform_region.start
+            if region.start < self.timeline_region.start:
+                start = self.timeline_region.start
                 new_visible_region = Region(start, start + self.visible_region.length)
-            elif region.end > self.waveform_region.end:
-                end = self.waveform_region.end
+            elif region.end > self.timeline_region.end:
+                end = self.timeline_region.end
                 new_visible_region = Region(end - self.visible_region.length, end)
             else:
                 new_visible_region = self._add_margin_to_region(region)
@@ -466,7 +471,7 @@ class WaveformNavigation(EventObject):
         else:
             visible_length = self.visible_region.length
             visible_margin = visible_length * self.RELATIVE_FOCUS_MARGIN
-            waveform_start, waveform_end = self._waveform_region
+            timeline_start, timeline_end = self._timeline_region
             if roi.end_identifier == identifier:
                 start = min(region.start - visible_margin, self.visible_region.start)
                 right = max(region.end + visible_margin, start + visible_length)
@@ -475,7 +480,7 @@ class WaveformNavigation(EventObject):
                 end = max(region.end + visible_margin, self.visible_region.end)
                 left = min(region.start - visible_margin, end - visible_length)
                 right = left + visible_length
-            self.set_visible_region(Region(clamp(left, waveform_start, waveform_end - visible_length), clamp(right, waveform_start + visible_length, waveform_end)), force_animate=animate)
+            self.set_visible_region(Region(clamp(left, timeline_start, timeline_end - visible_length), clamp(right, timeline_start + visible_length, timeline_end)), force_animate=animate)
             self._request_select_region = True
         self.focus_marker = FocusMarker(self.focusable_object_descriptions[identifier].focus_name, region.end if roi.end_identifier == identifier else region.start)
 
@@ -516,16 +521,16 @@ class WaveformNavigation(EventObject):
         visible_region = roi.region_with_margin
         self.set_visible_region(visible_region)
         self.focus_object(focused_object)
-        if visible_region != self._waveform_region:
+        if visible_region != self._timeline_region:
             self._locked_roi = roi
 
     def try_hide_focus(self):
-        """ Hides the focus, if the focused object is not longer touched """
+        u""" Hides the focus, if the focused object is not longer touched """
         if self._should_hide_focus():
             self.show_focus = False
 
     def try_hide_focus_delayed(self):
-        """ Hides the focus after some time, if the focused object is not
+        u""" Hides the focus after some time, if the focused object is not
             longer touched
         """
         if self._hide_focus_task and self._should_hide_focus():
@@ -542,13 +547,13 @@ class WaveformNavigation(EventObject):
         self._changed_identifiers = set()
 
     def copy_state(self, navigation):
-        """
-        Tries to replicate the state of the given waveform navigation.
-        The waveform regions need to be identical for this to make sense.
+        u"""
+        Tries to replicate the state of the given timeline navigation.
+        The timeline regions need to be identical for this to make sense.
         The focused identifier and all region of interests should be available
         in both navigations, or the result will be undefined.
         """
-        if self._waveform_region == navigation.waveform_region:
+        if self._timeline_region == navigation.timeline_region:
             self.set_visible_region(navigation.visible_region)
             self._focused_identifier = navigation._focused_identifier
             source_roi_name = navigation.get_name_for_roi(navigation._source_roi)
@@ -576,10 +581,10 @@ class WaveformNavigation(EventObject):
         start, end = region
         margin = self.RELATIVE_FOCUS_MARGIN
         start1 = (margin * start + end * margin - start) / (2 * margin - 1)
-        start1 = self._waveform_region.clamp_position(start1)
+        start1 = self._timeline_region.clamp_position(start1)
         end1 = (end - margin * start1) / (1 - margin)
         end2 = (margin * start + end * margin - end) / (2 * margin - 1)
-        end2 = self._waveform_region.clamp_position(end2)
+        end2 = self._timeline_region.clamp_position(end2)
         start2 = (start - margin * end2) / (1 - margin)
         return Region(max(start1, start2), min(end1, end2))
 
@@ -591,11 +596,11 @@ class WaveformNavigation(EventObject):
         length = self.get_min_visible_length()
         margin = self.RELATIVE_FOCUS_MARGIN * length
         if align_right:
-            right = self._waveform_region.clamp_position(position + margin)
-            left = self._waveform_region.clamp_position(right - length)
+            right = self._timeline_region.clamp_position(position + margin)
+            left = self._timeline_region.clamp_position(right - length)
         else:
-            left = self._waveform_region.clamp_position(position - margin)
-            right = self._waveform_region.clamp_position(left + length)
+            left = self._timeline_region.clamp_position(position - margin)
+            right = self._timeline_region.clamp_position(left + length)
         return Region(left, right)
 
     def _make_region_for_focused_object(self):
@@ -609,7 +614,7 @@ class WaveformNavigation(EventObject):
         return []
 
     def _get_unique_regions_of_interest(self):
-        """
+        u"""
         Eliminates duplicates of the current regions and returns the remaining getters
         sorted by the length of the regions.
         """
@@ -651,22 +656,30 @@ class WaveformNavigation(EventObject):
             self._report_current_source_and_target_roi()
 
     def _report_current_source_and_target_roi(self):
-        source_roi_name = ''
-        target_roi_name = ''
+        source_roi_name = u''
+        target_roi_name = u''
         for name, roi in self.regions_of_interest.iteritems():
             if roi == self._source_roi:
                 source_roi_name = name
             elif roi == self._target_roi:
                 target_roi_name = name
 
-        logger.debug('Zooming between roi "%s" and "%s"' % (source_roi_name, target_roi_name))
+        logger.debug(u'Zooming between roi "%s" and "%s"' % (source_roi_name, target_roi_name))
 
 
-class SimplerWaveformNavigation(WaveformNavigation):
-    """ Extends the WaveformNavigation class by the concept of focusing parameters
+class WaveformNavigation(EventObject):
+    visible_region_in_samples = listenable_property.managed(Region(0, 1))
+    MIN_VISIBLE_SAMPLES = 49
+
+    def get_region_in_samples(self, region):
+        return region
+
+
+class SimplerWaveformNavigation(TimelineNavigation, WaveformNavigation):
+    u""" Extends the TimelineNavigation class by the concept of focusing parameters
         and slices.
     """
-    selected_slice_focus = 'selected_slice'
+    selected_slice_focus = u'selected_slice'
 
     def __init__(self, simpler = None, *a, **k):
         super(SimplerWaveformNavigation, self).__init__(*a, **k)
@@ -683,6 +696,10 @@ class SimplerWaveformNavigation(WaveformNavigation):
         self.__on_parameter_value_changed.replace_subjects(focusable_parameters)
         self._update_waveform_region()
 
+    def set_visible_region(self, region, source_action = None, force_animate = False):
+        super(SimplerWaveformNavigation, self).set_visible_region(region, source_action, force_animate)
+        self.visible_region_in_samples = self.get_region_in_samples(self.visible_region)
+
     def get_region_in_samples(self, region):
         sample = self._simpler.sample
         if liveobj_valid(sample) and sample.warping:
@@ -690,7 +707,7 @@ class SimplerWaveformNavigation(WaveformNavigation):
         return region
 
     def get_min_visible_length(self):
-        """
+        u"""
         Tries to give a useful duration in beat time for warped samples.
         """
         sample = self._simpler.sample
@@ -700,22 +717,22 @@ class SimplerWaveformNavigation(WaveformNavigation):
 
     @lazy_attribute
     def additional_regions_of_interest(self):
-        return {'start_end_marker': self.make_region_of_interest(start_identifier='Start', end_identifier='End', getter=lambda : (self._simpler.positions.start_marker, self._simpler.positions.end_marker)),
-         'active_sample': self.make_region_of_interest(start_identifier='S Start', end_identifier='S Length', getter=lambda : (self._simpler.positions.active_start, self._simpler.positions.active_end)),
-         'loop': self.make_region_of_interest(start_identifier='S Loop Length', end_identifier='S Length', getter=lambda : (self._simpler.positions.loop_start, self._simpler.positions.loop_end)),
-         'selected_slice': self.make_region_of_interest(start_identifier=self.selected_slice_focus, end_identifier=None, getter=lambda : (self._simpler.positions.selected_slice.time, self.get_next_slice_position()))}
+        return {u'start_end_marker': self.make_region_of_interest(start_identifier=u'Start', end_identifier=u'End', getter=lambda : (self._simpler.positions.start_marker, self._simpler.positions.end_marker)),
+         u'active_sample': self.make_region_of_interest(start_identifier=u'S Start', end_identifier=u'S Length', getter=lambda : (self._simpler.positions.active_start, self._simpler.positions.active_end)),
+         u'loop': self.make_region_of_interest(start_identifier=u'S Loop Length', end_identifier=u'S Length', getter=lambda : (self._simpler.positions.loop_start, self._simpler.positions.loop_end)),
+         u'selected_slice': self.make_region_of_interest(start_identifier=self.selected_slice_focus, end_identifier=None, getter=lambda : (self._simpler.positions.selected_slice.time, self.get_next_slice_position()))}
 
     @lazy_attribute
-    def focusable_object_descriptions(self):
-        return {'Start': ObjectDescription(('start_end_marker',), 'start_marker'),
-         'End': ObjectDescription(('start_end_marker',), 'end_marker'),
-         'S Start': ObjectDescription(('start_end_marker', 'active_sample'), 'position'),
-         'S Length': ObjectDescription(('start_end_marker', 'active_sample'), 'position'),
-         'S Loop Length': ObjectDescription(('start_end_marker', 'active_sample', 'loop'), 'position'),
-         self.selected_slice_focus: ObjectDescription(('start_end_marker', 'selected_slice'), '')}
+    def additional_focusable_object_descriptions(self):
+        return {u'Start': ObjectDescription((u'start_end_marker',), u'start_marker'),
+         u'End': ObjectDescription((u'start_end_marker',), u'end_marker'),
+         u'S Start': ObjectDescription((u'start_end_marker', u'active_sample'), u'position'),
+         u'S Length': ObjectDescription((u'start_end_marker', u'active_sample'), u'position'),
+         u'S Loop Length': ObjectDescription((u'start_end_marker', u'active_sample', u'loop'), u'position'),
+         self.selected_slice_focus: ObjectDescription((u'start_end_marker', u'selected_slice'), u'')}
 
     def get_object_identifier(self, obj):
-        if hasattr(obj, 'name'):
+        if hasattr(obj, u'name'):
             return obj.name
         return obj
 
@@ -735,7 +752,7 @@ class SimplerWaveformNavigation(WaveformNavigation):
         return next_pos
 
     def object_changed(self, identifier1, identifier2):
-        if self.selected_slice_focus in (identifier1, identifier2) and self._get_selected_slice_index() == 0 and 'Start' in (identifier1, identifier2):
+        if self.selected_slice_focus in (identifier1, identifier2) and self._get_selected_slice_index() == 0 and u'Start' in (identifier1, identifier2):
             return False
         return identifier1 != identifier2
 
@@ -744,42 +761,42 @@ class SimplerWaveformNavigation(WaveformNavigation):
             return super(SimplerWaveformNavigation, self).focus_object(obj)
         return False
 
-    @listens('playback_mode')
+    @listens(u'playback_mode')
     def __on_playback_mode_changed(self):
-        start_end_region = self.regions_of_interest['start_end_marker'].region
+        start_end_region = self.regions_of_interest[u'start_end_marker'].region
         if start_end_region.inside(self.visible_region):
-            self.focus_object(self._simpler.get_parameter_by_name('Start'))
+            self.focus_object(self._simpler.get_parameter_by_name(u'Start'))
         else:
             self._focus_start_end_roi()
 
-    @listens_group('value')
+    @listens_group(u'value')
     def __on_parameter_value_changed(self, parameter):
         self._simpler.positions.update_all()
         self.change_object(parameter)
 
-    @listens('selected_slice')
+    @listens(u'selected_slice')
     def __on_selected_slice_changed(self, _):
         self._focus_selected_slice()
 
-    @listens('playing_position_enabled')
+    @listens(u'playing_position_enabled')
     def __on_playing_position_enabled_changed(self):
         slicing = self._simpler.playback_mode == Live.SimplerDevice.PlaybackMode.slicing
         if slicing and self._simpler.playing_position_enabled:
             self._focus_selected_slice()
 
-    @listens('use_beat_time')
+    @listens(u'use_beat_time')
     def __on_use_beat_time_changed(self, use_beat_time):
         self._update_waveform_region_and_preserve_visible_region()
 
-    @listens('warp_markers')
+    @listens(u'warp_markers')
     def __on_warp_markers_changed(self):
         self._update_waveform_region_and_preserve_visible_region()
 
-    @listens('before_update_all')
+    @listens(u'before_update_all')
     def __on_before_update_all(self):
         self._enable_focus_objects = False
 
-    @listens('after_update_all')
+    @listens(u'after_update_all')
     def __on_after_update_all(self):
         self._enable_focus_objects = True
 
@@ -792,7 +809,7 @@ class SimplerWaveformNavigation(WaveformNavigation):
         self.set_visible_region(region)
 
     def _update_waveform_region(self):
-        self.waveform_region = Region(self._simpler.positions.start, self._simpler.positions.end)
+        self.timeline_region = Region(self._simpler.positions.start, self._simpler.positions.end)
 
     def _focus_selected_slice(self):
         slice_index = self._get_selected_slice_index()
@@ -800,7 +817,7 @@ class SimplerWaveformNavigation(WaveformNavigation):
             self.focus_object(self.selected_slice_focus)
 
     def _focus_start_end_roi(self):
-        self.focus_region_of_interest('start_end_marker', self._simpler.get_parameter_by_name('Start'))
+        self.focus_region_of_interest(u'start_end_marker', self._simpler.get_parameter_by_name(u'Start'))
 
     def _get_selected_slice_index(self):
         selected_slice_index = -1
@@ -813,41 +830,43 @@ class SimplerWaveformNavigation(WaveformNavigation):
         return selected_slice_index
 
 
-class AudioClipWaveformNavigation(WaveformNavigation):
-    """ WaveformNavigation that adds the concept of focus for audio clips to the. """
-    zoom_focus = 'zoom'
-    start_marker_focus = 'start_marker'
-    loop_start_focus = 'loop_start'
-    loop_end_focus = 'loop_end'
+class ClipTimelineNavigation(TimelineNavigation):
+    u"""
+    ClipTimelineNavigation that adds the concept of focus for clips to the
+    TimelineNavigation.
+    """
+    MIN_VISIBLE_BEATS = 1
+    zoom_focus = u'zoom'
+    start_marker_focus = u'start_marker'
+    loop_start_focus = u'loop_start'
+    loop_end_focus = u'loop_end'
 
     def __init__(self, clip = None, *a, **k):
-        super(AudioClipWaveformNavigation, self).__init__(*a, **k)
+        super(ClipTimelineNavigation, self).__init__(*a, **k)
         self._clip = clip
         self._process_object_changes = True
-        self._connect_positions_property('loop_start', self.loop_start_focus)
-        self._connect_positions_property('loop_length', self.loop_end_focus)
-        self._connect_positions_property('start_marker', self.start_marker_focus)
+        self._connect_positions_property(u'loop_start', self.loop_start_focus)
+        self._connect_positions_property(u'loop_length', self.loop_end_focus)
+        self._connect_positions_property(u'start_marker', self.start_marker_focus)
         self.__on_is_recording_changed.subject = clip.positions
-        self.__on_warp_markers_changed.subject = clip.positions
-        self.__on_use_beat_time_changed.subject = clip.positions
         self.__on_before_update_all.subject = clip.positions
         self.__on_after_update_all.subject = clip.positions
-        self._update_waveform_region()
+        self._update_timeline_region()
 
     def _connect_positions_property(self, property_name, focus_object):
         self.register_slot(self._clip.positions, lambda _: self.change_object(focus_object), property_name)
 
     @lazy_attribute
     def additional_regions_of_interest(self):
-        return {'start_end_marker': self.make_region_of_interest(start_identifier=self.start_marker_focus, end_identifier=self.loop_end_focus, getter=lambda : (self._clip.positions.start_marker, self._clip.positions.loop_end)),
-         'loop': self.make_region_of_interest(start_identifier=self.loop_start_focus, end_identifier=self.loop_end_focus, getter=lambda : (self._clip.positions.loop_start, self._clip.positions.loop_end)),
-         'start_end': self.make_region_of_interest(getter=self._get_start_end_region)}
+        return {u'start_end_marker': self.make_region_of_interest(start_identifier=self.start_marker_focus, end_identifier=self.loop_end_focus, getter=lambda : (self._clip.positions.start_marker, self._clip.positions.loop_end)),
+         u'loop': self.make_region_of_interest(start_identifier=self.loop_start_focus, end_identifier=self.loop_end_focus, getter=lambda : (self._clip.positions.loop_start, self._clip.positions.loop_end)),
+         u'start_end': self.make_region_of_interest(getter=self._get_start_end_region)}
 
     @lazy_attribute
-    def focusable_object_descriptions(self):
-        return {self.start_marker_focus: ObjectDescription(('start_end', 'start_end_marker'), 'start_marker'),
-         self.loop_start_focus: ObjectDescription(('start_end', 'loop'), lambda : ('position' if self._clip.looping else 'start_marker')),
-         self.loop_end_focus: ObjectDescription(('start_end',), 'end_marker')}
+    def additional_focusable_object_descriptions(self):
+        return {self.start_marker_focus: ObjectDescription((u'start_end', u'start_end_marker'), u'start_marker'),
+         self.loop_start_focus: ObjectDescription((u'start_end', u'loop'), lambda : (u'position' if self._clip.looping else u'start_marker')),
+         self.loop_end_focus: ObjectDescription((u'start_end',), u'end_marker')}
 
     def get_object_identifier(self, obj):
         return obj
@@ -864,9 +883,9 @@ class AudioClipWaveformNavigation(WaveformNavigation):
         if self._process_object_changes:
             self._clip.positions.update_all()
             visible_length = self.visible_region.length
-            self._update_waveform_region()
+            self._update_timeline_region()
             self.set_visible_length(visible_length)
-            super(AudioClipWaveformNavigation, self).change_object(obj)
+            super(ClipTimelineNavigation, self).change_object(obj)
 
     def get_region_in_samples(self, region):
         if self._clip.warping:
@@ -874,44 +893,72 @@ class AudioClipWaveformNavigation(WaveformNavigation):
         return region
 
     def get_min_visible_length(self):
+        return self.MIN_VISIBLE_BEATS
+
+    def set_focus_marker_without_updating_visible_region(self, identifier):
+        u"""
+        This will set the focused identifier to the specified one. Doing so, has the
+        effect of focusing an identifier, without immediately jumping to it until
+        the user uses the zoom parameter.
         """
+        self._focused_identifier = identifier
+        self._request_select_region = True
+        current_region = self.visible_region
+        roi = self._get_roi_for_object_identifier(identifier)
+        self.focus_marker = FocusMarker(self.focusable_object_descriptions[identifier].focus_name, current_region.end if roi.end_identifier == identifier else current_region.start)
+
+    def _get_start_end_region(self):
+        start_position = min(self._clip.positions.start_marker, self._clip.positions.loop_start)
+        return (start_position, self._clip.positions.loop_end)
+
+    @listens(u'is_recording')
+    def __on_is_recording_changed(self):
+        self._update_timeline_region()
+
+    @listens(u'before_update_all')
+    def __on_before_update_all(self):
+        self._process_object_changes = False
+
+    @listens(u'after_update_all')
+    def __on_after_update_all(self):
+        self._process_object_changes = True
+        self._request_select_region = True
+
+    def _update_timeline_region(self):
+        self.timeline_region = Region(min(self._clip.positions.start, self._clip.positions.start_marker, self._clip.positions.loop_start), max(self._clip.positions.end, self._clip.positions.loop_end))
+
+
+class AudioClipTimelineNavigation(ClipTimelineNavigation, WaveformNavigation):
+
+    def __init__(self, *a, **k):
+        super(AudioClipTimelineNavigation, self).__init__(*a, **k)
+        self.__on_warp_markers_changed.subject = self._clip.positions
+        self.__on_use_beat_time_changed.subject = self._clip.positions
+        self._update_timeline_region()
+
+    def set_visible_region(self, region, source_action = None, force_animate = False):
+        super(AudioClipTimelineNavigation, self).set_visible_region(region, source_action, force_animate)
+        self.visible_region_in_samples = self.get_region_in_samples(self.visible_region)
+
+    @listens(u'warp_markers')
+    def __on_warp_markers_changed(self):
+        self._update_waveform_region_and_preserve_visible_region()
+
+    @listens(u'use_beat_time')
+    def __on_use_beat_time_changed(self, use_beat_time):
+        self._update_waveform_region_and_preserve_visible_region()
+
+    def get_min_visible_length(self):
+        u"""
         Tries to give a useful duration in beat time for warped audio clips.
         """
         if self._clip.warping:
             return self._clip.sample_to_beat_time(self.MIN_VISIBLE_SAMPLES) - self._clip.sample_to_beat_time(0)
         return self.MIN_VISIBLE_SAMPLES
 
-    def _get_start_end_region(self):
-        start_position = min(self._clip.positions.start_marker, self._clip.positions.loop_start)
-        return (start_position, self._clip.positions.loop_end)
-
-    @listens('is_recording')
-    def __on_is_recording_changed(self):
-        self._update_waveform_region()
-
-    @listens('warp_markers')
-    def __on_warp_markers_changed(self):
-        self._update_waveform_region_and_preserve_visible_region()
-
-    @listens('use_beat_time')
-    def __on_use_beat_time_changed(self, use_beat_time):
-        self._update_waveform_region_and_preserve_visible_region()
-
-    @listens('before_update_all')
-    def __on_before_update_all(self):
-        self._process_object_changes = False
-
-    @listens('after_update_all')
-    def __on_after_update_all(self):
-        self._process_object_changes = True
-        self._request_select_region = True
-
     def _update_waveform_region_and_preserve_visible_region(self):
         region = self.visible_region_in_samples
-        self._update_waveform_region()
+        self._update_timeline_region()
         if self._clip.warping:
             region = Region(self._clip.sample_to_beat_time(region.start), self._clip.sample_to_beat_time(region.end))
         self.set_visible_region(region)
-
-    def _update_waveform_region(self):
-        self.waveform_region = Region(min(self._clip.positions.start, self._clip.positions.start_marker, self._clip.positions.loop_start), max(self._clip.positions.end, self._clip.positions.loop_end))

@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from ableton.v2.base import clamp, task, liveobj_valid
 from ableton.v2.control_surface.control import EncoderControl, control_list
@@ -58,7 +58,7 @@ class AutomationComponent(DeviceParameterComponent):
         return self._can_automate_parameters()
 
     def _can_automate_parameters(self):
-        return self.parameter_provider.parameters and liveobj_valid(self._clip) and not self._clip.is_arrangement_clip and len(self._selected_time) > 0
+        return len(self.parameter_provider.parameters) > 0 and liveobj_valid(self._clip) and not self._clip.is_arrangement_clip and len(self._selected_time) > 0
 
     def set_parameter_controls(self, encoders):
         self.encoders.set_control_element(encoders)
@@ -72,9 +72,9 @@ class AutomationComponent(DeviceParameterComponent):
 
     def parameter_to_string(self, parameter):
         if not parameter:
-            return ''
+            return u''
         if len(self._selected_time) == 0:
-            return '-'
+            return u'-'
         return parameter.str_for_value(self.parameter_to_value(parameter))
 
     def parameter_to_value(self, parameter):

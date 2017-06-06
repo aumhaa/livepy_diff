@@ -1,5 +1,5 @@
 
-from __future__ import with_statement
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.ControlSurface import ControlSurface
 from _Framework.ControlElement import ControlElement
@@ -17,14 +17,14 @@ from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from _Framework.ClipSlotComponent import ClipSlotComponent
 from _Framework.SceneComponent import SceneComponent
 from _Framework.SessionComponent import SessionComponent
-from TransportViewModeSelector import TransportViewModeSelector
-from SelectButtonModeSelector import SelectButtonModeSelector
-from PageableDeviceComponent import PageableDeviceComponent
-from EncoderMixerModeSelector import EncoderMixerModeSelector
-from MixerOrDeviceModeSelector import MixerOrDeviceModeSelector
-from NotifyingMixerComponent import NotifyingMixerComponent
-from DisplayingMixerComponent import DisplayingMixerComponent
-from PeekableEncoderElement import PeekableEncoderElement
+from .TransportViewModeSelector import TransportViewModeSelector
+from .SelectButtonModeSelector import SelectButtonModeSelector
+from .PageableDeviceComponent import PageableDeviceComponent
+from .EncoderMixerModeSelector import EncoderMixerModeSelector
+from .MixerOrDeviceModeSelector import MixerOrDeviceModeSelector
+from .NotifyingMixerComponent import NotifyingMixerComponent
+from .DisplayingMixerComponent import DisplayingMixerComponent
+from .PeekableEncoderElement import PeekableEncoderElement
 SYSEX_START = (240, 0, 1, 5, 32, 127)
 PAD_TRANSLATIONS = ((0, 2, 85, 15),
  (1, 2, 86, 15),
@@ -36,15 +36,15 @@ PAD_TRANSLATIONS = ((0, 2, 85, 15),
  (3, 3, 84, 15))
 
 class AxiomPro(ControlSurface):
-    """ Script for the M-Audio Axiom Pro """
+    u""" Script for the M-Audio Axiom Pro """
 
     def __init__(self, c_instance):
         ControlSurface.__init__(self, c_instance)
         with self.component_guard():
             is_momentary = True
             self.set_pad_translations(PAD_TRANSLATIONS)
-            self._suggested_input_port = 'HyperControl'
-            self._suggested_output_port = 'HyperControl'
+            self._suggested_input_port = u'HyperControl'
+            self._suggested_output_port = u'HyperControl'
             self._display_on_button = ButtonElement(not is_momentary, MIDI_CC_TYPE, 15, 79)
             self._waiting_for_first_response = True
             mixer1 = DisplayingMixerComponent(0)

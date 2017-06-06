@@ -1,9 +1,9 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from .SubjectSlot import Subject, subject_slot, SlotManager
 
 class TrackArmState(Subject, SlotManager):
-    __subject_events__ = ('arm',)
+    __subject_events__ = (u'arm',)
 
     def __init__(self, track = None, *a, **k):
         super(TrackArmState, self).__init__(*a, **k)
@@ -16,11 +16,11 @@ class TrackArmState(Subject, SlotManager):
         self._on_explicit_arm_changed.subject = subject
         self._on_implicit_arm_changed.subject = subject
 
-    @subject_slot('arm')
+    @subject_slot(u'arm')
     def _on_explicit_arm_changed(self):
         self._on_arm_changed()
 
-    @subject_slot('implicit_arm')
+    @subject_slot(u'implicit_arm')
     def _on_implicit_arm_changed(self):
         self._on_arm_changed()
 

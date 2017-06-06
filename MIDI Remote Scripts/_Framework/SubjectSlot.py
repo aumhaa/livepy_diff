@@ -1,8 +1,8 @@
 
-"""
+u"""
 Family of classes for maintaining connections with optional subjects.
 """
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from itertools import izip, repeat
 from functools import partial, wraps
 from .Disconnectable import Disconnectable, CompoundDisconnectable
@@ -14,22 +14,22 @@ class SubjectSlotError(Exception):
 
 
 class SubjectEvent(NamedTuple):
-    """
+    u"""
     Description of a subject event
     """
     name = None
-    doc = ''
+    doc = u''
     signal = Signal
     override = False
 
 
 def subject_add_event(cls, event_name_or_event):
-    if isinstance(event_name_or_event, str):
+    if isinstance(event_name_or_event, basestring):
         event = SubjectEvent(name=event_name_or_event)
     else:
         event = event_name_or_event
     raise callable(event.signal) or AssertionError
-    signal_attr = '_' + event.name + '_signal'
+    signal_attr = u'_' + event.name + u'_signal'
 
     def get_signal(self):
         try:
@@ -39,31 +39,31 @@ def subject_add_event(cls, event_name_or_event):
             setattr(self, signal_attr, signal)
             return signal
 
-    kwargs = dict({'doc': event.doc,
-     'override': event.override})
+    kwargs = dict({u'doc': event.doc,
+     u'override': event.override})
 
-    @monkeypatch(cls, (event.name + '_has_listener'), **kwargs)
+    @monkeypatch(cls, (event.name + u'_has_listener'), **kwargs)
     def has_method(self, slot):
         return get_signal(self).is_connected(slot)
 
-    @monkeypatch(cls, ('add_' + event.name + '_listener'), **kwargs)
+    @monkeypatch(cls, (u'add_' + event.name + u'_listener'), **kwargs)
     def add_method(self, slot, identify_sender = False, *a, **k):
         sender = self if identify_sender else None
         return get_signal(self).connect(slot, sender=sender, *a, **k)
 
-    @monkeypatch(cls, ('remove_' + event.name + '_listener'), **kwargs)
+    @monkeypatch(cls, (u'remove_' + event.name + u'_listener'), **kwargs)
     def remove_method(self, slot):
         return get_signal(self).disconnect(slot)
 
-    @monkeypatch(cls, ('notify_' + event.name), **kwargs)
+    @monkeypatch(cls, (u'notify_' + event.name), **kwargs)
     def notify_method(self, *a, **k):
         return get_signal(self)(*a, **k)
 
-    @monkeypatch(cls, ('clear_' + event.name + '_listeners'), **kwargs)
+    @monkeypatch(cls, (u'clear_' + event.name + u'_listeners'), **kwargs)
     def clear_method(self):
         return get_signal(self).disconnect_all()
 
-    @monkeypatch(cls, (event.name + '_listener_count'), **kwargs)
+    @monkeypatch(cls, (event.name + u'_listener_count'), **kwargs)
     def listener_count_method(self):
         return get_signal(self).count
 
@@ -80,24 +80,24 @@ def setup_subject(cls, listeners):
 class SubjectMeta(type):
 
     def __new__(cls, name, bases, dct):
-        events = dct.get('__subject_events__', [])
-        if events and 'disconnect' not in dct:
-            dct['disconnect'] = lambda self: super(cls, self).disconnect()
+        events = dct.get(u'__subject_events__', [])
+        if events and u'disconnect' not in dct:
+            dct[u'disconnect'] = lambda self: super(cls, self).disconnect()
         cls = super(SubjectMeta, cls).__new__(cls, name, bases, dct)
-        raise not events or hasattr(cls, 'disconnect') or AssertionError
+        raise not events or hasattr(cls, u'disconnect') or AssertionError
         setup_subject(cls, events)
         return cls
 
 
 class Subject(Disconnectable):
-    """
+    u"""
     Base class that installs the SubjectMeta metaclass
     """
     __metaclass__ = SubjectMeta
 
 
 class SlotManager(CompoundDisconnectable):
-    """
+    u"""
     Holds references to a number of slots. Disconnecting it clears all
     of them and unregisters them from the system.
     """
@@ -114,7 +114,7 @@ class SlotManager(CompoundDisconnectable):
 
 
 class SubjectSlot(Disconnectable):
-    """
+    u"""
     This class maintains the relationship between a subject and a
     listener callback. As soon as both are non-null, it connects the
     listener the given 'event' of the subject and release the connection
@@ -151,7 +151,7 @@ class SubjectSlot(Disconnectable):
         self.listener = listener
 
     def disconnect(self):
-        """
+        u"""
         Disconnects the slot clearing its members.
         """
         self.subject = None
@@ -159,16 +159,16 @@ class SubjectSlot(Disconnectable):
         super(SubjectSlot, self).disconnect()
 
     def _check_subject_interface(self, subject):
-        if not callable(getattr(subject, 'add_' + self._event + '_listener', None)):
-            raise SubjectSlotError('Subject %s missing "add" method for event: %s' % (subject, self._event))
-        if not callable(getattr(subject, 'remove_' + self._event + '_listener', None)):
-            raise SubjectSlotError('Subject %s missing "remove" method for event: %s' % (subject, self._event))
-        if not callable(getattr(subject, self._event + '_has_listener', None)):
-            raise SubjectSlotError('Subject %s missing "has" method for event: %s' % (subject, self._event))
+        if not callable(getattr(subject, u'add_' + self._event + u'_listener', None)):
+            raise SubjectSlotError(u'Subject %s missing "add" method for event: %s' % (subject, self._event))
+        if not callable(getattr(subject, u'remove_' + self._event + u'_listener', None)):
+            raise SubjectSlotError(u'Subject %s missing "remove" method for event: %s' % (subject, self._event))
+        if not callable(getattr(subject, self._event + u'_has_listener', None)):
+            raise SubjectSlotError(u'Subject %s missing "has" method for event: %s' % (subject, self._event))
 
     def connect(self):
         if not self.is_connected and self._subject != None and self._listener != None:
-            add_method = getattr(self._subject, 'add_' + self._event + '_listener')
+            add_method = getattr(self._subject, u'add_' + self._event + u'_listener')
             all_args = tuple(self._extra_args) + (self._listener,)
             try:
                 add_method(*all_args, **self._extra_kws)
@@ -176,13 +176,13 @@ class SubjectSlot(Disconnectable):
                 pass
 
     def soft_disconnect(self):
-        """
+        u"""
         Disconnects the listener from the subject keeping their
         values.
         """
         if self.is_connected and self._subject != None and self._listener != None:
             all_args = tuple(self._extra_args) + (self._listener,)
-            remove_method = getattr(self._subject, 'remove_' + self._event + '_listener')
+            remove_method = getattr(self._subject, u'remove_' + self._event + u'_listener')
             try:
                 remove_method(*all_args)
             except RuntimeError:
@@ -193,7 +193,7 @@ class SubjectSlot(Disconnectable):
         all_args = tuple(self._extra_args) + (self._listener,)
         connected = False
         try:
-            connected = bool(self._subject != None and self._listener != None and getattr(self._subject, self._event + '_has_listener')(*all_args))
+            connected = bool(self._subject != None and self._listener != None and getattr(self._subject, self._event + u'_has_listener')(*all_args))
         except RuntimeError:
             pass
 
@@ -225,7 +225,7 @@ class SubjectSlot(Disconnectable):
 
 
 class CallableSlotMixin(object):
-    """
+    u"""
     Use this Mixin to turn subject-slot like interfaces into a
     'callable'.  The call operator will be forwarded to the
     subjectslot.
@@ -240,7 +240,7 @@ class CallableSlotMixin(object):
 
 
 class SubjectSlotGroup(SlotManager):
-    """
+    u"""
     A subject slot that connects a given listener to many subjects.
     """
     listener = None
@@ -281,7 +281,7 @@ class SubjectSlotGroup(SlotManager):
 
 
 class MultiSubjectSlot(SlotManager, SubjectSlot):
-    """
+    u"""
     A subject slot that takes a string describing the path to the event to listen to.
     It will make sure that any changes to the elements of this path notify the given
     listener and will follow the changing subjects.
@@ -326,7 +326,7 @@ def subject_slot(events, *a, **k):
     def decorator(self, method):
         raise isinstance(self, SlotManager) or AssertionError
         function = partial(method, self)
-        event_list = events.split('.')
+        event_list = events.split(u'.')
         num_events = len(event_list)
         event = event_list if num_events > 1 else events
         base_class = MultiSubjectSlot if num_events > 1 else SubjectSlot

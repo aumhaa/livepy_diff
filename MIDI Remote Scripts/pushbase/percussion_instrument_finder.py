@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from itertools import chain
 from ableton.v2.base import EventObject, listens_group, liveobj_changed, liveobj_valid
@@ -7,12 +7,12 @@ from ableton.v2.control_surface.mode import Mode
 from .device_chain_utils import find_instrument_devices, find_instrument_meeting_requirement
 
 class PercussionInstrumentFinder(Mode, EventObject):
-    """
+    u"""
     Looks in the hierarchy of devices of the selected track, looking
     for the first available drum-rack or sliced simpler (depth-first),
     updating as the device list changes.
     """
-    __events__ = ('instrument',)
+    __events__ = (u'instrument',)
     _drum_group = None
     _simpler = None
 
@@ -40,20 +40,20 @@ class PercussionInstrumentFinder(Mode, EventObject):
 
     @property
     def drum_group(self):
-        """
+        u"""
         The latest found drum rack.
         """
         return self._drum_group
 
     @property
     def sliced_simpler(self):
-        """
+        u"""
         The latest found simpler in slicing mode.
         """
         return self._simpler
 
     def _get_device_parent(self):
-        """
+        u"""
         The currently observed track.
         """
         return self._device_parent
@@ -65,15 +65,16 @@ class PercussionInstrumentFinder(Mode, EventObject):
 
     device_parent = property(_get_device_parent, _set_device_parent)
 
-    @listens_group('devices')
+    @listens_group(u'devices')
     def __on_devices_changed(self, chain):
+        self._get_device_parent().set_data(u'alternative_mode_locked', False)
         self.update()
 
-    @listens_group('chains')
+    @listens_group(u'chains')
     def __on_chains_changed(self, chain):
         self.update()
 
-    @listens_group('playback_mode')
+    @listens_group(u'playback_mode')
     def __on_slicing_changed(self, _simpler):
         self.update()
 
@@ -86,7 +87,7 @@ class PercussionInstrumentFinder(Mode, EventObject):
         device_parent = self.device_parent
         devices = list(find_instrument_devices(device_parent))
         racks = filter(lambda d: d.can_have_chains, devices)
-        simplers = filter(lambda d: hasattr(d, 'playback_mode'), devices)
+        simplers = filter(lambda d: hasattr(d, u'playback_mode'), devices)
         chains = list(chain([device_parent], *[ d.chains for d in racks ]))
         self.__on_chains_changed.replace_subjects(racks)
         self.__on_devices_changed.replace_subjects(chains)
@@ -103,7 +104,7 @@ class PercussionInstrumentFinder(Mode, EventObject):
 
 
 def find_drum_group_device(track_or_chain):
-    """
+    u"""
     Looks up recursively for a drum_group device in the track.
     """
     requirement = lambda i: i.can_have_drum_pads
@@ -111,8 +112,8 @@ def find_drum_group_device(track_or_chain):
 
 
 def find_sliced_simpler(track_or_chain):
-    """
+    u"""
     Looks up recursively for a sliced simpler device in the track.
     """
-    requirement = lambda i: getattr(i, 'playback_mode', None) == Live.SimplerDevice.PlaybackMode.slicing
+    requirement = lambda i: getattr(i, u'playback_mode', None) == Live.SimplerDevice.PlaybackMode.slicing
     return find_instrument_meeting_requirement(requirement, track_or_chain)

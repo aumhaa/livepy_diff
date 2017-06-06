@@ -1,10 +1,11 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.ButtonElement import ButtonElement
 from _Framework.InputControlElement import MIDI_NOTE_TYPE, MIDI_CC_TYPE, MIDI_CC_STATUS
-from consts import *
+from .consts import *
 
 class ConfigurableButtonElement(ButtonElement):
-    """ Special button class that can be configured with custom on- and off-values
+    u""" Special button class that can be configured with custom on- and off-values
     and can send and receive on different channels with different message types """
 
     def __init__(self, is_momentary, msg_type, channel, identifier, send_channel = None, identifier_send_offset = 0, send_msg_type = None):
