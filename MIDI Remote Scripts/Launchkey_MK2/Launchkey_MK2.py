@@ -30,6 +30,7 @@ class Launchkey_MK2(OptimizedControlSurface):
         super(Launchkey_MK2, self).__init__(c_instance=c_instance, *a, **k)
         self._is_25_key_model = False
         self._is_in_control_on = True
+        self._identity_response_pending = False
         with self.component_guard():
             self._skin = make_skin()
             with inject(skin=const(self._skin)).everywhere():
@@ -176,7 +177,9 @@ class Launchkey_MK2(OptimizedControlSurface):
             if self._is_identity_response_valid(product_id_bytes):
                 self._set_model_type(product_id_bytes)
                 self._request_task.kill()
-                self.on_identified()
+                if self._identity_response_pending:
+                    self.on_identified()
+                    self._identity_response_pending = False
             else:
                 self.log_message(u'MIDI device responded with wrong product id (%s).' % (str(product_id_bytes),))
         else:
@@ -195,6 +198,7 @@ class Launchkey_MK2(OptimizedControlSurface):
         self._is_25_key_model = product_id_bytes[3] == consts.LAUNCHKEY_25_ID_BYTE
 
     def _send_identity_request(self):
+        self._identity_response_pending = True
         self._send_midi(consts.IDENTITY_REQUEST)
 
     def on_identified(self):

@@ -7,7 +7,7 @@ from .event import Event, EventError, EventObject, has_event, listenable_propert
 from .signal import Signal
 from .dependency import DependencyError, depends, inject
 from .disconnectable import disconnectable, Disconnectable, CompoundDisconnectable
-from .util import aggregate_contexts, Bindable, BooleanContext, chunks, clamp, compose, const, dict_diff, find_if, first, flatten, forward_property, get_slice, group, index_if, infinite_context_manager, instance_decorator, in_range, is_contextmanager, is_iterable, is_matrix, lazy_attribute, linear, maybe, memoize, mixin, monkeypatch, monkeypatch_extend, NamedTuple, negate, next, nop, overlaymap, print_message, product, recursive_map, remove_if, second, sign, Slicer, slicer, slice_size, third, to_slice, trace_value, union
+from .util import aggregate_contexts, Bindable, BooleanContext, OutermostOnlyContext, chunks, clamp, compose, const, dict_diff, find_if, first, flatten, forward_property, get_slice, group, index_if, infinite_context_manager, instance_decorator, in_range, is_contextmanager, is_iterable, is_matrix, lazy_attribute, linear, maybe, memoize, mixin, monkeypatch, monkeypatch_extend, NamedTuple, negate, next, nop, overlaymap, print_message, product, recursive_map, remove_if, second, sign, Slicer, slicer, slice_size, third, to_slice, trace_value, union
 from .gcutil import histogram, instances_by_name, refget
 __all__ = (u'Bindable',
  u'BooleanContext',

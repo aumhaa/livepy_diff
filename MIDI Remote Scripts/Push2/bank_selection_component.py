@@ -1,6 +1,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
-from ableton.v2.base import NamedTuple, listenable_property, listens, listens_group, liveobj_valid, nop
+from ableton.v2.base import has_event, NamedTuple, listenable_property, listens, listens_group, liveobj_valid, nop
 from ableton.v2.control_surface import Component
 from ableton.v2.control_surface.control import control_list, ButtonControl
 from pushbase.banking_util import MAIN_KEY
@@ -22,6 +22,7 @@ class BankProvider(ItemProvider):
         if self._device != device:
             self._device = device
             self._on_device_parameters_changed.subject = self._device
+            self._on_bank_names_changed.subject = self._device if has_event(self._device, u'bank_parameters_changed') else None
             self._items = self._create_items()
             self.notify_items()
             self.notify_selected_item()
@@ -56,8 +57,15 @@ class BankProvider(ItemProvider):
         if device == self._device:
             self.notify_selected_item()
 
+    @listens(u'bank_parameters_changed')
+    def _on_bank_names_changed(self):
+        self._update_and_notify_items()
+
     @listens(u'parameters')
     def _on_device_parameters_changed(self):
+        self._update_and_notify_items()
+
+    def _update_and_notify_items(self):
         items = self._create_items()
         if self._items != items:
             self._items = items

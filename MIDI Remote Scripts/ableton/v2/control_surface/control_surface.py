@@ -16,6 +16,7 @@ from .device_bank_registry import DeviceBankRegistry
 from .device_provider import DeviceProvider
 from .elements import PhysicalDisplayElement
 from .input_control_element import InputControlElement, MIDI_CC_TYPE, MIDI_NOTE_TYPE, MIDI_PB_TYPE, MIDI_SYSEX_TYPE, ScriptForwarding
+from .message_scheduler import MessageScheduler
 from .profile import profile
 __all__ = (u'SimpleControlSurface', u'ControlSurface')
 logger = logging.getLogger(__name__)
@@ -46,6 +47,7 @@ class SimpleControlSurface(EventObject):
     This class does not support controlling devices. Use :class:`ControlSurface` if
     you need device support.
     """
+    __events__ = (u'received_midi', u'disconnect')
     preferences_key = None
 
     def __init__(self, c_instance = None, publish_self = True, *a, **k):
@@ -73,6 +75,7 @@ class SimpleControlSurface(EventObject):
         self._midi_message_dict = {}
         self._midi_message_list = []
         self._midi_message_count = 0
+        self.mxd_midi_scheduler = MessageScheduler(self._do_send_midi, self._task_group.add(task.TimedCallbackTask()))
         self._ownership_handler = OptimizedOwnershipHandler()
         self._control_surface_injector = inject(element_ownership_handler=const(self._ownership_handler), parent_task_group=const(self._task_group), show_message=const(self.show_message), register_component=const(self._register_component), register_control=const(self._register_control), request_rebuild_midi_map=const(self.request_rebuild_midi_map), set_pad_translations=const(self.set_pad_translations), send_midi=const(self._send_midi), song=const(self.song), set_session_highlight=const(self._c_instance.set_session_highlight)).everywhere()
 
@@ -117,6 +120,7 @@ class SimpleControlSurface(EventObject):
         broken, so the control surface can be garbage collected.
         """
         self._pre_serialize()
+        self.notify_disconnect(self)
         self._disconnect_and_unregister_all_components()
         with self.component_guard():
             for control in self.controls:
@@ -285,6 +289,8 @@ class SimpleControlSurface(EventObject):
         recipient.receive_value(data)
 
     def _do_receive_midi(self, midi_bytes):
+        self.notify_received_midi(*midi_bytes)
+        self.mxd_midi_scheduler.handle_message(midi_bytes)
         self.process_midi_bytes(midi_bytes, self._receive_midi_data)
 
     @staticmethod
@@ -310,6 +316,8 @@ class SimpleControlSurface(EventObject):
         """
         midi_data_for_recipient = OrderedDict()
         for midi_bytes in midi_chunk:
+            self.notify_received_midi(*midi_bytes)
+            self.mxd_midi_scheduler.handle_message(midi_bytes)
             self.process_midi_bytes(midi_bytes, partial(self._merge_midi_data, midi_data=midi_data_for_recipient))
 
         for recipient, data in midi_data_for_recipient.itervalues():
@@ -328,13 +336,13 @@ class SimpleControlSurface(EventObject):
             if result is not None:
                 identifier, recipient = result
                 midi_processor(recipient, midi_bytes[len(identifier):-1])
-            else:
+            elif self.received_midi_listener_count() == 0:
                 logger.warning(u'Got unknown sysex message: ' + midi.pretty_print_bytes(midi_bytes))
         else:
             recipient = self.get_recipient_for_nonsysex_midi_message(midi_bytes)
             if recipient is not None:
                 midi_processor(recipient, midi.extract_value(midi_bytes))
-            else:
+            elif self.received_midi_listener_count() == 0:
                 logger.warning(u'Got unknown message: ' + midi.pretty_print_bytes(midi_bytes))
 
     def get_recipient_for_nonsysex_midi_message(self, midi_bytes):

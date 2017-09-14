@@ -129,6 +129,7 @@ class Layer(LayerBase, ExclusiveResource):
         self._control_to_names = dict()
         self._control_clients = dict()
         for name, control in controls.iteritems():
+            raise control is not None or AssertionError(name)
             self._control_to_names.setdefault(control, []).append(name)
 
     def __add__(self, other):

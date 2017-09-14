@@ -10,17 +10,18 @@ class TupleWrapper(object):
 
     forget_tuple_wrapper_instances = staticmethod(forget_tuple_wrapper_instances)
 
-    def get_tuple_wrapper(parent, attribute):
+    def get_tuple_wrapper(parent, attribute, element_filter = None):
         if (parent, attribute) not in TupleWrapper._tuple_wrapper_registry:
-            TupleWrapper._tuple_wrapper_registry[parent, attribute] = TupleWrapper(parent, attribute)
+            TupleWrapper._tuple_wrapper_registry[parent, attribute] = TupleWrapper(parent, attribute, element_filter)
         return TupleWrapper._tuple_wrapper_registry[parent, attribute]
 
     get_tuple_wrapper = staticmethod(get_tuple_wrapper)
 
-    def __init__(self, parent, attribute):
+    def __init__(self, parent, attribute, element_filter = None):
         raise isinstance(attribute, (str, unicode)) or AssertionError
         self._parent = parent
         self._attribute = attribute
+        self._element_filter = element_filter
 
     def get_list(self):
         result = ()
@@ -32,6 +33,8 @@ class TupleWrapper(object):
                 result = parent[self._attribute]
         elif hasattr(parent, self._attribute):
             result = getattr(parent, self._attribute)
+        if self._element_filter:
+            return [ (e if self._element_filter(e) else None) for e in result ]
         return result
 
 
@@ -158,7 +161,11 @@ class StringHandler(object):
         argument = int(self._sub_string)
         if cmp(unicode(self._arguments[-1]), u'id') == 0:
             self._arguments.pop()
-            argument = self._id_callback(argument)
+            try:
+                argument = self._id_callback(argument)
+            except KeyError:
+                raise RuntimeError(u'Invalid id')
+
         self._add_argument(argument)
 
     def _add_argument(self, argument):

@@ -260,17 +260,16 @@ class FaderfoxDeviceController(FaderfoxComponent):
         if device and device == self.device:
             self.device_locked = False
         if hasattr(self.parent.song(), u'appointed_device'):
-            if not self.parent.song().appointed_device == self_device:
+            if not self.parent.song().appointed_device == self.device:
                 self.parent.request_rebuild_midi_map()
 
     def set_appointed_device(self, device):
-        if self.device_locked:
-            self.device_locked = False
-        if not device == self.device:
-            self.bank = 0
-            self.show_bank = True
-        self.device = device
-        self.parent.request_rebuild_midi_map()
+        if not self.device_locked:
+            if not device == self.device:
+                self.bank = 0
+                self.show_bank = True
+            self.device = device
+            self.parent.request_rebuild_midi_map()
 
     def refresh_state(self):
         pass

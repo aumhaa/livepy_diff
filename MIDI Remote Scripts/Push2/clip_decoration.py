@@ -4,7 +4,7 @@ from ableton.v2.base import liveobj_valid, listenable_property, listens, EventOb
 from pushbase.decoration import DecoratorFactory, LiveObjectDecorator
 from pushbase.internal_parameter import InternalParameter
 from .decoration import find_decorated_object
-from .timeline_navigation import AudioClipTimelineNavigation, ClipTimelineNavigation
+from .timeline_navigation import AudioClipTimelineNavigation, MidiClipTimelineNavigation
 
 class ClipPositions(EventObject):
     __events__ = (u'is_recording', u'warp_markers', u'before_update_all', u'after_update_all')
@@ -146,12 +146,13 @@ class ClipPositions(EventObject):
         self.__on_end_marker_changed()
         self.__on_loop_start_changed()
         self.__on_loop_end_changed()
+        self._update_start_end()
         if self._clip.is_audio_clip:
             self.use_beat_time = self._clip.warping
         self.notify_after_update_all()
 
 
-class MidiClipZoomParameter(ClipTimelineNavigation, InternalParameter):
+class MidiClipZoomParameter(MidiClipTimelineNavigation, InternalParameter):
     pass
 
 

@@ -1,5 +1,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
+import math
 from ableton.v2.control_surface import Component
 from .colors import COLOR_INDEX_TO_SCREEN_COLOR, COLOR_INDEX_TO_SCREEN_COLOR_SHADES
 
@@ -10,3 +11,72 @@ class VisualisationSettingsComponent(Component):
     shade3_colors = COLOR_INDEX_TO_SCREEN_COLOR_SHADES[2]
     shade4_colors = COLOR_INDEX_TO_SCREEN_COLOR_SHADES[3]
     shade5_colors = COLOR_INDEX_TO_SCREEN_COLOR_SHADES[4]
+    button_left = 4
+    light_left = 14
+    light_right = 100
+    button_right = 110
+    row_top = 1
+    body_top = 5
+    body_bottom = 15
+    row_bottom = 19
+    button_spacing = 121
+    row_spacing = 20
+    body_height = body_bottom - body_top
+    body_margin = body_top - row_top
+    button_light_margin = light_left - button_left
+    button_gap = button_spacing - (button_right - button_left)
+    row_height = row_bottom - row_top
+    row_gap = row_spacing - row_height
+    screen_width = 960
+    screen_height = 160
+    visualisation_left = button_left
+    visualisation_top = row_spacing * 3 + row_top
+
+
+class VisualisationGuides(object):
+
+    @staticmethod
+    def _guide_x(index, origin_x, guide_type):
+        if origin_x == None:
+            origin_x = VisualisationSettingsComponent.visualisation_left
+        origin_column = int(math.floor(origin_x / VisualisationSettingsComponent.button_spacing))
+        return origin_column * VisualisationSettingsComponent.button_spacing + guide_type + index * VisualisationSettingsComponent.button_spacing - origin_x
+
+    @staticmethod
+    def _guide_y(index, origin_y, guide_type):
+        if origin_y == None:
+            origin_y = VisualisationSettingsComponent.visualisation_top
+        origin_row = int(math.floor(origin_y / VisualisationSettingsComponent.row_spacing))
+        return origin_row * VisualisationSettingsComponent.row_spacing + guide_type + index * VisualisationSettingsComponent.row_spacing - origin_y
+
+    @staticmethod
+    def button_left_x(index, origin_x = None):
+        return VisualisationGuides._guide_x(index, origin_x, VisualisationSettingsComponent.button_left)
+
+    @staticmethod
+    def light_left_x(index, origin_x = None):
+        return VisualisationGuides._guide_x(index, origin_x, VisualisationSettingsComponent.light_left)
+
+    @staticmethod
+    def light_right_x(index, origin_x = None):
+        return VisualisationGuides._guide_x(index, origin_x, VisualisationSettingsComponent.light_right)
+
+    @staticmethod
+    def button_right_x(index, origin_x = None):
+        return VisualisationGuides._guide_x(index, origin_x, VisualisationSettingsComponent.button_right)
+
+    @staticmethod
+    def row_top_y(index, origin_y = None):
+        return VisualisationGuides._guide_y(index, origin_y, VisualisationSettingsComponent.row_top)
+
+    @staticmethod
+    def body_top_y(index, origin_y = None):
+        return VisualisationGuides._guide_y(index, origin_y, VisualisationSettingsComponent.body_top)
+
+    @staticmethod
+    def body_bottom_y(index, origin_y = None):
+        return VisualisationGuides._guide_y(index, origin_y, VisualisationSettingsComponent.body_bottom)
+
+    @staticmethod
+    def row_bottom_y(index, origin_y = None):
+        return VisualisationGuides._guide_y(index, origin_y, VisualisationSettingsComponent.row_bottom)

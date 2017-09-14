@@ -7,7 +7,7 @@ import functools
 import logging
 import traceback
 from .dependency import depends
-from .util import remove_if, find_if, linear as linear_fn, const
+from .util import remove_if, find_if, linear as linear_fn, const, nop
 logger = logging.getLogger(__name__)
 
 class TaskError(Exception):
@@ -370,6 +370,25 @@ class SequenceTask(Task):
 
         self._iter = iter(self._tasks)
         self._advance_sequence()
+
+
+class TimedCallbackTask(SequenceTask):
+    _callback = nop
+
+    def start(self, duration, callback):
+        if duration is not None:
+            self._tasks = [DelayTask(duration), FuncTask(self._call)]
+            self._callback = callback or nop
+        else:
+            self._tasks = []
+        self.restart()
+
+    def _call(self, _time_expired):
+        self.cancel()
+        self._callback()
+
+    def cancel(self):
+        self.kill()
 
 
 def totask(task):

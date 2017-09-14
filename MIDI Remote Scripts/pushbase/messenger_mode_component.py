@@ -37,3 +37,11 @@ class MessengerModesComponent(ModesComponent, Messenger):
             message = self._mode_message_map.get(name, None)
             if message:
                 self.show_notification(message)
+
+    @property
+    def muted(self):
+        return self._muted
+
+    @muted.setter
+    def muted(self, muted):
+        self._muted = muted

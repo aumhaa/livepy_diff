@@ -331,6 +331,9 @@ class NoteEditorSettingsComponent(ModesComponent):
     def is_touched(self):
         return any(imap(lambda e: e and e.is_touched, self.encoders))
 
+    def _is_step_held(self):
+        return len(self._active_note_regions()) > 0
+
     def add_editor(self, editor):
         raise editor != None or AssertionError
         self._editors.append(editor)
@@ -360,7 +363,7 @@ class NoteEditorSettingsComponent(ModesComponent):
         if self.selected_mode == u'enabled':
             if setting == None or not self._automation.can_automate_parameters:
                 self._set_settings_view_enabled(False)
-        elif len(self._active_note_regions()) > 0:
+        elif self._is_step_held():
             if self.selected_setting == u'automation' and self._automation.can_automate_parameters or self.selected_setting == u'note_settings':
                 self._show_settings()
 
@@ -422,8 +425,7 @@ class NoteEditorSettingsComponent(ModesComponent):
 
     @listens(u'detail_clip')
     def _on_detail_clip_changed(self):
-        clip = self.song.view.detail_clip if self.is_enabled() else None
-        self._automation.clip = clip
+        self._automation.clip = self.song.view.detail_clip if self.is_enabled() else None
 
     @listens(u'selected_track')
     def _on_selected_track_changed(self):
@@ -431,11 +433,13 @@ class NoteEditorSettingsComponent(ModesComponent):
 
     @initial_encoders.touched
     def initial_encoders(self, encoder):
-        self._show_settings()
+        if self.selected_mode == u'about_to_show':
+            self._show_settings()
 
     @initial_encoders.value
     def initial_encoders(self, encoder, value):
-        self._show_settings()
+        if self.selected_mode == u'about_to_show':
+            self._show_settings()
 
     @encoders.touched
     def encoders(self, encoder):
@@ -480,8 +484,7 @@ class NoteEditorSettingsComponent(ModesComponent):
             self._notify_modification()
 
     def _try_hide_settings(self):
-        is_encoder_held = any(imap(lambda e: e and e.is_touched, self.encoders))
-        if self._request_hide and not is_encoder_held:
+        if self._request_hide and not self.is_touched:
             self.selected_mode = u'disabled'
             self._request_hide = False
 

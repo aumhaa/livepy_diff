@@ -268,7 +268,7 @@ class EnumWrappingParameter(InternalParameterBase, PropertyHostMixin):
 
     @property
     def canonical_parent(self):
-        self._parent
+        return self._parent
 
     @property
     def max(self):
@@ -352,3 +352,13 @@ class ProxyParameter(Proxy):
 
     def __str__(self):
         return str(self.proxied_object)
+
+    def __eq__(self, other):
+        if isinstance(other, ProxyParameter):
+            return self.proxied_object == other.proxied_object and self.proxied_interface == other.proxied_interface
+        return self.proxied_object == other
+
+    def __ne__(self, other):
+        if isinstance(other, ProxyParameter):
+            return self.proxied_object != other.proxied_object or self.proxied_interface != other.proxied_interface
+        return self.proxied_object != other

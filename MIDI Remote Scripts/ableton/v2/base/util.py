@@ -588,6 +588,26 @@ class BooleanContext(object):
             self._managed._current_value = self._old_value
 
 
+class OutermostOnlyContext(object):
+    u"""
+    This context manager only enters the outermost context it is given in
+    a nested series of when clauses.
+    """
+
+    def __init__(self, *a, **k):
+        self._entered_count = 0
+
+    @contextmanager
+    def __call__(self, context):
+        self._entered_count += 1
+        if self._entered_count == 1:
+            with context as result:
+                yield result
+        else:
+            yield
+        self._entered_count -= 1
+
+
 def dict_diff(left, right):
     u"""
     Computes a dictionary with the elements that are in the right but

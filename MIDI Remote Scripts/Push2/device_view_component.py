@@ -82,6 +82,19 @@ class CompressorDeviceViewConnector(DeviceViewConnector):
             self._view.routing_channel_position_list = device.routing_channel_position_list
 
 
+class InstrumentVectorDeviceViewConnector(DeviceViewConnector):
+
+    def update(self):
+        super(InstrumentVectorDeviceViewConnector, self).update()
+        device = self._value_for_state(self._device_component.device(), None)
+        if not (not liveobj_valid(device) or device.class_name == u'InstrumentVector'):
+            raise AssertionError
+            self._view.bank_view_description = self._parameter_provider.device_component.bank_view_description
+            self._view.visualisation_visible = self._parameter_provider.device_component.visualisation_visible
+            self._view.wavetable_visualisation_visible = liveobj_valid(device) and self._parameter_provider.device_component.wavetable_visualisation_visible
+            self._view.filter_visualisation_visible = self._parameter_provider.device_component.filter_visualisation_visible
+
+
 class DeviceViewComponent(ModesComponent):
 
     def __init__(self, device_component = None, view_model = None, *a, **k):
@@ -89,7 +102,10 @@ class DeviceViewComponent(ModesComponent):
         raise view_model is not None or AssertionError
         super(DeviceViewComponent, self).__init__(*a, **k)
         self._get_device = device_component.device
-        for view, connector, name in ((view_model.deviceParameterView, DeviceViewConnector, u'default'), (view_model.simplerDeviceView, SimplerDeviceViewConnector, u'OriginalSimpler'), (view_model.compressorDeviceView, CompressorDeviceViewConnector, u'Compressor2')):
+        for view, connector, name in ((view_model.deviceParameterView, DeviceViewConnector, u'default'),
+         (view_model.simplerDeviceView, SimplerDeviceViewConnector, u'OriginalSimpler'),
+         (view_model.compressorDeviceView, CompressorDeviceViewConnector, u'Compressor2'),
+         (view_model.instrumentVectorDeviceView, InstrumentVectorDeviceViewConnector, u'InstrumentVector')):
             view.visible = False
             self.add_mode(name, connector(device_component=device_component, parameter_provider=device_component, device_type_provider=self._device_type, view=view, is_enabled=False))
 

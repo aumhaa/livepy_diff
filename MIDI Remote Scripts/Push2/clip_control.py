@@ -1,5 +1,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
+from itertools import chain
+from contextlib import contextmanager
 from MidiRemoteScript import MutableVector
 from ableton.v2.base import listens, listens_group, liveobj_valid, listenable_property
 from ableton.v2.control_surface import Component, CompoundComponent
@@ -535,8 +537,9 @@ class MidiClipControllerComponent(CompoundComponent):
         self._visualisation_real_time_data = self.register_component(RealTimeDataComponent(channel_type=u'visualisation'))
         self.__on_visualisation_channel_changed.subject = self._visualisation_real_time_data
         self.__on_visualisation_attached.subject = self._visualisation_real_time_data
-        self._instruments_with_note_colors = []
+        self._instruments = []
         self._sequencers = []
+        self._mute_during_track_change_components = []
         self._note_settings_component = None
         self._note_editor_settings_component = None
 
@@ -578,9 +581,12 @@ class MidiClipControllerComponent(CompoundComponent):
 
     def add_instrument_component(self, instrument):
         self.__on_instrument_position_changed.add_subject(instrument)
+        self._instruments.append(instrument)
         if hasattr(instrument, u'note_colors'):
             self.__on_note_colors_changed.add_subject(instrument)
-            self._instruments_with_note_colors.append(instrument)
+
+    def add_mute_during_track_change_component(self, component):
+        self._mute_during_track_change_components.append(component)
 
     def add_paginator(self, paginator):
         self.__on_paginator_page_index_changed.add_subject(paginator)
@@ -599,6 +605,7 @@ class MidiClipControllerComponent(CompoundComponent):
 
     def update(self):
         super(MidiClipControllerComponent, self).update()
+        self._update_notification_mutes()
         if self.is_enabled():
             self.__on_matrix_mode_changed()
 
@@ -606,6 +613,8 @@ class MidiClipControllerComponent(CompoundComponent):
         self._visualisation_real_time_data.set_data(getattr(self.clip, u'proxied_object', self.clip))
         self.__on_clip_color_changed.subject = self.clip
         self.__on_visible_region_changed.subject = getattr(self.clip, u'timeline_navigation', None)
+        self.__on_focus_marker_changed.subject = getattr(self.clip, u'timeline_navigation', None)
+        self.__on_show_focus_changed.subject = getattr(self.clip, u'timeline_navigation', None)
 
     def _focus_grid_window(self):
         if liveobj_valid(self.clip) and self.get_static_view_data()[u'ShowGridWindow']:
@@ -640,6 +649,14 @@ class MidiClipControllerComponent(CompoundComponent):
     def __on_visible_region_changed(self, *a):
         self._configure_visualisation()
 
+    @listens(u'focus_marker')
+    def __on_focus_marker_changed(self, *a):
+        self._configure_visualisation()
+
+    @listens(u'show_focus')
+    def __on_show_focus_changed(self, *a):
+        self._configure_visualisation()
+
     @listens(u'matrix_mode_path')
     def __on_matrix_mode_changed(self):
         if self.is_enabled():
@@ -654,6 +671,7 @@ class MidiClipControllerComponent(CompoundComponent):
                 nav = self.clip.timeline_navigation
                 nav.set_focus_marker_without_updating_visible_region(u'start_marker')
             self._configure_visualisation()
+            self._update_notification_mutes()
 
     @listens_group(u'position')
     def __on_instrument_position_changed(self, instrument):
@@ -710,6 +728,22 @@ class MidiClipControllerComponent(CompoundComponent):
         if self._matrix_mode_watcher is not None:
             return self._matrix_mode_watcher.matrix_mode_path
 
+    def _update_notification_mutes(self):
+        for component in chain(self._sequencers, self._instruments):
+            if hasattr(component, u'show_notifications'):
+                component.show_notifications = not (self.is_enabled() and self.get_static_view_data()[u'ShowScrollbarCursor'])
+
+    def mute_components_during_track_change(self, muted):
+        if self.is_enabled():
+            for component in self._mute_during_track_change_components:
+                component.muted = muted
+
+    @contextmanager
+    def changing_track(self):
+        self.mute_components_during_track_change(True)
+        yield
+        self.mute_components_during_track_change(False)
+
     def _update_grid_window_pitch_range(self, view_data):
         if self.matrix_mode_path() == u'matrix_modes.note.instrument.split_melodic_sequencer':
             view_data[u'MinGridWindowPitch'] = self._most_recent_base_note
@@ -749,9 +783,9 @@ class MidiClipControllerComponent(CompoundComponent):
         note_colors = []
         matrix_mode = self.matrix_mode_path()
         if matrix_mode is not None and matrix_mode.startswith(u'matrix_modes.note.drums'):
-            enabled_instruments = filter(lambda instrument: instrument.is_enabled(), self._instruments_with_note_colors)
-            if len(enabled_instruments) == 1:
-                note_colors = enabled_instruments[0].note_colors
+            instruments_with_note_colors = filter(lambda instrument: instrument.is_enabled() and hasattr(instrument, u'note_colors'), self._instruments)
+            if len(instruments_with_note_colors) == 1:
+                note_colors = instruments_with_note_colors[0].note_colors
         view_data[u'NoteColors'] = make_color_vector(note_colors)
 
     def _configure_visualisation(self):
@@ -774,6 +808,11 @@ class MidiClipControllerComponent(CompoundComponent):
                 visible_region = self.clip.zoom.visible_region
                 view_data[u'DisplayStartTime'] = visible_region.start
                 view_data[u'DisplayEndTime'] = visible_region.end
+            if hasattr(self.clip, u'timeline_navigation'):
+                focus_marker = self.clip.timeline_navigation.focus_marker
+                view_data[u'FocusMarkerName'] = focus_marker.name
+                view_data[u'FocusMarkerPosition'] = focus_marker.position
+                view_data[u'ShowFocus'] = self.clip.timeline_navigation.show_focus
             view_data[u'NoteSettingsMode'] = self._note_settings_component is not None and self._note_settings_component.is_enabled()
             view_data[u'NoteSettingsTouched'] = self._note_editor_settings_component is not None and self._note_editor_settings_component.is_enabled() and self._note_editor_settings_component.is_touched
             view_data[u'EditingNotePitches'] = make_vector([ pitch for pitch, (start, end) in self._most_recent_editing_note_regions ])

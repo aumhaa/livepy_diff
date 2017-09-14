@@ -34,6 +34,7 @@ class APC(ControlSurface):
         self._device_id = 0
         self._common_channel = 0
         self._dongle_challenge = (Live.Application.get_random_int(0, 2000000), Live.Application.get_random_int(2000001, 4000000))
+        self._identity_response_pending = False
 
     def disconnect(self):
         self._do_uncombine()
@@ -52,11 +53,13 @@ class APC(ControlSurface):
 
     def _on_identity_response(self, midi_bytes):
         if midi_bytes[5] == MANUFACTURER_ID and midi_bytes[6] == self._product_model_id_byte():
-            version_bytes = midi_bytes[9:13]
-            self._device_id = midi_bytes[13]
-            self._send_introduction_message()
-            self._send_dongle_challenge()
-            self._log_version(version_bytes)
+            if self._identity_response_pending:
+                self._identity_response_pending = False
+                version_bytes = midi_bytes[9:13]
+                self._device_id = midi_bytes[13]
+                self._send_introduction_message()
+                self._send_dongle_challenge()
+                self._log_version(version_bytes)
 
     def _on_dongle_response(self, midi_bytes):
         if midi_bytes[1] == MANUFACTURER_ID and midi_bytes[3] == self._product_model_id_byte() and midi_bytes[2] == self._device_id and midi_bytes[5] == 0 and midi_bytes[6] == 16:
@@ -101,6 +104,7 @@ class APC(ControlSurface):
         return False
 
     def _send_identity_request(self):
+        self._identity_response_pending = False
         self._send_midi((240, 126, 0, 6, 1, 247))
 
     def _send_introduction_message(self, mode_byte = ABLETON_MODE):

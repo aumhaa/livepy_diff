@@ -317,9 +317,11 @@ SAT_BNK_NAMES = (u'General Controls', u'Waveshaper Controls')
 SMD_BANK1 = (u'L Beat Delay', u'L Beat Swing', u'L Time Delay', u'R Beat Delay', u'R Beat Swing', u'R Time Delay', u'Feedback', u'Dry/Wet')
 SMD_BANKS = (SMD_BANK1,)
 SMD_BOBS = (SMD_BANK1,)
-UTL_BANK1 = (u'StereoSeparation', u'BlockDc', u'PhaseInvertL', u'PhaseInvertR', u'Signal Source', u'Panorama', u'Mute', u'Gain')
-UTL_BANKS = (UTL_BANK1,)
+UTL_BANK1 = (u'Left Inv', u'Right Inv', u'Channel Mode', u'Stereo Width', u'Mono', u'Balance', u'Gain', u'Mute')
+UTL_BANK2 = (u'Bass Mono', u'Bass Freq', u'DC Filter', u'', u'', u'', u'', u'')
+UTL_BANKS = (UTL_BANK1, UTL_BANK2)
 UTL_BOBS = (UTL_BANK1,)
+UTL_BNK_NAMES = (u'General Controls', u'Low Frequency')
 VDS_BANK1 = (u'Tracing Freq.', u'Tracing Width', u'Tracing Drive', u'Crackle Density', u'Pinch Freq.', u'Pinch Width', u'Pinch Drive', u'Crackle Volume')
 VDS_BANKS = (VDS_BANK1,)
 VDS_BOBS = (VDS_BANK1,)
@@ -459,7 +461,8 @@ BANK_NAME_DICT = {u'AudioEffectGroupDevice': RCK_BNK_NAMES,
  u'Vocoder': VOC_BNK_NAMES,
  u'Amp': AMP_BNK_NAMES,
  u'GlueCompressor': GLU_BNK_NAMES,
- u'AutoFilter': AFL_BNK_NAMES}
+ u'AutoFilter': AFL_BNK_NAMES,
+ u'StereoGain': UTL_BNK_NAMES}
 MAX_DEVICES = (u'MxDeviceInstrument', u'MxDeviceAudioEffect', u'MxDeviceMidiEffect')
 
 def device_parameters_to_map(device):

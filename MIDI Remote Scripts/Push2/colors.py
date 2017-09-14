@@ -274,7 +274,7 @@ class ScreenColor(object):
         return ScreenColor.from_hsv(h, s, v)
 
 
-COLOR_INDEX_TO_PUSH_INDEX = (1, 4, 4, 10, 9, 13, 17, 16, 17, 18, 4, 4, 1, 5, 10, 10, 9, 12, 15, 16, 20, 22, 24, 4, 3, 7, 8, 8, 11, 14, 14, 15, 19, 20, 21, 25, 3, 6, 6, 6, 4, 9, 12, 15, 17, 2, 23, 2, 2, 5, 7, 10, 4, 11, 15, 19, 26, 4, 4, 4)
+COLOR_INDEX_TO_PUSH_INDEX = (26, 3, 4, 5, 7, 9, 11, 14, 19, 17, 19, 21, 23, 5, 1, 3, 4, 6, 8, 10, 12, 15, 16, 18, 20, 22, 25, 19, 2, 2, 5, 5, 8, 9, 13, 14, 14, 19, 21, 19, 26, 4, 2, 4, 4, 6, 10, 10, 15, 17, 17, 19, 19, 22, 24, 13, 1, 3, 4, 6, 10, 10, 13, 13, 18, 18, 22, 24, 24, 17)
 PUSH_INDEX_TO_SCREEN_COLOR = (ScreenColor(255, 255, 255),
  ScreenColor(255, 48, 0),
  ScreenColor(237, 89, 56),
@@ -308,7 +308,7 @@ COLOR_INDEX_TO_SCREEN_COLOR_SHADES = [tuple([ color.shade(0.2) for color in COLO
  tuple([ color.shade(0.7) for color in COLOR_INDEX_TO_SCREEN_COLOR ]),
  tuple([ color.shade(0.7).adjust_saturation(-0.2) for color in COLOR_INDEX_TO_SCREEN_COLOR ]),
  tuple([ color.adjust_saturation(-0.7) for color in COLOR_INDEX_TO_SCREEN_COLOR ])]
-PUSH_INDEX_TO_COLOR_INDEX = (1, 48, 37, 41, 50, 38, 26, 28, 17, 16, 29, 18, 6, 31, 19, 20, 7, 10, 33, 21, 35, 22, 47, 23, 36, 57)
+PUSH_INDEX_TO_COLOR_INDEX = (15, 29, 2, 3, 4, 18, 5, 19, 6, 20, 7, 21, 35, 8, 22, 23, 10, 24, 9, 25, 12, 26, 13, 55, 27, 1)
 COLOR_TABLE = ((0, 0, 0),
  (1, 15865344, 2),
  (2, 16728114, 4),

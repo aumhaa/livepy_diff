@@ -1,5 +1,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
+from Live import DeviceParameter
 from ableton.v2.base import clamp, liveobj_valid, listenable_property, listens, const, EventObject, Slot
 
 class DeviceTriggerOption(EventObject):
@@ -53,7 +54,7 @@ class DeviceSwitchOption(DeviceTriggerOption):
         self.notify_active()
 
     def _is_active(self):
-        return super(DeviceSwitchOption, self)._is_active() and liveobj_valid(self._parameter)
+        return super(DeviceSwitchOption, self)._is_active() and liveobj_valid(self._parameter) and self._parameter.state == DeviceParameter.ParameterState.enabled
 
     @listenable_property
     def active_index(self):
@@ -80,24 +81,28 @@ class DeviceOnOffOption(DeviceTriggerOption):
     ON_LABEL = u'ON'
     OFF_LABEL = u'OFF'
 
-    def __init__(self, name = None, property_host = None, property_name = u'', *a, **k):
+    def __init__(self, name = None, property_host = None, value_property_name = u'value', state_property_name = u'state', *a, **k):
         super(DeviceOnOffOption, self).__init__(callback=self.cycle_index, name=name, *a, **k)
+        self._value_property_name = value_property_name
+        self._state_property_name = state_property_name
+        self.set_property_host(property_host)
+
+    def set_property_host(self, property_host):
         self._property_host = property_host
-        self._property_name = property_name
 
         def notify_index_and_default_label():
             self.notify_active_index()
             self.notify_default_label()
 
-        self._property_slot = self.register_slot(Slot(subject=property_host, event_name=property_name, listener=notify_index_and_default_label))
+        self._property_slot = self.register_slot(Slot(subject=property_host, event_name=self._value_property_name, listener=notify_index_and_default_label))
 
     def _property_value(self):
         if liveobj_valid(self._property_host):
-            return getattr(self._property_host, self._property_name, False)
+            return getattr(self._property_host, self._value_property_name, False)
         return False
 
     def _is_active(self):
-        return super(DeviceOnOffOption, self)._is_active() and liveobj_valid(self._property_host)
+        return super(DeviceOnOffOption, self)._is_active() and liveobj_valid(self._property_host) and getattr(self._property_host, self._state_property_name, 0) == DeviceParameter.ParameterState.enabled
 
     @listenable_property
     def active_index(self):
@@ -107,7 +112,7 @@ class DeviceOnOffOption(DeviceTriggerOption):
         if liveobj_valid(self._property_host):
             value_type = type(self._property_value())
             new_value = not bool((self.active_index + 1) % 2)
-            setattr(self._property_host, self._property_name, value_type(new_value))
+            setattr(self._property_host, self._value_property_name, value_type(new_value))
 
     @property
     def default_label(self):

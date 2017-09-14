@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import functools
 import traceback
 from .Dependency import depends
-from .Util import remove_if, find_if, linear as linear_fn, print_message, const
+from .Util import remove_if, find_if, linear as linear_fn, print_message, const, nop
 
 class TaskError(Exception):
     pass
@@ -365,6 +365,25 @@ class SequenceTask(Task):
 
         self._iter = iter(self._tasks)
         self._advance_sequence()
+
+
+class TimedCallbackTask(SequenceTask):
+    _callback = nop
+
+    def start(self, duration, callback):
+        if duration is not None:
+            self._tasks = [DelayTask(duration), FuncTask(self._call)]
+            self._callback = callback or nop
+        else:
+            self._tasks = []
+        self.restart()
+
+    def _call(self, _time_expired):
+        self.cancel()
+        self._callback()
+
+    def cancel(self):
+        self.kill()
 
 
 def totask(task):

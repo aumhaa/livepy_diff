@@ -5,7 +5,7 @@ from functools import partial
 from itertools import imap
 from ableton.v2.base import clamp, const, inject, listens, listens_group, liveobj_valid, NamedTuple, nop
 from ableton.v2.control_surface import BackgroundLayer, ClipCreator, ControlSurface, DeviceBankRegistry, Layer, midi
-from ableton.v2.control_surface.components import BackgroundComponent, M4LInterfaceComponent, ModifierBackgroundComponent, SessionNavigationComponent, SessionRingComponent, SessionOverviewComponent, ViewControlComponent
+from ableton.v2.control_surface.components import BackgroundComponent, ModifierBackgroundComponent, SessionNavigationComponent, SessionRingComponent, SessionOverviewComponent, ViewControlComponent
 from ableton.v2.control_surface.elements import ButtonElement, ButtonMatrixElement, ChoosingElement, ComboElement, DoublePressContext, MultiElement, OptionalElement, to_midi_value
 from ableton.v2.control_surface.mode import AddLayerMode, LayerMode, LazyComponentMode, ReenterBehaviour, ModesComponent
 from .accent_component import AccentComponent
@@ -149,7 +149,6 @@ class PushBase(ControlSurface):
         self._init_note_repeat()
         self._init_matrix_modes()
         self._init_device()
-        self._init_m4l_interface()
 
     def _create_injector(self):
         return inject(double_press_context=const(self._double_press_context), expect_dialog=const(self.expect_dialog), show_notification=const(self.show_notification), selection=lambda : PushSelection(application=self.application, device_component=self._device_component, navigation_component=self._device_navigation))
@@ -563,7 +562,7 @@ class PushBase(ControlSurface):
         self._view_control_session_layer = Layer(prev_scene_button=OptionalElement(u'nav_up_button', self._settings[u'workflow'], False), next_scene_button=OptionalElement(u'nav_down_button', self._settings[u'workflow'], False), prev_scene_list_button=OptionalElement(u'nav_up_button', self._settings[u'workflow'], True), next_scene_list_button=OptionalElement(u'nav_down_button', self._settings[u'workflow'], True)) + self._view_control_arrangement_layer
         self._session_recording = self._create_session_recording()
         new_button = MultiElement(self.elements.new_button, self.elements.foot_pedal_button.double_press)
-        session_recording_base_layer = Layer(automation_button=u'automation_button', new_scene_button=self._with_shift(u'new_button'), re_enable_automation_button=self._with_shift(u'automation_button'), delete_automation_button=ComboElement(u'automation_button', u'delete_button'), foot_switch_button=self.elements.foot_pedal_button.single_press, capture_midi_to_new_scene_button=ComboElement(u'new_button', modifier=u'record_button'), _uses_foot_pedal=u'foot_pedal_button')
+        session_recording_base_layer = Layer(automation_button=u'automation_button', new_scene_button=self._with_shift(u'new_button'), re_enable_automation_button=self._with_shift(u'automation_button'), delete_automation_button=ComboElement(u'automation_button', u'delete_button'), foot_switch_button=self.elements.foot_pedal_button.single_press, capture_midi_button=ComboElement(u'new_button', modifier=u'record_button'), _uses_foot_pedal=u'foot_pedal_button')
         self._session_recording_arrangement_layer = Layer(record_button=self._with_shift(u'record_button'), arrangement_record_button=u'record_button') + session_recording_base_layer
         self._session_recording_session_layer = Layer(record_button=u'record_button', arrangement_record_button=self._with_shift(u'record_button'), new_button=OptionalElement(new_button, self._settings[u'workflow'], False), scene_list_new_button=OptionalElement(new_button, self._settings[u'workflow'], True)) + session_recording_base_layer
         self.__on_session_visible_changed.subject = self.application.view
@@ -771,12 +770,8 @@ class PushBase(ControlSurface):
         self._master_cue_vol = ParameterValueComponent(self.song.master_track.mixer_device.cue_volume, display_label=u'Cue Volume:', display_seg_start=3, name=u'Cue_Volume_Display', is_root=True)
         self._master_cue_vol.layer = Layer(encoder=self._with_shift(u'master_volume_control'))
 
-    def _init_m4l_interface(self):
-        self._m4l_interface = M4LInterfaceComponent(controls=self.controls, component_guard=self.component_guard, priority=consts.M4L_PRIORITY, is_root=True)
-        self.get_control_names = self._m4l_interface.get_control_names
-        self.get_control = self._m4l_interface.get_control
-        self.grab_control = self._m4l_interface.grab_control
-        self.release_control = self._m4l_interface.release_control
+    def mxd_grab_control_priority(self):
+        return consts.M4L_PRIORITY
 
     @listens(u'selected_mode')
     def __on_note_editor_layout_changed(self, mode):

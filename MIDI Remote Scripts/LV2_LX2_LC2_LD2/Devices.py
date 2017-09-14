@@ -198,9 +198,11 @@ RSN_BNK_NAMES = (u'General / Mode I', u'Modes II-IV')
 SMD_BANK1 = (u'L Beat Delay', u'L Beat Swing', u'L Time Delay', u'Dry/Wet', u'R Beat Delay', u'R Beat Swing', u'R Time Delay', u'Feedback')
 SMD_BANKS = SMD_BANK1
 SMD_BOBS = SMD_BANK1
-UTL_BANK1 = (u'StereoSeparation', u'Panorama', u'Mute', u'BlockDc', u'Signal Source', u'Gain', u'PhaseInvertL', u'PhaseInvertR')
-UTL_BANKS = UTL_BANK1
-UTL_BOBS = UTL_BANK1
+UTL_BANK1 = (u'Left Inv', u'Right Inv', u'Channel Mode', u'Stereo Width', u'Mono', u'Balance', u'Gain', u'Mute')
+UTL_BANK2 = (u'Bass Mono', u'Bass Freq', u'DC Filter', u'', u'', u'', u'', u'')
+UTL_BANKS = (UTL_BANK1, UTL_BANK2)
+UTL_BOBS = (UTL_BANK1,)
+UTL_BANK_NAMES = (u'General Controls', u'Low Frequency')
 RVB_BANK1 = (u'In Filter Freq', u'In Filter Width', u'PreDelay', u'ER Spin On', u'ER Spin Rate', u'ER Spin Amount', u'ER Shape', u'DecayTime')
 RVB_BANK2 = (u'HiShelf Freq', u'LowShelf Freq', u'Chorus Rate', u'Density', u'HiShelf Gain', u'LowShelf Gain', u'Chorus Amount', u'Scale')
 RVB_BANK3 = (u'DecayTime', u'Freeze On', u'Room Size', u'Stereo Image', u'ER Level', u'Diffuse Level', u'Dry/Wet', u'Quality')
@@ -315,7 +317,8 @@ BANK_NAME_DICT = {u'AudioEffectGroupDevice': RCK_BNK_NAMES,
  u'Phaser': PHS_BNK_NAMES,
  u'Saturator': SAT_BNK_NAMES,
  u'Resonator': RSN_BNK_NAMES,
- u'Reverb': RVB_BNK_NAMES}
+ u'Reverb': RVB_BNK_NAMES,
+ u'StereoGain': UTL_BANK_NAMES}
 DEVICE_DICT = {u'AudioEffectGroupDevice': RCK_BANKS,
  u'MidiEffectGroupDevice': RCK_BANKS,
  u'InstrumentGroupDevice': RCK_BANKS,

@@ -160,6 +160,8 @@ class DeviceParameter(Binding):
     max = view_property(float, 0.0)
     value = view_property(float, 0.0)
     valueItems = view_property(listof(unicode))
+    valueItemImages = view_property(listof(unicode))
+    valueItemSmallImages = view_property(listof(unicode))
     displayValue = view_property(unicode, u'')
     unit = view_property(unicode, u'')
     id = id_property()
@@ -252,6 +254,7 @@ class DeviceParameterListModel(ViewModel):
 
 
 class DeviceVisualisationModel(Binding):
+    shrink_parameters = view_property(listof(bool))
     visualisation_real_time_channel_id = view_property(unicode, u'')
 
 
@@ -327,6 +330,17 @@ class CompressorDeviceViewModel(ViewModel):
     routing_channel_position_list = view_property(RoutingChannelPositionList)
 
 
+class InstrumentVectorDeviceViewModel(ViewModel):
+    visible = view_property(bool, False)
+    deviceType = view_property(unicode, u'')
+    device = view_property(Device)
+    parameters = view_property(listof(DeviceParameter))
+    bank_view_description = view_property(unicode, u'')
+    visualisation_visible = view_property(bool, False)
+    wavetable_visualisation_visible = view_property(bool, False)
+    filter_visualisation_visible = view_property(bool, False)
+
+
 class TrackControlModel(Binding):
     ADAPTER = TrackControlAdapter
     track_control_mode = view_property(unicode, u'')
@@ -347,6 +361,7 @@ class BrowserItem(Binding):
     icon = view_property(unicode, u'')
     is_loadable = view_property(bool, False)
     is_device = view_property(bool, False)
+    color_label_index = view_property(int, -1)
 
 
 class BrowserLoadNeighbourOverlay(Binding):
@@ -634,6 +649,26 @@ class VisualisationSettings(Binding):
     shade3_colors = view_property(listof(Color))
     shade4_colors = view_property(listof(Color))
     shade5_colors = view_property(listof(Color))
+    button_left = view_property(int, 0)
+    light_left = view_property(int, 0)
+    light_right = view_property(int, 0)
+    button_right = view_property(int, 0)
+    row_top = view_property(int, 0)
+    body_top = view_property(int, 0)
+    body_bottom = view_property(int, 0)
+    row_bottom = view_property(int, 0)
+    button_spacing = view_property(int, 0)
+    row_spacing = view_property(int, 0)
+    body_height = view_property(int, 0)
+    body_margin = view_property(int, 0)
+    button_light_margin = view_property(int, 0)
+    button_gap = view_property(int, 0)
+    row_height = view_property(int, 0)
+    row_gap = view_property(int, 0)
+    screen_width = view_property(int, 0)
+    screen_height = view_property(int, 0)
+    visualisation_left = view_property(int, 0)
+    visualisation_top = view_property(int, 0)
 
 
 class RootModel(ViewModel):
@@ -651,6 +686,7 @@ class RootModel(ViewModel):
     deviceParameterView = view_property(DeviceParameterListModel)
     simplerDeviceView = view_property(SimplerDeviceViewModel)
     compressorDeviceView = view_property(CompressorDeviceViewModel)
+    instrumentVectorDeviceView = view_property(InstrumentVectorDeviceViewModel)
     deviceVisualisation = view_property(DeviceVisualisationModel)
     mixerView = view_property(MixerViewModel)
     tracklistView = view_property(TrackListModel)

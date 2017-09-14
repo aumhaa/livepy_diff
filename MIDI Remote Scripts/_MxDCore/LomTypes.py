@@ -46,73 +46,109 @@ def routing_object_to_dict(routing_type):
      u'identifier': hash(routing_type)}
 
 
-def available_routing_objects_to_json(track, property_name):
-    verify_routings_available_for_track(track, property_name)
-    property_value = getattr(track, property_name)
+def available_routing_objects_to_json(obj, property_name):
+    property_value = getattr(obj, property_name)
     return data_dict_to_json(property_name, tuple([ routing_object_to_dict(t) for t in property_value ]))
 
 
+def available_track_routing_objects_to_json(track, property_name):
+    verify_routings_available_for_track(track, property_name)
+    return available_routing_objects_to_json(track, property_name)
+
+
 def available_routing_input_types_to_json(track):
-    return available_routing_objects_to_json(track, u'available_input_routing_types')
+    return available_track_routing_objects_to_json(track, u'available_input_routing_types')
 
 
 def available_routing_output_types_to_json(track):
-    return available_routing_objects_to_json(track, u'available_output_routing_types')
+    return available_track_routing_objects_to_json(track, u'available_output_routing_types')
 
 
 def available_routing_input_channels_to_json(track):
-    return available_routing_objects_to_json(track, u'available_input_routing_channels')
+    return available_track_routing_objects_to_json(track, u'available_input_routing_channels')
 
 
 def available_routing_output_channels_to_json(track):
-    return available_routing_objects_to_json(track, u'available_output_routing_channels')
+    return available_track_routing_objects_to_json(track, u'available_output_routing_channels')
 
 
-def routing_object_to_json(track, property_name):
-    verify_routings_available_for_track(track, property_name)
-    property_value = getattr(track, property_name)
+def available_routing_types_to_json(device):
+    return available_routing_objects_to_json(device, u'available_routing_types')
+
+
+def available_routing_channels_to_json(device):
+    return available_routing_objects_to_json(device, u'available_routing_channels')
+
+
+def routing_object_to_json(obj, property_name):
+    property_value = getattr(obj, property_name)
     return data_dict_to_json(property_name, routing_object_to_dict(property_value))
 
 
+def routing_track_object_to_json(track, property_name):
+    verify_routings_available_for_track(track, property_name)
+    return routing_object_to_json(track, property_name)
+
+
 def routing_input_type_to_json(track):
-    return routing_object_to_json(track, u'input_routing_type')
+    return routing_track_object_to_json(track, u'input_routing_type')
 
 
 def routing_output_type_to_json(track):
-    return routing_object_to_json(track, u'output_routing_type')
+    return routing_track_object_to_json(track, u'output_routing_type')
 
 
 def routing_input_channel_to_json(track):
-    return routing_object_to_json(track, u'input_routing_channel')
+    return routing_track_object_to_json(track, u'input_routing_channel')
 
 
 def routing_output_channel_to_json(track):
-    return routing_object_to_json(track, u'output_routing_channel')
+    return routing_track_object_to_json(track, u'output_routing_channel')
 
 
-def json_to_routing_object(track, property_name, json_dict):
-    verify_routings_available_for_track(track, property_name)
-    objects = getattr(track, u'available_%ss' % property_name, [])
+def routing_type_to_json(device):
+    return routing_object_to_json(device, u'routing_type')
+
+
+def routing_channel_to_json(device):
+    return routing_object_to_json(device, u'routing_channel')
+
+
+def json_to_routing_object(obj, property_name, json_dict):
+    objects = getattr(obj, u'available_%ss' % property_name, [])
     identifier = json_to_data_dict(property_name, json_dict)[u'identifier']
     for routing_object in objects:
         if hash(routing_object) == identifier:
             return routing_object
 
 
+def json_to_track_routing_object(track, property_name, json_dict):
+    verify_routings_available_for_track(track, property_name)
+    return json_to_routing_object(track, property_name, json_dict)
+
+
 def json_to_input_routing_type(track, json_dict):
-    return json_to_routing_object(track, u'input_routing_type', json_dict)
+    return json_to_track_routing_object(track, u'input_routing_type', json_dict)
 
 
 def json_to_output_routing_type(track, json_dict):
-    return json_to_routing_object(track, u'output_routing_type', json_dict)
+    return json_to_track_routing_object(track, u'output_routing_type', json_dict)
 
 
 def json_to_input_routing_channel(track, json_dict):
-    return json_to_routing_object(track, u'input_routing_channel', json_dict)
+    return json_to_track_routing_object(track, u'input_routing_channel', json_dict)
 
 
 def json_to_output_routing_channel(track, json_dict):
-    return json_to_routing_object(track, u'output_routing_channel', json_dict)
+    return json_to_track_routing_object(track, u'output_routing_channel', json_dict)
+
+
+def json_to_routing_type(device, json_dict):
+    return json_to_routing_object(device, u'routing_type', json_dict)
+
+
+def json_to_routing_channel(device, json_dict):
+    return json_to_routing_object(device, u'routing_channel', json_dict)
 
 
 _DEVICE_BASE_PROPS = [MFLProperty(u'canonical_parent'),
@@ -150,7 +186,8 @@ EXPOSED_TYPE_PROPERTIES = {Live.Application.Application: (MFLProperty(u'view'),
                                 MFLProperty(u'get_document'),
                                 MFLProperty(u'get_major_version'),
                                 MFLProperty(u'get_minor_version'),
-                                MFLProperty(u'press_current_dialog_button')),
+                                MFLProperty(u'press_current_dialog_button'),
+                                MFLProperty(u'control_surfaces')),
  Live.Application.Application.View: (MFLProperty(u'canonical_parent'),
                                      MFLProperty(u'browse_mode'),
                                      MFLProperty(u'focused_document_view'),
@@ -266,6 +303,10 @@ EXPOSED_TYPE_PROPERTIES = {Live.Application.Application: (MFLProperty(u'view'),
                                         MFLProperty(u're_enable_automation'),
                                         MFLProperty(u'str_for_value'),
                                         MFLProperty(u'__str__')),
+ Live.DeviceIO.DeviceIO: (MFLProperty(u'available_routing_channels', format=MFLPropertyFormats.JSON, to_json=available_routing_channels_to_json, min_epii_version=(4, 4)),
+                          MFLProperty(u'available_routing_types', format=MFLPropertyFormats.JSON, to_json=available_routing_types_to_json, min_epii_version=(4, 4)),
+                          MFLProperty(u'routing_channel', format=MFLPropertyFormats.JSON, to_json=routing_channel_to_json, from_json=json_to_routing_channel, min_epii_version=(4, 4)),
+                          MFLProperty(u'routing_type', format=MFLPropertyFormats.JSON, to_json=routing_type_to_json, from_json=json_to_routing_type, min_epii_version=(4, 4))),
  Live.DrumChain.DrumChain: tuple(_CHAIN_BASE_PROPS + [MFLProperty(u'out_note'), MFLProperty(u'choke_group')]),
  Live.DrumPad.DrumPad: (MFLProperty(u'canonical_parent'),
                         MFLProperty(u'chains'),
@@ -275,7 +316,11 @@ EXPOSED_TYPE_PROPERTIES = {Live.Application.Application: (MFLProperty(u'view'),
                         MFLProperty(u'solo'),
                         MFLProperty(u'delete_all_chains')),
  Live.Eq8Device.Eq8Device.View: tuple(_DEVICE_VIEW_BASE_PROPS + [MFLProperty(u'selected_band')]),
- Live.MaxDevice.MaxDevice: tuple(_DEVICE_BASE_PROPS + [MFLProperty(u'get_bank_count'), MFLProperty(u'get_bank_name'), MFLProperty(u'get_bank_parameters')]),
+ Live.MaxDevice.MaxDevice: tuple(_DEVICE_BASE_PROPS + [MFLProperty(u'get_bank_count'),
+                            MFLProperty(u'get_bank_name'),
+                            MFLProperty(u'get_bank_parameters'),
+                            MFLProperty(u'outputs'),
+                            MFLProperty(u'inputs')]),
  Live.MixerDevice.MixerDevice: (MFLProperty(u'canonical_parent'),
                                 MFLProperty(u'sends'),
                                 MFLProperty(u'cue_volume'),
@@ -400,6 +445,8 @@ EXPOSED_TYPE_PROPERTIES = {Live.Application.Application: (MFLProperty(u'view'),
                   MFLProperty(u'swing_amount'),
                   MFLProperty(u'tempo'),
                   MFLProperty(u'capture_and_insert_scene'),
+                  MFLProperty(u'capture_midi'),
+                  MFLProperty(u'can_capture_midi'),
                   MFLProperty(u'continue_playing'),
                   MFLProperty(u'create_audio_track'),
                   MFLProperty(u'create_midi_track'),
@@ -510,6 +557,7 @@ EXPOSED_TYPE_PROPERTIES = {Live.Application.Application: (MFLProperty(u'view'),
                          MFLProperty(u'is_collapsed'),
                          MFLProperty(u'select_instrument'))}
 HIDDEN_TYPE_PROPERTIES = {Live.Sample.Sample: (u'slices',)}
+EXTRA_CS_FUNCTIONS = (u'get_control_names', u'get_control', u'grab_control', u'release_control')
 ENUM_TYPES = (Live.Song.Quantization,
  Live.Song.RecordingQuantization,
  Live.Song.CaptureMode,
@@ -532,7 +580,9 @@ TUPLE_TYPES = {u'tracks': Live.Track.Track,
  u'visible_drum_pads': Live.DrumPad.DrumPad,
  u'control_surfaces': ControlSurface,
  u'components': ControlSurfaceComponent,
- u'controls': ControlElement}
+ u'controls': ControlElement,
+ u'outputs': Live.DeviceIO.DeviceIO,
+ u'inputs': Live.DeviceIO.DeviceIO}
 PROPERTY_TYPES = {u'master_track': Live.Track.Track,
  u'selected_track': Live.Track.Track,
  u'selected_scene': Live.Scene.Scene,
@@ -645,6 +695,12 @@ def cs_base_classes():
      ControlSurface2,
      ControlSurfaceComponent2,
      ControlElement2)
+
+
+def is_control_surface(lom_object):
+    from _Framework.ControlSurface import ControlSurface
+    from ableton.v2.control_surface import ControlSurface as ControlSurface2
+    return isinstance(lom_object, (ControlSurface, ControlSurface2))
 
 
 def is_lom_object(lom_object, lom_classes):

@@ -151,6 +151,7 @@ class Layer(LayerBase):
         self._element_to_names = dict()
         self._element_clients = dict()
         for name, element in elements.iteritems():
+            raise get_element(element) is not None or AssertionError(name)
             self._element_to_names.setdefault(get_element(element), []).append(name)
 
     def __getattr__(self, name):

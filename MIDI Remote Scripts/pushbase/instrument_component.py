@@ -115,6 +115,7 @@ class InstrumentComponent(PlayableComponent, CompoundComponent, Slideable, Messe
         self._has_notes = [False] * 128
         self._has_notes_pattern = self._get_pattern(0)
         self._aftertouch_control = None
+        self._show_notifications = True
         self.__on_detail_clip_changed.subject = self.song.view
         self.__on_detail_clip_changed()
         self._slider = self.register_component(SlideComponent(self))
@@ -167,6 +168,14 @@ class InstrumentComponent(PlayableComponent, CompoundComponent, Slideable, Messe
                 return self._has_notes[note]
             return False
         return False
+
+    @property
+    def show_notifications(self):
+        return self._show_notifications
+
+    @show_notifications.setter
+    def show_notifications(self, value):
+        self._show_notifications = value
 
     @property
     def page_length(self):
@@ -286,7 +295,7 @@ class InstrumentComponent(PlayableComponent, CompoundComponent, Slideable, Messe
         self._update_scale()
 
     def show_pitch_range_notification(self):
-        if self.is_enabled():
+        if self.is_enabled() and self.show_notifications:
             self.show_notification(u'Play {start_note} to {end_note}'.format(start_note=pitch_index_to_string(self.pattern.note(0, 0).index), end_note=pitch_index_to_string(self.pattern.note(self.width - 1, self.height - 1).index)))
 
     def _update_scale(self):

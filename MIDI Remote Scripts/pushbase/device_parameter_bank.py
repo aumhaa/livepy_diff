@@ -120,6 +120,7 @@ class MaxDeviceParameterBank(DeviceParameterBank):
     def __init__(self, *a, **k):
         super(MaxDeviceParameterBank, self).__init__(*a, **k)
         raise hasattr(self._device, u'get_bank_count') or AssertionError
+        self._on_bank_parameters_changed.subject = self.device
 
     def _calc_name(self):
         if self.bank_count() == 0:
@@ -129,6 +130,10 @@ class MaxDeviceParameterBank(DeviceParameterBank):
         if len(provided_name) > 0:
             return provided_name
         return super(MaxDeviceParameterBank, self)._calc_name()
+
+    @listens(u'bank_parameters_changed')
+    def _on_bank_parameters_changed(self):
+        self._update_parameters()
 
     def _collect_parameters(self):
         if self.bank_count() == 0:

@@ -7,7 +7,7 @@ import logging
 import weakref
 import Live
 import MidiRemoteScript
-from ableton.v2.base import const, inject, listens, listens_group, task, EventObject, NamedTuple
+from ableton.v2.base import const, inject, listens, listens_group, task, OutermostOnlyContext, EventObject, NamedTuple
 from ableton.v2.control_surface import BackgroundLayer, Component, IdentifiableControlSurface, Layer, get_element
 from ableton.v2.control_surface.defaults import TIMER_DELAY
 from ableton.v2.control_surface.elements import ButtonMatrixElement, ComboElement, SysexElement
@@ -134,6 +134,7 @@ class Push2(IdentifiableControlSurface, PushBase):
             self._real_time_data_list = []
             self._matrix_mode_map = {}
             self.bank_definitions = bank_definitions is not None and bank_definitions
+        self._changing_track_context = OutermostOnlyContext()
         super(Push2, self).__init__(c_instance=c_instance, product_id_bytes=sysex.IDENTITY_RESPONSE_PRODUCT_ID_BYTES, *a, **k)
         self._board_revision = 0
         self._firmware_collector = FirmwareCollector()
@@ -540,8 +541,8 @@ class Push2(IdentifiableControlSurface, PushBase):
         self._close_browse_mode()
 
     def _create_device_component(self):
-        device_component_layer = Layer(parameter_touch_buttons=ButtonMatrixElement(rows=[self.elements.global_param_touch_buttons_raw]))
-        return DeviceComponentProvider(touch_encoder_layer=device_component_layer, device_decorator_factory=self._device_decorator_factory, device_bank_registry=self._device_bank_registry, banking_info=self._banking_info, name=u'DeviceComponent', is_enabled=False)
+        device_component_layer = Layer(parameter_touch_buttons=ButtonMatrixElement(rows=[self.elements.global_param_touch_buttons_raw]), shift_button=u'shift_button')
+        return DeviceComponentProvider(device_component_layer=device_component_layer, device_decorator_factory=self._device_decorator_factory, device_bank_registry=self._device_bank_registry, banking_info=self._banking_info, name=u'DeviceComponent', is_enabled=False)
 
     def _create_device_parameter_component(self):
         return DeviceParameterComponent(parameter_provider=self._device_component, is_enabled=False, layer=Layer(parameter_controls=u'fine_grain_param_controls'))
@@ -568,6 +569,14 @@ class Push2(IdentifiableControlSurface, PushBase):
         self._model.chainListView = self._chain_selection
         self._model.parameterBankListView = self._bank_selection
         self._model.editModeOptionsView = self._bank_selection.options
+
+    def _init_matrix_modes(self):
+        super(Push2, self)._init_matrix_modes()
+        self._midi_clip_controller.add_mute_during_track_change_component(self._drum_modes)
+
+    def _init_instrument(self):
+        super(Push2, self)._init_instrument()
+        self._midi_clip_controller.add_mute_during_track_change_component(self._instrument)
 
     def _create_view_control_component(self):
         return ViewControlComponent(name=u'View_Control', tracks_provider=self._session_ring)
@@ -781,6 +790,10 @@ class Push2(IdentifiableControlSurface, PushBase):
 
     def _update_encoder_model(self):
         self._model.controls.encoders = [ NamedTuple(__id__=u'encoder_%i' % i, touched=e.is_pressed()) for i, e in enumerate(self.elements.global_param_touch_buttons_raw) ]
+
+    def reset_controlled_track(self, mode = None):
+        with self._changing_track_context(self._midi_clip_controller.changing_track()):
+            super(Push2, self).reset_controlled_track(mode)
 
     def _with_firmware_version(self, major_version, minor_version, control_element):
         u"""

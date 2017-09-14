@@ -198,11 +198,10 @@ class EffectController(RemoteSLComponent):
                 self.__reassign_strips()
 
     def set_appointed_device(self, device):
-        if self.__assigned_device_is_locked:
-            self.__assigned_device_is_locked = False
-        self.__change_assigned_device(device)
-        self.__update_select_row_leds()
-        self.__reassign_strips()
+        if not self.__assigned_device_is_locked:
+            self.__change_assigned_device(device)
+            self.__update_select_row_leds()
+            self.__reassign_strips()
 
     def __report_bank(self):
         if self.__show_bank:

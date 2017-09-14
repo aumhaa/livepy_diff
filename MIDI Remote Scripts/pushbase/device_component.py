@@ -24,7 +24,6 @@ class DeviceComponent(ParameterProvider, CompoundComponent):
         self._device_bank_registry = device_bank_registry
         super(DeviceComponent, self).__init__(*a, **k)
         self._initialize_subcomponents()
-        self.__on_bank_changed.subject = device_bank_registry
         self.__on_provided_device_changed.subject = device_provider
         self.__on_provided_device_changed()
 
@@ -43,9 +42,10 @@ class DeviceComponent(ParameterProvider, CompoundComponent):
 
     @listens(u'device_bank')
     def __on_bank_changed(self, device, bank):
-        self._set_bank_index(device, bank)
+        if device == self.device():
+            self._set_bank_index(bank)
 
-    def _set_bank_index(self, device, bank):
+    def _set_bank_index(self, bank):
         if self._bank is not None:
             self._bank.index = bank
 
@@ -91,8 +91,10 @@ class DeviceComponent(ParameterProvider, CompoundComponent):
         self._set_device_for_subcomponents(device)
         decorated_device = self._get_decorated_device(device)
         self._set_decorated_device(decorated_device)
-        bank_index_for_device = self._device_bank_registry.get_device_bank(device)
-        self._set_bank_index(device, bank_index_for_device)
+        device_bank_registry = self._device_bank_registry
+        self.__on_bank_changed.subject = device_bank_registry
+        bank_index_for_device = device_bank_registry.get_device_bank(device)
+        self._set_bank_index(bank_index_for_device)
         self.notify_device()
         self._update_parameters()
         self.__on_parameters_changed_in_device.subject = device

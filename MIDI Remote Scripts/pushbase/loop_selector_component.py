@@ -416,9 +416,8 @@ class LoopSelectorComponent(Component, Messenger):
         return (page_start, page_end)
 
     def _add_page_to_duplicator(self, page):
-        nudge_offset = self.page_offset
         page_start, page_end = self._selected_pages_time_range(page)
-        self._step_duplicator.add_step(page_start, page_end, nudge_offset, True)
+        self._step_duplicator.add_step(page_start, page_end, nudge_offset=0, is_page=True)
 
     def _on_press_loop_selector_matrix(self, page):
 

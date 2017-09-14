@@ -925,9 +925,25 @@ class UserFilesBrowserItem(BrowserItem):
         return res
 
 
+class CollectionsBrowserItem(BrowserItem):
+
+    def __init__(self, browser, *a, **k):
+        super(CollectionsBrowserItem, self).__init__(*a, **k)
+        self._browser = browser
+
+    @property
+    def is_selected(self):
+        return any(imap(lambda c: c.is_selected, self.children))
+
+    @lazy_attribute
+    def children(self):
+        color_labels = wrap_items(list(self._browser.colors), u'browser_collection_icon.svg', enable_wrapping=False)
+        self._browser = None
+        return color_labels
+
+
 def make_root_browser_items(browser, filter_type):
-    has_option = Live.Application.get_application().has_option
-    color_tags = wrap_items(list(browser.colors), u'browser_favorites.svg', enable_wrapping=False)
+    collections = CollectionsBrowserItem(browser, name=u'Collections', icon=u'browser_collections.svg')
     sounds = wrap_item(browser.sounds, u'browser_sounds.svg')
     drums = wrap_item(browser.drums, u'browser_drums.svg', enable_wrapping=False)
     instruments = wrap_item(browser.instruments, u'browser_instruments.svg')
@@ -953,4 +969,4 @@ def make_root_browser_items(browser, filter_type):
              audio_effects,
              midi_effects] + common_items
     user_files = UserFilesBrowserItem(browser, name=u'User Files', icon=u'browser_userfiles.svg')
-    return color_tags + [user_files] + categories
+    return [collections, user_files] + categories

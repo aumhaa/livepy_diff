@@ -1,7 +1,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 import Live
-from ableton.v2.base import clamp, listens, liveobj_valid, nop, EventObject, forward_property, listenable_property
+from ableton.v2.base import EventObject, clamp, forward_property, listenable_property, listens, liveobj_valid, nop
 from ableton.v2.control_surface import Component
 from ableton.v2.control_surface.control import ButtonControl, control_list, EncoderControl, StepEncoderControl
 from ableton.v2.control_surface.mode import ModesComponent
@@ -147,7 +147,10 @@ class LoopSettingsModel(EventObject):
 
     def move_position(self, value, fine_grained):
         if not is_new_recording(self.clip):
-            self.clip.position += self._adjusted_offset(value, fine_grained)
+            new_value = self.clip.position + self._adjusted_offset(value, fine_grained)
+            if self.clip.position == self.clip.start_marker:
+                self.clip.start_marker = new_value
+            self.clip.position = new_value
             self.clip.view.show_loop()
 
     def move_loop_end(self, value, fine_grained):

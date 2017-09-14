@@ -928,6 +928,17 @@ class ClipTimelineNavigation(TimelineNavigation):
         self.timeline_region = Region(min(self._clip.positions.start, self._clip.positions.start_marker, self._clip.positions.loop_start), max(self._clip.positions.end, self._clip.positions.loop_end))
 
 
+class MidiClipTimelineNavigation(ClipTimelineNavigation):
+
+    def __init__(self, clip = None, *a, **k):
+        super(MidiClipTimelineNavigation, self).__init__(clip=clip, *a, **k)
+        self.__on_clip_end_changed.subject = self._clip.positions
+
+    @listens(u'end')
+    def __on_clip_end_changed(self, _):
+        self._update_timeline_region()
+
+
 class AudioClipTimelineNavigation(ClipTimelineNavigation, WaveformNavigation):
 
     def __init__(self, *a, **k):

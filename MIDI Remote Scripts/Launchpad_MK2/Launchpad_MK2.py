@@ -10,7 +10,6 @@ from _Framework.IdentifiableControlSurface import IdentifiableControlSurface
 from _Framework.ModesComponent import ImmediateBehaviour, LayerMode, AddLayerMode
 from _Framework.InputControlElement import MIDI_CC_TYPE
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
-from _Framework.M4LInterfaceComponent import M4LInterfaceComponent
 from .Skin import make_default_skin
 from .Colors import CLIP_COLOR_TABLE, RGB_COLOR_TABLE
 from .ModeUtils import NotifyingModesComponent, SkinableBehaviourMixin, EnablingReenterBehaviour
@@ -102,7 +101,6 @@ class Launchpad_MK2(IdentifiableControlSurface, OptimizedControlSurface):
             self._last_sent_layout_byte = None
             with inject(switch_layout=const(self._switch_layout)).everywhere():
                 self._create_modes()
-            self._create_m4l_interface()
 
     def _create_controls(self):
         multi_button_channels = consts.USER_MODE_CHANNELS
@@ -195,13 +193,6 @@ class Launchpad_MK2(IdentifiableControlSurface, OptimizedControlSurface):
         self._modes.add_mode(u'mixer_mode', [self._session, self._stop_clip_layer_mode, self._mixer_home_page_layer], layout_byte=3, groups=set(u'mixer'))
         self._modes.layer = Layer(session_mode_button=self._session_button, user_1_mode_button=self._user_1_button, user_2_mode_button=self._user_2_button, mixer_mode_button=self._mixer_button, volume_mode_button=self._volume_button, pan_mode_button=self._pan_button, send_a_mode_button=self._send_a_button, send_b_mode_button=self._send_b_button)
         self._modes.selected_mode = u'session_mode'
-
-    def _create_m4l_interface(self):
-        self._m4l_interface = M4LInterfaceComponent(controls=self.controls, component_guard=self.component_guard, priority=1)
-        self.get_control_names = self._m4l_interface.get_control_names
-        self.get_control = self._m4l_interface.get_control
-        self.grab_control = self._m4l_interface.grab_control
-        self.release_control = self._m4l_interface.release_control
 
     def _set_send_index(self, index):
         self._mixer.send_index = index

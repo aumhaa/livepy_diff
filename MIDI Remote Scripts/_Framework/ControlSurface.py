@@ -13,8 +13,9 @@ from .Dependency import inject
 from .InputControlElement import InputControlElement, MIDI_CC_TYPE, MIDI_PB_TYPE, MIDI_NOTE_TYPE, MIDI_SYSEX_TYPE, MIDI_PB_STATUS
 from .PhysicalDisplayElement import PhysicalDisplayElement
 from .Profile import profile
-from .SubjectSlot import SlotManager
+from .SubjectSlot import SlotManager, Subject
 from .Util import BooleanContext, first, find_if, const, in_range
+from .MessageScheduler import MessageScheduler
 
 def _scheduled_method(method):
     u"""
@@ -52,11 +53,13 @@ def get_control_surfaces():
         return getattr(__builtins__, CS_LIST_KEY)
 
 
-class ControlSurface(SlotManager):
+class ControlSurface(Subject, SlotManager):
     u"""
     Central base class for scripts based on the new Framework. New
     scripts need to subclass this class and add special behavior.
     """
+    received_midi = ()
+    __subject_events__ = (u'received_midi', u'disconnect')
 
     def __init__(self, c_instance = None, publish_self = True, *a, **k):
         u""" Define and Initialize standard behavior """
@@ -89,6 +92,7 @@ class ControlSurface(SlotManager):
         self._midi_message_dict = {}
         self._midi_message_list = []
         self._midi_message_count = 0
+        self.mxd_midi_scheduler = MessageScheduler(self._do_send_midi, self._task_group.add(Task.TimedCallbackTask()))
         self._control_surface_injector = inject(parent_task_group=const(self._task_group), show_message=const(self.show_message), log_message=const(self.log_message), register_component=const(self._register_component), register_control=const(self._register_control), request_rebuild_midi_map=const(self.request_rebuild_midi_map), set_pad_translations=const(self.set_pad_translations), send_midi=const(self._send_midi), song=self.song).everywhere()
         self.register_slot(self.song(), self._on_track_list_changed, u'visible_tracks')
         self.register_slot(self.song(), self._on_scene_list_changed, u'scenes')
@@ -120,6 +124,7 @@ class ControlSurface(SlotManager):
         u"""
         Live -> Script: Called right before we get disconnected from Live
         """
+        self.notify_disconnect(self)
         self._disconnect_and_unregister_all_components()
         with self.component_guard():
             for control in self.controls:
@@ -337,6 +342,8 @@ class ControlSurface(SlotManager):
         return len(midi_bytes) != 3
 
     def _do_receive_midi(self, midi_bytes):
+        self.notify_received_midi(*midi_bytes)
+        self.mxd_midi_scheduler.handle_message(midi_bytes)
         if not self.is_sysex_message(midi_bytes):
             self.handle_nonsysex(midi_bytes)
         else:
@@ -354,7 +361,7 @@ class ControlSurface(SlotManager):
         recipient = self.get_recipient_for_nonsysex_midi_message(midi_bytes)
         if recipient is not None:
             recipient.receive_value(value)
-        else:
+        elif self.received_midi_listener_count() == 0:
             self.log_message(u'Got unknown message: ' + str(midi_bytes))
 
     def handle_sysex(self, midi_bytes):
@@ -362,8 +369,8 @@ class ControlSurface(SlotManager):
         if result != None:
             id, control = result
             control.receive_value(midi_bytes[len(id):-1])
-        else:
-            self.log_message(u'Got unknown sysex message: ', midi_bytes)
+        elif self.received_midi_listener_count() == 0:
+            self.log_message(u'Got unknown sysex message: ' + str(midi_bytes))
 
     def set_device_component(self, device_component):
         if self._device_component is not None:

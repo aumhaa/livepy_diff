@@ -5,7 +5,6 @@ from _Framework.ButtonMatrixElement import ButtonMatrixElement
 from _Framework.ComboElement import ComboElement, DoublePressElement, MultiElement
 from _Framework.ControlSurface import OptimizedControlSurface
 from _Framework.Layer import Layer
-from _Framework.M4LInterfaceComponent import M4LInterfaceComponent
 from _Framework.ModesComponent import ModesComponent, ImmediateBehaviour, DelayMode, AddLayerMode
 from _Framework.Resource import PrioritizedResource
 from _Framework.SessionRecordingComponent import SessionRecordingComponent
@@ -45,7 +44,6 @@ class APC40_MkII(APC, OptimizedControlSurface):
             self._create_view_control()
             self._create_quantization_selection()
             self._create_recording()
-            self._create_m4l_interface()
             self._session.set_mixer(self._mixer)
         self.set_highlighting_session_component(self._session)
         self.set_device_component(self._device)
@@ -172,13 +170,6 @@ class APC40_MkII(APC, OptimizedControlSurface):
     def _create_recording(self):
         record_button = MultiElement(self._session_record_button, self._foot_pedal_button.single_press)
         self._session_recording = SessionRecordingComponent(ClipCreator(), self._view_control, name=u'Session_Recording', is_enabled=False, layer=Layer(new_button=self._foot_pedal_button.double_press, record_button=record_button, _uses_foot_pedal=self._foot_pedal_button))
-
-    def _create_m4l_interface(self):
-        self._m4l_interface = M4LInterfaceComponent(controls=self.controls, component_guard=self.component_guard, priority=1)
-        self.get_control_names = self._m4l_interface.get_control_names
-        self.get_control = self._m4l_interface.get_control
-        self.grab_control = self._m4l_interface.grab_control
-        self.release_control = self._m4l_interface.release_control
 
     def get_matrix_button(self, column, row):
         return self._matrix_rows_raw[row][column]

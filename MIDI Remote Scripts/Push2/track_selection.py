@@ -113,6 +113,7 @@ class SessionRingTrackProvider(SessionRingComponent, ItemProvider):
         self._decorator_factory = TrackDecoratorFactory()
         super(SessionRingTrackProvider, self).__init__(set_session_highlight=partial(set_session_highlight, include_rack_chains=True), tracks_to_use=self._decorated_tracks_to_use, *a, **k)
         self._artificially_selected_item = None
+        self._selected_item_when_item_artificially_selected = None
         self._update_listeners()
         self._selected_track = self.register_disconnectable(SelectedMixerTrackProvider())
         self._on_selected_item_changed.subject = self._selected_track
@@ -165,6 +166,7 @@ class SessionRingTrackProvider(SessionRingComponent, ItemProvider):
         all_tracks = get_all_mixer_tracks(self.song)
         if item in all_tracks:
             self._artificially_selected_item = item
+            self._selected_item_when_item_artificially_selected = self.song.view.selected_track
             self.notify_selected_item()
 
     def synchronize_selection_with_live_view(self):
@@ -214,6 +216,8 @@ class SessionRingTrackProvider(SessionRingComponent, ItemProvider):
 
     @listens(u'selected_mixer_track')
     def _on_selected_item_changed(self, _):
+        if liveobj_changed(self._selected_item_when_item_artificially_selected, self.song.view.selected_track):
+            self._artificially_selected_item = None
         self.notify_selected_item()
 
 

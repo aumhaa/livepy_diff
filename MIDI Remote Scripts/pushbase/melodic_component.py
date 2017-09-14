@@ -65,6 +65,7 @@ class MelodicComponent(MessengerModesComponent):
         self._playhead_color = u'Melodic.Playhead'
         self._update_playhead_color()
         self._loop_selector.set_step_duplicator(self._step_duplicator)
+        self._show_notifications = True
 
     @property
     def play_modes(self):
@@ -129,6 +130,14 @@ class MelodicComponent(MessengerModesComponent):
     def set_mute_button(self, button):
         for e in self._note_editors:
             e.mute_button.set_control_element(button)
+
+    @property
+    def show_notifications(self):
+        return self._show_notifications
+
+    @show_notifications.setter
+    def show_notifications(self, value):
+        self._show_notifications = value
 
     @listenable_property
     def editable_pitch_range(self):
@@ -219,7 +228,7 @@ class MelodicComponent(MessengerModesComponent):
             self._update_note_editors()
 
     def _show_notes_information(self, mode = None):
-        if self.is_enabled():
+        if self.is_enabled() and self.show_notifications:
             if mode is None:
                 mode = self.selected_mode
             if mode == u'sequence':

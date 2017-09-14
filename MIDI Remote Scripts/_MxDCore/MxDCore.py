@@ -7,8 +7,9 @@ import _Framework
 from _Framework.Disconnectable import Disconnectable
 from _Framework.Debug import debug_print
 from .MxDUtils import TupleWrapper, StringHandler
+from .MxDControlSurfaceAPI import MxDControlSurfaceAPI
 from .LomUtils import LomInformation, LomIntrospection, LomPathCalculator, LomPathResolver
-from .LomTypes import ENUM_TYPES, CONTROL_SURFACES, PROPERTY_TYPES, ROOT_KEYS, MFLPropertyFormats, get_exposed_lom_types, get_exposed_property_info, get_root_prop, is_lom_object, is_cplusplus_lom_object, is_object_iterable, LomNoteOperationWarning, LomNoteOperationError, LomAttributeError, LomObjectError, verify_object_property, is_property_hidden
+from .LomTypes import ENUM_TYPES, LIVE_APP, CONTROL_SURFACES, PROPERTY_TYPES, ROOT_KEYS, MFLPropertyFormats, get_control_surfaces, get_exposed_lom_types, get_exposed_property_info, get_root_prop, is_lom_object, is_cplusplus_lom_object, is_object_iterable, LomNoteOperationWarning, LomNoteOperationError, LomAttributeError, LomObjectError, verify_object_property, is_property_hidden
 
 def get_current_max_device(device_id):
     raise MxDCore.instance != None and MxDCore.instance.manager != None or AssertionError
@@ -62,6 +63,7 @@ class MxDCore(object):
         self.manager = None
         self.lom_classes = []
         self.epii_version = (-1, -1)
+        self._cs_api = MxDControlSurfaceAPI(self)
         self._call_handler = {u'get_notes': self._object_get_notes_handler,
          u'set_notes': self._object_set_notes_handler,
          u'get_selected_notes': self._object_selected_notes_handler,
@@ -69,7 +71,14 @@ class MxDCore(object):
          u'notes': self._object_notes_handler,
          u'note': self._object_note_handler,
          u'done': self._object_done_handler,
-         u'get_control_names': self._object_get_control_names_handler}
+         u'get_control_names': self._cs_api.object_get_control_names,
+         u'get_control': self._cs_api.object_get_control,
+         u'grab_control': self._cs_api.object_grab_control,
+         u'release_control': self._cs_api.object_release_control,
+         u'send_midi': self._cs_api.object_send_midi,
+         u'send_receive_sysex': self._cs_api.object_send_receive_sysex,
+         u'grab_midi': self._cs_api.object_grab_midi,
+         u'release_midi': self._cs_api.object_release_midi}
         self.lom_classes = get_exposed_lom_types()
         self.lom_classes += LomIntrospection(_Framework).lom_classes
         self.appointed_lom_ids = {0: None}
@@ -158,7 +167,9 @@ class MxDCore(object):
 
     def _set_current_lom_id(self, device_id, object_id, lom_id, type):
         u"""set the CURRENT_LOM_ID of obj/obs/rmt objects"""
-        if not self.manager.set_current_lom_id(device_id, object_id, lom_id):
+        if self.manager.set_current_lom_id(device_id, object_id, lom_id):
+            self.device_contexts[device_id][object_id][ID_KEY] = 0
+        else:
             self.device_contexts[device_id][object_id][ID_KEY] = lom_id
             self._set_current_type(device_id, object_id, type)
             if type == u'obs':
@@ -226,6 +237,7 @@ class MxDCore(object):
             if isinstance(key, int):
                 object_context = device_context[key]
                 self._observer_uninstall_listener(device_id, key)
+                self._cs_api.release_control_surface_midi(device_id, key)
                 if len(object_context[PATH_KEY]) > 0:
                     object_context[PATH_KEY] = []
                     self._install_path_listeners(device_id, key, self._path_listener_callback)
@@ -466,9 +478,9 @@ class MxDCore(object):
                         if isinstance(result_value, ENUM_TYPES):
                             result_value = int(result_value)
                     prop_info = get_exposed_property_info(type(current_object), parameters, self.epii_version)
-                    result = prop_info and prop_info.to_json and self._str_representation_for_object(prop_info.to_json(current_object))
+                    result = prop_info and prop_info.to_json and self.str_representation_for_object(prop_info.to_json(current_object))
                 else:
-                    result = self._str_representation_for_object(result_value)
+                    result = self.str_representation_for_object(result_value)
                 self.manager.send_message(device_id, object_id, u'obj_prop_val', result)
             except LomAttributeError as e:
                 self._warn(device_id, object_id, unicode(e))
@@ -586,11 +598,11 @@ class MxDCore(object):
 
         return lom_object
 
-    def _str_representation_for_object(self, lom_object, mark_ids = True):
+    def str_representation_for_object(self, lom_object, mark_ids = True):
         result = u''
         lom_object = self._disambiguate_object(lom_object)
         if is_object_iterable(lom_object):
-            result = concatenate_strings(map(self._str_representation_for_object, lom_object))
+            result = concatenate_strings(map(self.str_representation_for_object, lom_object))
         elif is_lom_object(lom_object, self.lom_classes):
             result = (u'id ' if mark_ids else u'') + unicode(self._get_lom_id_by_lom_object(lom_object))
         elif isinstance(lom_object, (int, bool)):
@@ -639,6 +651,9 @@ class MxDCore(object):
             path_components = []
             if len(pure_path) > 0:
                 path_components = pure_path.strip().split(u' ')
+            if tuple(path_components[:2]) == (LIVE_APP, CONTROL_SURFACES):
+                object_context[PATH_KEY] = [LIVE_APP, CONTROL_SURFACES]
+                path_components = path_components[2:]
             for parameter in path_components:
                 if parameter == u'up':
                     del object_context[PATH_KEY][-1]
@@ -656,7 +671,7 @@ class MxDCore(object):
         self._warn_if_using_private_property(device_id, object_id, parameters[0])
         function = getattr(lom_object, parameters[0])
         result = function(*parameters[1:])
-        result_str = self._str_representation_for_object(result)
+        result_str = self.str_representation_for_object(result)
         self.manager.send_message(device_id, object_id, u'obj_call_result', result_str)
 
     def _object_get_notes_handler(self, device_id, object_id, lom_object, parameters):
@@ -731,12 +746,6 @@ class MxDCore(object):
             self._stop_note_operation(device_id, object_id)
         else:
             self._raise(device_id, object_id, u'no operation in progress')
-
-    def _object_get_control_names_handler(self, device_id, object_id, lom_object, parameters):
-        control_names = getattr(lom_object, u'get_control_names')()
-        formatter = lambda name: u'control %s\n' % name
-        result = u'control_names %d\n' % len(control_names) + concatenate_strings(map(formatter, control_names), string_format=u'%s%s') + u'done'
-        self.manager.send_message(device_id, object_id, u'obj_call_result', result)
 
     def _create_notes_output(self, notes):
         element_format = lambda el: unicode(int(el) if isinstance(el, bool) else el)
@@ -855,7 +864,7 @@ class MxDCore(object):
                 if prop_type == None:
                     self._warn(device_id, object_id, u'unsupported property type')
                 else:
-                    prop_value = self._str_representation_for_object(prop_info.to_json(current_object) if prop_info and prop_info.to_json else prop, mark_ids=False)
+                    prop_value = self.str_representation_for_object(prop_info.to_json(current_object) if prop_info and prop_info.to_json else prop, mark_ids=False)
                     self.manager.send_message(device_id, object_id, prop_type, prop_value)
             elif hasattr(current_object, property_name + u'_has_listener'):
                 self.manager.send_message(device_id, object_id, u'obs_string_val', u'bang')

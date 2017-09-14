@@ -119,4 +119,8 @@ PARAMETER_SENSITIVITIES = {u'Analog': {u'OSC1 Octave': {DEFAULT_SENSITIVITY_KEY:
  u'Resonator': {u'II Pitch': {DEFAULT_SENSITIVITY_KEY: 0.5},
                 u'III Pitch': {DEFAULT_SENSITIVITY_KEY: 0.5},
                 u'IV Pitch': {DEFAULT_SENSITIVITY_KEY: 0.5},
-                u'V Pitch': {DEFAULT_SENSITIVITY_KEY: 0.5}}}
+                u'V Pitch': {DEFAULT_SENSITIVITY_KEY: 0.5}},
+ u'InstrumentVector': {u'Osc 1 Pitch': {DEFAULT_SENSITIVITY_KEY: 10.0,
+                                        FINE_GRAINED_SENSITIVITY_KEY: 0.4},
+                       u'Osc 2 Pitch': {DEFAULT_SENSITIVITY_KEY: 10.0,
+                                        FINE_GRAINED_SENSITIVITY_KEY: 0.4}}}

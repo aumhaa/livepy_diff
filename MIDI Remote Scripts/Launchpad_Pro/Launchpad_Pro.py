@@ -9,7 +9,6 @@ from _Framework.Layer import Layer
 from _Framework.ControlSurface import OptimizedControlSurface
 from _Framework.IdentifiableControlSurface import IdentifiableControlSurface
 from _Framework.ModesComponent import ModesComponent, LayerMode, AddLayerMode, ReenterBehaviour
-from _Framework.M4LInterfaceComponent import M4LInterfaceComponent
 from _Framework.InputControlElement import MIDI_NOTE_TYPE, MIDI_CC_TYPE
 from _Framework.ComboElement import ComboElement
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
@@ -152,6 +151,7 @@ class MidiMap(SpecialMidiMap):
 
 
 class Launchpad_Pro(IdentifiableControlSurface, OptimizedControlSurface):
+    identity_request = consts.SYSEX_IDENTITY_REQUEST
 
     def __init__(self, c_instance, *a, **k):
         product_id_bytes = consts.MANUFACTURER_ID + consts.DEVICE_CODE
@@ -173,7 +173,6 @@ class Launchpad_Pro(IdentifiableControlSurface, OptimizedControlSurface):
                 self._create_mixer()
                 self._create_device()
                 self._create_modes()
-                self._create_m4l_interface()
                 self._create_user()
             self._on_session_record_changed.subject = self.song()
         self.set_device_component(self._device)
@@ -404,13 +403,6 @@ class Launchpad_Pro(IdentifiableControlSurface, OptimizedControlSurface):
          self._prioritized_session_zooming_button_layer_mode,
          self._session.update_navigation_buttons], behaviour=SpecialReenterBehaviour(u'session_mode'))
 
-    def _create_m4l_interface(self):
-        self._m4l_interface = M4LInterfaceComponent(controls=self.controls, component_guard=self.component_guard, priority=1)
-        self.get_control_names = self._m4l_interface.get_control_names
-        self.get_control = self._m4l_interface.get_control
-        self.grab_control = self._m4l_interface.grab_control
-        self.release_control = self._m4l_interface.release_control
-
     def toggle_detail_view(self):
         view = self.application().view
         if view.is_view_visible(u'Detail'):
@@ -532,9 +524,9 @@ class Launchpad_Pro(IdentifiableControlSurface, OptimizedControlSurface):
         self._send_midi(prefix + mode + suffix)
         self._last_sent_mode_byte = mode
 
-    def _send_identity_request(self):
+    def port_settings_changed(self):
         self.set_highlighting_session_component(None)
-        self._send_midi(consts.SYSEX_IDENTITY_REQUEST)
+        super(Launchpad_Pro, self).port_settings_changed()
 
     def on_identified(self):
         self._send_challenge()

@@ -97,7 +97,7 @@ class FixedLengthRecording(EventObject):
 class FixedLengthSessionRecordingComponent(SessionRecordingComponent, Messenger):
     foot_switch_button = ButtonControl()
     arrangement_record_button = ButtonControl()
-    capture_midi_to_new_scene_button = ButtonControl()
+    capture_midi_button = ButtonControl()
 
     def __init__(self, clip_creator = None, fixed_length_setting = None, *a, **k):
         raise clip_creator is not None or AssertionError
@@ -119,11 +119,11 @@ class FixedLengthSessionRecordingComponent(SessionRecordingComponent, Messenger)
         else:
             self._trigger_recording()
 
-    @capture_midi_to_new_scene_button.pressed
-    def capture_midi_to_new_scene_button(self, button):
+    @capture_midi_button.pressed
+    def capture_midi_button(self, button):
         try:
-            self.song.capture_midi_to_new_scene()
-            self.set_trigger_recording_on_release(not self._record_button.is_pressed)
+            self.song.capture_midi()
+            self.set_trigger_recording_on_release(not any((self._record_button.is_pressed, self.arrangement_record_button.is_pressed)))
         except RuntimeError:
             pass
 

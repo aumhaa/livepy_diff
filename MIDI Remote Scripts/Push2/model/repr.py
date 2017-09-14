@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import re
 from functools import partial
 from ableton.v2.base import EventObject, Slot, EventError, find_if, listenable_property, listens, liveobj_valid
+from ..device_parameter_icons import get_image_filenames, get_image_filenames_from_ids
 DEVICE_TYPES_WITH_PRESET_NAME = [u'InstrumentGroupDevice',
  u'DrumGroupDevice',
  u'AudioEffectGroupDevice',
@@ -71,6 +72,19 @@ def convert_color_index(color_index):
     if color_index is None:
         return UNCOLORED_INDEX
     return color_index
+
+
+def determine_color_label_index(item):
+    u"""
+    Returns a number >= 0 if the given item is a color label (aka Collection),
+    -1 otherwise. The number represents the index of the color label in the list of
+    *all* color labels (i.e. including currently invisible/disabled labels)
+    """
+    match = re.search(u'^color:colors=(\\d+)$', item.uri)
+    is_color_label = match is not None
+    if is_color_label:
+        return int(match.group(1)) - 1
+    return -1
 
 
 class ModelAdapter(EventObject):
@@ -144,6 +158,31 @@ class DeviceParameterAdapter(ModelAdapter):
         if self._adaptee.is_quantized:
             return self._adaptee.value_items
         return []
+
+    def _get_image_filenames(self, small_images = False):
+        device = self.canonical_parent
+        if not hasattr(device, u'class_name'):
+            return []
+        custom_images = None
+        if liveobj_valid(device):
+            try:
+                custom_images = device.get_value_item_icons(self._adaptee)
+            except (AttributeError, RuntimeError):
+                pass
+
+        if custom_images is not None:
+            return get_image_filenames_from_ids(custom_images, small_images)
+        else:
+            return get_image_filenames(self.original_name, device.class_name, small_images)
+
+    @listenable_property
+    def valueItemImages(self):
+        return self._get_image_filenames(small_images=False)
+
+    @listenable_property
+    def valueItemSmallImages(self):
+        result = self._get_image_filenames(small_images=True)
+        return result
 
     @listenable_property
     def displayValue(self):
@@ -620,6 +659,10 @@ class BrowserItemAdapter(ModelAdapter):
     def icon(self):
         return getattr(self._adaptee, u'icon', u'')
 
+    @property
+    def color_label_index(self):
+        return determine_color_label_index(self._adaptee)
+
 
 class BrowserListWrapper(EventObject):
     u"""
@@ -642,7 +685,8 @@ class BrowserListWrapper(EventObject):
          u'name': item.name,
          u'is_loadable': item.is_loadable,
          u'is_device': item.is_device,
-         u'icon': getattr(item, u'icon', u'')}
+         u'icon': getattr(item, u'icon', u''),
+         u'color_label_index': determine_color_label_index(item)}
 
     def to_json(self):
         return map(self._serialize_browser_item, self._browser_list.items)
