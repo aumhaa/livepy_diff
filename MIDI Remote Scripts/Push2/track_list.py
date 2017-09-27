@@ -4,11 +4,11 @@ from functools import partial
 from itertools import izip
 import Live
 from ableton.v2.base import nop, listenable_property, listens, listens_group, liveobj_changed, liveobj_valid
+from ableton.v2.control_surface import find_instrument_devices
 from ableton.v2.control_surface.control import ButtonControl, control_list
 from ableton.v2.control_surface.mode import ModeButtonBehaviour, ModesComponent
 from pushbase.actions import is_clip_stop_pending
 from pushbase.consts import MessageBoxText
-from pushbase.device_chain_utils import find_instrument_devices
 from pushbase.message_box_component import Messenger
 from pushbase.selected_track_parameter_provider import toggle_arm
 from pushbase.song_utils import delete_track_or_return_track

@@ -8,16 +8,15 @@ import weakref
 import Live
 import MidiRemoteScript
 from ableton.v2.base import const, inject, listens, listens_group, task, OutermostOnlyContext, EventObject, NamedTuple
-from ableton.v2.control_surface import BackgroundLayer, Component, IdentifiableControlSurface, Layer, get_element
+from ableton.v2.control_surface import BackgroundLayer, Component, IdentifiableControlSurface, Layer, get_element, find_instrument_meeting_requirement
 from ableton.v2.control_surface.defaults import TIMER_DELAY
 from ableton.v2.control_surface.elements import ButtonMatrixElement, ComboElement, SysexElement
-from ableton.v2.control_surface.mode import EnablingModesComponent, LayerMode, LazyComponentMode, ModesComponent, ReenterBehaviour, SetAttributeMode
+from ableton.v2.control_surface.mode import EnablingModesComponent, LayerMode, ModesComponent, LazyEnablingMode, ReenterBehaviour, SetAttributeMode
 from pushbase.actions import select_clip_and_get_name_from_slot, select_scene_and_get_name
 from pushbase.device_parameter_component import DeviceParameterComponentBase as DeviceParameterComponent
 from pushbase.pad_sensitivity import PadUpdateComponent
 from pushbase.quantization_component import QUANTIZATION_NAMES_UNICODE, QuantizationComponent, QuantizationSettingsComponent
 from pushbase.selection import PushSelection
-from pushbase.percussion_instrument_finder import find_drum_group_device
 from pushbase import consts
 from pushbase.push_base import PushBase, NUM_TRACKS, NUM_SCENES
 from pushbase.track_frozen_mode import TrackFrozenModesComponent
@@ -363,8 +362,11 @@ class Push2(IdentifiableControlSurface, PushBase):
         self._master_selector = MasterTrackComponent(tracks_provider=self._session_ring, is_enabled=False, layer=Layer(toggle_button=u'master_select_button'))
         self._master_selector.set_enabled(True)
 
-    def _create_instrument_layer(self):
-        return super(Push2, self)._create_instrument_layer() + self._create_loop_navigation_layer()
+    def _create_sequence_instrument_layer(self):
+        return super(Push2, self)._create_sequence_instrument_layer() + self._create_loop_navigation_layer()
+
+    def _create_sequence_instrument_layer_with_loop(self):
+        return super(Push2, self)._create_sequence_instrument_layer_with_loop() + self._create_loop_navigation_layer()
 
     def _create_play_instrument_with_loop_layer(self):
         return super(Push2, self)._create_play_instrument_with_loop_layer() + self._create_loop_navigation_layer()
@@ -465,9 +467,9 @@ class Push2(IdentifiableControlSurface, PushBase):
     def _init_browse_mode(self):
         application = Live.Application.get_application()
         browser = application.browser
-        self._main_modes.add_mode(u'browse', [BrowseMode(application=application, song=self.song, browser=browser, drum_group_component=self._drum_component, component_mode=self._browser_component_mode)], behaviour=BrowserModeBehaviour())
-        self._main_modes.add_mode(u'add_device', [AddDeviceMode(application=application, song=self.song, browser=browser, drum_group_component=self._drum_component, component_mode=self._browser_component_mode)], behaviour=BrowserModeBehaviour())
-        self._main_modes.add_mode(u'add_track', [AddTrackMode(browser=browser, component_mode=self._new_track_browser_component_mode)], behaviour=BrowserModeBehaviour())
+        self._main_modes.add_mode(u'browse', [BrowseMode(application=application, song=self.song, browser=browser, drum_group_component=self._drum_component, enabling_mode=self._browser_component_mode)], behaviour=BrowserModeBehaviour())
+        self._main_modes.add_mode(u'add_device', [AddDeviceMode(application=application, song=self.song, browser=browser, drum_group_component=self._drum_component, enabling_mode=self._browser_component_mode)], behaviour=BrowserModeBehaviour())
+        self._main_modes.add_mode(u'add_track', [AddTrackMode(browser=browser, enabling_mode=self._new_track_browser_component_mode)], behaviour=BrowserModeBehaviour())
 
     def _create_browser_layer(self):
         return (BackgroundLayer(u'select_buttons', u'track_state_buttons', priority=consts.DIALOG_PRIORITY), Layer(up_button=u'nav_up_button', down_button=u'nav_down_button', right_button=u'nav_right_button', left_button=u'nav_left_button', back_button=u'track_state_buttons_raw[-2]', open_button=u'track_state_buttons_raw[-1]', load_button=u'select_buttons_raw[-1]', scroll_encoders=self.elements.global_param_controls.submatrix[:-1, :], scroll_focused_encoder=u'parameter_controls_raw[-1]', close_button=u'track_state_buttons_raw[0]', prehear_button=u'track_state_buttons_raw[1]', priority=consts.DIALOG_PRIORITY))
@@ -493,7 +495,7 @@ class Push2(IdentifiableControlSurface, PushBase):
             browser = Live.Application.get_application().browser
             if browser.hotswap_target is None:
                 self._main_modes.selected_mode = u'device'
-            drum_rack = find_drum_group_device(self.song.view.selected_track)
+            drum_rack = find_instrument_meeting_requirement(lambda i: i.can_have_drum_pads, self.song.view.selected_track)
             if drum_rack and is_empty_rack(drum_rack):
                 self._device_navigation.request_drum_pad_selection()
             if drum_rack and self._device_navigation.is_drum_pad_selected:
@@ -621,7 +623,7 @@ class Push2(IdentifiableControlSurface, PushBase):
 
     def _init_dialog_modes(self):
         self._dialog_modes = ModesComponent(is_root=True)
-        self._dialog_modes.add_mode(u'convert', LazyComponentMode(self._create_convert))
+        self._dialog_modes.add_mode(u'convert', LazyEnablingMode(self._create_convert))
         self.__dialog_mode_button_value.replace_subjects([self.elements.scale_presets_button, self.elements.convert_button])
 
     @listens_group(u'value')
@@ -791,9 +793,9 @@ class Push2(IdentifiableControlSurface, PushBase):
     def _update_encoder_model(self):
         self._model.controls.encoders = [ NamedTuple(__id__=u'encoder_%i' % i, touched=e.is_pressed()) for i, e in enumerate(self.elements.global_param_touch_buttons_raw) ]
 
-    def reset_controlled_track(self, mode = None):
+    def recall_or_save_note_layout(self, mode = None):
         with self._changing_track_context(self._midi_clip_controller.changing_track()):
-            super(Push2, self).reset_controlled_track(mode)
+            super(Push2, self).recall_or_save_note_layout(mode)
 
     def _with_firmware_version(self, major_version, minor_version, control_element):
         u"""

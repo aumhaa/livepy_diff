@@ -55,12 +55,14 @@ class ModeSwitcherBase(Component, Messenger):
         if mode:
             mode.cycle_mode()
             self.cycle_button.color = u'DefaultButton.Alert'
-            self.show_notification(mode.get_mode_message() + u': Locked')
             self.locked_mode = mode
+            if mode.get_mode_message():
+                self.show_notification(mode.get_mode_message() + u': Locked')
 
     def _unlock_alternative_mode(self, locked_mode):
         if locked_mode:
-            self.show_notification(locked_mode.get_mode_message() + u': Unlocked')
+            if locked_mode.get_mode_message():
+                self.show_notification(locked_mode.get_mode_message() + u': Unlocked')
             locked_mode.cycle_mode(-1)
             self.cycle_button.color = u'DefaultButton.On'
 

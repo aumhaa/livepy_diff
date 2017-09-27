@@ -434,70 +434,80 @@ _MATRIX_MODE_PATH_TO_DATA = {u'matrix_modes.note.instrument.play': {u'Fold': Tru
                                         u'ShowScrollbarCursor': False,
                                         u'NumPitches': 128,
                                         u'PitchOffset': 0,
-                                        u'ShowStepLengthGrid': False},
+                                        u'ShowStepLengthGrid': False,
+                                        u'ShowMultipleGridWindows': False},
  u'matrix_modes.note.instrument.sequence': {u'Fold': False,
                                             u'NumDisplayKeys': 23,
                                             u'ShowGridWindow': True,
                                             u'ShowScrollbarCursor': True,
                                             u'NumPitches': 128,
                                             u'PitchOffset': 0,
-                                            u'ShowStepLengthGrid': True},
- u'matrix_modes.note.instrument.split_melodic_sequencer': {u'Fold': False,
+                                            u'ShowStepLengthGrid': True,
+                                            u'ShowMultipleGridWindows': False},
+ u'matrix_modes.note.instrument.split_melodic_sequencer': {u'Fold': True,
                                                            u'NumDisplayKeys': 32,
                                                            u'ShowGridWindow': True,
                                                            u'ShowScrollbarCursor': True,
                                                            u'NumPitches': 128,
                                                            u'PitchOffset': 0,
-                                                           u'ShowStepLengthGrid': True},
+                                                           u'ShowStepLengthGrid': True,
+                                                           u'ShowMultipleGridWindows': True},
  u'matrix_modes.note.drums.64pads': {u'Fold': True,
                                      u'NumDisplayKeys': 0,
                                      u'ShowGridWindow': False,
                                      u'ShowScrollbarCursor': False,
                                      u'NumPitches': 128,
                                      u'PitchOffset': 0,
-                                     u'ShowStepLengthGrid': False},
+                                     u'ShowStepLengthGrid': False,
+                                     u'ShowMultipleGridWindows': False},
  u'matrix_modes.note.drums.sequencer_loop': {u'Fold': False,
                                              u'NumDisplayKeys': 17,
                                              u'ShowGridWindow': True,
                                              u'ShowScrollbarCursor': True,
                                              u'NumPitches': 128,
                                              u'PitchOffset': 0,
-                                             u'ShowStepLengthGrid': True},
+                                             u'ShowStepLengthGrid': True,
+                                             u'ShowMultipleGridWindows': False},
  u'matrix_modes.note.drums.sequencer_velocity_levels': {u'Fold': False,
                                                         u'NumDisplayKeys': 17,
                                                         u'ShowGridWindow': True,
                                                         u'ShowScrollbarCursor': True,
                                                         u'NumPitches': 128,
                                                         u'PitchOffset': 0,
-                                                        u'ShowStepLengthGrid': True},
+                                                        u'ShowStepLengthGrid': True,
+                                                        u'ShowMultipleGridWindows': False},
  u'matrix_modes.note.slicing.64pads': {u'Fold': True,
                                        u'NumDisplayKeys': 0,
                                        u'ShowGridWindow': False,
                                        u'ShowScrollbarCursor': False,
                                        u'NumPitches': 64,
                                        u'PitchOffset': 36,
-                                       u'ShowStepLengthGrid': False},
+                                       u'ShowStepLengthGrid': False,
+                                       u'ShowMultipleGridWindows': False},
  u'matrix_modes.note.slicing.sequencer_loop': {u'Fold': False,
                                                u'NumDisplayKeys': 17,
                                                u'ShowGridWindow': True,
                                                u'ShowScrollbarCursor': True,
                                                u'NumPitches': 64,
                                                u'PitchOffset': 36,
-                                               u'ShowStepLengthGrid': True},
+                                               u'ShowStepLengthGrid': True,
+                                               u'ShowMultipleGridWindows': False},
  u'matrix_modes.note.slicing.sequencer_velocity_levels': {u'Fold': False,
                                                           u'NumDisplayKeys': 17,
                                                           u'ShowGridWindow': True,
                                                           u'ShowScrollbarCursor': True,
                                                           u'NumPitches': 64,
                                                           u'PitchOffset': 36,
-                                                          u'ShowStepLengthGrid': True},
+                                                          u'ShowStepLengthGrid': True,
+                                                          u'ShowMultipleGridWindows': False},
  u'matrix_modes.session': {u'Fold': True,
                            u'NumDisplayKeys': 0,
                            u'ShowGridWindow': False,
                            u'ShowScrollbarCursor': False,
                            u'NumPitches': 128,
                            u'PitchOffset': 0,
-                           u'ShowStepLengthGrid': False}}
+                           u'ShowStepLengthGrid': False,
+                           u'ShowMultipleGridWindows': False}}
 _DEFAULT_VIEW_DATA = {u'Fold': True,
  u'NumDisplayKeys': 0,
  u'ShowGridWindow': False,
@@ -512,7 +522,8 @@ _DEFAULT_VIEW_DATA = {u'Fold': True,
  u'NumPitches': 128,
  u'PitchOffset': 0,
  u'ShowStepLengthGrid': False,
- u'IsRecording': False}
+ u'IsRecording': False,
+ u'ShowMultipleGridWindows': False}
 
 def get_static_view_data(matrix_mode_path):
     return _MATRIX_MODE_PATH_TO_DATA.get(matrix_mode_path, _DEFAULT_VIEW_DATA)
@@ -542,6 +553,7 @@ class MidiClipControllerComponent(CompoundComponent):
         self._mute_during_track_change_components = []
         self._note_settings_component = None
         self._note_editor_settings_component = None
+        self._real_time_data_attached = False
 
     @property
     def clip(self):
@@ -593,7 +605,7 @@ class MidiClipControllerComponent(CompoundComponent):
         self.__on_paginator_page_length_changed.add_subject(paginator)
 
     def add_sequencer(self, sequencer):
-        self.__on_editable_pitch_range_changed.add_subject(sequencer)
+        self.__on_editable_pitches_changed.add_subject(sequencer)
         self.__on_row_start_times_changed.add_subject(sequencer)
         self.__on_step_length_changed.add_subject(sequencer)
         self.__on_selected_notes_changed.add_subject(sequencer)
@@ -639,6 +651,7 @@ class MidiClipControllerComponent(CompoundComponent):
 
     @listens(u'attached')
     def __on_visualisation_attached(self):
+        self._real_time_data_attached = True
         self._configure_visualisation()
 
     @listens(u'color_index')
@@ -663,7 +676,8 @@ class MidiClipControllerComponent(CompoundComponent):
             static_view_data = self.get_static_view_data()
             if self.matrix_mode_path() == u'matrix_modes.note.instrument.sequence':
                 num_visible_keys = static_view_data[u'NumDisplayKeys']
-                lower, upper = self._most_recent_editable_pitches
+                lower = self._most_recent_editable_pitches[0]
+                upper = self._most_recent_editable_pitches[-1]
                 self._loose_follow_base_note = (lower + upper) // 2 - num_visible_keys // 2
             if static_view_data[u'ShowGridWindow']:
                 self._focus_grid_window()
@@ -683,20 +697,15 @@ class MidiClipControllerComponent(CompoundComponent):
     def __on_note_colors_changed(self, instrument):
         self._configure_visualisation()
 
-    @listens_group(u'editable_pitch_range')
-    def __on_editable_pitch_range_changed(self, sequencer):
-        self._most_recent_editable_pitches = sequencer.editable_pitch_range
+    @listens_group(u'editable_pitches')
+    def __on_editable_pitches_changed(self, sequencer):
+        self._most_recent_editable_pitches = sequencer.editable_pitches
         self._configure_visualisation()
-
-    def __update_row_start_times(self):
-        enabled_sequencers = filter(lambda s: s.is_enabled(), self._sequencers)
-        if len(enabled_sequencers) == 1:
-            self._most_recent_row_start_times = enabled_sequencers[0].row_start_times
 
     @listens_group(u'row_start_times')
     def __on_row_start_times_changed(self, sequencer):
         if sequencer.is_enabled():
-            self.__update_row_start_times()
+            self._most_recent_row_start_times = sequencer.row_start_times
             self._configure_visualisation()
 
     @listens_group(u'step_length')
@@ -741,21 +750,20 @@ class MidiClipControllerComponent(CompoundComponent):
     @contextmanager
     def changing_track(self):
         self.mute_components_during_track_change(True)
+        self._real_time_data_attached = False
         yield
         self.mute_components_during_track_change(False)
 
     def _update_grid_window_pitch_range(self, view_data):
-        if self.matrix_mode_path() == u'matrix_modes.note.instrument.split_melodic_sequencer':
-            view_data[u'MinGridWindowPitch'] = self._most_recent_base_note
-            view_data[u'MaxGridWindowPitch'] = self._most_recent_max_note
-        else:
-            view_data[u'MinGridWindowPitch'] = self._most_recent_editable_pitches[0]
-            view_data[u'MaxGridWindowPitch'] = self._most_recent_editable_pitches[1]
+        view_data[u'MinGridWindowPitch'] = self._most_recent_editable_pitches[0]
+        view_data[u'MaxGridWindowPitch'] = self._most_recent_editable_pitches[-1]
+        view_data[u'GridWindowPitches'] = make_vector(self._most_recent_editable_pitches)
 
     def _update_minimum_pitch(self, view_data):
         if self.matrix_mode_path() == u'matrix_modes.note.instrument.sequence':
             num_visible_keys = self.get_static_view_data()[u'NumDisplayKeys']
-            lower, upper = self._most_recent_editable_pitches
+            lower = self._most_recent_editable_pitches[0]
+            upper = self._most_recent_editable_pitches[-1]
             window_size = upper - lower
             base_note = self._loose_follow_base_note
             if window_size >= num_visible_keys / 3:
@@ -772,7 +780,7 @@ class MidiClipControllerComponent(CompoundComponent):
 
     def _update_maximum_sequenceable_pitch(self, view_data):
         if self.matrix_mode_path() == u'matrix_modes.note.instrument.sequence':
-            view_data[u'MaxSequenceablePitch'] = self._most_recent_editable_pitches[1]
+            view_data[u'MaxSequenceablePitch'] = self._most_recent_editable_pitches[-1]
         else:
             view_data[u'MaxSequenceablePitch'] = self._most_recent_max_note
 
@@ -790,7 +798,7 @@ class MidiClipControllerComponent(CompoundComponent):
 
     def _configure_visualisation(self):
         visualisation = self._visualisation_real_time_data.device_visualisation()
-        if liveobj_valid(visualisation) and liveobj_valid(self.clip):
+        if liveobj_valid(visualisation) and liveobj_valid(self.clip) and self._real_time_data_attached:
             view_data = visualisation.get_view_data()
             color = COLOR_INDEX_TO_SCREEN_COLOR[self.clip.color_index]
             view_data[u'ClipColor'] = color.as_remote_script_color()

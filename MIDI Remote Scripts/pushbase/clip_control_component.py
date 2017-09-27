@@ -148,9 +148,10 @@ class LoopSettingsModel(EventObject):
     def move_position(self, value, fine_grained):
         if not is_new_recording(self.clip):
             new_value = self.clip.position + self._adjusted_offset(value, fine_grained)
-            if self.clip.position == self.clip.start_marker:
-                self.clip.start_marker = new_value
+            should_update_start_marker = self.clip.position == self.clip.start_marker
             self.clip.position = new_value
+            if should_update_start_marker:
+                self.clip.start_marker = new_value
             self.clip.view.show_loop()
 
     def move_loop_end(self, value, fine_grained):

@@ -1,6 +1,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial
+import re
 from ableton.v2.base import EventObject, clamp, depends, find_if, listenable_property, listens, liveobj_valid
 from pushbase.decoration import LiveObjectDecorator, DecoratorFactory
 from pushbase.internal_parameter import EnumWrappingParameter, InternalParameter, InternalParameterBase
@@ -451,6 +452,7 @@ class _SimplerDeviceDecorator(SimplerDeviceDecoratorBase, Messenger):
         self.__on_start_marker_changed.subject = self._live_object.sample
         self.__on_end_marker_changed.subject = self._live_object.sample
         self.__on_selected_slice_changed.subject = self._live_object.view
+        self.__on_envelope_type_changed.subject = self.envelope
 
     def setup_parameters(self):
         super(_SimplerDeviceDecorator, self).setup_parameters()
@@ -596,6 +598,14 @@ class _SimplerDeviceDecorator(SimplerDeviceDecoratorBase, Messenger):
             return u'Warp as %d Bar%s' % (bars, u's' if bars > 1 else u'')
         except RuntimeError:
             return u'Warp as X Bars'
+
+    @listenable_property
+    def envelope_type_index(self):
+        return self._envelope_types_provider.index
+
+    @listens(u'value')
+    def __on_envelope_type_changed(self):
+        self.notify_envelope_type_index()
 
 
 class _OperatorDeviceDecorator(EventObject, LiveObjectDecorator):
@@ -824,29 +834,60 @@ class _DrumBussDeviceDecorator(LiveObjectDecorator):
         return (self.compressor_option,)
 
 
-class _EchoDeviceDecorator(LiveObjectDecorator):
+class _EchoDeviceDecorator(LiveObjectDecorator, EventObject):
+
+    class EchoChannelName(int):
+        pass
+
+    EchoChannelName.left = EchoChannelName(0)
+    EchoChannelName.right = EchoChannelName(1)
+
+    class EchoChannelNamesList(NotifyingList):
+
+        def __init__(self):
+            super(_EchoDeviceDecorator.EchoChannelNamesList, self).__init__(available_values=[u'Left', u'Right'], default_value=_EchoDeviceDecorator.EchoChannelName.left)
 
     def __init__(self, song = None, *a, **k):
         super(_EchoDeviceDecorator, self).__init__(*a, **k)
-        self.syncL_option = DeviceOnOffOption(name=u'L Sync', property_host=get_parameter_by_name(self, u'L Sync'))
-        self.syncR_option = DeviceOnOffOption(name=u'R Sync', property_host=get_parameter_by_name(self, u'R Sync'))
-        self.clipdry_option = DeviceOnOffOption(name=u'Clip Dry', property_host=get_parameter_by_name(self, u'Clip Dry'))
-        self.feedbackinv_option = DeviceOnOffOption(name=u'Invert', property_host=get_parameter_by_name(self, u'Feedback Inv'))
-        self.modulation_timesfour_option = DeviceOnOffOption(name=u'Mod 4x', property_host=get_parameter_by_name(self, u'Mod 4x'))
+        self._channel_names_provider = _EchoDeviceDecorator.EchoChannelNamesList()
+        self.channel_switch_parameter = EnumWrappingParameter(name=u'Channel Toggle', parent=self, values_host=self._channel_names_provider, index_property_host=self._channel_names_provider, values_property=u'available_values', index_property=u'index', value_type=_EchoDeviceDecorator.EchoChannelName)
+        self._additional_parameters = (self.channel_switch_parameter,)
+        self.link_option = DeviceOnOffOption(name=u'Link', property_host=get_parameter_by_name(self, u'Link'))
+        self.sync_l_option = DeviceOnOffOption(name=u'L Sync', property_host=get_parameter_by_name(self, u'L Sync'))
+        self.sync_r_option = DeviceOnOffOption(name=u'R Sync', property_host=get_parameter_by_name(self, u'R Sync'))
+        self.sync_m_option = DeviceOnOffOption(name=u'M Sync', property_host=get_parameter_by_name(self, u'L Sync'))
+        self.sync_s_option = DeviceOnOffOption(name=u'S Sync', property_host=get_parameter_by_name(self, u'R Sync'))
+        self.clip_dry_option = DeviceOnOffOption(name=u'Clip Dry', property_host=get_parameter_by_name(self, u'Clip Dry'))
+        self.filter_on_option = DeviceOnOffOption(name=u'Filter', property_host=get_parameter_by_name(self, u'Filter On'))
+        self.feedback_inv_option = DeviceOnOffOption(name=u'Invert', property_host=get_parameter_by_name(self, u'Feedback Inv'))
+        self.modulation_times_four_option = DeviceOnOffOption(name=u'Mod 4x', property_host=get_parameter_by_name(self, u'Mod 4x'))
         self.reverb_loc_option = DeviceSwitchOption(name=u'Reverb Loc', parameter=get_parameter_by_name(self, u'Reverb Loc'))
         self.duck_option = DeviceOnOffOption(name=u'Duck', property_host=get_parameter_by_name(self, u'Duck On'))
         self.gate_option = DeviceOnOffOption(name=u'Gate', property_host=get_parameter_by_name(self, u'Gate On'))
         self.wobble_option = DeviceOnOffOption(name=u'Wobble', property_host=get_parameter_by_name(self, u'Wobble On'))
         self.noise_option = DeviceOnOffOption(name=u'Noise', property_host=get_parameter_by_name(self, u'Noise On'))
+        self.channel_switch_lr_option = DeviceSwitchOption(name=u'L/R Switch', parameter=self.channel_switch_parameter, labels=[u'Left', u'Right'])
+        self.channel_switch_ms_option = DeviceSwitchOption(name=u'M/S Switch', parameter=self.channel_switch_parameter, labels=[u'Mid', u'Side'])
+        self.register_disconnectables(self._additional_parameters)
         self.register_disconnectables(self.options)
 
     @property
+    def parameters(self):
+        return tuple(self._live_object.parameters) + self._additional_parameters
+
+    @property
     def options(self):
-        return (self.syncL_option,
-         self.syncR_option,
-         self.clipdry_option,
-         self.feedbackinv_option,
-         self.modulation_timesfour_option,
+        return (self.channel_switch_lr_option,
+         self.channel_switch_ms_option,
+         self.link_option,
+         self.sync_l_option,
+         self.sync_r_option,
+         self.sync_m_option,
+         self.sync_s_option,
+         self.clip_dry_option,
+         self.filter_on_option,
+         self.feedback_inv_option,
+         self.modulation_times_four_option,
          self.reverb_loc_option,
          self.duck_option,
          self.gate_option,
@@ -1008,7 +1049,7 @@ class _InstrumentVectorDeviceDecorator(LiveObjectDecorator, EventObject):
      u'SMP',
      u'PRD']
     available_filter_curcuit_bp_no_morph_values = [u'Clean', u'OSR']
-    __events__ = (u'request_mod_matrix_bank_view',)
+    __events__ = (u'request_bank_view', u'request_previous_bank_from_mod_matrix')
 
     def __init__(self, song = None, osc_types_provider = None, filter_types_provider = None, internal_filter_types_provider = None, envelope_types_provider = None, lfo_types_provider = None, amp_envelope_view_types_provider = None, mod_envelope_view_types_provider = None, *a, **k):
         super(_InstrumentVectorDeviceDecorator, self).__init__(*a, **k)
@@ -1027,6 +1068,7 @@ class _InstrumentVectorDeviceDecorator(LiveObjectDecorator, EventObject):
         self.register_disconnectables(self._options)
         self.__on_oscillator_switch_value_changed.subject = self.oscillator_switch
         self.__on_internal_filter_switch_value_changed.subject = self.filter_switch_for_filter_switch_option
+        self.__on_current_mod_target_index_changed.subject = self.current_mod_target_index
 
     @property
     def parameters(self):
@@ -1052,22 +1094,18 @@ class _InstrumentVectorDeviceDecorator(LiveObjectDecorator, EventObject):
         self._single_selected_parameter = value
         self.add_to_mod_matrix_option.notify_active()
 
+    @listenable_property
+    def current_mod_target_parameter(self):
+        return self._get_current_mod_target_parameter()
+
     def _create_parameters(self):
         self.oscillator_switch = EnumWrappingParameter(name=u'Oscillator', parent=self, values_host=self._osc_types_provider, index_property_host=self._osc_types_provider, values_property=u'available_values', index_property=u'index', value_type=InstrumentVectorOscillatorType)
         self.osc_1_pitch = PitchParameter(name=u'Osc 1 Pitch', parent=self, integer_value_host=get_parameter_by_name(self, u'Osc 1 Transp'), decimal_value_host=get_parameter_by_name(self, u'Osc 1 Detune'))
         self.osc_2_pitch = PitchParameter(name=u'Osc 2 Pitch', parent=self, integer_value_host=get_parameter_by_name(self, u'Osc 2 Transp'), decimal_value_host=get_parameter_by_name(self, u'Osc 2 Detune'))
         self.filter_switch_for_filter_switch_option = EnumWrappingParameter(name=u'Internal Filter', parent=self, values_host=self._internal_filter_types_provider, index_property_host=self._internal_filter_types_provider, values_property=u'available_values', index_property=u'index', value_type=InstrumentVectorFilterType)
-        self.modulation_targets = EnumWrappingParameter(name=u'Modulation Target Names', parent=self, values_host=self._live_object, index_property_host=self.current_mod_target_index, values_property=u'visible_modulation_target_names', index_property=u'index')
-        self.amp_envelope_modulation_amount = ModMatrixParameter(name=u'Amp Env Mod Amount', parent=self, modulation_value_host=self._live_object, modulation_target_index_host=self.current_mod_target_index, modulation_source=ModulationSource.amp_envelope)
-        self.envelope_2_modulation_amount = ModMatrixParameter(name=u'Env 2 Mod Amount', parent=self, modulation_value_host=self._live_object, modulation_target_index_host=self.current_mod_target_index, modulation_source=ModulationSource.envelope_2)
-        self.envelope_3_modulation_amount = ModMatrixParameter(name=u'Env 3 Mod Amount', parent=self, modulation_value_host=self._live_object, modulation_target_index_host=self.current_mod_target_index, modulation_source=ModulationSource.envelope_3)
-        self.lfo_1_modulation_amount = ModMatrixParameter(name=u'Lfo 1 Mod Amount', parent=self, modulation_value_host=self._live_object, modulation_target_index_host=self.current_mod_target_index, modulation_source=ModulationSource.lfo_1)
-        self.lfo_2_modulation_amount = ModMatrixParameter(name=u'Lfo 2 Mod Amount', parent=self, modulation_value_host=self._live_object, modulation_target_index_host=self.current_mod_target_index, modulation_source=ModulationSource.lfo_2)
-        self.midi_velocity_modulation_amount = ModMatrixParameter(name=u'MIDI Velocity Mod Amount', parent=self, modulation_value_host=self._live_object, modulation_target_index_host=self.current_mod_target_index, modulation_source=ModulationSource.midi_velocity)
-        self.midi_note_modulation_amount = ModMatrixParameter(name=u'MIDI Note Mod Amount', parent=self, modulation_value_host=self._live_object, modulation_target_index_host=self.current_mod_target_index, modulation_source=ModulationSource.midi_note)
-        self.midi_pitch_bend_modulation_amount = ModMatrixParameter(name=u'MIDI Pitch Bend Mod Amount', parent=self, modulation_value_host=self._live_object, modulation_target_index_host=self.current_mod_target_index, modulation_source=ModulationSource.midi_pitch_bend)
-        self.midi_aftertouch_modulation_amount = ModMatrixParameter(name=u'MIDI Aftertouch Mod Amount', parent=self, modulation_value_host=self._live_object, modulation_target_index_host=self.current_mod_target_index, modulation_source=ModulationSource.midi_channel_pressure)
-        self.midi_mod_wheen_modulation_amount = ModMatrixParameter(name=u'MIDI Mod Wheel Mod Amount', parent=self, modulation_value_host=self._live_object, modulation_target_index_host=self.current_mod_target_index, modulation_source=ModulationSource.midi_mod_wheel)
+        self.current_mod_target = InternalParameter(name=u'Current Mod Target', parent=self)
+        self.envelope_switch = EnumWrappingParameter(name=u'Envelopes', parent=self, values_host=self._envelope_types_provider, index_property_host=self._envelope_types_provider, values_property=u'available_values', index_property=u'index', value_type=InstrumentVectorEnvelopeType)
+        self.lfo_switch = EnumWrappingParameter(name=u'LFOs', parent=self, values_host=self._lfo_types_provider, index_property_host=self._lfo_types_provider, values_property=u'available_values', index_property=u'index', value_type=InstrumentVectorLfoType)
         return (EnumWrappingParameter(name=u'Osc 1 Effect Type', parent=self, values_host=self, index_property_host=self, values_property=u'available_effect_modes', index_property=u'oscillator_1_effect_mode'),
          EnumWrappingParameter(name=u'Osc 2 Effect Type', parent=self, values_host=self, index_property_host=self, values_property=u'available_effect_modes', index_property=u'oscillator_2_effect_mode'),
          EnumWrappingParameter(name=u'Osc 1 Category', parent=self, values_host=self._live_object, index_property_host=self, values_property=u'oscillator_wavetable_categories', index_property=u'oscillator_1_wavetable_category'),
@@ -1079,24 +1117,25 @@ class _InstrumentVectorDeviceDecorator(LiveObjectDecorator, EventObject):
          EnumWrappingParameter(name=u'Filter 2 Circuit LP/HP', parent=self, values_host=self, index_property_host=get_parameter_by_name(self, u'Filter 2 LP/HP'), values_property=u'available_filter_curcuit_lp_hp_values', index_property=u'value'),
          EnumWrappingParameter(name=u'Filter 1 Circuit BP/NO/Morph', parent=self, values_host=self, index_property_host=get_parameter_by_name(self, u'Filter 1 BP/NO/Morph'), values_property=u'available_filter_curcuit_bp_no_morph_values', index_property=u'value'),
          EnumWrappingParameter(name=u'Filter 2 Circuit BP/NO/Morph', parent=self, values_host=self, index_property_host=get_parameter_by_name(self, u'Filter 2 BP/NO/Morph'), values_property=u'available_filter_curcuit_bp_no_morph_values', index_property=u'value'),
-         EnumWrappingParameter(name=u'Envelopes', parent=self, values_host=self._envelope_types_provider, index_property_host=self._envelope_types_provider, values_property=u'available_values', index_property=u'index', value_type=InstrumentVectorEnvelopeType),
-         EnumWrappingParameter(name=u'LFOs', parent=self, values_host=self._lfo_types_provider, index_property_host=self._lfo_types_provider, values_property=u'available_values', index_property=u'index', value_type=InstrumentVectorLfoType),
          EnumWrappingParameter(name=u'Amp Env View', parent=self, values_host=self._amp_envelope_view_types_provider, index_property_host=self._amp_envelope_view_types_provider, values_property=u'available_values', index_property=u'index', value_type=InstrumentVectorEnvelopeViewType),
-         EnumWrappingParameter(name=u'Mod Env View', parent=self, values_host=self._mod_envelope_view_types_provider, index_property_host=self._mod_envelope_view_types_provider, values_property=u'available_values', index_property=u'index', value_type=InstrumentVectorEnvelopeViewType)) + (self.oscillator_switch,
+         EnumWrappingParameter(name=u'Mod Env View', parent=self, values_host=self._mod_envelope_view_types_provider, index_property_host=self._mod_envelope_view_types_provider, values_property=u'available_values', index_property=u'index', value_type=InstrumentVectorEnvelopeViewType),
+         EnumWrappingParameter(name=u'Modulation Target Names', parent=self, values_host=self._live_object, index_property_host=self.current_mod_target_index, values_property=u'visible_modulation_target_names', index_property=u'index'),
+         ModMatrixParameter(name=u'Amp Env Mod Amount', parent=self, modulation_value_host=self._live_object, modulation_target_index_host=self.current_mod_target_index, modulation_source=ModulationSource.amp_envelope),
+         ModMatrixParameter(name=u'Env 2 Mod Amount', parent=self, modulation_value_host=self._live_object, modulation_target_index_host=self.current_mod_target_index, modulation_source=ModulationSource.envelope_2),
+         ModMatrixParameter(name=u'Env 3 Mod Amount', parent=self, modulation_value_host=self._live_object, modulation_target_index_host=self.current_mod_target_index, modulation_source=ModulationSource.envelope_3),
+         ModMatrixParameter(name=u'Lfo 1 Mod Amount', parent=self, modulation_value_host=self._live_object, modulation_target_index_host=self.current_mod_target_index, modulation_source=ModulationSource.lfo_1),
+         ModMatrixParameter(name=u'Lfo 2 Mod Amount', parent=self, modulation_value_host=self._live_object, modulation_target_index_host=self.current_mod_target_index, modulation_source=ModulationSource.lfo_2),
+         ModMatrixParameter(name=u'MIDI Velocity Mod Amount', parent=self, modulation_value_host=self._live_object, modulation_target_index_host=self.current_mod_target_index, modulation_source=ModulationSource.midi_velocity),
+         ModMatrixParameter(name=u'MIDI Note Mod Amount', parent=self, modulation_value_host=self._live_object, modulation_target_index_host=self.current_mod_target_index, modulation_source=ModulationSource.midi_note),
+         ModMatrixParameter(name=u'MIDI Pitch Bend Mod Amount', parent=self, modulation_value_host=self._live_object, modulation_target_index_host=self.current_mod_target_index, modulation_source=ModulationSource.midi_pitch_bend),
+         ModMatrixParameter(name=u'MIDI Aftertouch Mod Amount', parent=self, modulation_value_host=self._live_object, modulation_target_index_host=self.current_mod_target_index, modulation_source=ModulationSource.midi_channel_pressure),
+         ModMatrixParameter(name=u'MIDI Mod Wheel Mod Amount', parent=self, modulation_value_host=self._live_object, modulation_target_index_host=self.current_mod_target_index, modulation_source=ModulationSource.midi_mod_wheel)) + (self.oscillator_switch,
          self.osc_1_pitch,
          self.osc_2_pitch,
          self.filter_switch_for_filter_switch_option,
-         self.modulation_targets,
-         self.amp_envelope_modulation_amount,
-         self.envelope_2_modulation_amount,
-         self.envelope_3_modulation_amount,
-         self.lfo_1_modulation_amount,
-         self.lfo_2_modulation_amount,
-         self.midi_velocity_modulation_amount,
-         self.midi_note_modulation_amount,
-         self.midi_pitch_bend_modulation_amount,
-         self.midi_aftertouch_modulation_amount,
-         self.midi_mod_wheen_modulation_amount)
+         self.current_mod_target,
+         self.envelope_switch,
+         self.lfo_switch)
 
     def _create_options(self):
 
@@ -1113,7 +1152,16 @@ class _InstrumentVectorDeviceDecorator(LiveObjectDecorator, EventObject):
             if is_selected_parameter_modulatable():
                 param = self.single_selected_parameter.decimal_value_host if isinstance(self.single_selected_parameter, PitchParameter) else self.single_selected_parameter
                 self.current_mod_target_index.index = self._live_object.add_parameter_to_modulation_matrix(param)
-                self.notify_request_mod_matrix_bank_view()
+                self.notify_request_bank_view(u'Matrix')
+
+        def jump_to_bank(bank_name):
+            self.notify_request_bank_view(bank_name)
+
+        def choose_envelope(value):
+            self.envelope_switch.value = value
+
+        def choose_lfo(value):
+            self.lfo_switch.value = value
 
         self.osc_on_option = DeviceOnOffOption(name=u'Osc', property_host=self._get_osc_on_property_host())
         self.add_to_mod_matrix_option = DeviceTriggerOption(name=u'Add to Matrix', callback=add_selected_parameter_to_mod_matrix, is_active=is_selected_parameter_modulatable)
@@ -1122,10 +1170,25 @@ class _InstrumentVectorDeviceDecorator(LiveObjectDecorator, EventObject):
          DeviceSwitchOption(name=u'Filter 2 Slope', parameter=get_parameter_by_name(self, u'Filter 2 Slope'), labels=[u'12dB', u'24dB']),
          DeviceSwitchOption(name=u'Filter Switch', parameter=self.filter_switch_for_filter_switch_option, labels=[u'Filter 1', u'Filter 2']),
          DeviceSwitchOption(name=u'LFO 1 Sync', parameter=get_parameter_by_name(self, u'LFO 1 Sync'), labels=[u'Hz', u'Sync']),
-         DeviceSwitchOption(name=u'LFO 2 Sync', parameter=get_parameter_by_name(self, u'LFO 2 Sync'), labels=[u'Hz', u'Sync'])) + (self.osc_on_option, self.add_to_mod_matrix_option)
+         DeviceSwitchOption(name=u'LFO 2 Sync', parameter=get_parameter_by_name(self, u'LFO 2 Sync'), labels=[u'Hz', u'Sync']),
+         DeviceTriggerOption(name=u'Go to Amp Env', callback=lambda : (choose_envelope(InstrumentVectorEnvelopeType.amp), jump_to_bank(u'Envelopes'))),
+         DeviceTriggerOption(name=u'Go to Env 2', callback=lambda : (choose_envelope(InstrumentVectorEnvelopeType.env2), jump_to_bank(u'Envelopes'))),
+         DeviceTriggerOption(name=u'Go to Env 3', callback=lambda : (choose_envelope(InstrumentVectorEnvelopeType.env3), jump_to_bank(u'Envelopes'))),
+         DeviceTriggerOption(name=u'Go to LFO 1', callback=lambda : (choose_lfo(InstrumentVectorLfoType.one), jump_to_bank(u'LFOs'))),
+         DeviceTriggerOption(name=u'Go to LFO 2', callback=lambda : (choose_lfo(InstrumentVectorLfoType.two), jump_to_bank(u'LFOs'))),
+         DeviceTriggerOption(name=u'Back', callback=self.notify_request_previous_bank_from_mod_matrix)) + (self.osc_on_option, self.add_to_mod_matrix_option)
+
+    def _get_parameter_by_name(self, name):
+        return find_if(lambda p: p.name == name, self.parameters)
 
     def _get_osc_on_property_host(self):
         return get_parameter_by_name(self, u'Osc {} On'.format(2 if self.oscillator_switch.value else 1))
+
+    def _get_current_mod_target_parameter(self):
+        target_parameter_name = self.get_modulation_target_parameter_name(self.current_mod_target_index.index)
+        if re.match(u'^Osc (1|2) Transp$', target_parameter_name):
+            target_parameter_name = target_parameter_name.replace(u'Transp', u'Pitch')
+        return self._get_parameter_by_name(target_parameter_name)
 
     @listens(u'value')
     def __on_oscillator_switch_value_changed(self):
@@ -1135,6 +1198,10 @@ class _InstrumentVectorDeviceDecorator(LiveObjectDecorator, EventObject):
     @listens(u'value')
     def __on_internal_filter_switch_value_changed(self):
         self.notify_filter_index()
+
+    @listens(u'index')
+    def __on_current_mod_target_index_changed(self):
+        self.notify_current_mod_target_parameter()
 
 
 class _UtilityDeviceDecorator(LiveObjectDecorator, EventObject):

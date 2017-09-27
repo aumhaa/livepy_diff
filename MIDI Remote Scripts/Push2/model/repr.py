@@ -166,7 +166,7 @@ class DeviceParameterAdapter(ModelAdapter):
         custom_images = None
         if liveobj_valid(device):
             try:
-                custom_images = device.get_value_item_icons(self._adaptee)
+                custom_images = device.get_value_item_icons(getattr(self._adaptee, u'original_parameter', self._adaptee))
             except (AttributeError, RuntimeError):
                 pass
 
@@ -514,7 +514,7 @@ class TrackAdapter(ModelAdapter):
 
     @property
     def containsDrumRack(self):
-        from pushbase.device_chain_utils import find_instrument_meeting_requirement
+        from ableton.v2.control_surface import find_instrument_meeting_requirement
         return find_instrument_meeting_requirement(lambda i: i.can_have_drum_pads, self._adaptee) is not None
 
     @property

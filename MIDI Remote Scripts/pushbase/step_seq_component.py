@@ -72,8 +72,8 @@ class StepSeqComponent(CompoundComponent):
         return self._note_editor.editing_note_regions
 
     @listenable_property
-    def editable_pitch_range(self):
-        return (self._note_editor.editing_notes[0], self._note_editor.editing_notes[-1])
+    def editable_pitches(self):
+        return self._note_editor.editing_notes
 
     @listenable_property
     def step_length(self):
@@ -185,7 +185,7 @@ class StepSeqComponent(CompoundComponent):
     def _on_selected_notes_changed(self, notes):
         if self.is_enabled():
             self._note_editor.editing_notes = notes
-            self.notify_editable_pitch_range()
+            self.notify_editable_pitches()
 
     @listens(u'pressed_pads')
     def _on_pressed_pads_changed(self, _):

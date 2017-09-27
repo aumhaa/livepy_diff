@@ -16,8 +16,8 @@ def tomode(thing):
         return Mode()
     if isinstance(thing, Mode):
         return thing
-    if isinstance(thing, Component):
-        return ComponentMode(thing)
+    if hasattr(thing, u'set_enabled'):
+        return EnablingMode(thing)
     if isinstance(thing, tuple) and len(thing) == 2:
         if isinstance(thing[0], Component) and isinstance(thing[1], (Layer, CompoundLayer)):
             return LayerMode(*thing)
@@ -79,42 +79,43 @@ def generator_mode(function):
     return lambda *a, **k: ContextManagerMode(makecontext(*a, **k))
 
 
-class ComponentMode(Mode):
+class EnablingMode(Mode):
     u"""
-    Enables a component while the mode is active.
+    Enables an object while the mode is active,
+    as long is it has a set_enabled method.
     """
 
-    def __init__(self, component = None, *a, **k):
-        super(ComponentMode, self).__init__(*a, **k)
-        raise component is not None or AssertionError
-        self._component = component
+    def __init__(self, enableable = None, *a, **k):
+        super(EnablingMode, self).__init__(*a, **k)
+        raise enableable is not None or AssertionError
+        self._enableable = enableable
 
     def enter_mode(self):
-        self._component.set_enabled(True)
+        self._enableable.set_enabled(True)
 
     def leave_mode(self):
-        self._component.set_enabled(False)
+        self._enableable.set_enabled(False)
 
 
-class LazyComponentMode(Mode):
+class LazyEnablingMode(Mode):
     u"""
     Creates the component the first time the mode is entered and
     enables it while the mode is active.
     """
 
-    def __init__(self, component_creator = None, *a, **k):
-        super(LazyComponentMode, self).__init__(*a, **k)
-        self._component_creator = component_creator
+    def __init__(self, factory = None, *a, **k):
+        super(LazyEnablingMode, self).__init__(*a, **k)
+        self._factory = factory
 
     @lazy_attribute
-    def component(self):
-        return self._component_creator()
+    def enableable(self):
+        return self._factory()
 
     def enter_mode(self):
-        self.component.set_enabled(True)
+        self.enableable.set_enabled(True)
 
     def leave_mode(self):
-        self.component.set_enabled(False)
+        self.enableable.set_enabled(False)
 
 
 class LayerModeBase(Mode):

@@ -73,6 +73,8 @@ class FixedLengthRecording(EventObject):
     def _record_in_slot(self, track, clip_slot):
         if self.should_start_fixed_length_recording(clip_slot):
             length, quant = self._fixed_length_setting.get_selected_length(self._song)
+            if self._song.is_playing:
+                quant = self._song.clip_trigger_quantization
             if track_can_overdub(track):
                 self._clip_creator.create(clip_slot, length=length, launch_quantization=self._song.clip_trigger_quantization)
             else:

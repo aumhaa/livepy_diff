@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import re
 from collections import namedtuple
 from functools import partial
+import Live
 from MidiRemoteScript import MutableVector
 from ableton.v2.base import EventError, EventObject, const, depends, listenable_property, listens, liveobj_changed, liveobj_valid, mixin
 from ableton.v2.control_surface import DeviceProvider as DeviceProviderBase
@@ -11,7 +12,7 @@ from ableton.v2.control_surface.mode import ModesComponent
 from pushbase.device_component import DeviceComponent as DeviceComponentBase
 from pushbase.parameter_provider import ParameterInfo
 from .colors import COLOR_INDEX_TO_SCREEN_COLOR
-from .device_decoration import InstrumentVectorFilterType, InstrumentVectorOscillatorType
+from .device_decoration import get_parameter_by_name, InstrumentVectorFilterType, InstrumentVectorOscillatorType
 from .device_parameter_bank_with_options import create_device_bank_with_options, OPTIONS_PER_BANK
 from .real_time_channel import RealTimeDataComponent
 from .parameter_mapping_sensitivities import PARAMETER_SENSITIVITIES, DEFAULT_SENSITIVITY_KEY, FINE_GRAINED_SENSITIVITY_KEY, parameter_mapping_sensitivity, fine_grain_parameter_mapping_sensitivity
@@ -46,6 +47,8 @@ class VisualisationLayout(object):
     button_gap = 15
     light_margin = 10
 
+
+ButtonRange = namedtuple(u'ButtonRange', [u'left_index', u'right_index'])
 
 class Push2DeviceProvider(DeviceProviderBase):
     allow_update_callback = const(True)
@@ -94,9 +97,9 @@ class DeviceComponentProvider(ModesComponent):
         self.__on_shrink_parameters_changed.subject = device_component
         self.__on_options_changed.subject = device_component
         self.__on_visualisation_visible_changed.subject = device_component
-        self._visualisation_real_time_data.set_data(device)
-        self.notify_shrink_parameters()
         device_component.set_device(device)
+        self.notify_shrink_parameters()
+        self._visualisation_real_time_data.set_data(device)
 
     @property
     def device_component(self):
@@ -298,14 +301,24 @@ class DeviceComponentWithTrackColorViewData(GenericDeviceComponent):
 
     def _set_device(self, device):
         super(DeviceComponentWithTrackColorViewData, self)._set_device(device)
+        self.__on_device_active_changed.subject = device if liveobj_valid(device) else None
+        self.__on_track_mute_changed.subject = self._parent_track
+        self.__on_track_muted_via_solo_changed.subject = self._parent_track
         self.__on_track_or_chain_color_changed.subject = device.canonical_parent if liveobj_valid(device) else None
 
     def _initial_visualisation_view_data(self):
-        view_data = {}
+        view_data = {u'IsActive': self._is_active_for_visualisation()}
         track_color = self._track_color_for_visualisation()
         if track_color is not None:
             view_data[u'TrackColor'] = track_color
         return view_data
+
+    def _is_active_for_visualisation(self):
+        device = self._decorated_device
+        parent_track = self._parent_track
+        if liveobj_valid(device) and liveobj_valid(parent_track):
+            return device.is_active and not parent_track.mute and not parent_track.muted_via_solo
+        return False
 
     def _track_color_for_visualisation(self):
         device = self._decorated_device
@@ -314,23 +327,52 @@ class DeviceComponentWithTrackColorViewData(GenericDeviceComponent):
             color = COLOR_INDEX_TO_SCREEN_COLOR[canonical_parent.color_index]
             return color.as_remote_script_color()
 
+    @listens(u'is_active')
+    def __on_device_active_changed(self):
+        self._update_is_active()
+
+    @listens(u'mute')
+    def __on_track_mute_changed(self):
+        self._update_is_active()
+
+    @listens(u'muted_via_solo')
+    def __on_track_muted_via_solo_changed(self):
+        self._update_is_active()
+
+    def _update_is_active(self):
+        self._update_visualisation_view_data({u'IsActive': self._is_active_for_visualisation()})
+
     @listens(u'color_index')
     def __on_track_or_chain_color_changed(self):
         track_color = self._track_color_for_visualisation()
         if track_color is not None:
             self._update_visualisation_view_data({u'TrackColor': track_color})
 
+    @property
+    def _parent_track(self):
+        track = self._decorated_device
+        while liveobj_valid(track) and not isinstance(track, Live.Track.Track):
+            track = getattr(track, u'canonical_parent', None)
 
-class SimplerDeviceComponent(GenericDeviceComponent):
+        return track
+
+
+class SimplerDeviceComponent(DeviceComponentWithTrackColorViewData):
     ZOOM_SENSITIVE_PARAMETERS = (u'S Start', u'S Length', u'Start', u'End', u'Nudge')
     PARAMETERS_RELATIVE_TO_ACTIVE_AREA = (u'S Start', u'S Length')
 
-    def _initialize_subcomponents(self):
+    @depends(real_time_mapper=None, register_real_time_data=None)
+    def _initialize_subcomponents(self, real_time_mapper = None, register_real_time_data = None):
         super(SimplerDeviceComponent, self)._initialize_subcomponents()
         self._playhead_real_time_data = self.register_component(RealTimeDataComponent(channel_type=u'playhead'))
         self._waveform_real_time_data = self.register_component(RealTimeDataComponent(channel_type=u'waveform'))
         self.__on_playhead_channel_changed.subject = self._playhead_real_time_data
         self.__on_waveform_channel_changed.subject = self._waveform_real_time_data
+        envelope_prefixes = [u'Ve',
+         u'Fe',
+         u'Pe',
+         u'']
+        self._parameter_name_features = get_parameter_name_to_envelope_features_map(envelope_prefixes)
 
     def _set_device_for_subcomponents(self, device):
         super(SimplerDeviceComponent, self)._set_device_for_subcomponents(device)
@@ -347,10 +389,15 @@ class SimplerDeviceComponent(GenericDeviceComponent):
     def _parameter_touched(self, parameter):
         if liveobj_valid(self._decorated_device) and liveobj_valid(parameter):
             self._decorated_device.zoom.touch_object(parameter)
+        self._update_visualisation_view_data(self._focus_visualisation_data())
 
     def _parameter_released(self, parameter):
         if liveobj_valid(self._decorated_device) and liveobj_valid(parameter):
             self._decorated_device.zoom.release_object(parameter)
+        self._update_visualisation_view_data(self._focus_visualisation_data())
+
+    def parameters_changed(self):
+        self._update_visualisation_view_data(self._envelope_visualisation_data())
 
     def _is_parameter_available(self, parameter):
         name = parameter.name if liveobj_valid(parameter) else u''
@@ -408,6 +455,81 @@ class SimplerDeviceComponent(GenericDeviceComponent):
         super(SimplerDeviceComponent, self).disconnect()
         self._playhead_real_time_data.set_data(None)
         self._waveform_real_time_data.set_data(None)
+
+    def _set_bank_index(self, bank):
+        super(SimplerDeviceComponent, self)._set_bank_index(bank)
+        self._update_visualisation_view_data(self._envelope_visualisation_data())
+        self.notify_visualisation_visible()
+        self.notify_shrink_parameters()
+
+    def _set_decorated_device(self, decorated_device):
+        super(SimplerDeviceComponent, self)._set_decorated_device(decorated_device)
+        self.__on_selected_envelope_type_changed.subject = decorated_device
+
+    @property
+    def selected_envelope_type(self):
+        if liveobj_valid(self._decorated_device):
+            return self._decorated_device.envelope_type_index
+        return 0
+
+    @listens(u'envelope_type_index')
+    def __on_selected_envelope_type_changed(self):
+        self._update_visualisation_view_data(self._envelope_visualisation_data())
+        self.notify_visualisation_visible()
+        self.notify_shrink_parameters()
+
+    @property
+    def _visualisation_visible(self):
+        return self._bank != None and self._bank.index == 2
+
+    @property
+    def _shrink_parameters(self):
+        if self._visualisation_visible:
+            left_button = self.envelope_left_button
+            right_button = left_button + 3
+            return [ index >= left_button and index <= right_button for index in range(8) ]
+        else:
+            return [False] * 8
+
+    def _initial_visualisation_view_data(self):
+        view_data = super(SimplerDeviceComponent, self)._initial_visualisation_view_data()
+        view_data.update(self._envelope_visualisation_data())
+        return view_data
+
+    @property
+    def envelope_left_button(self):
+        if self.selected_envelope_type == 0:
+            return 1
+        return 2
+
+    def _focus_visualisation_data(self):
+        touched_parameters = [ self.parameters[button.index] for button in self.parameter_touch_buttons if button.is_pressed ]
+        focused_features = set()
+        for parameter in touched_parameters:
+            if parameter.name in self._parameter_name_features:
+                focused_features |= self._parameter_name_features[parameter.name]
+
+        return {u'EnvelopeFocus': make_vector(focused_features)}
+
+    def _envelope_visualisation_data(self):
+        left_button = self.envelope_left_button
+        right_button = left_button + 3
+        shown_features = set([u'AttackLine',
+         u'DecayLine',
+         u'SustainLine',
+         u'ReleaseLine',
+         u'FadeInLine',
+         u'FadeOutLine'])
+        for parameter in self.parameters:
+            if parameter.name in self._parameter_name_features:
+                shown_features |= self._parameter_name_features[parameter.name]
+
+        view_data = {u'EnvelopeName': [u'Volume', u'Filter', u'Pitch'][self.selected_envelope_type],
+         u'EnvelopeLeft': VisualisationGuides.light_left_x(left_button),
+         u'EnvelopeRight': VisualisationGuides.light_right_x(right_button),
+         u'EnvelopeShow': make_vector(shown_features)}
+        view_data.update(self._focus_visualisation_data())
+        return view_data
 
 
 class Eq8DeviceComponent(DeviceComponentWithTrackColorViewData):
@@ -541,42 +663,52 @@ class CompressorDeviceComponent(DeviceComponentWithTrackColorViewData):
         return self._bank.index == 0
 
 
-BankEnvelopeConfig = namedtuple(u'BankEnvelopeConfig', [u'name_function', u'left_button_index', u'right_button_index'])
+def get_parameter_name_to_envelope_features_map(envelope_prefixes):
+
+    def parameter_names_for_feature(feature_name):
+        return [ (prefix + u' ' + feature_name if prefix is not u'' else feature_name) for prefix in envelope_prefixes ]
+
+    feature_parameter_names = {u'InitNode': parameter_names_for_feature(u'Init'),
+     u'AttackLine': parameter_names_for_feature(u'Init') + parameter_names_for_feature(u'Attack') + parameter_names_for_feature(u'Peak') + parameter_names_for_feature(u'A Slope'),
+     u'FadeInLine': parameter_names_for_feature(u'Fade In'),
+     u'AttackNode': parameter_names_for_feature(u'Attack') + parameter_names_for_feature(u'Peak'),
+     u'FadeInNode': parameter_names_for_feature(u'Fade In'),
+     u'DecayLine': parameter_names_for_feature(u'Attack') + parameter_names_for_feature(u'Peak') + parameter_names_for_feature(u'Decay') + parameter_names_for_feature(u'Sustain') + parameter_names_for_feature(u'D Slope'),
+     u'DecayNode': parameter_names_for_feature(u'Decay') + parameter_names_for_feature(u'Sustain'),
+     u'SustainLine': parameter_names_for_feature(u'Decay') + parameter_names_for_feature(u'Sustain') + parameter_names_for_feature(u'Fade In'),
+     u'SustainNode': parameter_names_for_feature(u'Sustain'),
+     u'ReleaseLine': parameter_names_for_feature(u'Sustain') + parameter_names_for_feature(u'Release') + parameter_names_for_feature(u'End') + parameter_names_for_feature(u'R Slope'),
+     u'FadeOutLine': parameter_names_for_feature(u'Fade Out'),
+     u'ReleaseNode': parameter_names_for_feature(u'Release') + parameter_names_for_feature(u'End'),
+     u'FadeOutNode': parameter_names_for_feature(u'Fade Out')}
+    parameter_name_features = {}
+    for feature_name, parameter_names in feature_parameter_names.iteritems():
+        for parameter_name in parameter_names:
+            parameter_feature_set = parameter_name_features.setdefault(parameter_name, set())
+            parameter_feature_set.add(feature_name)
+
+    return parameter_name_features
+
+
+BankEnvelopeConfig = namedtuple(u'BankEnvelopeConfig', [u'name_function', u'button_range'])
 
 class OperatorDeviceComponent(DeviceComponentWithTrackColorViewData):
 
     @depends(real_time_mapper=None, register_real_time_data=None)
     def _initialize_subcomponents(self, real_time_mapper = None, register_real_time_data = None):
         super(OperatorDeviceComponent, self)._initialize_subcomponents()
-        self._bank_envelope_configuration = {1: BankEnvelopeConfig(lambda : u'Operator%i' % self.selected_oscillator, 3, 6),
-         3: BankEnvelopeConfig(const(u'Filter'), 2, 5),
-         6: BankEnvelopeConfig(const(u'LFO'), 2, 5),
-         8: BankEnvelopeConfig(const(u'Pitch'), 2, 5)}
-        envelope_prefixes = [u'A',
-         u'B',
-         u'C',
-         u'D',
-         u'F',
-         u'L',
-         u'P']
-
-        def parameter_names_for_feature(feature_name):
-            return [ prefix + u'e ' + feature_name for prefix in envelope_prefixes ]
-
-        feature_parameter_names = {u'InitNode': parameter_names_for_feature(u'Init'),
-         u'AttackLine': parameter_names_for_feature(u'Init') + parameter_names_for_feature(u'Attack') + parameter_names_for_feature(u'Peak') + parameter_names_for_feature(u'A Slope'),
-         u'AttackNode': parameter_names_for_feature(u'Attack') + parameter_names_for_feature(u'Peak'),
-         u'DecayLine': parameter_names_for_feature(u'Attack') + parameter_names_for_feature(u'Peak') + parameter_names_for_feature(u'Decay') + parameter_names_for_feature(u'Sustain') + parameter_names_for_feature(u'D Slope'),
-         u'DecayNode': parameter_names_for_feature(u'Decay') + parameter_names_for_feature(u'Sustain'),
-         u'SustainLine': parameter_names_for_feature(u'Decay') + parameter_names_for_feature(u'Sustain'),
-         u'SustainNode': parameter_names_for_feature(u'Sustain'),
-         u'ReleaseLine': parameter_names_for_feature(u'Sustain') + parameter_names_for_feature(u'Release') + parameter_names_for_feature(u'End') + parameter_names_for_feature(u'R Slope'),
-         u'ReleaseNode': parameter_names_for_feature(u'Release') + parameter_names_for_feature(u'End')}
-        self._parameter_name_features = {}
-        for feature_name, parameter_names in feature_parameter_names.iteritems():
-            for parameter_name in parameter_names:
-                parameter_feature_set = self._parameter_name_features.setdefault(parameter_name, set())
-                parameter_feature_set.add(feature_name)
+        self._bank_envelope_configuration = {1: BankEnvelopeConfig(lambda : u'Operator%i' % self.selected_oscillator, ButtonRange(3, 6)),
+         3: BankEnvelopeConfig(const(u'Filter'), ButtonRange(2, 5)),
+         6: BankEnvelopeConfig(const(u'LFO'), ButtonRange(2, 5)),
+         8: BankEnvelopeConfig(const(u'Pitch'), ButtonRange(2, 5))}
+        envelope_prefixes = [u'Ae',
+         u'Be',
+         u'Ce',
+         u'De',
+         u'Fe',
+         u'Le',
+         u'Pe']
+        self._parameter_name_features = get_parameter_name_to_envelope_features_map(envelope_prefixes)
 
     def _parameter_touched(self, parameter):
         self._update_visualisation_view_data(self._envelope_visualisation_data())
@@ -609,28 +741,28 @@ class OperatorDeviceComponent(DeviceComponentWithTrackColorViewData):
         return view_data
 
     def _envelope_visualisation_data(self):
-        config = self._bank_envelope_configuration.get(self._bank.index, BankEnvelopeConfig(const(u''), 0, 0))
+        config = self._bank_envelope_configuration.get(self._bank.index, BankEnvelopeConfig(const(u''), ButtonRange(0, 0)))
         touched_parameters = [ self.parameters[button.index] for button in self.parameter_touch_buttons if button.is_pressed ]
         shown_features = set([u'AttackLine',
          u'DecayLine',
          u'SustainLine',
          u'ReleaseLine'])
         for parameter in self.parameters:
-            if parameter.parameter is not None:
+            if liveobj_valid(parameter.parameter):
                 name = parameter.parameter.name
                 if name in self._parameter_name_features:
                     shown_features |= self._parameter_name_features[name]
 
         focused_features = set()
         for parameter in touched_parameters:
-            if parameter.parameter is not None:
+            if liveobj_valid(parameter.parameter):
                 name = parameter.parameter.name
                 if name in self._parameter_name_features:
                     focused_features |= self._parameter_name_features[name]
 
         return {u'EnvelopeName': config.name_function(),
-         u'EnvelopeLeft': VisualisationGuides.light_left_x(config.left_button_index),
-         u'EnvelopeRight': VisualisationGuides.light_right_x(config.right_button_index),
+         u'EnvelopeLeft': VisualisationGuides.light_left_x(config.button_range.left_index),
+         u'EnvelopeRight': VisualisationGuides.light_right_x(config.button_range.right_index),
          u'EnvelopeShow': make_vector(list(shown_features)),
          u'EnvelopeFocus': make_vector(list(focused_features))}
 
@@ -646,7 +778,7 @@ class OperatorDeviceComponent(DeviceComponentWithTrackColorViewData):
     def _shrink_parameters(self):
         if self._visualisation_visible:
             config = self._bank_envelope_configuration[self._bank.index]
-            return [ config.left_button_index <= index <= config.right_button_index for index in xrange(8) ]
+            return [ config.button_range.left_index <= index <= config.button_range.right_index for index in xrange(8) ]
         else:
             return [False] * 8
 
@@ -654,6 +786,14 @@ class OperatorDeviceComponent(DeviceComponentWithTrackColorViewData):
 class InstrumentVectorDeviceComponent(DeviceComponentWithTrackColorViewData):
     OSCILLATOR_POSITION_PARAMETER_NAMES = re.compile(u'^(Osc (1|2) Pos)$|^Position$')
     FILTER_PARAMETER_NAMES = re.compile(u'^(Filter (1|2) (Type|Freq|Res))$|^Filter Type$|^Frequency$|^Resonance$')
+    WAVETABLE_VISUALISATION_CONFIGURATION_IN_BANKS = {0: ButtonRange(0, 2),
+     1: ButtonRange(1, 3)}
+    FILTER_VISUALISATION_CONFIGURATION_IN_BANKS = {0: ButtonRange(3, 5),
+     2: ButtonRange(2, 4)}
+
+    def __init__(self, *a, **k):
+        super(InstrumentVectorDeviceComponent, self).__init__(*a, **k)
+        self._bank_before_mod_matrix = 0
 
     def _parameter_touched(self, parameter):
         if liveobj_valid(self._decorated_device) and liveobj_valid(parameter):
@@ -677,6 +817,17 @@ class InstrumentVectorDeviceComponent(DeviceComponentWithTrackColorViewData):
             if view_data:
                 self._update_visualisation_view_data(view_data)
 
+    def _get_provided_parameters(self):
+        _, parameters = self._current_bank_details() if self.device() else (None, ())
+        provided_parameters = []
+        for param, name in parameters:
+            if param == self._decorated_device.current_mod_target:
+                param = self._decorated_device.current_mod_target_parameter
+                name = param.name if param is not None else u''
+            provided_parameters.append(self._create_parameter_info(param, name))
+
+        return provided_parameters
+
     def _shift_button_pressed(self, button):
         self._decorated_device.osc_1_pitch.adjust_finegrain = True
         self._decorated_device.osc_2_pitch.adjust_finegrain = True
@@ -689,17 +840,25 @@ class InstrumentVectorDeviceComponent(DeviceComponentWithTrackColorViewData):
         super(InstrumentVectorDeviceComponent, self)._set_decorated_device(decorated_device)
         self.__on_selected_oscillator_changed.subject = decorated_device
         self.__on_selected_filter_changed.subject = decorated_device
-        self.__on_request_mod_matrix_bank_view.subject = decorated_device
+        self.__on_request_bank_view.subject = decorated_device
+        self.__on_request_previous_bank_from_mod_matrix.subject = decorated_device
+        self.__on_current_mod_target_parameter_changed.subject = decorated_device
 
     def _set_bank_index(self, bank):
+        current_bank = self._bank.index
+        bank_definition = self._banking_info.device_bank_definition(self.device())
+        if bank_definition.key_by_index(current_bank) not in (u'Matrix', u'MIDI'):
+            self._bank_before_mod_matrix = current_bank
         super(InstrumentVectorDeviceComponent, self)._set_bank_index(bank)
         self._update_single_selected_parameter()
-        self._update_visualisation_view_data({u'WavetableVisualisationStart': VisualisationGuides.light_left_x(1) if bank == 1 else VisualisationGuides.light_left_x(0),
+        self._update_visualisation_view_data({u'WavetableVisualisationStart': VisualisationGuides.light_left_x(self.WAVETABLE_VISUALISATION_CONFIGURATION_IN_BANKS.get(bank, ButtonRange(0, 0)).left_index),
          u'WavetableVisualisationVisible': self.wavetable_visualisation_visible,
-         u'FilterVisualisationVisible': self.filter_visualisation_visible})
+         u'FilterVisualisationVisible': self.filter_visualisation_visible,
+         u'FilterCurveVisualisationStart': VisualisationGuides.light_left_x(self.FILTER_VISUALISATION_CONFIGURATION_IN_BANKS.get(bank, ButtonRange(0, 0)).left_index)})
         self.notify_visualisation_visible()
         self.notify_wavetable_visualisation_visible()
         self.notify_filter_visualisation_visible()
+        self.notify_shrink_parameters()
 
     def _update_single_selected_parameter(self):
         touched_parameters = [ self.parameters[button.index] for button in self.parameter_touch_buttons if button.is_pressed ]
@@ -715,11 +874,11 @@ class InstrumentVectorDeviceComponent(DeviceComponentWithTrackColorViewData):
 
     @listenable_property
     def wavetable_visualisation_visible(self):
-        return self._bank.index < 2 and self.selected_oscillator in [InstrumentVectorOscillatorType.one, InstrumentVectorOscillatorType.two]
+        return self._bank.index in self.WAVETABLE_VISUALISATION_CONFIGURATION_IN_BANKS and self.selected_oscillator in [InstrumentVectorOscillatorType.one, InstrumentVectorOscillatorType.two]
 
     @listenable_property
     def filter_visualisation_visible(self):
-        return self._bank.index == 0
+        return self._bank.index in self.FILTER_VISUALISATION_CONFIGURATION_IN_BANKS
 
     @property
     def selected_oscillator(self):
@@ -737,6 +896,19 @@ class InstrumentVectorDeviceComponent(DeviceComponentWithTrackColorViewData):
     def visualisation_width(self):
         return VisualisationGuides.light_right_x(2) - VisualisationGuides.light_left_x(0)
 
+    @property
+    def _shrink_parameters(self):
+        bank_index = self._bank.index
+        if self.visualisation_visible:
+            wavetable_visualisation_range = self.WAVETABLE_VISUALISATION_CONFIGURATION_IN_BANKS.get(bank_index, ButtonRange(0, 0))
+            filter_visualisation_range = self.FILTER_VISUALISATION_CONFIGURATION_IN_BANKS.get(bank_index, ButtonRange(0, 0))
+
+            def is_shrunk(index):
+                return self.wavetable_visualisation_visible and wavetable_visualisation_range.left_index <= index <= wavetable_visualisation_range.right_index or self.filter_visualisation_visible and filter_visualisation_range.left_index <= index <= filter_visualisation_range.right_index
+
+            return [ is_shrunk(parameter_index) for parameter_index in range(8) ]
+        return [False] * 8
+
     def _initial_visualisation_view_data(self):
         view_data = super(InstrumentVectorDeviceComponent, self)._initial_visualisation_view_data()
         view_data[u'SelectedOscillator'] = self.selected_oscillator
@@ -751,10 +923,16 @@ class InstrumentVectorDeviceComponent(DeviceComponentWithTrackColorViewData):
         view_data[u'SelectedFilter'] = InstrumentVectorFilterType.one
         return view_data
 
-    @listens(u'request_mod_matrix_bank_view')
-    def __on_request_mod_matrix_bank_view(self):
-        MOD_MATRIX_BANK_INDEX = 5
-        self._device_bank_registry.set_device_bank(self._device_provider.device, MOD_MATRIX_BANK_INDEX)
+    @listens(u'request_bank_view')
+    def __on_request_bank_view(self, bank_name):
+        device = self.device()
+        bank_definition = self._banking_info.device_bank_definition(device)
+        if bank_name in bank_definition:
+            self._device_bank_registry.set_device_bank(device, bank_definition.index_by_key(bank_name))
+
+    @listens(u'request_previous_bank_from_mod_matrix')
+    def __on_request_previous_bank_from_mod_matrix(self):
+        self._device_bank_registry.set_device_bank(self.device(), self._bank_before_mod_matrix)
 
     @listens(u'oscillator_index')
     def __on_selected_oscillator_changed(self):
@@ -762,10 +940,94 @@ class InstrumentVectorDeviceComponent(DeviceComponentWithTrackColorViewData):
          u'WavetableVisualisationVisible': self.wavetable_visualisation_visible})
         self.notify_visualisation_visible()
         self.notify_wavetable_visualisation_visible()
+        self.notify_shrink_parameters()
 
     @listens(u'filter_index')
     def __on_selected_filter_changed(self):
         self._update_visualisation_view_data({u'SelectedFilter': self.selected_filter})
+
+    @listens(u'current_mod_target_parameter')
+    def __on_current_mod_target_parameter_changed(self):
+        self._update_parameters()
+
+
+class EchoDeviceComponent(DeviceComponentWithTrackColorViewData):
+    TUNNEL_VISUALISATION_CONFIGURATION_IN_BANKS = {0: ButtonRange(0, 3),
+     1: ButtonRange(2, 5)}
+    FILTER_VISUALISATION_CONFIGURATION_IN_BANKS = {0: ButtonRange(4, 5),
+     3: ButtonRange(1, 4)}
+
+    def _parameter_touched(self, parameter):
+        self._update_visualisation_view_data(self._adjustment_view_data)
+
+    def _parameter_released(self, parameter):
+        self._update_visualisation_view_data(self._adjustment_view_data)
+
+    @property
+    def _adjustment_view_data(self):
+        is_linked = bool(get_parameter_by_name(self.device(), u'Link').value)
+        adjusting_tunnel_left = adjusting_tunnel_right = False
+        adjusting_filter_hp = adjusting_filter_lp = False
+        touched_parameters = [ self.parameters[button.index] for button in self.parameter_touch_buttons if button.is_pressed ]
+        for parameter in touched_parameters:
+            if parameter.name == u'Feedback':
+                adjusting_tunnel_left = adjusting_tunnel_right = True
+            elif parameter.name.startswith(u'L '):
+                adjusting_tunnel_left = True
+                if parameter.name != u'L Offset' and is_linked:
+                    adjusting_tunnel_right = True
+            elif parameter.name == u'R Offset' or parameter.name.startswith(u'R ') and not is_linked:
+                adjusting_tunnel_right = True
+            elif parameter.name in (u'HP Freq', u'HP Res'):
+                adjusting_filter_hp = True
+            elif parameter.name in (u'LP Freq', u'LP Res'):
+                adjusting_filter_lp = True
+
+        return {u'AdjustingTunnelLeft': adjusting_tunnel_left,
+         u'AdjustingTunnelRight': adjusting_tunnel_right,
+         u'AdjustingFilterHighPass': adjusting_filter_hp,
+         u'AdjustingFilterLowPass': adjusting_filter_lp}
+
+    def _set_bank_index(self, bank):
+        super(EchoDeviceComponent, self)._set_bank_index(bank)
+        self._update_visualisation_view_data(self._configuration_view_data)
+        self._update_visualisation_view_data(self._adjustment_view_data)
+        self.notify_visualisation_visible()
+        self.notify_shrink_parameters()
+
+    @property
+    def _visualisation_visible(self):
+        return self._bank.index in self.TUNNEL_VISUALISATION_CONFIGURATION_IN_BANKS or self._bank.index in self.FILTER_VISUALISATION_CONFIGURATION_IN_BANKS
+
+    @property
+    def _shrink_parameters(self):
+        if self._visualisation_visible:
+            tunnel_config = self.TUNNEL_VISUALISATION_CONFIGURATION_IN_BANKS.get(self._bank.index, ButtonRange(-1, -1))
+            filter_config = self.FILTER_VISUALISATION_CONFIGURATION_IN_BANKS.get(self._bank.index, ButtonRange(-1, -1))
+            return [ tunnel_config.left_index <= index <= tunnel_config.right_index or filter_config.left_index <= index <= filter_config.right_index for index in range(8) ]
+        else:
+            return [False] * 8
+
+    @property
+    def _configuration_view_data(self):
+        tunnel_left, tunnel_right = self._calculate_view_size(self.TUNNEL_VISUALISATION_CONFIGURATION_IN_BANKS)
+        filter_left, filter_right = self._calculate_view_size(self.FILTER_VISUALISATION_CONFIGURATION_IN_BANKS)
+        return {u'TunnelLeft': tunnel_left,
+         u'TunnelRight': tunnel_right,
+         u'FilterLeft': filter_left,
+         u'FilterRight': filter_right}
+
+    def _initial_visualisation_view_data(self):
+        view_data = super(EchoDeviceComponent, self)._initial_visualisation_view_data()
+        view_data.update(self._configuration_view_data)
+        view_data.update(self._adjustment_view_data)
+        return view_data
+
+    def _calculate_view_size(self, configuration):
+        if self._bank.index not in configuration:
+            return (0, 0)
+        config = configuration[self._bank.index]
+        return (VisualisationGuides.light_left_x(config.left_index), VisualisationGuides.light_right_x(config.right_index))
 
 
 DEVICE_COMPONENT_MODES = {u'Generic': GenericDeviceComponent,
@@ -773,4 +1035,5 @@ DEVICE_COMPONENT_MODES = {u'Generic': GenericDeviceComponent,
  u'Eq8': Eq8DeviceComponent,
  u'Compressor2': CompressorDeviceComponent,
  u'InstrumentVector': InstrumentVectorDeviceComponent,
- u'Operator': OperatorDeviceComponent}
+ u'Operator': OperatorDeviceComponent,
+ u'Echo': EchoDeviceComponent}

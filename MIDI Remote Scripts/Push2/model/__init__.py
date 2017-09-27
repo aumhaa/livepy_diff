@@ -330,17 +330,6 @@ class CompressorDeviceViewModel(ViewModel):
     routing_channel_position_list = view_property(RoutingChannelPositionList)
 
 
-class InstrumentVectorDeviceViewModel(ViewModel):
-    visible = view_property(bool, False)
-    deviceType = view_property(unicode, u'')
-    device = view_property(Device)
-    parameters = view_property(listof(DeviceParameter))
-    bank_view_description = view_property(unicode, u'')
-    visualisation_visible = view_property(bool, False)
-    wavetable_visualisation_visible = view_property(bool, False)
-    filter_visualisation_visible = view_property(bool, False)
-
-
 class TrackControlModel(Binding):
     ADAPTER = TrackControlAdapter
     track_control_mode = view_property(unicode, u'')
@@ -686,7 +675,6 @@ class RootModel(ViewModel):
     deviceParameterView = view_property(DeviceParameterListModel)
     simplerDeviceView = view_property(SimplerDeviceViewModel)
     compressorDeviceView = view_property(CompressorDeviceViewModel)
-    instrumentVectorDeviceView = view_property(InstrumentVectorDeviceViewModel)
     deviceVisualisation = view_property(DeviceVisualisationModel)
     mixerView = view_property(MixerViewModel)
     tracklistView = view_property(TrackListModel)

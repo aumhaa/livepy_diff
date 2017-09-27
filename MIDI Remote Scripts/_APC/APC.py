@@ -104,7 +104,7 @@ class APC(ControlSurface):
         return False
 
     def _send_identity_request(self):
-        self._identity_response_pending = False
+        self._identity_response_pending = True
         self._send_midi((240, 126, 0, 6, 1, 247))
 
     def _send_introduction_message(self, mode_byte = ABLETON_MODE):

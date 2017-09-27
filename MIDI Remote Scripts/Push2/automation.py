@@ -65,7 +65,6 @@ def make_automation_parameter(parameter_info):
 
 class AutomationComponent(AutomationComponentBase):
     ENCODER_SENSITIVITY_FACTOR = 0.5
-    __events__ = (u'parameters',)
 
     def __init__(self, *a, **k):
         self._parameter_infos = []
@@ -92,7 +91,7 @@ class AutomationComponent(AutomationComponentBase):
         self.notify_device()
         self.__on_device_changed.subject = provider if getattr(self.parameter_provider, u'device', None) is not None else None
 
-    @property
+    @listenable_property
     def parameters(self):
         return map(lambda info: (info.parameter if info else None), self._parameter_infos)
 

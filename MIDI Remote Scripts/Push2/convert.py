@@ -4,9 +4,8 @@ from functools import partial
 from itertools import izip
 import Live
 from ableton.v2.base import EventObject, find_if, listenable_property, listens, liveobj_valid, task
-from ableton.v2.control_surface import Component
+from ableton.v2.control_surface import Component, find_instrument_devices
 from ableton.v2.control_surface.control import ButtonControl, control_list
-from pushbase.device_chain_utils import find_instrument_devices
 from .colors import UNCOLORED_INDEX
 from .decoration import find_decorated_object
 from .device_decoration import SimplerDecoratedPropertiesCopier

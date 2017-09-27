@@ -21,7 +21,8 @@ class ParameterInfo(NamedTuple):
 
     @property
     def name(self):
-        return self._overriden_name or getattr(self.parameter, u'name', u'')
+        actual_name = self.parameter.name if liveobj_valid(self.parameter) else u''
+        return self._overriden_name or actual_name
 
     def __eq__(self, other_info):
         return super(ParameterInfo, self).__eq__(other_info) and self.name == other_info.name

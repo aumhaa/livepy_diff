@@ -228,7 +228,8 @@ class MelodicPattern(NamedTuple):
 
     def note(self, x, y):
         if not self._boundary_reached(x, y):
-            return self._get_note_info(self._octave_and_note(x, y), self.root_note, x + FEEDBACK_CHANNELS[0])
+            channel = y % len(FEEDBACK_CHANNELS) + FEEDBACK_CHANNELS[0]
+            return self._get_note_info(self._octave_and_note(x, y), self.root_note, channel)
         return NoteInfo()
 
     def __getitem__(self, i):

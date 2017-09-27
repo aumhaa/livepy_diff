@@ -4,10 +4,10 @@ from contextlib import contextmanager
 from functools import partial
 from itertools import imap
 from ableton.v2.base import clamp, const, inject, listens, listens_group, liveobj_valid, NamedTuple, nop
-from ableton.v2.control_surface import BackgroundLayer, ClipCreator, ControlSurface, DeviceBankRegistry, Layer, midi
+from ableton.v2.control_surface import BackgroundLayer, ClipCreator, ControlSurface, DeviceBankRegistry, PercussionInstrumentFinder, Layer, midi
 from ableton.v2.control_surface.components import BackgroundComponent, ModifierBackgroundComponent, SessionNavigationComponent, SessionRingComponent, SessionOverviewComponent, ViewControlComponent
 from ableton.v2.control_surface.elements import ButtonElement, ButtonMatrixElement, ChoosingElement, ComboElement, DoublePressContext, MultiElement, OptionalElement, to_midi_value
-from ableton.v2.control_surface.mode import AddLayerMode, LayerMode, LazyComponentMode, ReenterBehaviour, ModesComponent
+from ableton.v2.control_surface.mode import AddLayerMode, LayerMode, LazyEnablingMode, ReenterBehaviour, ModesComponent
 from .accent_component import AccentComponent
 from .actions import CaptureAndInsertSceneComponent, DeleteAndReturnToDefaultComponent, DeleteComponent, DeleteSelectedClipComponent, DeleteSelectedSceneComponent, DuplicateDetailClipComponent, DuplicateLoopComponent, UndoRedoComponent
 from .auto_arm_component import AutoArmComponent
@@ -32,7 +32,6 @@ from .select_playing_clip_component import SelectPlayingClipComponent
 from .session_recording_component import FixedLengthRecording, FixedLengthSessionRecordingComponent
 from .skin_default import make_default_skin
 from .step_seq_component import DrumStepSeqComponent, StepSeqComponent
-from .percussion_instrument_finder import PercussionInstrumentFinder
 from .touch_strip_controller import TouchStripControllerComponent, TouchStripEncoderConnection, TouchStripPitchModComponent
 from .track_frozen_mode import TrackFrozenModesComponent
 from .transport_component import TransportComponent
@@ -180,6 +179,7 @@ class PushBase(ControlSurface):
 
     def update(self):
         self.__on_session_record_changed()
+        self.recall_or_save_note_layout()
         self.reset_controlled_track()
         self.set_feedback_channels(FEEDBACK_CHANNELS)
         super(PushBase, self).update()
@@ -350,6 +350,7 @@ class PushBase(ControlSurface):
         note_mode = self._note_modes.selected_mode
         if note_mode == u'instrument':
             mode = {u'play': self._instrument.play_modes,
+             u'sequence': self._instrument.sequence_modes,
              u'split_melodic_sequencer': self._split_sequencer_mode}.get(self._instrument.selected_mode, None)
         elif note_mode == u'drums':
             mode = {u'64pads': self._drum_64pads_modes,
@@ -445,8 +446,8 @@ class PushBase(ControlSurface):
         self._session_ring = SessionRingComponent(num_tracks=NUM_TRACKS, num_scenes=NUM_SCENES, tracks_to_use=partial(tracks_to_use_from_song, self.song), is_enabled=True, is_root=True)
 
     def _init_session(self):
-        self._session_mode = LazyComponentMode(self._create_session)
-        self._session_overview_mode = LazyComponentMode(self._create_session_overview)
+        self._session_mode = LazyEnablingMode(self._create_session)
+        self._session_overview_mode = LazyEnablingMode(self._create_session_overview)
         self._session_navigation = SessionNavigationComponent(session_ring=self._session_ring, is_enabled=False, layer=self._create_session_navigation_layer())
 
     def _create_session_navigation_layer(self):
@@ -465,7 +466,7 @@ class PushBase(ControlSurface):
         raise NotImplementedError
 
     def _create_clip_mode(self):
-        return [self._when_track_is_not_frozen(partial(self._view_control.show_view, u'Detail/Clip'), LazyComponentMode(self._create_clip_control))]
+        return [self._when_track_is_not_frozen(partial(self._view_control.show_view, u'Detail/Clip'), LazyEnablingMode(self._create_clip_control))]
 
     def _init_main_modes(self):
 
@@ -618,7 +619,10 @@ class PushBase(ControlSurface):
     def _create_note_editor_device_automation_layer(self):
         return Layer(priority=consts.MOMENTARY_DIALOG_PRIORITY)
 
-    def _create_instrument_layer(self):
+    def _create_sequence_instrument_layer(self):
+        return Layer(playhead=u'playhead_element', mute_button=u'global_mute_button', quantization_buttons=u'side_buttons', note_editor_matrices=ButtonMatrixElement([[ self.elements.matrix.submatrix[:, 7 - row] for row in xrange(8) ]]), duplicate_button=u'duplicate_button', delete_button=u'delete_button')
+
+    def _create_sequence_instrument_layer_with_loop(self):
         return Layer(playhead=u'playhead_element', mute_button=u'global_mute_button', quantization_buttons=u'side_buttons', loop_selector_matrix=self.elements.double_press_matrix.submatrix[:, 0], short_loop_selector_matrix=self.elements.double_press_event_matrix.submatrix[:, 0], note_editor_matrices=ButtonMatrixElement([[ self.elements.matrix.submatrix[:, 7 - row] for row in xrange(7) ]]), duplicate_button=u'duplicate_button', delete_button=u'delete_button')
 
     def _create_play_instrument_with_loop_layer(self):
@@ -627,9 +631,9 @@ class PushBase(ControlSurface):
     def _init_instrument(self):
         self._note_layout = self.register_disconnectable(NoteLayout(song=self.song, preferences=self.preferences))
         instrument_basic_layer = Layer(octave_strip=self._with_shift(u'touch_strip_control'), octave_up_button=u'octave_up_button', octave_down_button=u'octave_down_button', scale_up_button=self._with_shift(u'octave_up_button'), scale_down_button=self._with_shift(u'octave_down_button'))
-        self._instrument = MelodicComponent(skin=self._skin, is_enabled=False, clip_creator=self._clip_creator, name=u'Melodic_Component', grid_resolution=self._grid_resolution, note_layout=self._note_layout, note_editor_settings=self._note_editor_settings_component, note_editor_class=self.note_editor_class, velocity_range_thresholds=self.note_editor_velocity_range_thresholds, layer=self._create_instrument_layer(), instrument_play_layer=instrument_basic_layer + Layer(matrix=u'matrix', aftertouch_control=u'aftertouch_control', delete_button=u'delete_button'), instrument_sequence_layer=instrument_basic_layer + Layer(note_strip=u'touch_strip_control'), pitch_mod_touch_strip_mode=LayerMode(self._pitch_mod_touch_strip, self._pitch_mod_touch_strip_layer), play_loop_instrument_layer=self._create_play_instrument_with_loop_layer())
+        self._instrument = MelodicComponent(skin=self._skin, is_enabled=False, clip_creator=self._clip_creator, name=u'Melodic_Component', grid_resolution=self._grid_resolution, note_layout=self._note_layout, note_editor_settings=self._note_editor_settings_component, note_editor_class=self.note_editor_class, velocity_range_thresholds=self.note_editor_velocity_range_thresholds, layer=self._create_sequence_instrument_layer(), sequence_layer_with_loop=self._create_sequence_instrument_layer_with_loop(), instrument_play_layer=instrument_basic_layer + Layer(matrix=u'matrix', aftertouch_control=u'aftertouch_control', delete_button=u'delete_button'), instrument_sequence_layer=instrument_basic_layer + Layer(note_strip=u'touch_strip_control'), pitch_mod_touch_strip_mode=LayerMode(self._pitch_mod_touch_strip, self._pitch_mod_touch_strip_layer), play_loop_instrument_layer=self._create_play_instrument_with_loop_layer())
         self._register_matrix_mode(u'play', self._instrument.play_modes, parent_path=[u'matrix_modes', u'note', u'instrument'])
-        self._register_matrix_mode(u'sequence', parent_path=[u'matrix_modes', u'note', u'instrument'])
+        self._register_matrix_mode(u'sequence', self._instrument.sequence_modes, parent_path=[u'matrix_modes', u'note', u'instrument'])
         self.__on_note_editor_layout_changed.subject = self._instrument
 
     def _create_scales_enabler(self):
@@ -822,7 +826,7 @@ class PushBase(ControlSurface):
             self._instrument.selected_mode = saved_mode
         self._load_alternative_note_layout()
 
-    def reset_controlled_track(self, mode = None):
+    def recall_or_save_note_layout(self, mode = None):
         track = self.song.view.selected_track
         saved_mode = track.get_data(u'push-selected-note-mode', None)
         if mode == None:
@@ -830,6 +834,8 @@ class PushBase(ControlSurface):
                 self._load_saved_note_layout(track, saved_mode)
             else:
                 self._save_default_note_layout(track)
+
+    def reset_controlled_track(self, mode = None):
         if self._instrument.is_enabled() and mode == u'sequence':
             self.release_controlled_track()
         else:
@@ -840,6 +846,7 @@ class PushBase(ControlSurface):
         self._select_note_mode()
 
     def _on_selected_track_changed(self):
+        self.recall_or_save_note_layout()
         self.reset_controlled_track()
         self._note_layout_switcher.release_alternative_layout()
         self._select_note_mode()
@@ -929,6 +936,7 @@ class PushBase(ControlSurface):
             self._note_modes.selected_mode = u'slicing'
         else:
             self._note_modes.selected_mode = u'instrument'
+        self.recall_or_save_note_layout()
         self.reset_controlled_track()
 
     def _percussion_instruments_for_track(self, track):
