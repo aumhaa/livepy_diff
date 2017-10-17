@@ -194,7 +194,7 @@ class MoveDeviceComponent(Component):
 
     @move_encoders.value
     def move_encoders(self, value, encoder):
-        if self._device is not None:
+        if liveobj_valid(self._device):
             with self._disabled_encoders():
                 if value > 0:
                     self._move_right()

@@ -123,4 +123,6 @@ PARAMETER_SENSITIVITIES = {u'Analog': {u'OSC1 Octave': {DEFAULT_SENSITIVITY_KEY:
  u'InstrumentVector': {u'Osc 1 Pitch': {DEFAULT_SENSITIVITY_KEY: 10.0,
                                         FINE_GRAINED_SENSITIVITY_KEY: 0.4},
                        u'Osc 2 Pitch': {DEFAULT_SENSITIVITY_KEY: 10.0,
-                                        FINE_GRAINED_SENSITIVITY_KEY: 0.4}}}
+                                        FINE_GRAINED_SENSITIVITY_KEY: 0.4},
+                       u'Unison Voices': {DEFAULT_SENSITIVITY_KEY: 10.0,
+                                          FINE_GRAINED_SENSITIVITY_KEY: 0.4}}}

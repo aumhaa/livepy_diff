@@ -77,7 +77,7 @@ class DeviceComponentProvider(ModesComponent):
         self.__on_visualisation_channel_changed.subject = self._visualisation_real_time_data
         self._device_component_modes = {}
         for mode_name, component_class in DEVICE_COMPONENT_MODES.iteritems():
-            self._device_component_modes[mode_name] = component_class(device_decorator_factory=device_decorator_factory, banking_info=banking_info, device_bank_registry=device_bank_registry, device_provider=device_provider, name=u'{}DeviceComponent'.format(mode_name), visualisation_real_time_data=self._visualisation_real_time_data, is_enabled=False)
+            self._device_component_modes[mode_name] = self.register_component(component_class(device_decorator_factory=device_decorator_factory, banking_info=banking_info, device_bank_registry=device_bank_registry, device_provider=device_provider, name=u'{}DeviceComponent'.format(mode_name), visualisation_real_time_data=self._visualisation_real_time_data, is_enabled=False))
 
         for mode_name, device_component in self._device_component_modes.iteritems():
             self.add_mode(mode_name, [device_component, (device_component, device_component_layer)])
@@ -851,10 +851,7 @@ class InstrumentVectorDeviceComponent(DeviceComponentWithTrackColorViewData):
             self._bank_before_mod_matrix = current_bank
         super(InstrumentVectorDeviceComponent, self)._set_bank_index(bank)
         self._update_single_selected_parameter()
-        self._update_visualisation_view_data({u'WavetableVisualisationStart': VisualisationGuides.light_left_x(self.WAVETABLE_VISUALISATION_CONFIGURATION_IN_BANKS.get(bank, ButtonRange(0, 0)).left_index),
-         u'WavetableVisualisationVisible': self.wavetable_visualisation_visible,
-         u'FilterVisualisationVisible': self.filter_visualisation_visible,
-         u'FilterCurveVisualisationStart': VisualisationGuides.light_left_x(self.FILTER_VISUALISATION_CONFIGURATION_IN_BANKS.get(bank, ButtonRange(0, 0)).left_index)})
+        self._update_visualisation_view_data(self._get_current_view_data())
         self.notify_visualisation_visible()
         self.notify_wavetable_visualisation_visible()
         self.notify_filter_visualisation_visible()
@@ -896,12 +893,17 @@ class InstrumentVectorDeviceComponent(DeviceComponentWithTrackColorViewData):
     def visualisation_width(self):
         return VisualisationGuides.light_right_x(2) - VisualisationGuides.light_left_x(0)
 
+    def _get_wavetable_visualisation_range(self):
+        return self.WAVETABLE_VISUALISATION_CONFIGURATION_IN_BANKS.get(self._bank.index, ButtonRange(0, 0))
+
+    def _get_filter_visualisation_range(self):
+        return self.FILTER_VISUALISATION_CONFIGURATION_IN_BANKS.get(self._bank.index, ButtonRange(0, 0))
+
     @property
     def _shrink_parameters(self):
-        bank_index = self._bank.index
         if self.visualisation_visible:
-            wavetable_visualisation_range = self.WAVETABLE_VISUALISATION_CONFIGURATION_IN_BANKS.get(bank_index, ButtonRange(0, 0))
-            filter_visualisation_range = self.FILTER_VISUALISATION_CONFIGURATION_IN_BANKS.get(bank_index, ButtonRange(0, 0))
+            wavetable_visualisation_range = self._get_wavetable_visualisation_range()
+            filter_visualisation_range = self._get_filter_visualisation_range()
 
             def is_shrunk(index):
                 return self.wavetable_visualisation_visible and wavetable_visualisation_range.left_index <= index <= wavetable_visualisation_range.right_index or self.filter_visualisation_visible and filter_visualisation_range.left_index <= index <= filter_visualisation_range.right_index
@@ -911,17 +913,20 @@ class InstrumentVectorDeviceComponent(DeviceComponentWithTrackColorViewData):
 
     def _initial_visualisation_view_data(self):
         view_data = super(InstrumentVectorDeviceComponent, self)._initial_visualisation_view_data()
-        view_data[u'SelectedOscillator'] = self.selected_oscillator
-        view_data[u'AdjustingPosition'] = False
-        view_data[u'AdjustingFilter'] = False
-        view_data[u'WavetableVisualisationStart'] = VisualisationGuides.light_left_x(0)
-        view_data[u'WavetableVisualisationWidth'] = self.visualisation_width
-        view_data[u'FilterCurveVisualisationStart'] = VisualisationGuides.light_left_x(3)
-        view_data[u'FilterCurveVisualisationWidth'] = self.visualisation_width
-        view_data[u'WavetableVisualisationVisible'] = True
-        view_data[u'FilterVisualisationVisible'] = True
-        view_data[u'SelectedFilter'] = InstrumentVectorFilterType.one
+        view_data.update(self._get_current_view_data())
         return view_data
+
+    def _get_current_view_data(self):
+        return {u'SelectedOscillator': self.selected_oscillator,
+         u'AdjustingPosition': False,
+         u'AdjustingFilter': False,
+         u'WavetableVisualisationStart': VisualisationGuides.light_left_x(self._get_wavetable_visualisation_range().left_index),
+         u'WavetableVisualisationWidth': self.visualisation_width,
+         u'FilterCurveVisualisationStart': VisualisationGuides.light_left_x(self._get_filter_visualisation_range().left_index),
+         u'FilterCurveVisualisationWidth': self.visualisation_width,
+         u'WavetableVisualisationVisible': self.wavetable_visualisation_visible,
+         u'FilterVisualisationVisible': self.filter_visualisation_visible,
+         u'SelectedFilter': InstrumentVectorFilterType.one}
 
     @listens(u'request_bank_view')
     def __on_request_bank_view(self, bank_name):

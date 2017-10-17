@@ -99,7 +99,7 @@ class Blocks(ControlSurface):
         self._modes.add_mode(u'session', [partial(self._send_mode_message, u'session'),
          partial(self._clear_send_cache, self._pads_raw),
          LayerMode(self._session, Layer(clip_launch_buttons=self._session_matrix, scene_launch_buttons=self._scene_launch_button_matrix, stop_all_clips_button=self._stop_all_clips_button)),
-         LayerMode(self._session_navigation, Layer(page_down_button=self._nav_down_button, page_up_button=self._nav_up_button, page_left_button=self._nav_left_button, page_right_button=self._nav_right_button))])
+         LayerMode(self._session_navigation, Layer(down_button=self._nav_down_button, up_button=self._nav_up_button, left_button=self._nav_left_button, right_button=self._nav_right_button))])
         self._modes.add_mode(u'note', [self._note_modes, self._select_note_mode])
         self._modes.cycle_mode_button.set_control_element(self._mode_cycle_button)
         self._modes.selected_mode = u'session'

@@ -527,7 +527,8 @@ class Push2(IdentifiableControlSurface, PushBase):
 
     def _on_selected_track_changed(self):
         if self._initialized:
-            super(Push2, self)._on_selected_track_changed()
+            with self._changing_track_context(self._midi_clip_controller.changing_track()):
+                super(Push2, self)._on_selected_track_changed()
             self._close_browse_mode()
             self._determine_mix_mode()
 
@@ -653,6 +654,7 @@ class Push2(IdentifiableControlSurface, PushBase):
 
     def _init_midi_clip_component(self):
         self._midi_clip_controller = MidiClipControllerComponent(is_enabled=False)
+        self._midi_clip_controller.set_drum_rack_finder(self._percussion_instrument_finder)
 
     def _create_clip_mode(self):
         base_loop_layer = Layer(shift_button=u'shift_button', loop_button=u'track_state_buttons_raw[1]', crop_button=u'track_state_buttons_raw[2]')
@@ -792,10 +794,6 @@ class Push2(IdentifiableControlSurface, PushBase):
 
     def _update_encoder_model(self):
         self._model.controls.encoders = [ NamedTuple(__id__=u'encoder_%i' % i, touched=e.is_pressed()) for i, e in enumerate(self.elements.global_param_touch_buttons_raw) ]
-
-    def recall_or_save_note_layout(self, mode = None):
-        with self._changing_track_context(self._midi_clip_controller.changing_track()):
-            super(Push2, self).recall_or_save_note_layout(mode)
 
     def _with_firmware_version(self, major_version, minor_version, control_element):
         u"""

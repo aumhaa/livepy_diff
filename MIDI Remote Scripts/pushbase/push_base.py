@@ -366,8 +366,7 @@ class PushBase(ControlSurface):
 
     def _create_note_mode(self):
         self._note_layout_switcher = NoteLayoutSwitcher(switch_note_mode_layout=self._switch_note_mode_layout, get_current_alternative_layout_mode=self._get_current_alternative_layout_mode, is_enabled=False, layer=Layer(cycle_button=self.note_layout_button, lock_button=self._with_shift(self.note_layout_button)))
-        return [self._percussion_instrument_finder,
-         self._view_control,
+        return [self._view_control,
          self._note_modes,
          self._delete_clip,
          self._select_playing_clip,
@@ -846,8 +845,6 @@ class PushBase(ControlSurface):
         self._select_note_mode()
 
     def _on_selected_track_changed(self):
-        self.recall_or_save_note_layout()
-        self.reset_controlled_track()
         self._note_layout_switcher.release_alternative_layout()
         self._select_note_mode()
 

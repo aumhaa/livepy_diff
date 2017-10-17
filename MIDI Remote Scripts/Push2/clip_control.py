@@ -13,6 +13,7 @@ from pushbase.note_editor_component import DEFAULT_START_NOTE
 from .clip_decoration import ClipDecoratorFactory
 from .colors import COLOR_INDEX_TO_SCREEN_COLOR
 from .decoration import find_decorated_object
+from .drum_group_component import DrumPadColorNotifier
 from .real_time_channel import RealTimeDataComponent
 from .timeline_navigation import ObjectDescription
 PARAMETERS_LOOPED = (u'Loop position', u'Loop length', u'Start offset')
@@ -554,6 +555,9 @@ class MidiClipControllerComponent(CompoundComponent):
         self._note_settings_component = None
         self._note_editor_settings_component = None
         self._real_time_data_attached = False
+        self._drum_rack_finder = None
+        self._drum_pad_color_notifier = self.register_disconnectable(DrumPadColorNotifier())
+        self.__on_note_colors_changed.add_subject(self._drum_pad_color_notifier)
 
     @property
     def clip(self):
@@ -567,6 +571,11 @@ class MidiClipControllerComponent(CompoundComponent):
     @listenable_property
     def visualisation_real_time_channel_id(self):
         return self._visualisation_real_time_data.channel_id
+
+    def set_drum_rack_finder(self, finder_component):
+        self._drum_rack_finder = finder_component
+        self.__on_drum_rack_changed.subject = self._drum_rack_finder
+        self.__on_drum_rack_changed()
 
     def set_matrix_mode_watcher(self, watcher):
         self._matrix_mode_watcher = watcher
@@ -594,8 +603,6 @@ class MidiClipControllerComponent(CompoundComponent):
     def add_instrument_component(self, instrument):
         self.__on_instrument_position_changed.add_subject(instrument)
         self._instruments.append(instrument)
-        if hasattr(instrument, u'note_colors'):
-            self.__on_note_colors_changed.add_subject(instrument)
 
     def add_mute_during_track_change_component(self, component):
         self._mute_during_track_change_components.append(component)
@@ -631,6 +638,10 @@ class MidiClipControllerComponent(CompoundComponent):
     def _focus_grid_window(self):
         if liveobj_valid(self.clip) and self.get_static_view_data()[u'ShowGridWindow']:
             self.clip.timeline_navigation.change_object(self.grid_window_focus)
+
+    @listens(u'instrument')
+    def __on_drum_rack_changed(self):
+        self._drum_pad_color_notifier.set_drum_group(self._drum_rack_finder.drum_group)
 
     @listens(u'enabled')
     def __on_note_settings_enabled_changed(self, _):
@@ -788,12 +799,9 @@ class MidiClipControllerComponent(CompoundComponent):
         view_data[u'MinSequenceablePitch'] = self._most_recent_editable_pitches[0] if self.matrix_mode_path() == u'matrix_modes.note.instrument.sequence' else self._most_recent_base_note
 
     def _update_note_colors(self, view_data):
-        note_colors = []
         matrix_mode = self.matrix_mode_path()
-        if matrix_mode is not None and matrix_mode.startswith(u'matrix_modes.note.drums'):
-            instruments_with_note_colors = filter(lambda instrument: instrument.is_enabled() and hasattr(instrument, u'note_colors'), self._instruments)
-            if len(instruments_with_note_colors) == 1:
-                note_colors = instruments_with_note_colors[0].note_colors
+        in_correct_mode = matrix_mode is not None and matrix_mode.startswith(u'matrix_modes.note.drums') or matrix_mode == u'matrix_modes.session'
+        note_colors = self._drum_pad_color_notifier.note_colors if in_correct_mode and self._drum_pad_color_notifier.has_drum_group else []
         view_data[u'NoteColors'] = make_color_vector(note_colors)
 
     def _configure_visualisation(self):

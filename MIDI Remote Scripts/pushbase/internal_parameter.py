@@ -25,6 +25,7 @@ class InternalParameterBase(EventObject):
         raise name is not None or AssertionError
         super(InternalParameterBase, self).__init__(*a, **k)
         self._name = name
+        self._state = DeviceParameter.ParameterState.enabled
 
     def _has_valid_parent(self):
         return liveobj_valid(self._parent)
@@ -67,7 +68,13 @@ class InternalParameterBase(EventObject):
 
     @listenable_property
     def state(self):
-        return DeviceParameter.ParameterState.enabled
+        return self._state
+
+    @state.setter
+    def state(self, new_state):
+        raise new_state in (DeviceParameter.ParameterState.enabled, DeviceParameter.ParameterState.irrelevant, DeviceParameter.ParameterState.disabled) or AssertionError
+        self._state = new_state
+        self.notify_state()
 
     @property
     def _live_ptr(self):
@@ -350,8 +357,8 @@ class ProxyParameter(Proxy):
             return getattr(self.proxied_interface, name, getattr(obj, name))
         raise AttributeError(u'Does not have attribute %s' % name)
 
-    def __str__(self):
-        return str(self.proxied_object)
+    def __unicode__(self):
+        return unicode(self.proxied_object)
 
     def __eq__(self, other):
         if isinstance(other, ProxyParameter):
@@ -362,3 +369,57 @@ class ProxyParameter(Proxy):
         if isinstance(other, ProxyParameter):
             return self.proxied_object != other.proxied_object or self.proxied_interface != other.proxied_interface
         return self.proxied_object != other
+
+
+class IntegerParameter(InternalParameter):
+
+    def __init__(self, integer_value_host = None, integer_value_property_name = None, min_value = None, max_value = None, *a, **k):
+        super(IntegerParameter, self).__init__(display_value_conversion=unicode, *a, **k)
+        self._integer_value_host = integer_value_host
+        self._integer_value_property_name = integer_value_property_name
+        self._min_value = min_value if min_value is not None else 0
+        self._max_value = max_value if max_value is not None else 1
+        self._value = self._get_integer_value()
+        try:
+            self.register_slot(integer_value_host, self.notify_value, integer_value_property_name)
+        except EventError:
+            pass
+
+    def _get_value(self):
+        return self._get_integer_value()
+
+    def _set_value(self, new_value):
+        if new_value != self._value:
+            self._value = new_value
+            self._set_integer_value(new_value)
+
+    value = property(_get_value, _set_value)
+
+    def _get_linear_value(self):
+        return self._value
+
+    def _set_linear_value(self, new_value):
+        if new_value != self._value:
+            self._value = new_value
+            if int(new_value) != self._get_integer_value():
+                self._set_integer_value(new_value)
+                self.notify_value()
+
+    linear_value = property(_get_linear_value, _set_linear_value)
+
+    def _get_integer_value(self):
+        if liveobj_valid(self._integer_value_host):
+            return getattr(self._integer_value_host, self._integer_value_property_name)
+        return self.min
+
+    def _set_integer_value(self, new_value):
+        raise self.min <= new_value <= self.max or AssertionError(u'Invalid value {}'.format(new_value))
+        setattr(self._integer_value_host, self._integer_value_property_name, int(new_value))
+
+    @property
+    def min(self):
+        return self._min_value
+
+    @property
+    def max(self):
+        return self._max_value

@@ -357,7 +357,7 @@ class Push(PushBase):
         self._master_cue_vol.display.layer = (BackgroundLayer(u'display_line4', priority=consts.DIALOG_PRIORITY), Layer(label_display=u'display_line1', value_display=u'display_line3', graphic_display=u'display_line2', priority=consts.DIALOG_PRIORITY))
 
     def _create_note_mode(self):
-        return super(Push, self)._create_note_mode() + [self._global_pad_parameters]
+        return super(Push, self)._create_note_mode() + [self._percussion_instrument_finder, self._global_pad_parameters]
 
     def _instantiate_session(self):
         return SpecialSessionComponent(session_ring=self._session_ring, is_enabled=False, auto_name=True, fixed_length_recording=self._create_fixed_length_recording(), layer=self._create_session_layer())
