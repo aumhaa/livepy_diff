@@ -78,8 +78,8 @@ class DeviceSwitchOption(DeviceTriggerOption):
 
 
 class DeviceOnOffOption(DeviceTriggerOption):
-    ON_LABEL = u'ON'
-    OFF_LABEL = u'OFF'
+    ON_LABEL = u'On'
+    OFF_LABEL = u'Off'
 
     def __init__(self, name = None, property_host = None, value_property_name = u'value', state_property_name = u'state', *a, **k):
         super(DeviceOnOffOption, self).__init__(callback=self.cycle_index, name=name, *a, **k)

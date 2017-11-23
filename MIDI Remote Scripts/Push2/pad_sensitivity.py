@@ -1,8 +1,12 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
+from collections import namedtuple
 playing_profile = 0
 default_profile = 1
 loop_selector_profile = 2
+MONO_AFTERTOUCH_ENABLED = 1
+MONO_AFTERTOUCH_DISABLED = 0
+PadSettings = namedtuple(u'PadSettings', [u'sensitivity', u'aftertouch_enabled'])
 
 def index_to_pad_coordinate(index):
     u"""
@@ -14,17 +18,19 @@ def index_to_pad_coordinate(index):
     return (8 - x, y + 1)
 
 
-def pad_parameter_sender(global_control, pad_control):
+def pad_parameter_sender(global_control, pad_control, aftertouch_control):
     u"""
-    Sends the sensitivity parameters for a given pad, or all pads
+    Sends the pad setting parameters for a given pad, or all pads
     (pad == None) over the given SysexElement.
     """
 
-    def do_send(sensitivity_value, pad = None):
+    def do_send(pad_settings, pad = None):
         if pad is None:
-            global_control.send_value(0, 0, sensitivity_value)
+            global_control.send_value(0, 0, pad_settings.sensitivity)
+            aftertouch_control.send_value(0, 0, pad_settings.aftertouch_enabled)
         else:
             scene, track = index_to_pad_coordinate(pad)
-            pad_control.send_value(scene, track, sensitivity_value)
+            pad_control.send_value(scene, track, pad_settings.sensitivity)
+            aftertouch_control.send_value(scene, track, pad_settings.aftertouch_enabled)
 
     return do_send

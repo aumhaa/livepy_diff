@@ -950,12 +950,14 @@ def make_root_browser_items(browser, filter_type):
     audio_effects = wrap_item(browser.audio_effects, u'browser_audioeffect.svg')
     midi_effects = wrap_item(browser.midi_effects, u'browser_midieffect.svg')
     packs = wrap_item(browser.packs, u'browser_packs.svg')
-    legacy_libraries = wrap_items(list(browser.legacy_libraries), u'browser_8folder.svg')
     current_project = wrap_item(browser.current_project, u'browser_currentproject.svg')
     if filter_type == Live.Browser.FilterType.samples:
-        categories = [packs] + legacy_libraries + [current_project]
+        categories = [packs, current_project]
     else:
-        common_items = [wrap_item(browser.max_for_live, u'browser_max.svg'), wrap_item(browser.plugins, u'browser_plugins.svg'), packs] + legacy_libraries + [current_project]
+        common_items = [wrap_item(browser.max_for_live, u'browser_max.svg'),
+         wrap_item(browser.plugins, u'browser_plugins.svg'),
+         packs,
+         current_project]
         if filter_type == Live.Browser.FilterType.audio_effect_hotswap:
             categories = [audio_effects] + common_items
         elif filter_type == Live.Browser.FilterType.midi_effect_hotswap:

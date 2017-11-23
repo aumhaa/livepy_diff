@@ -1,10 +1,9 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 import math
-from ableton.v2.control_surface import Component
 from .colors import COLOR_INDEX_TO_SCREEN_COLOR, COLOR_INDEX_TO_SCREEN_COLOR_SHADES
 
-class VisualisationSettingsComponent(Component):
+class VisualisationSettings(object):
     base_colors = COLOR_INDEX_TO_SCREEN_COLOR
     shade1_colors = COLOR_INDEX_TO_SCREEN_COLOR_SHADES[0]
     shade2_colors = COLOR_INDEX_TO_SCREEN_COLOR_SHADES[1]
@@ -38,45 +37,45 @@ class VisualisationGuides(object):
     @staticmethod
     def _guide_x(index, origin_x, guide_type):
         if origin_x == None:
-            origin_x = VisualisationSettingsComponent.visualisation_left
-        origin_column = int(math.floor(origin_x / VisualisationSettingsComponent.button_spacing))
-        return origin_column * VisualisationSettingsComponent.button_spacing + guide_type + index * VisualisationSettingsComponent.button_spacing - origin_x
+            origin_x = VisualisationSettings.visualisation_left
+        origin_column = int(math.floor(origin_x / VisualisationSettings.button_spacing))
+        return origin_column * VisualisationSettings.button_spacing + guide_type + index * VisualisationSettings.button_spacing - origin_x
 
     @staticmethod
     def _guide_y(index, origin_y, guide_type):
         if origin_y == None:
-            origin_y = VisualisationSettingsComponent.visualisation_top
-        origin_row = int(math.floor(origin_y / VisualisationSettingsComponent.row_spacing))
-        return origin_row * VisualisationSettingsComponent.row_spacing + guide_type + index * VisualisationSettingsComponent.row_spacing - origin_y
+            origin_y = VisualisationSettings.visualisation_top
+        origin_row = int(math.floor(origin_y / VisualisationSettings.row_spacing))
+        return origin_row * VisualisationSettings.row_spacing + guide_type + index * VisualisationSettings.row_spacing - origin_y
 
     @staticmethod
     def button_left_x(index, origin_x = None):
-        return VisualisationGuides._guide_x(index, origin_x, VisualisationSettingsComponent.button_left)
+        return VisualisationGuides._guide_x(index, origin_x, VisualisationSettings.button_left)
 
     @staticmethod
     def light_left_x(index, origin_x = None):
-        return VisualisationGuides._guide_x(index, origin_x, VisualisationSettingsComponent.light_left)
+        return VisualisationGuides._guide_x(index, origin_x, VisualisationSettings.light_left)
 
     @staticmethod
     def light_right_x(index, origin_x = None):
-        return VisualisationGuides._guide_x(index, origin_x, VisualisationSettingsComponent.light_right)
+        return VisualisationGuides._guide_x(index, origin_x, VisualisationSettings.light_right)
 
     @staticmethod
     def button_right_x(index, origin_x = None):
-        return VisualisationGuides._guide_x(index, origin_x, VisualisationSettingsComponent.button_right)
+        return VisualisationGuides._guide_x(index, origin_x, VisualisationSettings.button_right)
 
     @staticmethod
     def row_top_y(index, origin_y = None):
-        return VisualisationGuides._guide_y(index, origin_y, VisualisationSettingsComponent.row_top)
+        return VisualisationGuides._guide_y(index, origin_y, VisualisationSettings.row_top)
 
     @staticmethod
     def body_top_y(index, origin_y = None):
-        return VisualisationGuides._guide_y(index, origin_y, VisualisationSettingsComponent.body_top)
+        return VisualisationGuides._guide_y(index, origin_y, VisualisationSettings.body_top)
 
     @staticmethod
     def body_bottom_y(index, origin_y = None):
-        return VisualisationGuides._guide_y(index, origin_y, VisualisationSettingsComponent.body_bottom)
+        return VisualisationGuides._guide_y(index, origin_y, VisualisationSettings.body_bottom)
 
     @staticmethod
     def row_bottom_y(index, origin_y = None):
-        return VisualisationGuides._guide_y(index, origin_y, VisualisationSettingsComponent.row_bottom)
+        return VisualisationGuides._guide_y(index, origin_y, VisualisationSettings.row_bottom)

@@ -58,7 +58,7 @@ class AutomationComponent(DeviceParameterComponent):
         return self._can_automate_parameters()
 
     def _can_automate_parameters(self):
-        return len(self.parameter_provider.parameters) > 0 and liveobj_valid(self._clip) and not self._clip.is_arrangement_clip and len(self._selected_time) > 0
+        return len(self.parameter_provider.parameters) > 0 and liveobj_valid(self._clip) and not self._clip.is_arrangement_clip
 
     def set_parameter_controls(self, encoders):
         self.encoders.set_control_element(encoders)

@@ -711,7 +711,8 @@ class MidiClipControllerComponent(CompoundComponent):
     @listens_group(u'editable_pitches')
     def __on_editable_pitches_changed(self, sequencer):
         self._most_recent_editable_pitches = sequencer.editable_pitches
-        self._configure_visualisation()
+        if self.is_enabled():
+            self._configure_visualisation()
 
     @listens_group(u'row_start_times')
     def __on_row_start_times_changed(self, sequencer):

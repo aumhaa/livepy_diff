@@ -126,18 +126,19 @@ class ClipPositions(EventObject):
         self.loop_length = self._convert_to_desired_unit(self._clip.loop_end) - self._convert_to_desired_unit(self._clip.loop_start)
 
     def _update_start_end(self):
+        start = None
+        end = None
         if self.is_warping:
-            self.start = self._clip.sample_to_beat_time(0)
-            self.end = self._clip.sample_to_beat_time(self._clip.sample_length)
+            start = self._clip.sample_to_beat_time(0)
+            end = self._clip.sample_to_beat_time(self._clip.sample_length)
         elif self._clip.is_audio_clip:
-            self.start = 0
-            self.end = self._clip.sample_length
-        elif self._clip.looping:
-            self.start = min(self.start_of_first_note, self.start_marker, self.loop_start)
-            self.end = max(self.end_of_last_note, self.loop_end)
+            start = 0
+            end = self._clip.sample_length
         else:
-            self.start = min(self.start_of_first_note, self.start_marker, self.loop_start)
-            self.end = max(self.end_of_last_note, self.end_marker, self.loop_end)
+            start = self.start_of_first_note
+            end = self.end_of_last_note
+        self.start = min(start, self.loop_start if self._clip.looping else self.start_marker)
+        self.end = max(end, self.loop_end)
 
     def update_all(self):
         self.notify_before_update_all()

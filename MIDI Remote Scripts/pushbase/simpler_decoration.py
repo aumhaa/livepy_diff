@@ -1,8 +1,9 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial
+from math import ceil, floor
 import Live
-from ableton.v2.base import clamp, liveobj_valid, listenable_property, listens, EventObject
+from ableton.v2.base import clamp, liveobj_valid, listenable_property, listens, sign, EventObject
 from ableton.v2.base.collection import IndexedDict
 from .decoration import DecoratorFactory, LiveObjectDecorator
 from .internal_parameter import EnumWrappingParameter, RelativeInternalParameter, to_percentage_display, WrappingParameter
@@ -25,8 +26,9 @@ def from_sample_count(value, sample):
     return float(value) / sample.length
 
 
-def to_sample_count(value, sample):
-    return clamp(int(value * sample.length), 0, sample.length - 1)
+def to_sample_count(prev_value_getter, value, sample):
+    truncation_func = ceil if sign(value - prev_value_getter()) > 0 else floor
+    return clamp(int(truncation_func(value * sample.length)), 0, sample.length - 1)
 
 
 SimplerWarpModes = IndexedDict(((Live.Clip.WarpMode.beats, u'Beats'),
@@ -49,8 +51,8 @@ class SimplerDeviceDecorator(EventObject, LiveObjectDecorator):
         self.__on_slices_changed.subject = self._live_object.sample
 
     def setup_parameters(self):
-        self.start = WrappingParameter(name=u'Start', parent=self, property_host=self._live_object.sample, source_property=u'start_marker', from_property_value=from_sample_count, to_property_value=to_sample_count)
-        self.end = WrappingParameter(name=u'End', parent=self, property_host=self._live_object.sample, source_property=u'end_marker', from_property_value=from_sample_count, to_property_value=to_sample_count)
+        self.start = WrappingParameter(name=u'Start', parent=self, property_host=self._live_object.sample, source_property=u'start_marker', from_property_value=from_sample_count, to_property_value=partial(to_sample_count, lambda : self.start.linear_value))
+        self.end = WrappingParameter(name=u'End', parent=self, property_host=self._live_object.sample, source_property=u'end_marker', from_property_value=from_sample_count, to_property_value=partial(to_sample_count, lambda : self.end.linear_value))
         self.sensitivity = WrappingParameter(name=u'Sensitivity', parent=self, property_host=self._live_object.sample, source_property=u'slicing_sensitivity', display_value_conversion=to_percentage_display)
         self.mode = EnumWrappingParameter(name=u'Mode', parent=self, values_host=self, index_property_host=self, values_property=u'available_playback_modes', index_property=u'playback_mode')
         self.slicing_playback_mode_param = EnumWrappingParameter(name=u'Playback', parent=self, values_host=self, index_property_host=self, values_property=u'available_slicing_playback_modes', index_property=u'slicing_playback_mode')

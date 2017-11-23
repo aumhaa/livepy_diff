@@ -7,6 +7,10 @@ from pushbase.touch_strip_element import TouchStripStates, TouchStripModes
 PAD_VELOCITY_CURVE_CHUNK_SIZE = 16
 MODE_SWITCH_MESSAGE_ID = 10
 
+def make_mono_aftertouch_enabled_message(scene, track, is_enabled):
+    return make_message(51, (scene, track, int(is_enabled)))
+
+
 def make_aftertouch_mode_message(mode_id):
     raise mode_id in (u'polyphonic', u'mono') or AssertionError
     mode_byte = 0 if mode_id == u'mono' else 1

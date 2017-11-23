@@ -1,6 +1,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 from contextlib import contextmanager
+from itertools import ifilter
 from ableton.v2.base import EventObject, index_if, listenable_property, listens, liveobj_valid, find_if, task
 from ableton.v2.control_surface import CompoundComponent, defaults
 from ableton.v2.control_surface.control import ButtonControl, control_matrix, PlayableControl
@@ -242,6 +243,13 @@ class InstrumentComponent(PlayableComponent, CompoundComponent, Slideable, Messe
             if pitch and self._detail_clip:
                 self._do_delete_pitch(pitch)
 
+    @matrix.released
+    def matrix(self, button):
+        self._on_matrix_released(button)
+
+    def _on_matrix_released(self, button):
+        pass
+
     def _do_delete_pitch(self, pitch):
         clip = self._detail_clip
         if clip:
@@ -436,8 +444,13 @@ class SelectedNotesInstrumentComponent(InstrumentComponent):
 
     def _commit_pressed_notes(self):
         with self._updating_selected_notes_model():
-            self.selected_notes_provider.selected_notes = self._pitches
-        self._pitches = []
+            held_notes = map(lambda button: self._get_note_info_for_coordinate(button.coordinate).index, ifilter(lambda button: button.is_pressed, self.matrix))
+            if len(held_notes) > 0:
+                self.selected_notes_provider.selected_notes = held_notes
+                self._pitches = held_notes
+            else:
+                self.selected_notes_provider.selected_notes = self._pitches
+                self._pitches = []
 
     def _add_pitch(self, pitch):
         if self._chord_task.is_killed:
@@ -481,6 +494,11 @@ class SelectedNotesInstrumentComponent(InstrumentComponent):
             self._toggle_pitch_in_note_editor(pitch)
         elif not self.delete_button.is_pressed:
             self._add_pitch(pitch)
+
+    def _on_matrix_released(self, button):
+        if not (self.delete_button.is_pressed or self.select_button.is_pressed or self._is_note_editor_step_active()):
+            if self._chord_task.is_killed:
+                self._chord_task.restart()
 
     def _is_note_editor_step_active(self):
         return len(list(self._note_editor_component.active_steps)) > 0

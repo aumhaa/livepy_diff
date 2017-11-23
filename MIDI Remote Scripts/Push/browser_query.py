@@ -106,7 +106,7 @@ class PlacesBrowserQuery(BrowserQuery):
         super(PlacesBrowserQuery, self).__init__(*a, **k)
 
     def query(self, browser):
-        return [browser.packs, browser.user_library] + list(browser.legacy_libraries) + [browser.current_project] + list(browser.user_folders)
+        return [browser.packs, browser.user_library] + [browser.current_project] + list(browser.user_folders)
 
 
 class ColorTagsBrowserQuery(BrowserQuery):

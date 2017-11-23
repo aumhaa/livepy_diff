@@ -148,7 +148,7 @@ def remove_single_note(clip, time, notes, length):
 
 class NoteEditorComponent(CompoundComponent):
     __events__ = (u'page_length', u'active_note_regions', u'active_steps', u'notes_changed', u'modify_all_notes')
-    matrix = control_matrix(PadControl, channel=PLAYHEAD_FEEDBACK_CHANNELS[0], sensitivity_profile=u'default', mode=PlayableControl.Mode.listenable)
+    matrix = control_matrix(PadControl, channel=PLAYHEAD_FEEDBACK_CHANNELS[0], sensitivity_profile=u'loop', mode=PlayableControl.Mode.listenable)
     mute_button = ButtonControl(color=u'DefaultButton.Transparent')
 
     def __init__(self, clip_creator = None, grid_resolution = None, skin_base_key = u'NoteEditor', velocity_range_thresholds = None, velocity_provider = None, get_notes_handler = get_single_note, remove_notes_handler = remove_single_note, duplicate_all_notes = False, *a, **k):

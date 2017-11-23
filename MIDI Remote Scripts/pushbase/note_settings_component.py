@@ -2,7 +2,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 import math
 from functools import partial
-from itertools import imap, chain, izip_longest
+from itertools import ifilter, imap, chain, izip_longest
 from ableton.v2.base import clamp, find_if, forward_property, listenable_property, listens, listens_group, liveobj_valid, task
 from ableton.v2.control_surface import defaults, Component
 from ableton.v2.control_surface.control import ButtonControl, ControlManager, control_list, EncoderControl, StepEncoderControl
@@ -173,6 +173,10 @@ class NoteSettingsComponentBase(Component):
         self.register_disconnectable(setting)
         self.register_slot(setting, self.notify_setting_changed, u'setting_changed')
 
+    @property
+    def number_of_settings(self):
+        return len(self._settings)
+
     def set_info_message(self, message):
         pass
 
@@ -283,7 +287,6 @@ class NoteEditorSettingsComponent(ModesComponent):
     def __init__(self, note_settings_component = None, automation_component = None, initial_encoder_layer = None, encoder_layer = None, *a, **k):
         super(NoteEditorSettingsComponent, self).__init__(*a, **k)
         raise encoder_layer or AssertionError
-        self._request_hide = False
         self.settings = self.register_component(note_settings_component)
         self.settings.set_enabled(False)
         self._automation = self.register_component(automation_component)
@@ -329,7 +332,7 @@ class NoteEditorSettingsComponent(ModesComponent):
 
     @listenable_property
     def is_touched(self):
-        return any(imap(lambda e: e and e.is_touched, self.encoders))
+        return any(imap(lambda e: e and e.is_touched, ifilter(lambda e: self._can_notify_is_touched(e), self.encoders)))
 
     def _is_step_held(self):
         return len(self._active_note_regions()) > 0
@@ -361,8 +364,7 @@ class NoteEditorSettingsComponent(ModesComponent):
 
     def update_view_state_based_on_selected_setting(self, setting):
         if self.selected_mode == u'enabled':
-            if setting == None or not self._automation.can_automate_parameters:
-                self._set_settings_view_enabled(False)
+            self._set_settings_view_enabled(False)
         elif self._is_step_held():
             if self.selected_setting == u'automation' and self._automation.can_automate_parameters or self.selected_setting == u'note_settings':
                 self._show_settings()
@@ -396,12 +398,10 @@ class NoteEditorSettingsComponent(ModesComponent):
     def _set_settings_view_enabled(self, should_show_view):
         really_show_view = should_show_view and self._automation.can_automate_parameters if self.selected_setting == u'automation' else should_show_view
         if really_show_view:
-            self._request_hide = False
             if self.selected_mode == u'disabled':
                 self.selected_mode = u'about_to_show'
         else:
-            self._request_hide = True
-            self._try_hide_settings()
+            self._hide_settings()
 
     def _active_note_regions(self):
         all_active_regions = imap(lambda e: e.active_note_regions, self._editors)
@@ -413,7 +413,7 @@ class NoteEditorSettingsComponent(ModesComponent):
             all_steps = self._active_note_regions()
             self._automation.selected_time = all_steps
             self._update_note_infos()
-            self._set_settings_view_enabled(len(all_steps) > 0 and self.selected_setting != None)
+            self._set_settings_view_enabled(len(all_steps) > 0 and self.selected_setting != None or self.is_touched)
 
     @listens_group(u'modify_all_notes')
     def __on_modify_all_notes_changed(self, editor):
@@ -443,18 +443,24 @@ class NoteEditorSettingsComponent(ModesComponent):
 
     @encoders.touched
     def encoders(self, encoder):
-        if self.is_enabled():
+        if self._can_notify_is_touched(encoder):
             self.notify_is_touched()
 
     @encoders.released
     def encoders(self, encoder):
-        self._try_hide_settings()
-        if self.is_enabled():
+        if not self.is_touched and not self._is_step_held():
+            self._hide_settings()
+        if self._can_notify_is_touched(encoder):
             self.notify_is_touched()
 
     @encoders.value
     def encoders(self, encoder, value):
         self._notify_modification()
+
+    def _can_notify_is_touched(self, encoder):
+        if self.is_enabled():
+            return self._settings_modes.selected_mode != u'note_settings' or encoder.index >= self.encoders.control_count - self.settings.number_of_settings
+        return False
 
     def _notify_modification(self):
         for editor in self._editors:
@@ -483,10 +489,8 @@ class NoteEditorSettingsComponent(ModesComponent):
             self.selected_mode = u'enabled'
             self._notify_modification()
 
-    def _try_hide_settings(self):
-        if self._request_hide and not self.is_touched:
-            self.selected_mode = u'disabled'
-            self._request_hide = False
+    def _hide_settings(self):
+        self.selected_mode = u'disabled'
 
     def on_enabled_changed(self):
         super(NoteEditorSettingsComponent, self).on_enabled_changed()

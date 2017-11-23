@@ -28,10 +28,11 @@ from .elements import Elements
 from .browser_component import BrowserComponent, NewTrackBrowserComponent
 from .browser_modes import AddDeviceMode, AddTrackMode, BrowseMode, BrowserComponentMode, BrowserModeBehaviour
 from .color_chooser import ColorChooserComponent
-from .device_decoration import DeviceDecoratorFactory
+from .device_decorator_factory import DeviceDecoratorFactory
 from .skin_default import make_default_skin
 from .mute_solo_stop import MuteSoloStopClipComponent
-from .device_component import Push2DeviceProvider, DeviceComponentProvider
+from .device_component import Push2DeviceProvider
+from .device_component_provider import DeviceComponentProvider
 from .device_view_component import DeviceViewComponent
 from .device_navigation import is_empty_rack, DeviceNavigationComponent, MoveDeviceComponent
 from .drum_group_component import DrumGroupComponent
@@ -49,7 +50,7 @@ from .mixer_control_component import MixerControlComponent
 from .note_editor import Push2NoteEditorComponent
 from .note_settings import NoteSettingsComponent
 from .notification_component import NotificationComponent
-from .pad_sensitivity import default_profile, loop_selector_profile, pad_parameter_sender, playing_profile
+from .pad_sensitivity import default_profile, loop_selector_profile, MONO_AFTERTOUCH_DISABLED, MONO_AFTERTOUCH_ENABLED, pad_parameter_sender, PadSettings, playing_profile
 from .pad_velocity_curve import PadVelocityCurveSender
 from .routing import RoutingControlComponent, TrackOrRoutingControlChooserComponent
 from .scales_component import ScalesComponent, ScalesEnabler
@@ -68,7 +69,7 @@ from .track_selection import SessionRingTrackProvider, ViewControlComponent
 from .transport_state import TransportState
 from .user_component import UserButtonBehavior, UserComponent
 from .custom_bank_definitions import BANK_DEFINITIONS
-from .visualisation_settings import VisualisationSettingsComponent
+from .visualisation_settings import VisualisationSettings
 logger = logging.getLogger(__name__)
 VELOCITY_RANGE_THRESHOLDS = [120, 60, 0]
 
@@ -154,7 +155,7 @@ class Push2(IdentifiableControlSurface, PushBase):
             self._initialized = True
             self._init_hardware_settings()
             self._init_pad_curve()
-            self._init_visualisation_settings_component()
+            self._init_visualisation_settings()
             self._hardware_settings.hardware_initialized()
             self._pad_curve_sender.send()
             self._send_color_palette()
@@ -540,12 +541,12 @@ class Push2(IdentifiableControlSurface, PushBase):
     @listens(u'selected_track.is_frozen')
     def __on_selected_track_frozen_changed(self):
         frozen = self.song.view.selected_track.is_frozen
-        self._main_modes.browse_button.enabled = self._main_modes.add_track_button.enabled = self._main_modes.add_device_button.enabled = not frozen
+        self._main_modes.browse_button.enabled = self._main_modes.add_device_button.enabled = not frozen
         self._close_browse_mode()
 
     def _create_device_component(self):
         device_component_layer = Layer(parameter_touch_buttons=ButtonMatrixElement(rows=[self.elements.global_param_touch_buttons_raw]), shift_button=u'shift_button')
-        return DeviceComponentProvider(device_component_layer=device_component_layer, device_decorator_factory=self._device_decorator_factory, device_bank_registry=self._device_bank_registry, banking_info=self._banking_info, name=u'DeviceComponent', is_enabled=False)
+        return DeviceComponentProvider(device_component_layer=device_component_layer, device_decorator_factory=self._device_decorator_factory, device_bank_registry=self._device_bank_registry, banking_info=self._banking_info, name=u'DeviceComponent', is_enabled=False, delete_default_component=self._delete_default_component)
 
     def _create_device_parameter_component(self):
         return DeviceParameterComponent(parameter_provider=self._device_component, is_enabled=False, layer=Layer(parameter_controls=u'fine_grain_param_controls'))
@@ -711,9 +712,8 @@ class Push2(IdentifiableControlSurface, PushBase):
     def _init_pad_curve(self):
         self._pad_curve_sender = PadVelocityCurveSender(curve_sysex_element=SysexElement(sysex.make_pad_velocity_curve_message), threshold_sysex_element=SysexElement(sysex.make_pad_threshold_message), settings=self._setup_settings.pad_settings, chunk_size=sysex.PAD_VELOCITY_CURVE_CHUNK_SIZE)
 
-    def _init_visualisation_settings_component(self):
-        self._visualisation_settings_component = VisualisationSettingsComponent()
-        self._model.visualisationSettings = self._visualisation_settings_component
+    def _init_visualisation_settings(self):
+        self._model.visualisationSettings = VisualisationSettings()
 
     def _create_user_component(self):
         self._user_mode_ui_blocker = Component(is_enabled=False, layer=self._create_message_box_background_layer())
@@ -774,11 +774,12 @@ class Push2(IdentifiableControlSurface, PushBase):
     def _create_pad_sensitivity_update(self):
         all_pad_sysex_control = SysexElement(sysex.make_pad_setting_message)
         pad_sysex_control = SysexElement(sysex.make_pad_setting_message)
-        sensitivity_sender = pad_parameter_sender(all_pad_sysex_control, pad_sysex_control)
-        self._pad_sensitivity_update = PadUpdateComponent(all_pads=range(64), parameter_sender=sensitivity_sender, default_profile=default_profile, update_delay=TIMER_DELAY, is_root=True)
-        self._pad_sensitivity_update.set_profile(u'drums', playing_profile)
-        self._pad_sensitivity_update.set_profile(u'instrument', playing_profile)
-        self._pad_sensitivity_update.set_profile(u'loop', loop_selector_profile)
+        aftertouch_enabled_control = SysexElement(send_message_generator=sysex.make_mono_aftertouch_enabled_message)
+        sensitivity_sender = pad_parameter_sender(all_pad_sysex_control, pad_sysex_control, aftertouch_enabled_control)
+        self._pad_sensitivity_update = PadUpdateComponent(all_pads=range(64), parameter_sender=sensitivity_sender, default_profile=PadSettings(sensitivity=default_profile, aftertouch_enabled=MONO_AFTERTOUCH_ENABLED), update_delay=TIMER_DELAY, is_root=True)
+        self._pad_sensitivity_update.set_profile(u'drums', PadSettings(sensitivity=playing_profile, aftertouch_enabled=MONO_AFTERTOUCH_ENABLED))
+        self._pad_sensitivity_update.set_profile(u'instrument', PadSettings(sensitivity=playing_profile, aftertouch_enabled=MONO_AFTERTOUCH_ENABLED))
+        self._pad_sensitivity_update.set_profile(u'loop', PadSettings(sensitivity=loop_selector_profile, aftertouch_enabled=MONO_AFTERTOUCH_DISABLED))
 
     def _update_full_velocity(self, accent_is_active):
         super(Push2, self)._update_full_velocity(accent_is_active)

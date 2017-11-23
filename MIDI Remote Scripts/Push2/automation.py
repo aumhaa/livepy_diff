@@ -119,10 +119,7 @@ class AutomationComponent(AutomationComponentBase):
         super(AutomationComponent, self)._update_parameters()
 
     def _rebuild_parameter_list(self):
-        if self.is_enabled():
-            self._parameter_infos = map(make_automation_parameter, self._parameter_infos_to_use())
-        else:
-            self._parameter_infos = []
+        self._parameter_infos = map(make_automation_parameter, self._parameter_infos_to_use()) if self.is_enabled() else []
 
     def _update_parameter_values(self):
         for info in ifilter(lambda p: p is not None, self._parameter_infos):

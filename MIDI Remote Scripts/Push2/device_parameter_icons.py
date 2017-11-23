@@ -70,7 +70,6 @@ IMAGE_ID_TO_FILENAME = {u'amp_bass': (u'amp_bass.svg', u''),
  u'filter_high_prd': (u'filter_high_prd.svg', u''),
  u'filter_high_shelf': (u'filter_high_shelf.svg', u'HighShelf_small.svg'),
  u'filter_high_svf': (u'filter_high_svf.svg', u''),
- u'filter_low': (u'filter_low.svg', u''),
  u'filter_low_12': (u'filter_low_12.svg', u'12LowPass_small.svg'),
  u'filter_low_24': (u'filter_low_24.svg', u'24LowPass_small.svg'),
  u'filter_low_48': (u'filter_low_24.svg', u'24LowPass_small.svg'),
@@ -204,16 +203,17 @@ LFO_WAVEFORMS = (u'wave_sine', u'wave_square', u'wave_triangle', u'wave_saw_up',
 STEREO_MODE = (u'lfo_phase', u'lfo_spin')
 SYNC = (u'lfo_free', u'lfo_sync')
 EQ8_FILTER_TYPES = (u'filter_high_48', u'filter_high_12', u'filter_low_shelf', u'filter_bell', u'filter_notch_24', u'filter_high_shelf', u'filter_low_12', u'filter_low_48')
-CYTOMIC_FILTER_TYPES = (u'filter_low', u'filter_high_48', u'filter_band_24', u'filter_notch_24', u'filter_morph_24')
+CYTOMIC_FILTER_TYPES = (u'filter_low_48', u'filter_high_48', u'filter_band_24', u'filter_notch_24', u'filter_morph_24')
 FILTER_CIRCUIT_TYPES = (u'circuit_clean', u'circuit_osr', u'circuit_ms2', u'circuit_smp', u'circuit_prd')
 COMPRESSOR_MODES = (u'compressor_peak', u'compressor_rms', u'compressor_expand')
 VECTOR_LOOP_MODE = (u'wavetable_env_loop_none', u'wavetable_env_loop_trigger', u'wavetable_env_loop')
 VECTOR_OSCILLATOR_SWITCH = (u'wavetable_osc_1', u'wavetable_osc_2', u'wavetable_osc_sub', u'wavetable_osc_mix')
 VECTOR_OSCILLATOR_EFFECT_TYPES = (u'wavetable_effect_none', u'wavetable_effect_fm', u'wavetable_effect_classic', u'wavetable_effect_modern')
 VECTOR_FILTER_TYPES = (u'wavetable_filter_1', u'wavetable_filter_2', u'wavetable_filter_3', u'wavetable_filter_4', u'wavetable_filter_5')
+VECTOR_LFO_TYPES = (u'wave_sine', u'wave_triangle', u'wave_saw_down', u'wave_square', u'wave_sh_mono')
 GENERIC_PARAMETER_IMAGES = {u'LFO Waveform': LFO_WAVEFORMS,
  u'Waveform': (u'wave_sine', u'wave_triangle', u'wave_saw_down', u'wave_sh_stereo'),
- u'Filter Type': (u'filter_low', u'filter_high_48', u'filter_band_24', u'filter_notch_24'),
+ u'Filter Type': (u'filter_low_48', u'filter_high_48', u'filter_band_24', u'filter_notch_24'),
  u'Ext. In On': ACTIVATE,
  u'LFO Sync': SYNC,
  u'Sync': SYNC,
@@ -221,7 +221,7 @@ GENERIC_PARAMETER_IMAGES = {u'LFO Waveform': LFO_WAVEFORMS,
  u'LFO Stereo Mode': STEREO_MODE,
  u'Side Listen': ACTIVATE,
  u'EQ On': ACTIVATE,
- u'EQ Mode': (u'filter_low_shelf', u'filter_bell', u'filter_high_shelf', u'filter_low', u'filter_band_24', u'filter_high_48')}
+ u'EQ Mode': (u'filter_low_shelf', u'filter_bell', u'filter_high_shelf', u'filter_low_48', u'filter_band_24', u'filter_high_48')}
 DEVICE_PARAMETER_IMAGES = {u'UltraAnalog': {u'OSC1 On/Off': ACTIVATE,
                   u'OSC2 On/Off': ACTIVATE,
                   u'F1 On/Off': ACTIVATE,
@@ -448,6 +448,10 @@ DEVICE_PARAMETER_IMAGES = {u'UltraAnalog': {u'OSC1 On/Off': ACTIVATE,
                        u'Env 2 Loop Mode': VECTOR_LOOP_MODE,
                        u'Env 3 Loop Mode': VECTOR_LOOP_MODE,
                        u'LFOs': (u'wavetable_lfo_1', u'wavetable_lfo_2'),
+                       u'LFO 1 Shape': VECTOR_LFO_TYPES,
+                       u'LFO 2 Shape': VECTOR_LFO_TYPES,
+                       u'LFO 1 Retrigger': ACTIVATE,
+                       u'LFO 2 Retrigger': ACTIVATE,
                        u'Mono On': ACTIVATE},
  u'Limiter': {u'Auto': ACTIVATE,
               u'Link Channels': ACTIVATE},

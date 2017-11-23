@@ -31,19 +31,11 @@ def convert_parameter_value_to_graphic(param, param_to_value = lambda p: p.value
     return graphic_display_string
 
 
-def update_encoder_sensitivity(encoder, parameter_info):
-    if hasattr(encoder, u'set_sensitivities'):
-        encoder.set_sensitivities(parameter_info.default_encoder_sensitivity, parameter_info.fine_grain_encoder_sensitivity)
-    else:
-        encoder.mapping_sensitivity = parameter_info.default_encoder_sensitivity
-
-
 class DeviceParameterComponentBase(Component):
     controls = ControlList(MappedControl, 8)
 
     def __init__(self, parameter_provider = None, *a, **k):
         super(DeviceParameterComponentBase, self).__init__(*a, **k)
-        self._parameter_controls = []
         self.parameter_provider = parameter_provider
 
     def _get_parameter_provider(self):
@@ -68,14 +60,6 @@ class DeviceParameterComponentBase(Component):
             control.mapped_parameter = parameter
             if parameter:
                 control.update_sensitivities(parameter_info.default_encoder_sensitivity, parameter_info.fine_grain_encoder_sensitivity)
-
-    @property
-    def parameters(self):
-        return map(lambda p: p and p.parameter, self._parameter_provider.parameters)
-
-    @property
-    def parameter_names(self):
-        return map(lambda p: p and p.name or u'', self.parameters)
 
     def _update_parameters(self):
         if self.is_enabled():
@@ -104,6 +88,14 @@ class DeviceParameterComponent(DeviceParameterComponentBase):
         self._parameter_value_data_sources = map(DisplayDataSource, (u'', u'', u'', u'', u'', u'', u'', u''))
         self._parameter_graphic_data_sources = map(DisplayDataSource, (u'', u'', u'', u'', u'', u'', u'', u''))
         super(DeviceParameterComponent, self).__init__(*a, **k)
+
+    @property
+    def parameters(self):
+        return map(lambda p: p and p.parameter, self._parameter_provider.parameters)
+
+    @property
+    def parameter_names(self):
+        return map(lambda p: p and p.name or u'', self.parameters)
 
     def set_name_display_line(self, line):
         self._set_display_line(line, self._parameter_name_data_sources)
