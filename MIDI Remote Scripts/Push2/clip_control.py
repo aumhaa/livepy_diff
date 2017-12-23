@@ -557,7 +557,7 @@ class MidiClipControllerComponent(CompoundComponent):
         self._real_time_data_attached = False
         self._drum_rack_finder = None
         self._drum_pad_color_notifier = self.register_disconnectable(DrumPadColorNotifier())
-        self.__on_note_colors_changed.add_subject(self._drum_pad_color_notifier)
+        self.__on_note_colors_changed.subject = self._drum_pad_color_notifier
 
     @property
     def clip(self):
@@ -631,9 +631,10 @@ class MidiClipControllerComponent(CompoundComponent):
     def _on_clip_changed(self):
         self._visualisation_real_time_data.set_data(getattr(self.clip, u'proxied_object', self.clip))
         self.__on_clip_color_changed.subject = self.clip
-        self.__on_visible_region_changed.subject = getattr(self.clip, u'timeline_navigation', None)
-        self.__on_focus_marker_changed.subject = getattr(self.clip, u'timeline_navigation', None)
-        self.__on_show_focus_changed.subject = getattr(self.clip, u'timeline_navigation', None)
+        timeline_navigation = getattr(self.clip, u'timeline_navigation', None)
+        self.__on_visible_region_changed.subject = timeline_navigation
+        self.__on_focus_marker_changed.subject = timeline_navigation
+        self.__on_show_focus_changed.subject = timeline_navigation
 
     def _focus_grid_window(self):
         if liveobj_valid(self.clip) and self.get_static_view_data()[u'ShowGridWindow']:
@@ -704,8 +705,8 @@ class MidiClipControllerComponent(CompoundComponent):
         self._most_recent_max_note = instrument.max_pitch
         self._configure_visualisation()
 
-    @listens_group(u'note_colors')
-    def __on_note_colors_changed(self, instrument):
+    @listens(u'note_colors')
+    def __on_note_colors_changed(self):
         self._configure_visualisation()
 
     @listens_group(u'editable_pitches')

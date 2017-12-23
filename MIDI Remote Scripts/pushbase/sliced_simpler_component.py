@@ -1,8 +1,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 import Live
-from ableton.v2.control_surface.components import PlayableComponent
-from ableton.v2.control_surface.components import Slideable, SlideComponent
+from ableton.v2.control_surface.components import PlayableComponent, Slideable, SlideComponent
 from ableton.v2.control_surface.control import ButtonControl
 from ableton.v2.base import liveobj_valid, listens, listenable_property, NamedTuple, task
 from .instrument_component import SelectedNotesProvider

@@ -936,7 +936,8 @@ class MidiClipTimelineNavigation(ClipTimelineNavigation):
 
     @listens(u'end')
     def __on_clip_end_changed(self, _):
-        self._update_timeline_region()
+        if self._process_object_changes:
+            self._update_timeline_region()
 
 
 class AudioClipTimelineNavigation(ClipTimelineNavigation, WaveformNavigation):

@@ -1,10 +1,12 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 from itertools import ifilter
+from Live import DeviceParameter
 from ableton.v2.base import liveobj_valid, listenable_property, listens
 from pushbase.automation_component import AutomationComponent as AutomationComponentBase
 from pushbase.internal_parameter import InternalParameterBase
 from pushbase.parameter_provider import ParameterInfo
+from .device_decoration import PitchParameter
 
 class StepAutomationParameter(InternalParameterBase):
 
@@ -59,6 +61,8 @@ def make_automation_parameter(parameter_info):
     wrapped_parameter = None
     if parameter_info and liveobj_valid(parameter_info.parameter):
         parameter = parameter_info.parameter
+        if isinstance(parameter, PitchParameter):
+            parameter = parameter.integer_value_host
         wrapped_parameter = ParameterInfo(parameter=StepAutomationParameter(parameter=parameter), name=parameter_info.name, default_encoder_sensitivity=parameter_info.default_encoder_sensitivity, fine_grain_encoder_sensitivity=parameter_info.fine_grain_encoder_sensitivity)
     return wrapped_parameter
 
@@ -70,6 +74,10 @@ class AutomationComponent(AutomationComponentBase):
         self._parameter_infos = []
         super(AutomationComponent, self).__init__(*a, **k)
         self._drum_pad_selected = False
+
+    @staticmethod
+    def parameter_is_automateable(parameter):
+        return liveobj_valid(parameter) and isinstance(parameter, (DeviceParameter.DeviceParameter, PitchParameter))
 
     @property
     def deviceType(self):

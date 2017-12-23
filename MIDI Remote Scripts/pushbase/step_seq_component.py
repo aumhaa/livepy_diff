@@ -1,8 +1,9 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 from itertools import chain, starmap
-from ableton.v2.base import forward_property, listenable_property, listens, listens_group, liveobj_valid
+from ableton.v2.base import forward_property, listenable_property, listens, liveobj_valid
 from ableton.v2.control_surface import CompoundComponent
+from ableton.v2.control_surface.components import AccentComponent
 from ableton.v2.control_surface.elements import to_midi_value
 from .loop_selector_component import LoopSelectorComponent
 from .playhead_component import PlayheadComponent
@@ -35,7 +36,7 @@ class StepSeqComponent(CompoundComponent):
         self._on_pressed_pads_changed.subject = self._instrument
         self._on_selected_notes_changed.subject = self._instrument.selected_notes_provider
         self._on_detail_clip_changed.subject = self.song.view
-        self._on_grid_resolution_changed.subject = self._grid_resolution
+        self.__on_grid_resolution_changed.subject = self._grid_resolution
         self._on_page_index_changed.subject = self.paginator
         self._on_page_length_changed.subject = self.paginator
         self._on_active_steps_changed.subject = self._note_editor
@@ -49,13 +50,25 @@ class StepSeqComponent(CompoundComponent):
          (84, 90),
          (76, 82),
          (68, 74)))), feedback_channels=PLAYHEAD_FEEDBACK_CHANNELS))
+        self._accent_component = self.register_component(AccentComponent())
+        self.__on_accent_mode_changed.subject = self._accent_component
         self._skin = skin
         self._playhead_color = u'NoteEditor.Playhead'
+
+    next_loop_page_button = forward_property(u'_loop_selector')(u'next_page_button')
+    prev_loop_page_button = forward_property(u'_loop_selector')(u'prev_page_button')
 
     def set_playhead(self, playhead):
         self._playhead = playhead
         self._playhead_component.set_playhead(playhead)
         self._update_playhead_color()
+
+    def set_full_velocity(self, full_velocity):
+        self._accent_component.set_full_velocity(full_velocity)
+        self.__on_accent_mode_changed()
+
+    def set_accent_button(self, accent_button):
+        self._accent_component.accent_button.set_control_element(accent_button)
 
     def _get_playhead_color(self):
         return self._playhead_color
@@ -65,7 +78,6 @@ class StepSeqComponent(CompoundComponent):
         self._update_playhead_color()
 
     playhead_color = property(_get_playhead_color, _set_playhead_color)
-    full_velocity = forward_property(u'_note_editor')(u'full_velocity')
 
     @listenable_property
     def editing_note_regions(self):
@@ -84,7 +96,7 @@ class StepSeqComponent(CompoundComponent):
         return self._note_editor.get_row_start_times()
 
     @listens(u'index')
-    def _on_grid_resolution_changed(self):
+    def __on_grid_resolution_changed(self, *a):
         if self.is_enabled():
             self.notify_row_start_times()
             self.notify_step_length()
@@ -109,6 +121,10 @@ class StepSeqComponent(CompoundComponent):
         if self.is_enabled():
             self.notify_editing_note_regions()
 
+    @listens(u'activated')
+    def __on_accent_mode_changed(self):
+        self._note_editor.full_velocity = self._accent_component.activated
+
     def _is_triplet_quantization(self):
         return self._grid_resolution.clip_grid[1]
 
@@ -116,34 +132,22 @@ class StepSeqComponent(CompoundComponent):
         if self.is_enabled() and self._skin and self._playhead:
             self._playhead.velocity = to_midi_value(self._skin[self._playhead_color])
 
-    def set_full_velocity_button(self, button):
-        self._note_editor.set_full_velocity_button(button)
-
     def set_select_button(self, button):
-        self._instrument.set_select_button(button)
-        self._loop_selector.set_select_button(button)
+        self._instrument.select_button.set_control_element(button)
+        self._loop_selector.select_button.set_control_element(button)
 
     def set_mute_button(self, button):
         self._note_editor.mute_button.set_control_element(button)
 
     def set_delete_button(self, button):
-        self._instrument.set_delete_button(button)
+        self._instrument.delete_button.set_control_element(button)
         self._loop_selector.delete_button.set_control_element(button)
-
-    def set_next_loop_page_button(self, button):
-        self._loop_selector.next_page_button.set_control_element(button)
-
-    def set_prev_loop_page_button(self, button):
-        self._loop_selector.prev_page_button.set_control_element(button)
 
     def set_loop_selector_matrix(self, matrix):
         self._loop_selector.set_loop_selector_matrix(matrix)
 
     def set_short_loop_selector_matrix(self, matrix):
         self._loop_selector.set_short_loop_selector_matrix(matrix)
-
-    def set_follow_button(self, button):
-        self._loop_selector.set_follow_button(button)
 
     def set_duplicate_button(self, button):
         self._step_duplicator.button.set_control_element(button)
@@ -152,7 +156,7 @@ class StepSeqComponent(CompoundComponent):
         self._note_editor.set_matrix(matrix)
 
     def set_quantization_buttons(self, buttons):
-        self._grid_resolution.set_buttons(buttons)
+        self._grid_resolution.quantization_buttons.set_control_element(buttons)
 
     def set_velocity_control(self, control):
         self._note_editor.set_velocity_control(control)

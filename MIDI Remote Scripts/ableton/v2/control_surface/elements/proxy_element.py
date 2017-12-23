@@ -1,7 +1,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
-from ableton.v2.base import Proxy
-from ableton.v2.control_surface import ControlElement
+from ...base import Proxy
+from ..control_element import ControlElement
 
 class ProxyElement(Proxy, ControlElement):
 

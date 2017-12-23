@@ -11,6 +11,7 @@ from ableton.v2.control_surface.mode import ModesComponent
 from pushbase.mapped_control import MappedControl
 from pushbase.internal_parameter import ConstantParameter
 from pushbase.mixer_utils import has_pan_mode, is_set_to_split_stereo
+from pushbase.song_utils import find_parent_track
 from .real_time_channel import RealTimeDataComponent
 from .item_lister_component import SimpleItemSlot
 MIXER_SECTIONS = (u'Volumes', u'Pans')
@@ -36,13 +37,6 @@ SEND_MODE_NAMES = [u'send_slot_one',
 class MixerSectionDescription(NamedTuple):
     view = None
     parameter_name = None
-
-
-def find_parent_track(live_obj):
-    if isinstance(live_obj, Live.Track.Track):
-        return live_obj
-    else:
-        return find_parent_track(live_obj.canonical_parent)
 
 
 def assign_parameters(controls, parameters):

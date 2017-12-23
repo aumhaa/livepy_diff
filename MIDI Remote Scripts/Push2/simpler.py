@@ -223,7 +223,7 @@ class SimplerDeviceComponent(DeviceComponentWithTrackColorViewData):
          u'Fe',
          u'Pe',
          u'']
-        self._parameter_name_features = get_parameter_name_to_envelope_features_map(envelope_prefixes)
+        self._parameter_to_envelope_features = get_parameter_name_to_envelope_features_map(envelope_prefixes)
         self._playhead_real_time_data = self.register_component(RealTimeDataComponent(channel_type=u'playhead'))
         self._waveform_real_time_data = self.register_component(RealTimeDataComponent(channel_type=u'waveform'))
         self.__on_playhead_channel_changed.subject = self._playhead_real_time_data
@@ -244,15 +244,15 @@ class SimplerDeviceComponent(DeviceComponentWithTrackColorViewData):
     def _parameter_touched(self, parameter):
         if liveobj_valid(self._decorated_device) and liveobj_valid(parameter):
             self._decorated_device.zoom.touch_object(parameter)
-        self._update_visualisation_view_data(self._focus_visualisation_data())
+        self._update_visualisation_view_data(self._visualisation_data())
 
     def _parameter_released(self, parameter):
         if liveobj_valid(self._decorated_device) and liveobj_valid(parameter):
             self._decorated_device.zoom.release_object(parameter)
-        self._update_visualisation_view_data(self._focus_visualisation_data())
+        self._update_visualisation_view_data(self._visualisation_data())
 
     def parameters_changed(self):
-        self._update_visualisation_view_data(self._envelope_visualisation_data())
+        self._update_visualisation_view_data(self._visualisation_data())
 
     def _is_parameter_available(self, parameter):
         name = parameter.name if liveobj_valid(parameter) else u''
@@ -313,7 +313,7 @@ class SimplerDeviceComponent(DeviceComponentWithTrackColorViewData):
 
     def _set_bank_index(self, bank):
         super(SimplerDeviceComponent, self)._set_bank_index(bank)
-        self._update_visualisation_view_data(self._envelope_visualisation_data())
+        self._update_visualisation_view_data(self._visualisation_data())
         self.notify_visualisation_visible()
         self.notify_shrink_parameters()
 
@@ -329,26 +329,36 @@ class SimplerDeviceComponent(DeviceComponentWithTrackColorViewData):
 
     @listens(u'envelope_type_index')
     def __on_selected_envelope_type_changed(self):
-        self._update_visualisation_view_data(self._envelope_visualisation_data())
+        self._update_visualisation_view_data(self._visualisation_data())
         self.notify_visualisation_visible()
         self.notify_shrink_parameters()
 
     @property
-    def _visualisation_visible(self):
+    def _envelope_visible(self):
         return self._bank != None and self._bank.index == 2
 
     @property
+    def _filter_visible(self):
+        return self._bank != None and self._bank.index == 4
+
+    @property
+    def _visualisation_visible(self):
+        return self._filter_visible or self._envelope_visible
+
+    @property
     def _shrink_parameters(self):
-        if self._visualisation_visible:
+        if self._envelope_visible:
             left_button = self.envelope_left_button
             right_button = left_button + 3
             return [ index >= left_button and index <= right_button for index in range(8) ]
+        elif self._filter_visible:
+            return [ index >= 1 and index <= 3 for index in range(8) ]
         else:
             return [False] * 8
 
     def _initial_visualisation_view_data(self):
         view_data = super(SimplerDeviceComponent, self)._initial_visualisation_view_data()
-        view_data.update(self._envelope_visualisation_data())
+        view_data.update(self._visualisation_data())
         return view_data
 
     @property
@@ -357,14 +367,10 @@ class SimplerDeviceComponent(DeviceComponentWithTrackColorViewData):
             return 1
         return 2
 
-    def _focus_visualisation_data(self):
-        touched_parameters = [ self.parameters[button.index] for button in self.parameter_touch_buttons if button.is_pressed ]
-        focused_features = set()
-        for parameter in touched_parameters:
-            if parameter.name in self._parameter_name_features:
-                focused_features |= self._parameter_name_features[parameter.name]
-
-        return {u'EnvelopeFocus': make_vector(focused_features)}
+    def _visualisation_data(self):
+        data = self._envelope_visualisation_data()
+        data.update(self._filter_visualisation_data())
+        return data
 
     def _envelope_visualisation_data(self):
         left_button = self.envelope_left_button
@@ -376,12 +382,26 @@ class SimplerDeviceComponent(DeviceComponentWithTrackColorViewData):
          u'FadeInLine',
          u'FadeOutLine'])
         for parameter in self.parameters:
-            if parameter.name in self._parameter_name_features:
-                shown_features |= self._parameter_name_features[parameter.name]
+            if parameter.name in self._parameter_to_envelope_features:
+                shown_features |= self._parameter_to_envelope_features[parameter.name]
 
-        view_data = {u'EnvelopeName': [u'Volume', u'Filter', u'Pitch'][self.selected_envelope_type],
+        touched_parameters = [ self.parameters[button.index] for button in self.parameter_touch_buttons if button.is_pressed ]
+        focused_features = set()
+        for parameter in touched_parameters:
+            if parameter.name in self._parameter_to_envelope_features:
+                focused_features |= self._parameter_to_envelope_features[parameter.name]
+
+        return {u'EnvelopeVisible': self._envelope_visible,
+         u'EnvelopeName': [u'Volume', u'Filter', u'Pitch'][self.selected_envelope_type],
          u'EnvelopeLeft': VisualisationGuides.light_left_x(left_button),
          u'EnvelopeRight': VisualisationGuides.light_right_x(right_button),
-         u'EnvelopeShow': make_vector(shown_features)}
-        view_data.update(self._focus_visualisation_data())
-        return view_data
+         u'EnvelopeShow': make_vector(shown_features),
+         u'EnvelopeFocus': make_vector(focused_features)}
+
+    def _filter_visualisation_data(self):
+        left_column = 1
+        right_column = 3
+        return {u'FilterVisible': self._filter_visible,
+         u'FilterLeft': VisualisationGuides.light_left_x(left_column),
+         u'FilterRight': VisualisationGuides.light_right_x(right_column),
+         u'FilterFocus': any([ button.is_pressed for index, button in enumerate(self.parameter_touch_buttons) if index >= left_column and index <= right_column ])}

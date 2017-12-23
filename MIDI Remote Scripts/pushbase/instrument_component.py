@@ -288,10 +288,6 @@ class InstrumentComponent(PlayableComponent, CompoundComponent, Slideable, Messe
         self._aftertouch_control = control
         self._update_aftertouch()
 
-    def set_delete_button(self, button):
-        self.delete_button.set_control_element(button)
-        self._set_control_pads_from_script(self.delete_button.is_pressed)
-
     def _align_first_note(self):
         self._first_note = self.page_offset + (self._first_note - self._last_page_offset) * float(self.page_length) / float(self._last_page_length)
         if self._first_note >= self.position_count:

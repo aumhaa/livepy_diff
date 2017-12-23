@@ -88,6 +88,7 @@ USER_1_CHANNEL = 5
 USER_2_CHANNEL = 13
 
 class Launchpad_MK2(IdentifiableControlSurface, OptimizedControlSurface):
+    identity_request = consts.IDENTITY_REQUEST
 
     def __init__(self, c_instance, *a, **k):
         super(Launchpad_MK2, self).__init__(product_id_bytes=consts.PRODUCT_ID_BYTES, c_instance=c_instance, *a, **k)
@@ -208,9 +209,6 @@ class Launchpad_MK2(IdentifiableControlSurface, OptimizedControlSurface):
         with self.component_guard():
             for control in self.controls:
                 control.clear_send_cache()
-
-    def _send_identity_request(self):
-        self._send_midi(consts.IDENTITY_REQUEST)
 
     def on_identified(self):
         self._send_challenge()

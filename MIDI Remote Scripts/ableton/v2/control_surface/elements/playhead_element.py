@@ -1,6 +1,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
-from ableton.v2.base import nop
+from ...base import nop
 from .proxy_element import ProxyElement
 
 class NullPlayhead(object):

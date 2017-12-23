@@ -1,5 +1,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
+import Live
+AutomationState = Live.DeviceParameter.AutomationState
 from ableton.v2.base import EventObject, clamp, const, find_if, inject, listenable_property, listens, liveobj_valid
 from pushbase.decoration import LiveObjectDecorator
 from pushbase.internal_parameter import InternalParameter
@@ -8,6 +10,10 @@ from .timeline_navigation import Region, SimplerWaveformNavigation
 
 def get_parameter_by_name(decorator, name):
     return find_if(lambda p: p.name == name, decorator._live_object.parameters)
+
+
+def get_parameter_automation_state(parameter):
+    return getattr(parameter, u'automation_state', AutomationState.none)
 
 
 class NotifyingList(EventObject):
@@ -321,6 +327,8 @@ class PitchParameter(InternalParameter):
         self._decimal_value_host = decimal_value_host
         self._on_integer_value_changed.subject = integer_value_host
         self._on_decimal_value_changed.subject = decimal_value_host
+        self._on_integer_value_automation_state_changed.subject = integer_value_host
+        self._on_decimal_value_automation_state_changed.subject = decimal_value_host
         self._integer_value = getattr(integer_value_host, u'value', 0)
         self._decimal_value = getattr(decimal_value_host, u'value', 0.0)
         self.adjust_finegrain = False
@@ -339,13 +347,30 @@ class PitchParameter(InternalParameter):
             self._decimal_value = new_decimal_value
             self.notify_value()
 
+    @listens(u'automation_state')
+    def _on_integer_value_automation_state_changed(self):
+        self.notify_automation_state()
+
+    @listens(u'automation_state')
+    def _on_decimal_value_automation_state_changed(self):
+        self.notify_automation_state()
+
     @property
     def _combined_value(self):
         return getattr(self._integer_value_host, u'value', 0) + (getattr(self._decimal_value_host, u'value', 0.0) - 0.5)
 
-    @property
-    def value(self):
+    def _get_value(self):
         return self._combined_value
+
+    def _set_value(self, new_value):
+        if new_value != self._combined_value:
+            coarse_linear_value = round(new_value)
+            fine_linear_value = new_value - coarse_linear_value + 0.5
+            self._set_coarse(coarse_linear_value)
+            self._set_finegrain(fine_linear_value)
+            self.notify_value()
+
+    value = property(_get_value, _set_value)
 
     def _get_linear_value(self):
         if self.adjust_finegrain:
@@ -382,6 +407,10 @@ class PitchParameter(InternalParameter):
         return self._decimal_value_host
 
     @property
+    def integer_value_host(self):
+        return self._integer_value_host
+
+    @property
     def min(self):
         return getattr(self._integer_value_host, u'min', 0) - getattr(self._decimal_value_host, u'min', 0.0)
 
@@ -392,6 +421,18 @@ class PitchParameter(InternalParameter):
     @property
     def display_value(self):
         return u'{0:.2f}st'.format(self._combined_value)
+
+    @property
+    def default_value(self):
+        return 0
+
+    @property
+    def automation_state(self):
+        integer_host_automation_state = get_parameter_automation_state(self._integer_value_host)
+        decimal_host_automation_state = get_parameter_automation_state(self._decimal_value_host)
+        if integer_host_automation_state == AutomationState.playing or decimal_host_automation_state == AutomationState.playing:
+            return AutomationState.playing
+        return integer_host_automation_state or decimal_host_automation_state
 
 
 class ModMatrixParameter(InternalParameter):

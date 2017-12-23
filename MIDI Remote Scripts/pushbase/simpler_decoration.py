@@ -7,7 +7,7 @@ from ableton.v2.base import clamp, liveobj_valid, listenable_property, listens, 
 from ableton.v2.base.collection import IndexedDict
 from .decoration import DecoratorFactory, LiveObjectDecorator
 from .internal_parameter import EnumWrappingParameter, RelativeInternalParameter, to_percentage_display, WrappingParameter
-BoolWrappingParameter = partial(WrappingParameter, to_property_value=lambda integer, _simpler: bool(integer), from_property_value=lambda boolean, _simpler: int(boolean), value_items=[u'off', u'on'], display_value_conversion=lambda val: (u'on' if val else u'off'))
+BoolWrappingParameter = partial(WrappingParameter, to_property_value=lambda integer, _simpler: bool(integer), from_property_value=lambda boolean, _simpler: int(boolean), value_items=[u'Off', u'On'], display_value_conversion=lambda val: (u'On' if val else u'Off'))
 
 def from_user_range(minv, maxv):
     return lambda v, s: (v - minv) / float(maxv - minv)

@@ -1,6 +1,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
-from ableton.v2.base import EventObject, listenable_property
+from ...base import EventObject, listenable_property
 from .proxy_element import ProxyElement
 
 class NullVelocityLevels(EventObject):

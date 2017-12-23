@@ -349,13 +349,13 @@ class NoteEditorSettingsComponent(ModesComponent):
         self.settings.set_encoder_controls(encoders)
         self._automation.set_parameter_controls(encoders)
 
-    def _get_parameter_provider(self):
+    @property
+    def parameter_provider(self):
         self._automation.parameter_provider
 
-    def _set_parameter_provider(self, value):
+    @parameter_provider.setter
+    def parameter_provider(self, value):
         self._automation.parameter_provider = value
-
-    parameter_provider = property(_get_parameter_provider, _set_parameter_provider)
 
     @listens(u'selected_mode')
     def __on_selected_setting_mode_changed(self, mode):
@@ -363,7 +363,7 @@ class NoteEditorSettingsComponent(ModesComponent):
             self._automation.selected_time = self._active_note_regions()
 
     def update_view_state_based_on_selected_setting(self, setting):
-        if self.selected_mode == u'enabled':
+        if self.selected_mode == u'enabled' and self.is_touched or setting is None:
             self._set_settings_view_enabled(False)
         elif self._is_step_held():
             if self.selected_setting == u'automation' and self._automation.can_automate_parameters or self.selected_setting == u'note_settings':

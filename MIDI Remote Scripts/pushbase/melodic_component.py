@@ -2,6 +2,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from itertools import izip_longest
 from ableton.v2.base import find_if, forward_property, listenable_property, listens, listens_group, liveobj_valid
+from ableton.v2.control_surface.components import AccentComponent
 from ableton.v2.control_surface.elements import to_midi_value
 from ableton.v2.control_surface.mode import LayerMode
 from .consts import MessageBoxText
@@ -23,14 +24,14 @@ class MelodicComponent(MessengerModesComponent):
         super(MelodicComponent, self).__init__(*a, **k)
         self._matrices = None
         self._grid_resolution = grid_resolution
-        self.instrument, self._step_duplicator = self.register_components(InstrumentComponent(note_layout=note_layout), StepDuplicatorComponent())
+        self.instrument, self._step_duplicator, self._accent_component = self.register_components(InstrumentComponent(note_layout=note_layout), StepDuplicatorComponent(), AccentComponent())
         self._note_editors = self.register_components(*[ note_editor_class(clip_creator=clip_creator, grid_resolution=self._grid_resolution, velocity_range_thresholds=velocity_range_thresholds, is_enabled=False) for _ in xrange(NUM_NOTE_EDITORS) ])
         for editor in self._note_editors:
             note_editor_settings.add_editor(editor)
             editor.set_step_duplicator(self._step_duplicator)
 
         self.paginator = self.register_component(NoteEditorPaginator(self._note_editors))
-        self._loop_selector = self.register_component(LoopSelectorComponent(clip_creator=clip_creator, paginator=self.paginator, is_enabled=False))
+        self._loop_selector = self.register_component(LoopSelectorComponent(clip_creator=clip_creator, paginator=self.paginator, is_enabled=False, default_size=8))
         self._playhead = None
         self._playhead_component = self.register_component(PlayheadComponent(grid_resolution=grid_resolution, paginator=self.paginator, follower=self._loop_selector, feedback_channels=PLAYHEAD_FEEDBACK_CHANNELS, is_enabled=False))
         self._play_modes = self.register_component(MessengerModesComponent(muted=True, is_enabled=False))
@@ -50,25 +51,28 @@ class MelodicComponent(MessengerModesComponent):
          LayerMode(self, layer),
          self._playhead_component,
          self._update_note_editors,
-         self.paginator] + self._note_editors, message=MessageBoxText.LAYOUT_MELODIC_SEQUENCER, default_mode=u'sequence', alternative_mode=u'sequence_loop')
+         self.paginator,
+         self._accent_component] + self._note_editors, message=MessageBoxText.LAYOUT_MELODIC_SEQUENCER, default_mode=u'sequence', alternative_mode=u'sequence_loop')
         self._sequence_modes.add_mode(u'sequence_loop', [LayerMode(self.instrument, instrument_sequence_layer),
          note_editor_settings,
          self._loop_selector,
          LayerMode(self, sequence_layer_with_loop),
          self._playhead_component,
          self._update_note_editors,
-         self.paginator] + self._note_editors, message=MessageBoxText.ALTERNATE_SEQUENCE_LOOP, default_mode=u'sequence', alternative_mode=u'sequence_loop')
+         self.paginator,
+         self._accent_component] + self._note_editors, message=MessageBoxText.ALTERNATE_SEQUENCE_LOOP, default_mode=u'sequence', alternative_mode=u'sequence_loop')
         self._sequence_modes.selected_mode = u'sequence'
         self.add_mode(u'sequence', self._sequence_modes, message=MessageBoxText.LAYOUT_MELODIC_SEQUENCER)
         self.selected_mode = u'play'
         self._on_detail_clip_changed.subject = self.song.view
         self._on_pattern_changed.subject = self.instrument
         self._on_notes_changed.subject = self.instrument
-        self._on_grid_resolution_changed.subject = self._grid_resolution
+        self.__on_grid_resolution_changed.subject = self._grid_resolution
         self._on_page_index_changed.subject = self.paginator
         self._on_page_length_changed.subject = self.paginator
         self._on_active_steps_changed.replace_subjects(self._note_editors)
         self._on_modify_all_notes_changed.replace_subjects(self._note_editors)
+        self.__on_accent_activated_changed.subject = self._accent_component
         self._on_detail_clip_changed()
         self._update_note_editors()
         self._skin = skin
@@ -129,17 +133,25 @@ class MelodicComponent(MessengerModesComponent):
             self._playhead_component.set_clip(clip)
             self.instrument.set_detail_clip(clip)
 
-    def _set_full_velocity(self, enable):
+    @listens(u'activated')
+    def __on_accent_activated_changed(self):
+        self._update_full_velocity_for_editors()
+
+    def _update_full_velocity_for_editors(self):
+        enabled = self._accent_component.activated
         for note_editor in self._note_editors:
-            note_editor.full_velocity = enable
+            note_editor.full_velocity = enabled
 
-    def _get_full_velocity(self):
-        self._note_editors[0].full_velocity
+    def set_full_velocity(self, full_velocity):
+        self._accent_component.set_full_velocity(full_velocity)
+        self._update_full_velocity_for_editors()
 
-    full_velocity = property(_get_full_velocity, _set_full_velocity)
+    def set_accent_button(self, accent_button):
+        self._accent_component.accent_button.set_control_element(accent_button)
+        self._update_full_velocity_for_editors()
 
     def set_quantization_buttons(self, buttons):
-        self._grid_resolution.set_buttons(buttons)
+        self._grid_resolution.quantization_buttons.set_control_element(buttons)
 
     def set_mute_button(self, button):
         for e in self._note_editors:
@@ -173,7 +185,7 @@ class MelodicComponent(MessengerModesComponent):
         return self._note_editors[0].get_row_start_times()
 
     @listens(u'index')
-    def _on_grid_resolution_changed(self):
+    def __on_grid_resolution_changed(self, *a):
         if self.is_enabled():
             self.notify_row_start_times()
             self.notify_step_length()

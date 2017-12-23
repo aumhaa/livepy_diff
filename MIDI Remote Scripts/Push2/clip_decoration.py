@@ -142,7 +142,6 @@ class ClipPositions(EventObject):
 
     def update_all(self):
         self.notify_before_update_all()
-        self._update_start_end()
         self.__on_start_marker_changed()
         self.__on_end_marker_changed()
         self.__on_loop_start_changed()

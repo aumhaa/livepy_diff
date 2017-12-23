@@ -7,14 +7,14 @@ from pushbase.colors import Pulse
 from pushbase.message_box_component import Messenger
 from .colors import IndexedColor, Rgb, inverse_translate_color_index, translate_color_index
 from .skin_default import SELECTION_PULSE_SPEED
-COLOR_CHOOSER_LAYOUT = ((13, 12, 14, 15, 17, 16, 18, 19),
- (11, None, None, None, None, None, None, 20),
- (9, None, None, None, None, None, None, 21),
- (8, None, None, None, None, None, None, 26),
- (10, None, None, None, None, None, None, 22),
- (7, None, None, None, None, None, None, 25),
- (5, None, None, None, None, None, None, 24),
- (4, 6, 3, None, None, 1, 23, 2))
+COLOR_CHOOSER_LAYOUT = ((10, 11, 12, 13, 14, 15, 16, 17),
+ (9, None, None, None, None, None, None, 18),
+ (8, None, None, None, None, None, None, 19),
+ (7, None, None, None, None, None, None, 20),
+ (5, None, None, None, None, None, None, 21),
+ (6, None, None, None, None, None, None, 22),
+ (4, None, None, None, None, None, None, 23),
+ (3, 2, 1, None, None, 25, 26, 24))
 
 class ColorChooserComponent(Component, Messenger):
     matrix = control_matrix(ButtonControl, dimensions=(8, 8))

@@ -119,9 +119,6 @@ class DrumGroupComponent(SlideableTouchStripComponent, DrumGroupComponent, Messe
     def set_quantize_button(self, button):
         self.quantize_button.set_control_element(button)
 
-    def set_delete_button(self, button):
-        self.delete_button.set_control_element(button)
-
     @duplicate_button.pressed
     def duplicate_button(self, button):
         self._set_control_pads_from_script(True)

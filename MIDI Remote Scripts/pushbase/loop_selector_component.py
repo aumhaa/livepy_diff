@@ -2,13 +2,14 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from contextlib import contextmanager
 from functools import partial
-from itertools import ifilter, izip
-from ableton.v2.base import EventObject, clamp, first, listens, liveobj_changed, liveobj_valid, nop, task
+from itertools import izip
+from ableton.v2.base import EventObject, clamp, listenable_property, listens, liveobj_changed, liveobj_valid, nop, task
 from ableton.v2.control_surface import defaults, Component
-from ableton.v2.control_surface.control import ButtonControl
+from ableton.v2.control_surface.control import ButtonControl, control_matrix, PlayableControl
 from .step_duplicator import NullStepDuplicator, set_loop
 from .consts import MessageBoxText
 from .message_box_component import Messenger
+from .pad_control import PadControl
 
 def create_clip_in_selected_slot(creator, song, clip_length = None):
     u"""
@@ -70,47 +71,41 @@ class LoopSelectorComponent(Component, Messenger):
     next_page_button = ButtonControl()
     prev_page_button = ButtonControl()
     delete_button = ButtonControl()
-    __events__ = (u'is_following',)
+    select_button = ButtonControl()
+    loop_selector_matrix = control_matrix(PadControl, sensitivity_profile=u'loop', mode=PlayableControl.Mode.listenable)
+    short_loop_selector_matrix = control_matrix(ButtonControl)
+    is_following = listenable_property.managed(False)
 
-    def __init__(self, clip_creator = None, measure_length = 4.0, follow_detail_clip = False, paginator = None, default_size = 1, *a, **k):
+    def __init__(self, clip_creator = None, measure_length = 4.0, follow_detail_clip = False, paginator = None, default_size = None, *a, **k):
         super(LoopSelectorComponent, self).__init__(*a, **k)
-        self._clip_creator = clip_creator
-        self._sequencer_clip = None
-        self._paginator = Paginator()
-        self._loop_start = 0
-        self._loop_end = 0
-        self._loop_length = 0
-        self._is_following = False
-        self._follow_button = None
-        self._select_button = None
-        self._short_loop_selector_matrix = None
-        self._loop_selector_matrix = None
-        self._default_size = default_size
-        self._pressed_pages = []
-        self._page_colors = []
-        self._measure_length = measure_length
-        self._last_playhead_page = -1
-        self._follow_task = self._tasks.add(task.sequence(task.wait(defaults.MOMENTARY_DELAY), task.run(partial(self._set_is_following, True))))
-        self._follow_task.kill()
-        self.set_step_duplicator(None)
-        self._notification_reference = partial(nop, None)
-        self.is_deleting = False
-        if follow_detail_clip:
-            self._on_detail_clip_changed.subject = self.song.view
-            self._on_detail_clip_changed()
-        self._on_session_record_changed.subject = self.song
-        self._on_song_playback_status_changed.subject = self.song
-        if paginator is not None:
-            self.set_paginator(paginator)
+        if not default_size is not None:
+            raise AssertionError
+            self._clip_creator = clip_creator
+            self._sequencer_clip = None
+            self._paginator = Paginator()
+            self._loop_start = 0
+            self._loop_end = 0
+            self._loop_length = 0
+            self._default_size = default_size
+            self._pressed_pages = []
+            self._page_colors = []
+            self._measure_length = measure_length
+            self._last_playhead_page = -1
 
-    def _get_is_following(self):
-        return self._can_follow and self._is_following
+            def set_is_following_true():
+                self.is_following = True
 
-    def _set_is_following(self, value):
-        self._is_following = value
-        self.notify_is_following(value)
-
-    is_following = property(_get_is_following, _set_is_following)
+            self._follow_task = self._tasks.add(task.sequence(task.wait(defaults.MOMENTARY_DELAY), task.run(set_is_following_true)))
+            self._follow_task.kill()
+            self.set_step_duplicator(None)
+            self._notification_reference = partial(nop, None)
+            self.is_deleting = False
+            if follow_detail_clip:
+                self._on_detail_clip_changed.subject = self.song.view
+                self._on_detail_clip_changed()
+            self._on_session_record_changed.subject = self.song
+            self._on_song_playback_status_changed.subject = self.song
+            paginator is not None and self.set_paginator(paginator)
 
     def set_paginator(self, paginator):
         self._paginator = paginator or Paginator()
@@ -125,16 +120,7 @@ class LoopSelectorComponent(Component, Messenger):
     @listens(u'page_length')
     def _on_page_length_changed(self):
         self._update_page_colors()
-        self._update_follow_button()
         self._select_start_page()
-
-    def set_follow_button(self, button):
-        self._follow_button = button
-        self._on_follow_value.subject = button
-        self._update_follow_button()
-
-    def set_select_button(self, button):
-        self._select_button = button
 
     def set_step_duplicator(self, duplicator):
         self._step_duplicator = duplicator or NullStepDuplicator()
@@ -146,7 +132,7 @@ class LoopSelectorComponent(Component, Messenger):
 
     def set_detail_clip(self, clip):
         if liveobj_changed(clip, self._sequencer_clip):
-            self._is_following = liveobj_valid(clip) and (self._is_following or clip_is_new_recording(clip))
+            self.is_following = liveobj_valid(clip) and (self.is_following or clip_is_new_recording(clip))
             self._on_playing_position_changed.subject = clip
             self._on_playing_status_changed.subject = clip
             self._on_loop_start_changed.subject = clip
@@ -155,10 +141,6 @@ class LoopSelectorComponent(Component, Messenger):
             self._sequencer_clip = clip
             self._step_duplicator.set_clip(clip)
             self._on_loop_changed()
-
-    def _update_follow_button(self):
-        if self.is_enabled() and self._follow_button:
-            self._follow_button.set_light(self.is_following)
 
     def _select_start_page(self):
         if liveobj_valid(self._sequencer_clip):
@@ -191,30 +173,20 @@ class LoopSelectorComponent(Component, Messenger):
         self._update_page_colors()
 
     def set_loop_selector_matrix(self, matrix):
-        self._loop_selector_matrix = matrix
-        self._on_loop_selector_matrix_value.subject = matrix
-        if matrix:
-            matrix.reset()
-            for button, _ in ifilter(first, matrix.iterbuttons()):
-                button.sensitivity_profile = u'loop'
-
+        self.loop_selector_matrix.set_control_element(matrix)
         self._update_page_colors()
 
     def set_short_loop_selector_matrix(self, matrix):
-        self._short_loop_selector_matrix = matrix
-        self._on_short_loop_selector_matrix_value.subject = matrix
-        if matrix:
-            matrix.reset()
+        self.short_loop_selector_matrix.set_control_element(matrix)
         self._update_page_colors()
 
     def update(self):
         super(LoopSelectorComponent, self).update()
         self._update_page_and_playhead_leds()
-        self._update_follow_button()
 
     @listens(u'is_recording')
     def _on_is_recording_changed(self):
-        self.is_following = self._is_following or clip_is_new_recording(self._sequencer_clip)
+        self.is_following = self.is_following or clip_is_new_recording(self._sequencer_clip)
 
     @listens(u'playing_position')
     def _on_playing_position_changed(self):
@@ -275,7 +247,7 @@ class LoopSelectorComponent(Component, Messenger):
             self._update_page_leds()
 
     def _get_size(self):
-        return max(len(self._loop_selector_matrix or []), len(self._short_loop_selector_matrix or []), self._default_size)
+        return max(self.loop_selector_matrix.control_count, self.short_loop_selector_matrix.control_count, self._default_size)
 
     def _get_loop_in_pages(self):
         page_length = self._page_length_in_beats
@@ -326,15 +298,14 @@ class LoopSelectorComponent(Component, Messenger):
         self._update_page_and_playhead_leds()
 
     def _update_page_leds(self):
-        self._update_page_leds_in_matrix(self._loop_selector_matrix)
-        self._update_page_leds_in_matrix(self._short_loop_selector_matrix)
+        self._update_page_leds_in_matrix(self.loop_selector_matrix)
+        self._update_page_leds_in_matrix(self.short_loop_selector_matrix)
 
     def _update_page_leds_in_matrix(self, matrix):
         u""" update hardware leds to match precomputed map """
         if self.is_enabled() and matrix:
             for button, color in izip(matrix, self._page_colors):
-                if button:
-                    button.set_light(color)
+                button.color = color
 
     def _jump_to_page(self, next_page):
         start, length = self._get_loop_in_pages()
@@ -370,24 +341,30 @@ class LoopSelectorComponent(Component, Messenger):
     def prev_page_button(self, button):
         self._follow_task.kill()
 
-    @listens(u'value')
-    def _on_short_loop_selector_matrix_value(self, value, x, y, is_momentary):
-        page = x + y * self._short_loop_selector_matrix.width()
+    @short_loop_selector_matrix.pressed
+    def short_loop_selector_matrix(self, button):
         if self.is_enabled():
-            if value or not is_momentary:
-                self._pressed_pages = [page]
-                self._try_set_loop()
-                self._pressed_pages = []
+            page = self._get_corresponding_page(button, self.short_loop_selector_matrix)
+            self._pressed_pages = [page]
+            self._try_set_loop()
+            self._pressed_pages = []
 
-    @listens(u'value')
-    def _on_loop_selector_matrix_value(self, value, x, y, is_momentary):
-        page = x + y * self._loop_selector_matrix.width()
+    @loop_selector_matrix.pressed
+    def loop_selector_matrix(self, button):
         if self.is_enabled():
-            if value or not is_momentary:
-                if page not in self._pressed_pages:
-                    self._on_press_loop_selector_matrix(page)
-        if (not is_momentary or not value) and page in self._pressed_pages:
+            page = self._get_corresponding_page(button, self.loop_selector_matrix)
+            if page not in self._pressed_pages:
+                self._on_press_loop_selector_matrix(page)
+
+    @loop_selector_matrix.released
+    def loop_selector_matrix(self, button):
+        page = self._get_corresponding_page(button, self.loop_selector_matrix)
+        if page in self._pressed_pages:
             self._pressed_pages.remove(page)
+
+    def _get_corresponding_page(self, button, matrix):
+        y, x = button.coordinate
+        return x + y * matrix.width
 
     def _quantize_page_index(self, page_index, quant):
         page_length = self._page_length_in_beats
@@ -441,7 +418,7 @@ class LoopSelectorComponent(Component, Messenger):
 
         self._pressed_pages.append(page)
         absolute_page = page + self.page_offset
-        if not self._select_button or not self._select_button.is_pressed():
+        if not self.select_button.is_pressed:
             if not liveobj_valid(self._sequencer_clip) and not self.song.view.highlighted_clip_slot.has_clip:
                 create_clip(absolute_page)
             elif liveobj_valid(self._sequencer_clip):
@@ -478,10 +455,6 @@ class LoopSelectorComponent(Component, Messenger):
         self._sequencer_clip.view.show_loop()
 
     @property
-    def _can_follow(self):
-        return True
-
-    @property
     def _page_length_in_beats(self):
         return clamp(self._paginator.page_length, 0.25, self._one_measure_in_beats)
 
@@ -491,15 +464,16 @@ class LoopSelectorComponent(Component, Messenger):
 
     @property
     def page_offset(self):
-        size = max(self._loop_selector_matrix.width() * self._loop_selector_matrix.height() if self._loop_selector_matrix else 0, 1)
+
+        def zero_if_none(n):
+            if n is None:
+                return 0
+            return n
+
+        width = zero_if_none(self.loop_selector_matrix.width)
+        height = zero_if_none(self.loop_selector_matrix.height)
+        size = max(width * height, 1)
         page_index = self._paginator.page_index
         page_length = self._paginator.page_length
         selected_page_index = int(page_index * page_length / self._page_length_in_beats)
         return size * int(selected_page_index / size)
-
-    @listens(u'value')
-    def _on_follow_value(self, value):
-        if self.is_enabled() and value:
-            if self._can_follow:
-                self.is_following = not self.is_following
-                self._update_follow_button()

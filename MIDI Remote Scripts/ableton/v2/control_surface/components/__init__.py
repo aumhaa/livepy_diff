@@ -1,5 +1,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
+from .accent import AccentComponent
 from .background import BackgroundComponent, ModifierBackgroundComponent
 from .channel_strip import ChannelStripComponent
 from .clip_slot import ClipSlotComponent, find_nearest_color
@@ -18,4 +19,4 @@ from .slide import Slideable, SlideComponent
 from .toggle import ToggleComponent
 from .transport import TransportComponent
 from .view_control import BasicSceneScroller, BasicTrackScroller, SceneListScroller, SceneScroller, TrackScroller, ViewControlComponent
-__all__ = (u'BackgroundComponent', u'ModifierBackgroundComponent', u'ChannelStripComponent', u'ClipSlotComponent', u'find_nearest_color', u'DeviceComponent', u'DrumGroupComponent', u'MixerComponent', u'right_align_return_tracks_track_assigner', u'PlayableComponent', u'SceneComponent', u'Scrollable', u'ScrollComponent', u'SessionComponent', u'SessionNavigationComponent', u'SessionRingScroller', u'SessionRingTrackScroller', u'SessionRingSceneScroller', u'SessionRingTrackPager', u'SessionRingScenePager', u'SessionRecordingComponent', u'SessionRingComponent', u'SessionOverviewComponent', u'Slideable', u'SlideComponent', u'ToggleComponent', u'TransportComponent', u'BasicSceneScroller', u'BasicTrackScroller', u'SceneListScroller', u'SceneScroller', u'TrackScroller', u'ViewControlComponent')
+__all__ = (u'AccentComponent', u'BackgroundComponent', u'ModifierBackgroundComponent', u'ChannelStripComponent', u'ClipSlotComponent', u'find_nearest_color', u'DeviceComponent', u'DrumGroupComponent', u'MixerComponent', u'right_align_return_tracks_track_assigner', u'PlayableComponent', u'SceneComponent', u'Scrollable', u'ScrollComponent', u'SessionComponent', u'SessionNavigationComponent', u'SessionRingScroller', u'SessionRingTrackScroller', u'SessionRingSceneScroller', u'SessionRingTrackPager', u'SessionRingScenePager', u'SessionRecordingComponent', u'SessionRingComponent', u'SessionOverviewComponent', u'Slideable', u'SlideComponent', u'ToggleComponent', u'TransportComponent', u'BasicSceneScroller', u'BasicTrackScroller', u'SceneListScroller', u'SceneScroller', u'TrackScroller', u'ViewControlComponent')

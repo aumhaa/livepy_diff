@@ -175,7 +175,7 @@ class NoteEditorComponent(CompoundComponent):
         self._clip_notes = []
         self._pitches = [DEFAULT_START_NOTE]
         self._grid_resolution = grid_resolution
-        self._on_resolution_changed.subject = self._grid_resolution
+        self.__on_resolution_changed.subject = self._grid_resolution
         self.set_step_duplicator(None)
         self._nudge_offset = 0
         self._length_offset = 0
@@ -293,7 +293,6 @@ class NoteEditorComponent(CompoundComponent):
     def update(self):
         super(NoteEditorComponent, self).update()
         self._update_editor_matrix_leds()
-        self._grid_resolution.update()
 
     def _get_clip_notes_time_range(self):
         if self._modify_all_notes_enabled:
@@ -403,7 +402,7 @@ class NoteEditorComponent(CompoundComponent):
         self._trigger_modification(immediate=True)
 
     @listens(u'index')
-    def _on_resolution_changed(self):
+    def __on_resolution_changed(self, *a):
         self._release_active_steps()
         self._update_from_grid()
         self.set_selected_page_point(self._selected_page_point)
@@ -514,24 +513,21 @@ class NoteEditorComponent(CompoundComponent):
         self.notify_active_steps()
         self.notify_active_note_regions()
 
-    def _is_continuation_of_existing_note(self, step):
+    def _find_continued_step(self, step):
 
         def steps_to_note_start(steps):
             return map(lambda step: self.get_step_start_time(step), steps)
 
         time = self.get_step_start_time(step)
-        all_note_starts = map(note_start_time, self._clip_notes)
-        if all_note_starts:
-            insert_point = bisect(all_note_starts, time)
+        all_steps_with_notes = [ time_step for time_step, index in self._visible_steps() if time_step.filter_notes(self._clip_notes) ]
+        all_time_step_starts = map(lambda ts: ts.start, all_steps_with_notes)
+        if all_time_step_starts:
+            insert_point = bisect(all_time_step_starts, time)
             if insert_point > 0:
-                prev_note = self._clip_notes[insert_point - 1]
-                notes_in_modified_steps = []
-                for start in steps_to_note_start(self._modified_steps):
-                    notes_in_modified_steps.extend(TimeStep(start, self._get_step_length()).filter_notes(self._clip_notes))
-
-                if note_start_time(prev_note) in map(note_start_time, notes_in_modified_steps):
-                    return prev_note
-        return False
+                prev_filled_step = all_steps_with_notes[insert_point - 1]
+                notes_in_modified_steps = steps_to_note_start(self._modified_steps)
+                if prev_filled_step.start in notes_in_modified_steps:
+                    return prev_filled_step
 
     def _add_step_to_duplicator(self, step):
         nudge_offset = 0
@@ -551,21 +547,25 @@ class NoteEditorComponent(CompoundComponent):
                 self._add_step_to_duplicator(step)
             else:
                 self._step_tap_tasks[step].restart()
-                note_continuation = self._is_continuation_of_existing_note(step)
-                if note_continuation:
-                    self._modify_length_of_existing_note(note_continuation, step)
+                continued_step = self._find_continued_step(step)
+                if continued_step:
+                    self._modify_length_of_notes_within_existing_step(continued_step, step)
                 else:
                     self._pressed_steps.append(step)
                 self._velocity_provider.set_velocities_playable(False)
         self.notify_active_steps()
         self.notify_active_note_regions()
 
-    def _modify_length_of_existing_note(self, existing_note, new_step):
-        time = note_start_time(existing_note)
-        old_end = note_length(existing_note) + note_start_time(existing_note)
-        new_end = self.get_step_start_time(new_step) + self._get_step_length()
-        new_notes = self._modify_notes_in_time(self._time_step(time), self._clip_notes, new_end - old_end)
-        self._replace_notes(new_notes)
+    def _modify_length_of_notes_within_existing_step(self, existing_time_step, new_step):
+        notes_in_step = existing_time_step.filter_notes(self._clip_notes)
+        new_end = float(self.get_step_start_time(new_step) + self._get_step_length())
+        step_mute = all(map(lambda note: note_muted(note), notes_in_step))
+        new_notes = []
+        for note in self._clip_notes:
+            length_offset = new_end - (note_length(note) + note_start_time(note)) if note in notes_in_step else 0
+            new_notes.append(self._modify_single_note(step_mute, existing_time_step, length_offset, note))
+
+        self._replace_notes(tuple(new_notes))
 
     def _time_step(self, time):
         return TimeStep(time, self._get_step_length())

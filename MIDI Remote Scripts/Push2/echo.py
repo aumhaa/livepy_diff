@@ -68,6 +68,7 @@ class EchoDeviceComponent(DeviceComponentWithTrackColorViewData):
      1: ButtonRange(2, 5)}
     FILTER_VISUALISATION_CONFIGURATION_IN_BANKS = {0: ButtonRange(4, 5),
      3: ButtonRange(1, 4)}
+    LFO_VISUALISATION_CONFIGURATION_IN_BANKS = {4: ButtonRange(0, 3)}
 
     def _parameter_touched(self, parameter):
         self._update_visualisation_view_data(self._adjustment_view_data)
@@ -80,6 +81,7 @@ class EchoDeviceComponent(DeviceComponentWithTrackColorViewData):
         is_linked = bool(get_parameter_by_name(self.device(), u'Link').value)
         adjusting_tunnel_left = adjusting_tunnel_right = False
         adjusting_filter_hp = adjusting_filter_lp = False
+        adjusting_lfo = adjusting_lfo_phase = False
         touched_parameters = [ self.parameters[button.index] for button in self.parameter_touch_buttons if button.is_pressed ]
         for parameter in touched_parameters:
             if parameter.name == u'Feedback':
@@ -94,11 +96,17 @@ class EchoDeviceComponent(DeviceComponentWithTrackColorViewData):
                 adjusting_filter_hp = True
             elif parameter.name in (u'LP Freq', u'LP Res'):
                 adjusting_filter_lp = True
+            elif parameter.name == u'Mod Phase':
+                adjusting_lfo_phase = True
+            elif parameter.name.startswith(u'Mod '):
+                adjusting_lfo = True
 
         return {u'AdjustingTunnelLeft': adjusting_tunnel_left,
          u'AdjustingTunnelRight': adjusting_tunnel_right,
          u'AdjustingFilterHighPass': adjusting_filter_hp,
-         u'AdjustingFilterLowPass': adjusting_filter_lp}
+         u'AdjustingFilterLowPass': adjusting_filter_lp,
+         u'AdjustingLfo': adjusting_lfo,
+         u'AdjustingLfoPhase': adjusting_lfo_phase}
 
     def _set_bank_index(self, bank):
         super(EchoDeviceComponent, self)._set_bank_index(bank)
@@ -109,14 +117,15 @@ class EchoDeviceComponent(DeviceComponentWithTrackColorViewData):
 
     @property
     def _visualisation_visible(self):
-        return self._bank.index in self.TUNNEL_VISUALISATION_CONFIGURATION_IN_BANKS or self._bank.index in self.FILTER_VISUALISATION_CONFIGURATION_IN_BANKS
+        return self._bank.index in self.TUNNEL_VISUALISATION_CONFIGURATION_IN_BANKS or self._bank.index in self.FILTER_VISUALISATION_CONFIGURATION_IN_BANKS or self._bank.index in self.LFO_VISUALISATION_CONFIGURATION_IN_BANKS
 
     @property
     def _shrink_parameters(self):
         if self._visualisation_visible:
             tunnel_config = self.TUNNEL_VISUALISATION_CONFIGURATION_IN_BANKS.get(self._bank.index, ButtonRange(-1, -1))
             filter_config = self.FILTER_VISUALISATION_CONFIGURATION_IN_BANKS.get(self._bank.index, ButtonRange(-1, -1))
-            return [ tunnel_config.left_index <= index <= tunnel_config.right_index or filter_config.left_index <= index <= filter_config.right_index for index in range(8) ]
+            lfo_config = self.LFO_VISUALISATION_CONFIGURATION_IN_BANKS.get(self._bank.index, ButtonRange(-1, -1))
+            return [ tunnel_config.left_index <= index <= tunnel_config.right_index or filter_config.left_index <= index <= filter_config.right_index or lfo_config.left_index <= index <= lfo_config.right_index for index in range(8) ]
         else:
             return [False] * 8
 
@@ -124,10 +133,13 @@ class EchoDeviceComponent(DeviceComponentWithTrackColorViewData):
     def _configuration_view_data(self):
         tunnel_left, tunnel_right = self._calculate_view_size(self.TUNNEL_VISUALISATION_CONFIGURATION_IN_BANKS)
         filter_left, filter_right = self._calculate_view_size(self.FILTER_VISUALISATION_CONFIGURATION_IN_BANKS)
+        lfo_left, lfo_right = self._calculate_view_size(self.LFO_VISUALISATION_CONFIGURATION_IN_BANKS)
         return {u'TunnelLeft': tunnel_left,
          u'TunnelRight': tunnel_right,
          u'FilterLeft': filter_left,
-         u'FilterRight': filter_right}
+         u'FilterRight': filter_right,
+         u'LfoLeft': lfo_left,
+         u'LfoRight': lfo_right}
 
     def _initial_visualisation_view_data(self):
         view_data = super(EchoDeviceComponent, self)._initial_visualisation_view_data()

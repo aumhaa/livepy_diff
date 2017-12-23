@@ -6,7 +6,7 @@ from copy import copy
 from ableton.v2.base import task, nop, listens, listens_group, mixin, get_slice
 from ableton.v2.control_surface import BackgroundLayer, Layer
 from ableton.v2.control_surface.defaults import TIMER_DELAY
-from ableton.v2.control_surface.elements import ComboElement
+from ableton.v2.control_surface.elements import ComboElement, NullFullVelocity, NullPlayhead, NullVelocityLevels
 from ableton.v2.control_surface.mode import AddLayerMode, EnablingModesComponent, LazyEnablingMode, ModesComponent
 from pushbase import consts
 from pushbase.actions import SelectComponent, StopClipComponent
@@ -16,8 +16,6 @@ from pushbase.control_element_factory import create_sysex_element
 from pushbase.note_editor_component import NoteEditorComponent
 from pushbase.note_settings_component import NoteSettingsComponent
 from pushbase.pad_sensitivity import PadUpdateComponent
-from pushbase.playhead_element import NullPlayhead
-from pushbase.velocity_levels_element import NullVelocityLevels
 from pushbase.push_base import PushBase
 from pushbase.quantization_component import QuantizationComponent
 from pushbase.sysex import LIVE_MODE
@@ -143,8 +141,8 @@ class Push(PushBase):
         self._start_handshake_task.kill()
         self.elements.playhead_element.proxied_object = self._c_instance.playhead
         self.elements.velocity_levels_element.proxied_object = self._c_instance.velocity_levels
+        self.elements.full_velocity_element.proxied_object = self._c_instance.full_velocity
         self._note_repeat.set_note_repeat(self._c_instance.note_repeat)
-        self._accent_component.set_full_velocity(self._c_instance.full_velocity)
         for control in self.controls:
             receive_value_backup = getattr(control, u'_receive_value_backup', nop)
             if receive_value_backup != nop:
@@ -177,8 +175,9 @@ class Push(PushBase):
         self.elements.playhead_element.proxied_object = NullPlayhead()
         self._c_instance.velocity_levels.enabled = False
         self.elements.velocity_levels_element.proxied_object = NullVelocityLevels()
+        self._c_instance.full_velocity.enabled = False
+        self.elements.full_velocity_element.proxied_object = NullFullVelocity()
         self._note_repeat.set_note_repeat(None)
-        self._accent_component.set_full_velocity(None)
         for control in self.controls:
             receive_value_backup = getattr(control, u'receive_value', nop)
             send_midi_backup = getattr(control, u'send_midi', nop)
@@ -452,7 +451,7 @@ class Push(PushBase):
             def delete_clip_envelope(_, param):
                 return self._delete_default_component.delete_clip_envelope(param)
 
-        self.elements = Elements(deleter=Deleter(), undo_handler=self.song, pad_sensitivity_update=self._pad_sensitivity_update, playhead=self._c_instance.playhead, velocity_levels=self._c_instance.velocity_levels)
+        self.elements = Elements(deleter=Deleter(), undo_handler=self.song, pad_sensitivity_update=self._pad_sensitivity_update, playhead=self._c_instance.playhead, velocity_levels=self._c_instance.velocity_levels, full_velocity=self._c_instance.full_velocity)
 
     def _create_pad_sensitivity_update(self):
         all_pad_sysex_control = create_sysex_element(sysex.ALL_PADS_SENSITIVITY_PREFIX)

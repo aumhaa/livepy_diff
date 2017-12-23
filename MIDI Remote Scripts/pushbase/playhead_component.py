@@ -19,7 +19,7 @@ class PlayheadComponent(Component):
         self._triplet_notes = tuple(triplet_notes)
         self._feedback_channels = feedback_channels
         self._on_page_changed.subject = self._paginator
-        self._on_grid_resolution_changed.subject = self._grid_resolution
+        self.__on_grid_resolution_changed.subject = self._grid_resolution
         self._on_follower_is_following_changed.subject = self._follower
 
     def set_playhead(self, playhead):
@@ -45,7 +45,7 @@ class PlayheadComponent(Component):
         self.update()
 
     @listens(u'index')
-    def _on_grid_resolution_changed(self):
+    def __on_grid_resolution_changed(self, *a):
         self.update()
 
     @listens(u'is_following')

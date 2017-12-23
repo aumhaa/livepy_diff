@@ -2,13 +2,13 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from collections import namedtuple
 from functools import partial
-import Live
 from MidiRemoteScript import MutableVector
 from ableton.v2.base import EventError, const, listenable_property, listens, liveobj_valid
 from ableton.v2.control_surface import DeviceProvider as DeviceProviderBase
 from ableton.v2.control_surface.control import control_list, ButtonControl
 from pushbase.device_component import DeviceComponent as DeviceComponentBase
 from pushbase.parameter_provider import ParameterInfo
+from pushbase.song_utils import find_parent_track
 from .colors import COLOR_INDEX_TO_SCREEN_COLOR
 from .device_parameter_bank_with_options import create_device_bank_with_options, OPTIONS_PER_BANK
 from .parameter_mapping_sensitivities import PARAMETER_SENSITIVITIES, DEFAULT_SENSITIVITY_KEY, FINE_GRAINED_SENSITIVITY_KEY, parameter_mapping_sensitivity, fine_grain_parameter_mapping_sensitivity
@@ -50,10 +50,10 @@ class GenericDeviceComponent(DeviceComponentBase):
     parameter_touch_buttons = control_list(ButtonControl, control_count=8)
     shift_button = ButtonControl()
 
-    def __init__(self, visualisation_real_time_data = None, delete_default_component = None, *a, **k):
+    def __init__(self, visualisation_real_time_data = None, delete_button = None, *a, **k):
         super(GenericDeviceComponent, self).__init__(*a, **k)
         self._visualisation_real_time_data = visualisation_real_time_data
-        self._delete_default_component = delete_default_component
+        self._delete_button = delete_button
         self.default_sensitivity = partial(self._sensitivity, DEFAULT_SENSITIVITY_KEY)
         self.fine_sensitivity = partial(self._sensitivity, FINE_GRAINED_SENSITIVITY_KEY)
 
@@ -180,8 +180,9 @@ class DeviceComponentWithTrackColorViewData(GenericDeviceComponent):
     def _set_device(self, device):
         super(DeviceComponentWithTrackColorViewData, self)._set_device(device)
         self.__on_device_active_changed.subject = device if liveobj_valid(device) else None
-        self.__on_track_mute_changed.subject = self._parent_track
-        self.__on_track_muted_via_solo_changed.subject = self._parent_track
+        parent_track = find_parent_track(self._decorated_device)
+        self.__on_track_mute_changed.subject = parent_track
+        self.__on_track_muted_via_solo_changed.subject = parent_track
         self.__on_track_or_chain_color_changed.subject = device.canonical_parent if liveobj_valid(device) else None
 
     def _initial_visualisation_view_data(self):
@@ -193,7 +194,7 @@ class DeviceComponentWithTrackColorViewData(GenericDeviceComponent):
 
     def _is_active_for_visualisation(self):
         device = self._decorated_device
-        parent_track = self._parent_track
+        parent_track = find_parent_track(self._decorated_device)
         if liveobj_valid(device) and liveobj_valid(parent_track):
             if parent_track == self.song.master_track:
                 return device.is_active
@@ -220,21 +221,15 @@ class DeviceComponentWithTrackColorViewData(GenericDeviceComponent):
         self._update_is_active()
 
     def _update_is_active(self):
-        self._update_visualisation_view_data({u'IsActive': self._is_active_for_visualisation()})
+        if self.is_enabled():
+            self._update_visualisation_view_data({u'IsActive': self._is_active_for_visualisation()})
 
     @listens(u'color_index')
     def __on_track_or_chain_color_changed(self):
-        track_color = self._track_color_for_visualisation()
-        if track_color is not None:
-            self._update_visualisation_view_data({u'TrackColor': track_color})
-
-    @property
-    def _parent_track(self):
-        track = self._decorated_device
-        while liveobj_valid(track) and not isinstance(track, Live.Track.Track):
-            track = getattr(track, u'canonical_parent', None)
-
-        return track
+        if self.is_enabled():
+            track_color = self._track_color_for_visualisation()
+            if track_color is not None:
+                self._update_visualisation_view_data({u'TrackColor': track_color})
 
 
 def get_parameter_name_to_envelope_features_map(envelope_prefixes):
@@ -243,15 +238,15 @@ def get_parameter_name_to_envelope_features_map(envelope_prefixes):
         return [ (prefix + u' ' + feature_name if prefix is not u'' else feature_name) for prefix in envelope_prefixes ]
 
     feature_parameter_names = {u'InitNode': parameter_names_for_feature(u'Init'),
-     u'AttackLine': parameter_names_for_feature(u'Init') + parameter_names_for_feature(u'Attack') + parameter_names_for_feature(u'Peak') + parameter_names_for_feature(u'A Slope'),
+     u'AttackLine': parameter_names_for_feature(u'Init') + parameter_names_for_feature(u'Attack') + parameter_names_for_feature(u'Peak') + parameter_names_for_feature(u'A. Slope'),
      u'FadeInLine': parameter_names_for_feature(u'Fade In'),
      u'AttackNode': parameter_names_for_feature(u'Attack') + parameter_names_for_feature(u'Peak'),
      u'FadeInNode': parameter_names_for_feature(u'Fade In'),
-     u'DecayLine': parameter_names_for_feature(u'Attack') + parameter_names_for_feature(u'Peak') + parameter_names_for_feature(u'Decay') + parameter_names_for_feature(u'Sustain') + parameter_names_for_feature(u'D Slope'),
+     u'DecayLine': parameter_names_for_feature(u'Attack') + parameter_names_for_feature(u'Peak') + parameter_names_for_feature(u'Decay') + parameter_names_for_feature(u'Sustain') + parameter_names_for_feature(u'D. Slope'),
      u'DecayNode': parameter_names_for_feature(u'Decay') + parameter_names_for_feature(u'Sustain'),
      u'SustainLine': parameter_names_for_feature(u'Decay') + parameter_names_for_feature(u'Sustain') + parameter_names_for_feature(u'Fade In'),
      u'SustainNode': parameter_names_for_feature(u'Sustain'),
-     u'ReleaseLine': parameter_names_for_feature(u'Sustain') + parameter_names_for_feature(u'Release') + parameter_names_for_feature(u'End') + parameter_names_for_feature(u'R Slope'),
+     u'ReleaseLine': parameter_names_for_feature(u'Sustain') + parameter_names_for_feature(u'Release') + parameter_names_for_feature(u'End') + parameter_names_for_feature(u'R. Slope'),
      u'FadeOutLine': parameter_names_for_feature(u'Fade Out'),
      u'ReleaseNode': parameter_names_for_feature(u'Release') + parameter_names_for_feature(u'End'),
      u'FadeOutNode': parameter_names_for_feature(u'Fade Out')}

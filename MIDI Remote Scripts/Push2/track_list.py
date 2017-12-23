@@ -4,17 +4,16 @@ from functools import partial
 from itertools import izip
 import Live
 from ableton.v2.base import nop, listenable_property, listens, listens_group, liveobj_changed, liveobj_valid
-from ableton.v2.control_surface import find_instrument_devices
+from ableton.v2.control_surface import Component, find_instrument_devices
 from ableton.v2.control_surface.control import ButtonControl, control_list
 from ableton.v2.control_surface.mode import ModeButtonBehaviour, ModesComponent
 from pushbase.actions import is_clip_stop_pending
 from pushbase.consts import MessageBoxText
 from pushbase.message_box_component import Messenger
 from pushbase.selected_track_parameter_provider import toggle_arm
-from pushbase.song_utils import delete_track_or_return_track
+from pushbase.song_utils import delete_track_or_return_track, find_parent_track
 from .colors import DISPLAY_BUTTON_SHADE_LEVEL, IndexedColor, make_blinking_track_color, make_pulsing_track_color
 from .mixable_utilities import can_play_clips, is_chain
-from .mixer_control_component import find_parent_track
 from .real_time_channel import RealTimeDataComponent
 from .skin_default import RECORDING_COLOR, UNLIT_COLOR
 from .track_selection import get_all_mixer_tracks, SelectedMixerTrackProvider
@@ -80,6 +79,18 @@ def toggle_mixable_solo(mixable, song):
         mixable.solo = not mixable.solo
 
 
+def playing_clip(track):
+    if hasattr(track, u'playing_slot_index'):
+        try:
+            if track.playing_slot_index >= 0:
+                playing_clip_slot = track.clip_slots[track.playing_slot_index]
+                if liveobj_valid(playing_clip_slot):
+                    return playing_clip_slot.clip
+                return None
+        except RuntimeError:
+            pass
+
+
 class TrackListBehaviour(ModeButtonBehaviour):
 
     def press_immediate(self, component, mode):
@@ -100,7 +111,7 @@ class TrackListComponent(ModesComponent, Messenger):
     __events__ = (u'mute_solo_stop_cancel_action_performed',)
     track_action_buttons = control_list(ButtonControl, control_count=8)
 
-    def __init__(self, tracks_provider = None, trigger_recording_on_release_callback = nop, color_chooser = None, *a, **k):
+    def __init__(self, tracks_provider = None, trigger_recording_on_release_callback = nop, color_chooser = None, clip_phase_enabler = None, *a, **k):
         raise tracks_provider is not None or AssertionError
         super(TrackListComponent, self).__init__(*a, **k)
         self.locked_mode = None
@@ -109,6 +120,8 @@ class TrackListComponent(ModesComponent, Messenger):
         self._color_chooser = color_chooser
         self._track_selected_when_pressed = [False] * self.track_action_buttons.control_count
         self._playheads_real_time_data = [ self.register_component(RealTimeDataComponent(channel_type=u'playhead', is_enabled=False)) for _ in xrange(8) ]
+        self._clip_phase_enabler = clip_phase_enabler or self.register_component(Component())
+        self.__on_clip_phase_enabler_changed.subject = self._clip_phase_enabler
         self._setup_action_mode(u'select', handler=self._select_mixable)
         self._setup_action_mode(u'lock_override', handler=self._select_mixable)
         self._setup_action_mode(u'delete', handler=self._delete_mixable)
@@ -161,17 +174,6 @@ class TrackListComponent(ModesComponent, Messenger):
             self._button_feedback_provider = feedback_provider
             self._update_all_button_colors()
 
-    def _playing_clip(self, track):
-        if hasattr(track, u'playing_slot_index'):
-            try:
-                if track.playing_slot_index >= 0:
-                    playing_clip_slot = track.clip_slots[track.playing_slot_index]
-                    if playing_clip_slot is not None:
-                        return playing_clip_slot.clip
-                    return
-            except RuntimeError:
-                pass
-
     @listens(u'tracks')
     def __on_tracks_changed(self):
         self._update_track_and_chain_listeners()
@@ -210,7 +212,7 @@ class TrackListComponent(ModesComponent, Messenger):
     def _update_playheads_real_time_data(self):
         if self.song.is_playing:
             for track, real_time_data in zip(self.tracks, self._playheads_real_time_data):
-                real_time_data.set_data(self._playing_clip(track))
+                real_time_data.set_data(playing_clip(track))
 
         else:
             for track, real_time_data in zip(self.tracks, self._playheads_real_time_data):
@@ -334,9 +336,13 @@ class TrackListComponent(ModesComponent, Messenger):
         if self._color_chooser is not None:
             self._color_chooser.object = mixable
 
+    @listens(u'enabled')
+    def __on_clip_phase_enabler_changed(self, _):
+        self._update_realtime_channels_ability()
+
     def _update_realtime_channels_ability(self):
         for playhead in self._playheads_real_time_data:
-            playhead.set_enabled(self.is_enabled())
+            playhead.set_enabled(self.is_enabled() and self._clip_phase_enabler.is_enabled())
 
     def on_enabled_changed(self):
         super(TrackListComponent, self).on_enabled_changed()

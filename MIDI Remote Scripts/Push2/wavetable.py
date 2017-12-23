@@ -2,9 +2,13 @@
 from __future__ import absolute_import, print_function, unicode_literals
 import re
 import Live
-ModulationSource = Live.InstrumentWavetableDevice.ModulationSource
+AutomationState = Live.DeviceParameter.AutomationState
+ModulationSource = Live.WavetableDevice.ModulationSource
 ParameterState = Live.DeviceParameter.ParameterState
 from ableton.v2.base import EventObject, find_if, listens, listenable_property, liveobj_valid
+from ableton.v2.control_surface import Layer
+from pushbase.actions import DeleteAndReturnToDefaultComponent
+from pushbase.consts import MessageBoxText
 from pushbase.decoration import LiveObjectDecorator
 from pushbase.internal_parameter import EnumWrappingParameter, IntegerParameter, InternalParameter, InternalParameterBase
 from .device_decoration import get_parameter_by_name, IndexProvider, ModMatrixParameter, NotifyingList, PitchParameter
@@ -72,6 +76,13 @@ class InstrumentVectorDeviceDecorator(LiveObjectDecorator, EventObject):
      u'Position Spread',
      u'Random Note')
     mono_off_on_values = (u'Off', u'On')
+    poly_voices_values = (u'2',
+     u'3',
+     u'4',
+     u'5',
+     u'6',
+     u'7',
+     u'8')
     available_filter_routings = (u'Serial', u'Parallel', u'Split')
     __events__ = (u'request_bank_view', u'request_previous_bank_from_mod_matrix')
 
@@ -82,7 +93,7 @@ class InstrumentVectorDeviceDecorator(LiveObjectDecorator, EventObject):
          u'S',
          u'Mix'], default_value=InstrumentVectorOscillatorType.one)
         self._filter_types_provider = NotifyingList(available_values=[u'1', u'2'], default_value=InstrumentVectorFilterType.one)
-        self._envelope_types_provider = NotifyingList(available_values=[u'AMP', u'ENV2', u'ENV3'], default_value=InstrumentVectorEnvelopeType.amp)
+        self._envelope_types_provider = NotifyingList(available_values=[u'Amp', u'Env2', u'Env3'], default_value=InstrumentVectorEnvelopeType.amp)
         self._lfo_types_provider = NotifyingList(available_values=[u'LFO1', u'LFO2'], default_value=InstrumentVectorLfoType.one)
         self._amp_envelope_view_types_provider = NotifyingList(available_values=[u'Time', u'Slope'], default_value=InstrumentVectorEnvelopeViewType.time)
         self._mod_envelope_view_types_provider = NotifyingList(available_values=[u'Time', u'Slope', u'Value'], default_value=InstrumentVectorEnvelopeViewType.time)
@@ -125,6 +136,10 @@ class InstrumentVectorDeviceDecorator(LiveObjectDecorator, EventObject):
     def filter_index(self):
         return self._filter_types_provider.index
 
+    @listenable_property
+    def lfo_index(self):
+        return self._lfo_types_provider.index
+
     @property
     def single_selected_parameter(self):
         return self._single_selected_parameter
@@ -144,7 +159,7 @@ class InstrumentVectorDeviceDecorator(LiveObjectDecorator, EventObject):
         self.filter_switch_for_filter_switch_option = EnumWrappingParameter(name=u'Internal Filter', parent=self, values_host=self._filter_types_provider, index_property_host=self._filter_types_provider, values_property=u'available_values', index_property=u'index', value_type=InstrumentVectorFilterType)
         self.current_mod_target = InternalParameter(name=u'Current Mod Target', parent=self)
         self.envelope_switch = EnumWrappingParameter(name=u'Envelopes', parent=self, values_host=self._envelope_types_provider, index_property_host=self._envelope_types_provider, values_property=u'available_values', index_property=u'index', value_type=InstrumentVectorEnvelopeType)
-        self.lfo_switch = EnumWrappingParameter(name=u'LFOs', parent=self, values_host=self._lfo_types_provider, index_property_host=self._lfo_types_provider, values_property=u'available_values', index_property=u'index', value_type=InstrumentVectorLfoType)
+        self.lfo_switch = EnumWrappingParameter(name=u'LFO', parent=self, values_host=self._lfo_types_provider, index_property_host=self._lfo_types_provider, values_property=u'available_values', index_property=u'index', value_type=InstrumentVectorLfoType)
         self._osc_1_category_switch = EnumWrappingParameter(name=u'Osc 1 Category', parent=self, values_host=self._live_object, index_property_host=self, values_property=u'oscillator_wavetable_categories', index_property=u'oscillator_1_wavetable_category')
         self._osc_2_category_switch = EnumWrappingParameter(name=u'Osc 2 Category', parent=self, values_host=self._live_object, index_property_host=self, values_property=u'oscillator_wavetable_categories', index_property=u'oscillator_2_wavetable_category')
         self._osc_1_table_switch = EnumWrappingParameter(name=u'Osc 1 Table', parent=self, values_host=self._live_object, index_property_host=self, values_property=u'oscillator_1_wavetables', index_property=u'oscillator_1_wavetable_index')
@@ -172,6 +187,7 @@ class InstrumentVectorDeviceDecorator(LiveObjectDecorator, EventObject):
          EnumWrappingParameter(name=u'Unison Mode', parent=self, values_host=self, index_property_host=self, values_property=u'available_unison_modes', index_property=u'unison_mode'),
          IntegerParameter(name=u'Unison Voices', parent=self, integer_value_host=self._live_object, integer_value_property_name=u'unison_voice_count', min_value=self.MIN_UNISON_VOICE_COUNT, max_value=self.MAX_UNISON_VOICE_COUNT),
          EnumWrappingParameter(name=u'Mono On', parent=self, values_host=self, index_property_host=self, values_property=u'mono_off_on_values', index_property=u'mono_poly', to_index_conversion=lambda index: int(not index), from_index_conversion=lambda index: int(not index)),
+         EnumWrappingParameter(name=u'Poly Voices', parent=self, values_host=self, index_property_host=self, values_property=u'poly_voices_values', index_property=u'poly_voices'),
          EnumWrappingParameter(name=u'Filter Routing', parent=self, values_host=self, index_property_host=self, values_property=u'available_filter_routings', index_property=u'filter_routing')) + (self.oscillator_switch,
          self.osc_1_pitch,
          self.osc_2_pitch,
@@ -248,10 +264,19 @@ class InstrumentVectorDeviceDecorator(LiveObjectDecorator, EventObject):
     def _get_lfo_retrigger_property_host(self):
         return get_parameter_by_name(self, u'LFO {} Retrigger'.format(self._lfo_types_provider.index + 1))
 
-    def _get_current_mod_target_parameter(self):
-        target_parameter_name = self.get_modulation_target_parameter_name(self.current_mod_target_index.index)
+    def _resolve_ambiguous_modulation_target_name(self, target_parameter_name):
         if re.match(u'^Osc (1|2) Transp$', target_parameter_name):
-            target_parameter_name = target_parameter_name.replace(u'Transp', u'Pitch')
+            return target_parameter_name.replace(u'Transp', u'Pitch')
+        lfo_rate_re = re.match(u'^LFO (1|2) S\\. Rate$', target_parameter_name)
+        if lfo_rate_re:
+            lfo_number = lfo_rate_re.group(1)
+            lfo_sync_param = get_parameter_by_name(self, u'LFO {} Sync'.format(lfo_number))
+            if lfo_sync_param.value == 0:
+                return u'LFO {} Rate'.format(lfo_number)
+        return target_parameter_name
+
+    def _get_current_mod_target_parameter(self):
+        target_parameter_name = self._resolve_ambiguous_modulation_target_name(self.get_modulation_target_parameter_name(self.current_mod_target_index.index))
         return self._get_parameter_by_name(target_parameter_name)
 
     def _get_parameter_enabled_state(self, parameter):
@@ -276,6 +301,7 @@ class InstrumentVectorDeviceDecorator(LiveObjectDecorator, EventObject):
     @listens(u'index')
     def __on_lfo_types_provider_index_changed(self):
         self.lfo_retrigger_option.set_property_host(self._get_lfo_retrigger_property_host())
+        self.notify_lfo_index()
 
     @listens(u'value')
     def __on_osc_1_on_value_changed(self):
@@ -310,21 +336,47 @@ class InstrumentVectorDeviceDecorator(LiveObjectDecorator, EventObject):
             self._filter_2_circuit_bp_no_morph_switch.state = state
 
 
+def has_automation(parameter):
+    return parameter.automation_state != AutomationState.none
+
+
+class InstrumentVectorDeleteComponent(DeleteAndReturnToDefaultComponent):
+
+    def delete_clip_envelope(self, parameter):
+        if isinstance(parameter, PitchParameter) and has_automation(parameter):
+            playing_clip = self._get_playing_clip()
+            if playing_clip:
+                deleted_automation_names = []
+                for parameter in [parameter.integer_value_host, parameter.decimal_value_host]:
+                    if has_automation(parameter):
+                        playing_clip.clear_envelope(parameter)
+                        deleted_automation_names.append(parameter.name)
+
+                if deleted_automation_names:
+                    self.show_notification(MessageBoxText.DELETE_ENVELOPE % dict(automation=u', '.join(deleted_automation_names)))
+        else:
+            super(InstrumentVectorDeleteComponent, self).delete_clip_envelope(parameter)
+
+
 class InstrumentVectorDeviceComponent(DeviceComponentWithTrackColorViewData):
     OSCILLATOR_POSITION_PARAMETER_NAMES = re.compile(u'^(Osc (1|2) Pos)$|^Position$')
     FILTER_PARAMETER_NAMES = re.compile(u'^(Filter (1|2) (Type|Freq|Res))$|^Filter Type$|^Frequency$|^Resonance$')
+    LFO_PARAMETER_NAMES = re.compile(u'^(LFO (1|2) (Shape|Shaping|S. Rate|Rate|Amount|Attack Time|Phase Offset))$|^LFO$|^LFO Type$|^Shape$|^Rate$|^Amount$|^Attack$|^Offset$')
     WAVETABLE_VISUALISATION_CONFIGURATION_IN_BANKS = {0: ButtonRange(0, 2),
      1: ButtonRange(1, 3)}
     FILTER_VISUALISATION_CONFIGURATION_IN_BANKS = {0: ButtonRange(3, 5),
      2: ButtonRange(2, 4)}
+    LFO_VISUALISATION_CONFIGURATION_IN_BANKS = {5: ButtonRange(0, 3)}
 
     def __init__(self, *a, **k):
         super(InstrumentVectorDeviceComponent, self).__init__(*a, **k)
         self._bank_before_mod_matrix = 0
+        self._delete_default_component = self.register_component(InstrumentVectorDeleteComponent(name=u'DeleteAndDefault'))
+        self._delete_default_component.layer = Layer(delete_button=self._delete_button)
 
     def _parameter_touched(self, parameter):
         if liveobj_valid(self._decorated_device) and liveobj_valid(parameter):
-            if self._is_resetting_mod_matrix_parameter(parameter):
+            if self._is_resetting_parameter() and self._is_custom_parameter(parameter):
                 self._delete_default_component.delete_clip_envelope(parameter)
             view_data = {}
             self._update_single_selected_parameter()
@@ -332,6 +384,8 @@ class InstrumentVectorDeviceComponent(DeviceComponentWithTrackColorViewData):
                 view_data[u'AdjustingPosition'] = True
             if self.FILTER_PARAMETER_NAMES.match(parameter.name):
                 view_data[u'AdjustingFilter'] = True
+            if self.LFO_PARAMETER_NAMES.match(parameter.name):
+                view_data[u'AdjustingLfo'] = True
             if view_data:
                 self._update_visualisation_view_data(view_data)
 
@@ -343,11 +397,16 @@ class InstrumentVectorDeviceComponent(DeviceComponentWithTrackColorViewData):
                 view_data[u'AdjustingPosition'] = False
             if not self._any_filter_parameter_touched():
                 view_data[u'AdjustingFilter'] = False
+            if not self._any_lfo_parameter_touched():
+                view_data[u'AdjustingLfo'] = False
             if view_data:
                 self._update_visualisation_view_data(view_data)
 
-    def _is_resetting_mod_matrix_parameter(self, parameter):
-        return isinstance(parameter, ModMatrixParameter) and self._delete_default_component is not None and self._delete_default_component.is_deleting
+    def _is_resetting_parameter(self):
+        return self._delete_default_component is not None and self._delete_default_component.is_deleting
+
+    def _is_custom_parameter(self, parameter):
+        return isinstance(parameter, ModMatrixParameter) or isinstance(parameter, PitchParameter)
 
     def _get_provided_parameters(self):
         _, parameters = self._current_bank_details() if self.device() else (None, ())
@@ -372,6 +431,7 @@ class InstrumentVectorDeviceComponent(DeviceComponentWithTrackColorViewData):
         super(InstrumentVectorDeviceComponent, self)._set_decorated_device(decorated_device)
         self.__on_selected_oscillator_changed.subject = decorated_device
         self.__on_selected_filter_changed.subject = decorated_device
+        self.__on_selected_lfo_changed.subject = decorated_device
         self.__on_request_bank_view.subject = decorated_device
         self.__on_request_previous_bank_from_mod_matrix.subject = decorated_device
         self.__on_current_mod_target_parameter_changed.subject = decorated_device
@@ -387,6 +447,7 @@ class InstrumentVectorDeviceComponent(DeviceComponentWithTrackColorViewData):
         self.notify_visualisation_visible()
         self.notify_wavetable_visualisation_visible()
         self.notify_filter_visualisation_visible()
+        self.notify_lfo_visualisation_visible()
         self.notify_shrink_parameters()
 
     def _update_single_selected_parameter(self):
@@ -397,9 +458,13 @@ class InstrumentVectorDeviceComponent(DeviceComponentWithTrackColorViewData):
         touched_parameters = [ self.parameters[button.index] for button in self.parameter_touch_buttons if button.is_pressed ]
         return any([ self.FILTER_PARAMETER_NAMES.match(parameter.name) for parameter in touched_parameters ])
 
+    def _any_lfo_parameter_touched(self):
+        touched_parameters = [ self.parameters[button.index] for button in self.parameter_touch_buttons if button.is_pressed ]
+        return any([ self.LFO_PARAMETER_NAMES.match(parameter.name) for parameter in touched_parameters ])
+
     @property
     def _visualisation_visible(self):
-        return self.wavetable_visualisation_visible or self.filter_visualisation_visible
+        return self.wavetable_visualisation_visible or self.filter_visualisation_visible or self.lfo_visualisation_visible
 
     @listenable_property
     def wavetable_visualisation_visible(self):
@@ -408,6 +473,10 @@ class InstrumentVectorDeviceComponent(DeviceComponentWithTrackColorViewData):
     @listenable_property
     def filter_visualisation_visible(self):
         return self._bank.index in self.FILTER_VISUALISATION_CONFIGURATION_IN_BANKS
+
+    @listenable_property
+    def lfo_visualisation_visible(self):
+        return self._bank.index in self.LFO_VISUALISATION_CONFIGURATION_IN_BANKS
 
     @property
     def selected_oscillator(self):
@@ -422,6 +491,12 @@ class InstrumentVectorDeviceComponent(DeviceComponentWithTrackColorViewData):
         return 0
 
     @property
+    def selected_lfo(self):
+        if liveobj_valid(self._decorated_device):
+            return self._decorated_device.lfo_index
+        return 0
+
+    @property
     def visualisation_width(self):
         return VisualisationGuides.light_right_x(2) - VisualisationGuides.light_left_x(0)
 
@@ -431,14 +506,18 @@ class InstrumentVectorDeviceComponent(DeviceComponentWithTrackColorViewData):
     def _get_filter_visualisation_range(self):
         return self.FILTER_VISUALISATION_CONFIGURATION_IN_BANKS.get(self._bank.index, ButtonRange(0, 0))
 
+    def _get_lfo_visualisation_range(self):
+        return self.LFO_VISUALISATION_CONFIGURATION_IN_BANKS.get(self._bank.index, ButtonRange(0, 0))
+
     @property
     def _shrink_parameters(self):
         if self.visualisation_visible:
             wavetable_visualisation_range = self._get_wavetable_visualisation_range()
             filter_visualisation_range = self._get_filter_visualisation_range()
+            lfo_visualisation_range = self._get_lfo_visualisation_range()
 
             def is_shrunk(index):
-                return self.wavetable_visualisation_visible and wavetable_visualisation_range.left_index <= index <= wavetable_visualisation_range.right_index or self.filter_visualisation_visible and filter_visualisation_range.left_index <= index <= filter_visualisation_range.right_index
+                return self.wavetable_visualisation_visible and wavetable_visualisation_range.left_index <= index <= wavetable_visualisation_range.right_index or (self.filter_visualisation_visible and filter_visualisation_range.left_index) <= index <= filter_visualisation_range.right_index or self.lfo_visualisation_visible and lfo_visualisation_range.left_index <= index <= lfo_visualisation_range.right_index
 
             return [ is_shrunk(parameter_index) for parameter_index in range(8) ]
         return [False] * 8
@@ -449,16 +528,22 @@ class InstrumentVectorDeviceComponent(DeviceComponentWithTrackColorViewData):
         return view_data
 
     def _get_current_view_data(self):
+        lfo_visualisation_range = self._get_lfo_visualisation_range()
         return {u'SelectedOscillator': self.selected_oscillator,
          u'AdjustingPosition': False,
          u'AdjustingFilter': False,
+         u'AdjustingLfo': False,
          u'WavetableVisualisationStart': VisualisationGuides.light_left_x(self._get_wavetable_visualisation_range().left_index),
          u'WavetableVisualisationWidth': self.visualisation_width,
          u'FilterCurveVisualisationStart': VisualisationGuides.light_left_x(self._get_filter_visualisation_range().left_index),
          u'FilterCurveVisualisationWidth': self.visualisation_width,
+         u'LfoVisualisationStart': VisualisationGuides.light_left_x(lfo_visualisation_range.left_index),
+         u'LfoVisualisationWidth': VisualisationGuides.light_right_x(lfo_visualisation_range.right_index) - VisualisationGuides.light_left_x(lfo_visualisation_range.left_index),
          u'WavetableVisualisationVisible': self.wavetable_visualisation_visible,
          u'FilterVisualisationVisible': self.filter_visualisation_visible,
-         u'SelectedFilter': self.selected_filter}
+         u'LfoVisualisationVisible': self.lfo_visualisation_visible,
+         u'SelectedFilter': self.selected_filter,
+         u'SelectedLfo': self.selected_lfo}
 
     @listens(u'request_bank_view')
     def __on_request_bank_view(self, bank_name):
@@ -482,6 +567,10 @@ class InstrumentVectorDeviceComponent(DeviceComponentWithTrackColorViewData):
     @listens(u'filter_index')
     def __on_selected_filter_changed(self):
         self._update_visualisation_view_data({u'SelectedFilter': self.selected_filter})
+
+    @listens(u'lfo_index')
+    def __on_selected_lfo_changed(self):
+        self._update_visualisation_view_data({u'SelectedLfo': self.selected_lfo})
 
     @listens(u'current_mod_target_parameter')
     def __on_current_mod_target_parameter_changed(self):

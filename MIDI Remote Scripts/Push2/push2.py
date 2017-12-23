@@ -442,7 +442,8 @@ class Push2(IdentifiableControlSurface, PushBase):
          self._device_or_pad_parameter_chooser,
          self._setup_freeze_aware_device_navigation(),
          self._device_note_editor_mode,
-         SetAttributeMode(obj=self._note_editor_settings_component, attribute=u'parameter_provider', value=self._device_component)]
+         SetAttributeMode(obj=self._note_editor_settings_component, attribute=u'parameter_provider', value=self._device_component),
+         self._clip_phase_enabler]
 
     def _setup_freeze_aware_device_navigation(self):
 
@@ -546,7 +547,7 @@ class Push2(IdentifiableControlSurface, PushBase):
 
     def _create_device_component(self):
         device_component_layer = Layer(parameter_touch_buttons=ButtonMatrixElement(rows=[self.elements.global_param_touch_buttons_raw]), shift_button=u'shift_button')
-        return DeviceComponentProvider(device_component_layer=device_component_layer, device_decorator_factory=self._device_decorator_factory, device_bank_registry=self._device_bank_registry, banking_info=self._banking_info, name=u'DeviceComponent', is_enabled=False, delete_default_component=self._delete_default_component)
+        return DeviceComponentProvider(device_component_layer=device_component_layer, device_decorator_factory=self._device_decorator_factory, device_bank_registry=self._device_bank_registry, banking_info=self._banking_info, name=u'DeviceComponent', is_enabled=False, delete_button=self.elements.delete_button)
 
     def _create_device_parameter_component(self):
         return DeviceParameterComponent(parameter_provider=self._device_component, is_enabled=False, layer=Layer(parameter_controls=u'fine_grain_param_controls'))
@@ -592,7 +593,8 @@ class Push2(IdentifiableControlSurface, PushBase):
         self._sessionring_link = self.register_disconnectable(SessionRingSelectionLinking(session_ring=self._session_ring, selection_changed_notifier=self._view_control))
 
     def _init_track_list(self):
-        self._track_list_component = TrackListComponent(tracks_provider=self._session_ring, trigger_recording_on_release_callback=self._session_recording.set_trigger_recording_on_release, color_chooser=self._create_color_chooser(), is_enabled=False, is_root=True, layer=Layer(track_action_buttons=u'select_buttons', lock_override_button=u'select_button', delete_button=u'delete_button', duplicate_button=u'duplicate_button', arm_button=u'record_button', select_color_button=u'shift_button'))
+        self._clip_phase_enabler = Component(is_enabled=False)
+        self._track_list_component = TrackListComponent(tracks_provider=self._session_ring, trigger_recording_on_release_callback=self._session_recording.set_trigger_recording_on_release, color_chooser=self._create_color_chooser(), clip_phase_enabler=self._clip_phase_enabler, is_enabled=False, is_root=True, layer=Layer(track_action_buttons=u'select_buttons', lock_override_button=u'select_button', delete_button=u'delete_button', duplicate_button=u'duplicate_button', arm_button=u'record_button', select_color_button=u'shift_button'))
         self._track_list_component.set_enabled(True)
         self._model.tracklistView = self._track_list_component
 
@@ -621,7 +623,7 @@ class Push2(IdentifiableControlSurface, PushBase):
                 if not self._is_on_master():
                     self._mix_modes.cycle_mode()
 
-        self._main_modes.add_mode(u'mix', [self._mix_modes, SetAttributeMode(obj=self._note_editor_settings_component, attribute=u'parameter_provider', value=self._track_parameter_provider)], behaviour=MixModeBehaviour())
+        self._main_modes.add_mode(u'mix', [self._mix_modes, SetAttributeMode(obj=self._note_editor_settings_component, attribute=u'parameter_provider', value=self._track_parameter_provider), self._clip_phase_enabler], behaviour=MixModeBehaviour())
 
     def _init_dialog_modes(self):
         self._dialog_modes = ModesComponent(is_root=True)
@@ -673,7 +675,10 @@ class Push2(IdentifiableControlSurface, PushBase):
         clip_control_mode_selector.add_mode(u'no_clip', [])
         clip_control_mode_selector.selected_mode = u'no_clip'
         clip_control = ClipControlComponent(midi_loop_controller=self._midi_loop_controller, audio_loop_controller=self._audio_loop_controller, audio_clip_controller=audio_clip_controller, midi_clip_controller=self._midi_clip_controller, mode_selector=clip_control_mode_selector, decorator_factory=self._clip_decorator_factory, is_enabled=False)
-        return [partial(self._view_control.show_view, u'Detail/Clip'), clip_control_mode_selector, clip_control]
+        return [partial(self._view_control.show_view, u'Detail/Clip'),
+         clip_control_mode_selector,
+         clip_control,
+         self._clip_phase_enabler]
 
     def _init_quantize_actions(self):
         self._quantize_settings = QuantizationSettingsComponent(name=u'Quantization_Settings', quantization_names=QUANTIZATION_NAMES_UNICODE, is_enabled=False, layer=make_dialog_layer(swing_amount_encoder=u'parameter_controls_raw[0]', quantize_to_encoder=u'parameter_controls_raw[1]', quantize_amount_encoder=u'parameter_controls_raw[2]', record_quantization_encoder=u'parameter_controls_raw[4]', record_quantization_toggle_button=u'track_state_buttons_raw[4]', priority=consts.MOMENTARY_DIALOG_PRIORITY))
@@ -697,7 +702,7 @@ class Push2(IdentifiableControlSurface, PushBase):
         return Layer(mix_button=u'mix_button', clip_button=u'clip_mode_button', device_button=u'device_mode_button', browse_button=u'browse_mode_button', add_device_button=u'create_device_button', add_track_button=u'create_track_button') + Layer(user_button=u'user_button', priority=consts.USER_BUTTON_PRIORITY)
 
     def _should_send_palette(self):
-        return self._firmware_version < FirmwareVersion(1, 0, 59)
+        return self._firmware_version < FirmwareVersion(1, 0, 63)
 
     def _send_color_palette(self):
         if self._should_send_palette():
@@ -767,7 +772,7 @@ class Push2(IdentifiableControlSurface, PushBase):
             def delete_clip_envelope(_, param):
                 return self._delete_default_component.delete_clip_envelope(param)
 
-        self.elements = Elements(deleter=Deleter(), undo_handler=self.song, pad_sensitivity_update=self._pad_sensitivity_update, playhead=self._c_instance.playhead, velocity_levels=self._c_instance.velocity_levels, model=self._model)
+        self.elements = Elements(deleter=Deleter(), undo_handler=self.song, pad_sensitivity_update=self._pad_sensitivity_update, playhead=self._c_instance.playhead, velocity_levels=self._c_instance.velocity_levels, full_velocity=self._c_instance.full_velocity, model=self._model)
         self.__on_param_encoder_touched.replace_subjects(self.elements.global_param_touch_buttons_raw)
         self._update_encoder_model()
 
@@ -780,14 +785,6 @@ class Push2(IdentifiableControlSurface, PushBase):
         self._pad_sensitivity_update.set_profile(u'drums', PadSettings(sensitivity=playing_profile, aftertouch_enabled=MONO_AFTERTOUCH_ENABLED))
         self._pad_sensitivity_update.set_profile(u'instrument', PadSettings(sensitivity=playing_profile, aftertouch_enabled=MONO_AFTERTOUCH_ENABLED))
         self._pad_sensitivity_update.set_profile(u'loop', PadSettings(sensitivity=loop_selector_profile, aftertouch_enabled=MONO_AFTERTOUCH_DISABLED))
-
-    def _update_full_velocity(self, accent_is_active):
-        super(Push2, self)._update_full_velocity(accent_is_active)
-        self._slicing_step_sequencer.full_velocity = accent_is_active
-
-    def _update_playhead_color(self, color):
-        super(Push2, self)._update_playhead_color(color)
-        self._slicing_step_sequencer.playhead_color = color
 
     @listens_group(u'value')
     def __on_param_encoder_touched(self, value, encoder):
