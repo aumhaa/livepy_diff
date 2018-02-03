@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from itertools import izip_longest
 from ableton.v2.base import in_range, clamp, task
 from ableton.v2.control_surface import CompoundComponent, Component, defaults
@@ -17,19 +17,19 @@ class ActionWithSettingsComponent(CompoundComponent):
         self._settings_task = task.Task()
 
     def show_settings(self):
-        """ Please override. Returns True if succeeded to show settings """
+        u""" Please override. Returns True if succeeded to show settings """
         return True
 
     def hide_settings(self):
-        """ Please override """
+        u""" Please override """
         pass
 
     def trigger_action(self):
-        """ Called whenever action button is pressed. """
+        u""" Called whenever action button is pressed. """
         pass
 
     def post_trigger_action(self):
-        """ Called whenever action button is released. Unless settings
+        u""" Called whenever action button is released. Unless settings
         are shown."""
         pass
 
@@ -57,9 +57,9 @@ class ActionWithSettingsComponent(CompoundComponent):
 
 
 class OptionsComponent(Component):
-    __events__ = ('selected_option',)
-    unselected_color = 'Option.Unselected'
-    selected_color = 'Option.Selected'
+    __events__ = (u'selected_option',)
+    unselected_color = u'Option.Unselected'
+    selected_color = u'Option.Selected'
     _selected_option = None
     select_buttons = control_list(ButtonControl, control_count=0)
 
@@ -145,9 +145,9 @@ class OptionsComponent(Component):
     def _update_data_sources(self):
         for index, (source, name) in enumerate(izip_longest(self._data_sources, self.option_names)):
             if name:
-                source.set_display_string((consts.CHAR_SELECT if index == self._selected_option else ' ') + name)
+                source.set_display_string((consts.CHAR_SELECT if index == self._selected_option else u' ') + name)
             else:
-                source.set_display_string('')
+                source.set_display_string(u'')
 
 
 class ActionWithOptionsComponent(ActionWithSettingsComponent):
@@ -170,13 +170,13 @@ class ActionWithOptionsComponent(ActionWithSettingsComponent):
 
 
 class ToggleWithOptionsComponent(ActionWithOptionsComponent):
-    __events__ = ('toggle_option', 'is_active')
+    __events__ = (u'toggle_option', u'is_active')
     _is_active = False
     _just_activated = False
 
     def __init__(self, *a, **k):
         super(ToggleWithOptionsComponent, self).__init__(*a, **k)
-        self.action_button.color = 'DefaultButton.Off'
+        self.action_button.color = u'DefaultButton.Off'
 
     def _get_is_active(self):
         return self._is_active
@@ -185,7 +185,7 @@ class ToggleWithOptionsComponent(ActionWithOptionsComponent):
         if value != self._is_active:
             self._is_active = value
             self.notify_is_active(value)
-            self.action_button.color = 'DefaultButton.On' if value else 'DefaultButton.Off'
+            self.action_button.color = u'DefaultButton.On' if value else u'DefaultButton.Off'
 
     is_active = property(_get_is_active, _set_is_active)
 

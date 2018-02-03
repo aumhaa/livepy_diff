@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.ButtonSliderElement import ButtonSliderElement
 from _Framework.InputControlElement import *
 SLIDER_MODE_SINGLE = 0
@@ -6,7 +7,7 @@ SLIDER_MODE_VOLUME = 1
 SLIDER_MODE_PAN = 2
 
 class PreciseButtonSliderElement(ButtonSliderElement):
-    """ Class representing a set of buttons used as a slider """
+    u""" Class representing a set of buttons used as a slider """
 
     def __init__(self, buttons):
         ButtonSliderElement.__init__(self, buttons)

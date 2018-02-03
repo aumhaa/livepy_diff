@@ -1,18 +1,17 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import math
 from functools import partial
-from itertools import imap, chain, izip_longest
-from ableton.v2.base import clamp, find_if, forward_property, listens, listens_group, task
+from itertools import ifilter, imap, chain, izip_longest
+from ableton.v2.base import clamp, find_if, forward_property, listenable_property, listens, listens_group, liveobj_valid, task
 from ableton.v2.control_surface import defaults, Component
-from ableton.v2.control_surface.control import ButtonControl, ControlManager, EncoderControl, StepEncoderControl
+from ableton.v2.control_surface.control import ButtonControl, ControlManager, control_list, EncoderControl, StepEncoderControl
 from ableton.v2.control_surface.elements import DisplayDataSource
 from ableton.v2.control_surface.mode import ModesComponent, Mode, AddLayerMode
-from .action_with_options_component import OptionsComponent
 from .consts import CHAR_ELLIPSIS, GRAPH_VOL
 
 class NoteSettingBase(ControlManager):
-    __events__ = ('setting_changed',)
+    __events__ = (u'setting_changed',)
     attribute_index = -1
     encoder = EncoderControl()
 
@@ -56,11 +55,11 @@ class NoteSetting(NoteSettingBase):
         raise NotImplementedError
 
     def set_min_max(self, min_max_value):
-        self.value_source.set_display_string(self.attribute_min_max_to_string(min_max_value[0], min_max_value[1]) if min_max_value else '-')
+        self.value_source.set_display_string(self.attribute_min_max_to_string(min_max_value[0], min_max_value[1]) if min_max_value else u'-')
 
 
-RANGE_STRING_FLOAT = '%.1f' + CHAR_ELLIPSIS + '%.1f'
-RANGE_STRING_INT = '%d' + CHAR_ELLIPSIS + '%d'
+RANGE_STRING_FLOAT = u'%.1f' + CHAR_ELLIPSIS + u'%.1f'
+RANGE_STRING_INT = u'%d' + CHAR_ELLIPSIS + u'%d'
 
 def step_offset_percentage(step_length, value):
     return int(round((value - int(value / step_length) * step_length) / step_length * 100))
@@ -70,8 +69,8 @@ def step_offset_min_max_to_string(step_length, min_value, max_value):
     min_value = step_offset_percentage(step_length, min_value)
     max_value = step_offset_percentage(step_length, max_value)
     if min_value == max_value:
-        return '%d%%' % min_value
-    return (RANGE_STRING_INT + '%%') % (min_value, max_value)
+        return u'%d%%' % min_value
+    return (RANGE_STRING_INT + u'%%') % (min_value, max_value)
 
 
 def convert_value_to_graphic(value, value_range):
@@ -86,7 +85,7 @@ class NoteNudgeSetting(NoteSetting):
     attribute_index = 1
 
     def get_label(self):
-        return 'Nudge'
+        return u'Nudge'
 
     def encoder_value_to_attribute(self, value):
         return self.step_length * value
@@ -100,7 +99,7 @@ class NoteLengthCoarseSetting(NoteSetting):
     encoder = StepEncoderControl()
 
     def get_label(self):
-        return 'Length -'
+        return u'Length -'
 
     def attribute_min_max_to_string(self, min_value, max_value):
         min_value = min_value / self.step_length
@@ -108,10 +107,10 @@ class NoteLengthCoarseSetting(NoteSetting):
 
         def format_string(value):
             num_non_decimal_figures = int(math.log10(value)) if value > 0 else 0
-            return '%%.%dg' % (num_non_decimal_figures + 2,)
+            return u'%%.%dg' % (num_non_decimal_figures + 2,)
 
         if min_value == max_value:
-            return (format_string(min_value) + ' stp') % min_value
+            return (format_string(min_value) + u' stp') % min_value
         return (format_string(min_value) + CHAR_ELLIPSIS + format_string(max_value)) % (min_value, max_value)
 
     def encoder_value_to_attribute(self, value):
@@ -126,7 +125,7 @@ class NoteLengthFineSetting(NoteSetting):
     attribute_index = 2
 
     def get_label(self):
-        return 'Fine'
+        return u'Fine'
 
     def encoder_value_to_attribute(self, value):
         return self.step_length * value
@@ -140,7 +139,7 @@ class NoteVelocitySetting(NoteSetting):
     attribute_index = 3
 
     def get_label(self):
-        return 'Velocity'
+        return u'Velocity'
 
     def encoder_value_to_attribute(self, value):
         return value * 128
@@ -152,7 +151,7 @@ class NoteVelocitySetting(NoteSetting):
 
 
 class NoteSettingsComponentBase(Component):
-    __events__ = ('setting_changed', 'full_velocity')
+    __events__ = (u'setting_changed', u'full_velocity')
     full_velocity_button = ButtonControl()
 
     def __init__(self, grid_resolution = None, *a, **k):
@@ -168,11 +167,15 @@ class NoteSettingsComponentBase(Component):
         self._add_setting(NoteVelocitySetting(grid_resolution=grid_resolution))
 
     def _add_setting(self, setting):
-        raise len(self._settings) < 8 or AssertionError('Cannot show more than 8 settings')
+        raise len(self._settings) < 8 or AssertionError(u'Cannot show more than 8 settings')
         self._settings.append(setting)
         self._update_encoders()
         self.register_disconnectable(setting)
-        self.register_slot(setting, self.notify_setting_changed, 'setting_changed')
+        self.register_slot(setting, self.notify_setting_changed, u'setting_changed')
+
+    @property
+    def number_of_settings(self):
+        return len(self._settings)
 
     def set_info_message(self, message):
         pass
@@ -238,7 +241,7 @@ class NoteSettingsComponent(NoteSettingsComponentBase):
 
 
 class DetailViewRestorerMode(Mode):
-    """
+    u"""
     Restores the detail view if either only clip view or device view is visible.
     Has no effect if the detail view is hidden at the point the mode is entered.
     """
@@ -249,10 +252,10 @@ class DetailViewRestorerMode(Mode):
         self._view_to_restore = None
 
     def enter_mode(self):
-        clip_view_visible = self._app.view.is_view_visible('Detail/Clip', False)
-        device_chain_visible = self._app.view.is_view_visible('Detail/DeviceChain', False)
+        clip_view_visible = self._app.view.is_view_visible(u'Detail/Clip', False)
+        device_chain_visible = self._app.view.is_view_visible(u'Detail/DeviceChain', False)
         if clip_view_visible != device_chain_visible:
-            self._view_to_restore = 'Detail/Clip' if clip_view_visible else 'Detail/DeviceChain'
+            self._view_to_restore = u'Detail/Clip' if clip_view_visible else u'Detail/DeviceChain'
 
     def leave_mode(self):
         try:
@@ -263,53 +266,61 @@ class DetailViewRestorerMode(Mode):
             pass
 
 
+def show_clip_view(application):
+    try:
+        view = application.view
+        if view.is_view_visible(u'Detail/DeviceChain', False) and not view.is_view_visible(u'Detail/Clip', False):
+            application.view.show_view(u'Detail/Clip')
+    except RuntimeError:
+        pass
+
+
+class ModeSelector(Component):
+    select_buttons = control_list(ButtonControl, color=u'DefaultButton.Disabled')
+    state_buttons = control_list(ButtonControl, color=u'DefaultButton.Disabled')
+
+
 class NoteEditorSettingsComponent(ModesComponent):
+    initial_encoders = control_list(EncoderControl)
+    encoders = control_list(EncoderControl)
 
     def __init__(self, note_settings_component = None, automation_component = None, initial_encoder_layer = None, encoder_layer = None, *a, **k):
         super(NoteEditorSettingsComponent, self).__init__(*a, **k)
         raise encoder_layer or AssertionError
-        self._request_hide = False
         self.settings = self.register_component(note_settings_component)
         self.settings.set_enabled(False)
         self._automation = self.register_component(automation_component)
         self._automation.set_enabled(False)
-        self._mode_selector = self.register_component(OptionsComponent(num_options=2, num_labels=0, num_display_segments=8))
-        self._mode_selector.set_enabled(False)
-        self._on_selected_option.subject = self._mode_selector
-        self._update_available_modes()
-        self._mode_selector.selected_option = 0
-        self._visible_detail_view = 'Detail/DeviceChain'
+        self._mode_selector = self.register_component(ModeSelector(is_enabled=False))
+        self._visible_detail_view = u'Detail/DeviceChain'
         self._show_settings_task = self._tasks.add(task.sequence(task.wait(defaults.MOMENTARY_DELAY), task.run(self._show_settings))).kill()
         self._update_infos_task = self._tasks.add(task.run(self._update_note_infos)).kill()
         self._settings_modes = self.register_component(ModesComponent())
         self._settings_modes.set_enabled(False)
-        self._settings_modes.add_mode('automation', [self._automation,
+        self._settings_modes.add_mode(u'automation', [self._automation,
          self._mode_selector,
          partial(self._set_envelope_view_visible, True),
-         self._show_clip_view])
-        self._settings_modes.add_mode('note_settings', [self.settings,
+         partial(show_clip_view, self.application)])
+        self._settings_modes.add_mode(u'note_settings', [self.settings,
          self._update_note_infos,
          self._mode_selector,
          partial(self._set_envelope_view_visible, False),
-         self._show_clip_view])
-        self._encoders = None
-        self._initial_encoders = None
-        self.add_mode('disabled', [])
-        self.add_mode('about_to_show', [AddLayerMode(self, initial_encoder_layer), (self._show_settings_task.restart, self._show_settings_task.kill)])
-        self.add_mode('enabled', [DetailViewRestorerMode(self.application),
-         AddLayerMode(self, encoder_layer),
-         self._update_available_modes,
-         self._settings_modes])
-        self.selected_mode = 'disabled'
+         partial(show_clip_view, self.application)])
+        self._settings_modes.selected_mode = u'note_settings'
+        self.__on_selected_setting_mode_changed.subject = self._settings_modes
+        self.add_mode(u'disabled', [])
+        self.add_mode(u'about_to_show', [AddLayerMode(self, initial_encoder_layer), (self._show_settings_task.restart, self._show_settings_task.kill)])
+        self.add_mode(u'enabled', [DetailViewRestorerMode(self.application), AddLayerMode(self, encoder_layer), self._settings_modes])
+        self.selected_mode = u'disabled'
         self._editors = []
         self._on_detail_clip_changed.subject = self.song.view
         self._on_selected_track_changed.subject = self.song.view
         self.__on_full_velocity_changed.subject = self.settings
         self.__on_setting_changed.subject = self.settings
 
-    automation_layer = forward_property('_automation')('layer')
-    mode_selector_layer = forward_property('_mode_selector')('layer')
-    selected_setting = forward_property('_settings_modes')('selected_mode')
+    automation_layer = forward_property(u'_automation')(u'layer')
+    mode_selector_layer = forward_property(u'_mode_selector')(u'layer')
+    selected_setting = forward_property(u'_settings_modes')(u'selected_mode')
 
     @property
     def step_settings(self):
@@ -319,6 +330,13 @@ class NoteEditorSettingsComponent(ModesComponent):
     def editors(self):
         return self._editors
 
+    @listenable_property
+    def is_touched(self):
+        return any(imap(lambda e: e and e.is_touched, ifilter(lambda e: self._can_notify_is_touched(e), self.encoders)))
+
+    def _is_step_held(self):
+        return len(self._active_note_regions()) > 0
+
     def add_editor(self, editor):
         raise editor != None or AssertionError
         self._editors.append(editor)
@@ -326,37 +344,37 @@ class NoteEditorSettingsComponent(ModesComponent):
         self._on_notes_changed.replace_subjects(self._editors)
         self.__on_modify_all_notes_changed.add_subject(editor)
 
-    def set_display_line(self, line):
-        self._mode_selector.set_display_line(line)
-
-    def set_initial_encoders(self, encoders):
-        self._initial_encoders = encoders
-        self._on_init_encoder_touch.replace_subjects(encoders or [])
-        self._on_init_encoder_value.replace_subjects(encoders or [])
-
     def set_encoders(self, encoders):
-        self._encoders = encoders
-        self._on_encoder_touch.replace_subjects(encoders or [])
-        self._on_encoder_value.replace_subjects(encoders or [])
+        self.encoders.set_control_element(encoders)
         self.settings.set_encoder_controls(encoders)
         self._automation.set_parameter_controls(encoders)
 
-    def _get_parameter_provider(self):
+    @property
+    def parameter_provider(self):
         self._automation.parameter_provider
 
-    def _set_parameter_provider(self, value):
+    @parameter_provider.setter
+    def parameter_provider(self, value):
         self._automation.parameter_provider = value
-        if self.selected_mode != 'disabled':
-            self._update_available_modes()
 
-    parameter_provider = property(_get_parameter_provider, _set_parameter_provider)
+    @listens(u'selected_mode')
+    def __on_selected_setting_mode_changed(self, mode):
+        if mode == u'automation':
+            self._automation.selected_time = self._active_note_regions()
 
-    @listens('full_velocity')
+    def update_view_state_based_on_selected_setting(self, setting):
+        if self.selected_mode == u'enabled' and self.is_touched or setting is None:
+            self._set_settings_view_enabled(False)
+        elif self._is_step_held():
+            if self.selected_setting == u'automation' and self._automation.can_automate_parameters or self.selected_setting == u'note_settings':
+                self._show_settings()
+
+    @listens(u'full_velocity')
     def __on_full_velocity_changed(self):
         for editor in self._editors:
             editor.set_full_velocity()
 
-    @listens('setting_changed')
+    @listens(u'setting_changed')
     def __on_setting_changed(self, index, value):
         for editor in self._editors:
             self._modify_note_property_offset(editor, index, value)
@@ -369,84 +387,80 @@ class NoteEditorSettingsComponent(ModesComponent):
         elif index == 3:
             editor.set_velocity_offset(value)
 
-    def _update_available_modes(self):
-        available_modes = ['Notes']
-        if self._automation.can_automate_parameters:
-            available_modes.append('Automat')
-        self._mode_selector.option_names = available_modes
-
-    def _show_clip_view(self):
-        try:
-            view = self.application.view
-            if view.is_view_visible('Detail/DeviceChain', False) and not view.is_view_visible('Detail/Clip', False):
-                self.application.view.show_view('Detail/Clip')
-        except RuntimeError:
-            pass
-
     def _set_envelope_view_visible(self, visible):
         clip = self.song.view.detail_clip
-        if clip:
+        if liveobj_valid(clip):
             if visible:
                 clip.view.show_envelope()
             else:
                 clip.view.hide_envelope()
 
-    def _try_immediate_show_settings(self):
-        if self.selected_mode == 'about_to_show' and any(imap(lambda e: e and e.is_pressed(), self._initial_encoders or [])):
-            self._show_settings()
+    def _set_settings_view_enabled(self, should_show_view):
+        really_show_view = should_show_view and self._automation.can_automate_parameters if self.selected_setting == u'automation' else should_show_view
+        if really_show_view:
+            if self.selected_mode == u'disabled':
+                self.selected_mode = u'about_to_show'
+        else:
+            self._hide_settings()
 
-    @listens_group('active_note_regions')
+    def _active_note_regions(self):
+        all_active_regions = imap(lambda e: e.active_note_regions, self._editors)
+        return list(set(chain.from_iterable(all_active_regions)))
+
+    @listens_group(u'active_note_regions')
     def _on_active_note_regions_changed(self, _):
         if self.is_enabled():
-            all_steps = list(set(chain.from_iterable(imap(lambda e: e.active_note_regions, self._editors))))
+            all_steps = self._active_note_regions()
             self._automation.selected_time = all_steps
             self._update_note_infos()
-            if len(all_steps) > 0:
-                self._request_hide = False
-                if self.selected_mode == 'disabled':
-                    self.selected_mode = 'about_to_show'
-                    self._try_immediate_show_settings()
-            else:
-                self._request_hide = True
-                self._try_hide_settings()
+            self._set_settings_view_enabled(len(all_steps) > 0 and self.selected_setting != None or self.is_touched)
 
-    @listens_group('modify_all_notes')
+    @listens_group(u'modify_all_notes')
     def __on_modify_all_notes_changed(self, editor):
-        self.selected_mode = 'about_to_show' if editor.modify_all_notes_enabled else 'disabled'
+        self.selected_mode = u'about_to_show' if editor.modify_all_notes_enabled else u'disabled'
 
-    @listens_group('notes_changed')
+    @listens_group(u'notes_changed')
     def _on_notes_changed(self, editor):
         self._update_infos_task.restart()
 
-    @listens('detail_clip')
+    @listens(u'detail_clip')
     def _on_detail_clip_changed(self):
-        clip = self.song.view.detail_clip if self.is_enabled() else None
-        self._automation.clip = clip
+        self._automation.clip = self.song.view.detail_clip if self.is_enabled() else None
 
-    @listens('selected_track')
+    @listens(u'selected_track')
     def _on_selected_track_changed(self):
-        self.selected_mode = 'disabled'
+        self.selected_mode = u'disabled'
 
-    @listens('selected_option')
-    def _on_selected_option(self, option):
-        self._update_selected_setting(option)
+    @initial_encoders.touched
+    def initial_encoders(self, encoder):
+        if self.selected_mode == u'about_to_show':
+            self._show_settings()
 
-    @listens_group('touch_value')
-    def _on_init_encoder_touch(self, value, encoder):
-        self._show_settings()
+    @initial_encoders.value
+    def initial_encoders(self, encoder, value):
+        if self.selected_mode == u'about_to_show':
+            self._show_settings()
 
-    @listens_group('value')
-    def _on_init_encoder_value(self, value, encoder):
-        self._show_settings()
+    @encoders.touched
+    def encoders(self, encoder):
+        if self._can_notify_is_touched(encoder):
+            self.notify_is_touched()
 
-    @listens_group('touch_value')
-    def _on_encoder_touch(self, value, encoder):
-        if not value:
-            self._try_hide_settings()
+    @encoders.released
+    def encoders(self, encoder):
+        if not self.is_touched and not self._is_step_held():
+            self._hide_settings()
+        if self._can_notify_is_touched(encoder):
+            self.notify_is_touched()
 
-    @listens_group('value')
-    def _on_encoder_value(self, value, encoder):
+    @encoders.value
+    def encoders(self, encoder, value):
         self._notify_modification()
+
+    def _can_notify_is_touched(self, encoder):
+        if self.is_enabled():
+            return self._settings_modes.selected_mode != u'note_settings' or encoder.index >= self.encoders.control_count - self.settings.number_of_settings
+        return False
 
     def _notify_modification(self):
         for editor in self._editors:
@@ -468,30 +482,20 @@ class NoteEditorSettingsComponent(ModesComponent):
                 self.settings.set_min_max(i, min_max_values[i] if min_max_values else None)
 
             edit_all_notes_active = find_if(lambda e: e.modify_all_notes_enabled, self._editors) != None
-            self.settings.set_info_message('Tweak to add note' if not edit_all_notes_active and not min_max_values else '')
+            self.settings.set_info_message(u'Tweak to add note' if not edit_all_notes_active and not min_max_values else u'')
 
     def _show_settings(self):
-        if self.selected_mode != 'enabled':
-            self.selected_mode = 'enabled'
+        if self.selected_mode != u'enabled':
+            self.selected_mode = u'enabled'
             self._notify_modification()
-            self._update_selected_setting(self._mode_selector.selected_option)
 
-    def _update_selected_setting(self, option):
-        if option == 0:
-            self.selected_setting = 'note_settings'
-        elif option == 1:
-            self._on_active_note_regions_changed(None)
-            self.selected_setting = 'automation'
-
-    def _try_hide_settings(self):
-        if self._request_hide and not any(imap(lambda e: e and e.is_pressed(), self._encoders or [])):
-            self.selected_mode = 'disabled'
-            self._request_hide = False
+    def _hide_settings(self):
+        self.selected_mode = u'disabled'
 
     def on_enabled_changed(self):
         super(NoteEditorSettingsComponent, self).on_enabled_changed()
         if not self.is_enabled():
-            self.selected_mode = 'disabled'
+            self.selected_mode = u'disabled'
 
     def update(self):
         super(NoteEditorSettingsComponent, self).update()

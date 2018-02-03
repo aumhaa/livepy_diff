@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial
 import Live
 from ableton.v2.base import EventObject, listens, listenable_property, task
@@ -16,8 +16,8 @@ LENGTH_OPTIONS = (Quantization.q_quarter,
  Quantization.q_8_bars,
  Quantization.q_8_bars,
  Quantization.q_8_bars)
-LENGTH_OPTION_NAMES = ('1 Beat', '2 Beats', '1 Bar', '2 Bars', '4 Bars', '8 Bars', '16 Bars', '32 Bars')
-LENGTH_LABELS = ('Recording length:', '', '', '')
+LENGTH_OPTION_NAMES = (u'1 Beat', u'2 Beats', u'1 Bar', u'2 Bars', u'4 Bars', u'8 Bars', u'16 Bars', u'32 Bars')
+LENGTH_LABELS = (u'Recording length:', u'', u'', u'')
 DEFAULT_LENGTH_OPTION_INDEX = list(LENGTH_OPTIONS).index(Quantization.q_2_bars)
 
 class FixedLengthSetting(EventObject):
@@ -36,9 +36,9 @@ class FixedLengthSetting(EventObject):
 
 
 class FixedLengthSettingComponent(Component):
-    length_option_buttons = control_list(RadioButtonControl, checked_color='Option.Selected', unchecked_color='Option.Unselected', control_count=len(LENGTH_OPTIONS))
-    fixed_length_toggle_button = ToggleButtonControl(toggled_color='Option.On', untoggled_color='Option.Off')
-    legato_launch_toggle_button = ToggleButtonControl(toggled_color='FixedLength.PhraseAlignedOn', untoggled_color='FixedLength.PhraseAlignedOff')
+    length_option_buttons = control_list(RadioButtonControl, checked_color=u'Option.Selected', unchecked_color=u'Option.Unselected', control_count=len(LENGTH_OPTIONS))
+    fixed_length_toggle_button = ToggleButtonControl(toggled_color=u'Option.On', untoggled_color=u'Option.Off')
+    legato_launch_toggle_button = ToggleButtonControl(toggled_color=u'FixedLength.PhraseAlignedOn', untoggled_color=u'FixedLength.PhraseAlignedOff')
     label_display_line = TextDisplayControl(LENGTH_LABELS)
     option_display_line = TextDisplayControl(LENGTH_OPTION_NAMES)
 
@@ -46,19 +46,19 @@ class FixedLengthSettingComponent(Component):
         raise fixed_length_setting is not None or AssertionError
         super(FixedLengthSettingComponent, self).__init__(*a, **k)
         self._fixed_length_setting = fixed_length_setting
-        self.length_option_buttons.connect_property(fixed_length_setting, 'selected_index')
-        self.fixed_length_toggle_button.connect_property(fixed_length_setting, 'enabled')
-        self.legato_launch_toggle_button.connect_property(fixed_length_setting, 'legato_launch')
+        self.length_option_buttons.connect_property(fixed_length_setting, u'selected_index')
+        self.fixed_length_toggle_button.connect_property(fixed_length_setting, u'enabled')
+        self.legato_launch_toggle_button.connect_property(fixed_length_setting, u'legato_launch')
         self.__on_setting_selected_index_changes.subject = fixed_length_setting
         self.__on_setting_selected_index_changes(fixed_length_setting.selected_index)
 
-    @listens('selected_index')
+    @listens(u'selected_index')
     def __on_setting_selected_index_changes(self, index):
         self._update_option_display()
 
     def _update_option_display(self):
         for index, option_name in enumerate(LENGTH_OPTION_NAMES):
-            prefix = consts.CHAR_SELECT if index == self._fixed_length_setting.selected_index else ' '
+            prefix = consts.CHAR_SELECT if index == self._fixed_length_setting.selected_index else u' '
             self.option_display_line[index] = prefix + option_name
 
 
@@ -81,7 +81,7 @@ class FixedLengthComponent(CompoundComponent, Messenger):
         if not loop_set:
             enabled = not self._fixed_length_setting.enabled
             self._fixed_length_setting.enabled = enabled
-            self.show_notification(consts.MessageBoxText.FIXED_LENGTH % ('On' if enabled else 'Off'))
+            self.show_notification(consts.MessageBoxText.FIXED_LENGTH % (u'On' if enabled else u'Off'))
 
     @fixed_length_toggle_button.pressed_delayed
     def fixed_length_toggle_button(self, button):
@@ -127,6 +127,6 @@ class FixedLengthComponent(CompoundComponent, Messenger):
         self._length_press_state = None
         return loop_set
 
-    @listens('enabled')
+    @listens(u'enabled')
     def __on_setting_enabled_changes(self, enabled):
-        self.fixed_length_toggle_button.color = 'FixedLength.On' if enabled else 'FixedLength.Off'
+        self.fixed_length_toggle_button.color = u'FixedLength.On' if enabled else u'FixedLength.Off'

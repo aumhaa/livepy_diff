@@ -1,6 +1,6 @@
 
-from __future__ import absolute_import, print_function
-from ableton.v2.base import NamedTuple, listenable_property, listens, listens_group, liveobj_valid, nop
+from __future__ import absolute_import, print_function, unicode_literals
+from ableton.v2.base import has_event, NamedTuple, listenable_property, listens, listens_group, liveobj_valid, nop
 from ableton.v2.control_surface import Component
 from ableton.v2.control_surface.control import control_list, ButtonControl
 from pushbase.banking_util import MAIN_KEY
@@ -22,6 +22,7 @@ class BankProvider(ItemProvider):
         if self._device != device:
             self._device = device
             self._on_device_parameters_changed.subject = self._device
+            self._on_bank_names_changed.subject = self._device if has_event(self._device, u'bank_parameters_changed') else None
             self._items = self._create_items()
             self.notify_items()
             self.notify_selected_item()
@@ -51,13 +52,20 @@ class BankProvider(ItemProvider):
         bank_index = self.items.index((item, nesting_level))
         self._bank_registry.set_device_bank(self._device, bank_index)
 
-    @listens('device_bank')
+    @listens(u'device_bank')
     def _on_device_bank_changed(self, device, _):
         if device == self._device:
             self.notify_selected_item()
 
-    @listens('parameters')
+    @listens(u'bank_parameters_changed')
+    def _on_bank_names_changed(self):
+        self._update_and_notify_items()
+
+    @listens(u'parameters')
     def _on_device_parameters_changed(self):
+        self._update_and_notify_items()
+
+    def _update_and_notify_items(self):
         items = self._create_items()
         if self._items != items:
             self._items = items
@@ -72,8 +80,8 @@ class BankProvider(ItemProvider):
 
 
 class EditModeOptionsComponent(Component):
-    color_class_name = 'EditModeOptions'
-    option_buttons = control_list(ButtonControl, color=color_class_name + '.ItemSelected', control_count=8)
+    color_class_name = u'EditModeOptions'
+    option_buttons = control_list(ButtonControl, color=color_class_name + u'.ItemSelected', control_count=8)
 
     def __init__(self, back_callback = nop, device_options_provider = None, *a, **k):
         super(EditModeOptionsComponent, self).__init__(*a, **k)
@@ -115,17 +123,17 @@ class EditModeOptionsComponent(Component):
             return self._device_options_provider.options
         return []
 
-    @listens('device')
+    @listens(u'device')
     def __on_device_changed(self):
         self._update_device()
 
-    @listens('options')
+    @listens(u'options')
     def __on_options_changed(self):
         self.__on_active_options_changed.replace_subjects(self.options)
         self._update_button_feedback()
         self.notify_options()
 
-    @listens_group('active')
+    @listens_group(u'active')
     def __on_active_options_changed(self, _):
         self._update_button_feedback()
 
@@ -134,7 +142,7 @@ class EditModeOptionsComponent(Component):
             if button.index > 0:
                 option = self._option_for_button(button)
                 has_active_option = option and option.active
-                button.color = self.color_class_name + '.' + ('ItemNotSelected' if has_active_option else 'NoItem')
+                button.color = self.color_class_name + u'.' + (u'ItemNotSelected' if has_active_option else u'NoItem')
 
     def _update_device(self):
         self._set_device(self._device_options_provider.device())
@@ -146,8 +154,8 @@ class EditModeOptionsComponent(Component):
 
 
 class BankSelectionComponent(ItemListerComponent):
-    color_class_name = 'BankSelection'
-    __events__ = ('back',)
+    color_class_name = u'BankSelection'
+    __events__ = (u'back',)
 
     def __init__(self, bank_registry = None, banking_info = None, device_options_provider = None, *a, **k):
         self._bank_provider = BankProvider(bank_registry=bank_registry, banking_info=banking_info)

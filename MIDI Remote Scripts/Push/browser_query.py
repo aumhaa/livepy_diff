@@ -1,11 +1,12 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial
 from ableton.v2.base import first, find_if, const
 from .browser_model import VirtualBrowserItem
+import Live
 
 class BrowserQuery(object):
-    """
+    u"""
     Base class for browser queries. Is capable of creating a subfolder for wrapping
     all results of the query.
     """
@@ -24,7 +25,7 @@ class BrowserQuery(object):
 
 
 class PathBrowserQuery(BrowserQuery):
-    """
+    u"""
     Includes the element for the given path.
     """
 
@@ -48,7 +49,7 @@ class PathBrowserQuery(BrowserQuery):
 
 
 class TagBrowserQuery(BrowserQuery):
-    """
+    u"""
     Query that merges the contents of the specified subtrees of
     the browser.  It will first merge the contents of all the paths
     specified in the 'include' list. A path is either the name of a
@@ -80,7 +81,7 @@ class TagBrowserQuery(BrowserQuery):
 
 
 class SourceBrowserQuery(TagBrowserQuery):
-    """
+    u"""
     Like TagBrowserQuery, but adds a top-level source selection.
     """
 
@@ -93,11 +94,11 @@ class SourceBrowserQuery(TagBrowserQuery):
         for item in root:
             groups.setdefault(item.source, []).append(item)
 
-        return map(lambda (k, g): VirtualBrowserItem(name=k if k is not None else '', children_query=const(g)), sorted(groups.items(), key=first))
+        return map(lambda (k, g): VirtualBrowserItem(name=k if k is not None else u'', children_query=const(g)), sorted(groups.items(), key=first))
 
 
 class PlacesBrowserQuery(BrowserQuery):
-    """
+    u"""
     Query that fetches all places of the browser
     """
 
@@ -105,4 +106,16 @@ class PlacesBrowserQuery(BrowserQuery):
         super(PlacesBrowserQuery, self).__init__(*a, **k)
 
     def query(self, browser):
-        return [browser.packs, browser.user_library] + list(browser.legacy_libraries) + [browser.current_project] + list(browser.user_folders)
+        return [browser.packs, browser.user_library] + [browser.current_project] + list(browser.user_folders)
+
+
+class ColorTagsBrowserQuery(BrowserQuery):
+    u"""
+    Query that fetches all color (tags) of the browser
+    """
+
+    def __init__(self, *a, **k):
+        super(ColorTagsBrowserQuery, self).__init__(*a, **k)
+
+    def query(self, browser):
+        return list(browser.colors)

@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from itertools import count
 from ableton.v2.base import forward_property, listens_group
 from ableton.v2.control_surface import Component, CompoundComponent
@@ -9,7 +9,7 @@ from pushbase.user_component import UserComponentBase
 from pushbase import consts
 
 class UserSettingsComponent(Component):
-    """ Component for changing a list of settings """
+    u""" Component for changing a list of settings """
 
     def __init__(self, *a, **k):
         super(UserSettingsComponent, self).__init__(*a, **k)
@@ -51,7 +51,7 @@ class UserSettingsComponent(Component):
     def set_info_text(self, info_text):
         self._info_source.set_display_string(info_text)
 
-    @listens_group('normalized_value')
+    @listens_group(u'normalized_value')
     def _on_encoder_value(self, value, index):
         if index >= 0 and index < len(self._settings) and self._settings[index].change_relative(value):
             self._update_display()
@@ -69,8 +69,8 @@ class UserSettingsComponent(Component):
 
 class UserComponent(UserComponentBase, CompoundComponent):
     action_button = ButtonControl(**consts.SIDE_BUTTON_COLORS)
-    settings_layer = forward_property('_settings')('layer')
-    settings = forward_property('_settings')('settings')
+    settings_layer = forward_property(u'_settings')(u'layer')
+    settings = forward_property(u'_settings')(u'settings')
 
     def __init__(self, *a, **k):
         super(UserComponent, self).__init__(*a, **k)

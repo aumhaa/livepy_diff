@@ -1,40 +1,23 @@
 
-from __future__ import absolute_import, print_function
-from functools import partial
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
-from ableton.v2.base import EventObject, depends, find_if, listenable_property, listens, liveobj_valid
-from pushbase.decoration import LiveObjectDecorator, DecoratorFactory
-from pushbase.internal_parameter import EnumWrappingParameter, InternalParameter
-from pushbase.message_box_component import Messenger
-from pushbase.simpler_decoration import SimplerDeviceDecorator as SimplerDeviceDecoratorBase
-from .device_options import DeviceTriggerOption, DeviceSwitchOption, DeviceOnOffOption
-from .waveform_navigation import Region, SimplerWaveformNavigation
-RESET_SLICING_NOTIFICATION = 'Slicing has been reset'
-MAX_NUMBER_SLICES = 64
+AutomationState = Live.DeviceParameter.AutomationState
+from ableton.v2.base import EventObject, clamp, const, find_if, inject, listenable_property, listens, liveobj_valid
+from pushbase.decoration import LiveObjectDecorator
+from pushbase.internal_parameter import InternalParameter
+from .device_options import DeviceSwitchOption, DeviceOnOffOption
+from .timeline_navigation import Region, SimplerWaveformNavigation
 
 def get_parameter_by_name(decorator, name):
     return find_if(lambda p: p.name == name, decorator._live_object.parameters)
 
 
-class EnvelopeType(int):
-    pass
+def get_parameter_automation_state(parameter):
+    return getattr(parameter, u'automation_state', AutomationState.none)
 
-
-EnvelopeType.volume_env = EnvelopeType(0)
-EnvelopeType.filter_env = EnvelopeType(1)
-EnvelopeType.pitch_env = EnvelopeType(2)
-
-class OscillatorType(int):
-    pass
-
-
-OscillatorType.a = OscillatorType(0)
-OscillatorType.b = OscillatorType(1)
-OscillatorType.c = OscillatorType(2)
-OscillatorType.d = OscillatorType(3)
 
 class NotifyingList(EventObject):
-    __events__ = ('index',)
+    __events__ = (u'index',)
 
     def __init__(self, available_values, default_value = None, *a, **k):
         super(NotifyingList, self).__init__(*a, **k)
@@ -57,29 +40,25 @@ class NotifyingList(EventObject):
     index = property(_get_index, _set_index)
 
 
-class EnvelopeTypesList(NotifyingList):
+class IndexProvider(EventObject):
+    __events__ = (u'index',)
 
-    def __init__(self):
-        super(EnvelopeTypesList, self).__init__(available_values=['Volume', 'Filter', 'Pitch'], default_value=EnvelopeType.volume_env)
+    def __init__(self, *a, **k):
+        super(IndexProvider, self).__init__(*a, **k)
+        self._index = 0
 
+    def _get_index(self):
+        return self._index
 
-class OscillatorTypesList(NotifyingList):
+    def _set_index(self, value):
+        self._index = value
+        self.notify_index()
 
-    def __init__(self):
-        super(OscillatorTypesList, self).__init__(available_values=['A',
-         'B',
-         'C',
-         'D'], default_value=OscillatorType.a)
-
-
-class BandTypesList(NotifyingList):
-
-    def __init__(self):
-        super(BandTypesList, self).__init__(available_values=range(1, 9))
+    index = property(_get_index, _set_index)
 
 
 class WaveformNavigationParameter(InternalParameter):
-    """ Class for connecting a Simpler with a WaveformNavigation. It will create a new
+    u""" Class for connecting a Simpler with a WaveformNavigation. It will create a new
         instance of WaveformNavigation for every sample. It also still acts as a
         parameter, for the current zooming implemenation.
     
@@ -168,7 +147,7 @@ class SlicePoint(object):
 
 
 class SimplerPositions(EventObject):
-    __events__ = ('warp_markers', 'before_update_all', 'after_update_all')
+    __events__ = (u'warp_markers', u'before_update_all', u'after_update_all')
     start = listenable_property.managed(0.0)
     end = listenable_property.managed(0.0)
     start_marker = listenable_property.managed(0.0)
@@ -207,7 +186,7 @@ class SimplerPositions(EventObject):
         self.update_all()
 
     def _convert_sample_time(self, sample_time):
-        """
+        u"""
         Converts to beat time, if the sample is warped
         """
         sample = self._simpler.sample
@@ -215,66 +194,66 @@ class SimplerPositions(EventObject):
             return sample.sample_to_beat_time(sample_time)
         return sample_time
 
-    @listens('start_marker')
+    @listens(u'start_marker')
     def __on_start_marker_changed(self):
         if liveobj_valid(self._simpler.sample):
             self.start_marker = self._convert_sample_time(self._simpler.sample.start_marker)
 
-    @listens('end_marker')
+    @listens(u'end_marker')
     def __on_end_marker_changed(self):
         if liveobj_valid(self._simpler.sample):
             self.end_marker = self._convert_sample_time(self._simpler.sample.end_marker)
 
-    @listens('sample_start')
+    @listens(u'sample_start')
     def __on_active_start_changed(self):
         self.active_start = self._convert_sample_time(self._simpler.view.sample_start)
 
-    @listens('sample_end')
+    @listens(u'sample_end')
     def __on_active_end_changed(self):
         self.active_end = self._convert_sample_time(self._simpler.view.sample_end)
 
-    @listens('sample_loop_start')
+    @listens(u'sample_loop_start')
     def __on_loop_start_changed(self):
         self.loop_start = self._convert_sample_time(self._simpler.view.sample_loop_start)
 
-    @listens('sample_loop_end')
+    @listens(u'sample_loop_end')
     def __on_loop_end_changed(self):
         self.loop_end = self._convert_sample_time(self._simpler.view.sample_loop_end)
 
-    @listens('sample_loop_fade')
+    @listens(u'sample_loop_fade')
     def __on_loop_fade_changed(self):
         self.loop_fade_in_samples = self._simpler.view.sample_loop_fade
 
-    @listens('sample_env_fade_in')
+    @listens(u'sample_env_fade_in')
     def __on_env_fade_in_changed(self):
         if liveobj_valid(self._simpler.sample):
             start_marker = self._simpler.sample.start_marker
             fade_in_end = start_marker + self._simpler.view.sample_env_fade_in
             self.env_fade_in = self._convert_sample_time(fade_in_end) - self._convert_sample_time(start_marker)
 
-    @listens('sample_env_fade_out')
+    @listens(u'sample_env_fade_out')
     def __on_env_fade_out_changed(self):
         if liveobj_valid(self._simpler.sample):
             end_marker = self._simpler.sample.end_marker
             fade_out_start = end_marker - self._simpler.view.sample_env_fade_out
             self.env_fade_out = self._convert_sample_time(end_marker) - self._convert_sample_time(fade_out_start)
 
-    @listens('slices')
+    @listens(u'slices')
     def __on_slices_changed(self):
         if liveobj_valid(self._simpler.sample):
             self.slices = [ SlicePoint(s, self._convert_sample_time(s)) for s in self._simpler.sample.slices ]
 
-    @listens('selected_slice')
+    @listens(u'selected_slice')
     def __on_selected_slice_changed(self):
         if liveobj_valid(self._simpler.sample):
             t = self._convert_sample_time(self._simpler.view.selected_slice)
             self.selected_slice = SlicePoint(t, t)
 
-    @listens('warping')
+    @listens(u'warping')
     def __on_warping_changed(self):
         self.update_all()
 
-    @listens('warp_markers')
+    @listens(u'warp_markers')
     def __on_warp_markers_changed(self):
         self.update_all()
         self.notify_warp_markers()
@@ -299,280 +278,251 @@ class SimplerPositions(EventObject):
             self.notify_after_update_all()
 
 
-def center_point(start, end):
-    return int((end - start) / 2.0) + start
+class SamplerDeviceDecorator(EventObject, LiveObjectDecorator):
 
-
-def insert_new_slice(simpler):
-    sample = simpler.sample
-    view = simpler.view
-    slices = list(sample.slices) + [sample.end_marker]
-    selected_slice = view.selected_slice
-    if selected_slice in slices:
-        slice_index = slices.index(selected_slice)
-        new_slice_point = center_point(selected_slice, slices[slice_index + 1])
-        if new_slice_point not in slices:
-            sample.insert_slice(new_slice_point)
-            view.selected_slice = new_slice_point
-
-
-class _SimplerDeviceDecorator(SimplerDeviceDecoratorBase, Messenger):
-    waveform_real_time_channel_id = ''
-    playhead_real_time_channel_id = ''
-
-    def __init__(self, song = None, envelope_types_provider = None, *a, **k):
-        self._song = song
-        self._envelope_types_provider = envelope_types_provider if envelope_types_provider is not None else EnvelopeTypesList()
-        super(_SimplerDeviceDecorator, self).__init__(*a, **k)
-        self.setup_options()
-        self.register_disconnectables(self.options)
+    def __init__(self, *a, **k):
+        super(SamplerDeviceDecorator, self).__init__(*a, **k)
         self.__on_parameters_changed.subject = self._live_object
-        self.__on_signature_numerator_changed.subject = song
-        self.__on_can_warp_as_changed.subject = self._live_object
-        self.__on_can_warp_half_changed.subject = self._live_object
-        self.__on_can_warp_double_changed.subject = self._live_object
-        self.__on_start_marker_changed.subject = self._live_object.sample
-        self.__on_end_marker_changed.subject = self._live_object.sample
-        self.__on_selected_slice_changed.subject = self._live_object.view
-
-    def setup_parameters(self):
-        super(_SimplerDeviceDecorator, self).setup_parameters()
-        self.positions = self.register_disconnectable(SimplerPositions(self))
-        self.zoom = WaveformNavigationParameter(name='Zoom', parent=self, simpler=self)
-        self.zoom.focus_region_of_interest('start_end_marker', self.get_parameter_by_name('Start'))
-        self.zoom.add_waveform_navigation_listener(self.notify_waveform_navigation)
-        self.envelope = EnumWrappingParameter(name='Env. Type', parent=self, values_host=self._envelope_types_provider, index_property_host=self._envelope_types_provider, values_property='available_values', index_property='index', value_type=EnvelopeType)
-        self._additional_parameters.extend([self.zoom, self.envelope])
-
-    def setup_options(self):
-
-        def get_simpler_flag(name):
-            return liveobj_valid(self._live_object) and getattr(self._live_object, name)
-
-        def call_simpler_function(name, *a):
-            if liveobj_valid(self._live_object):
-                return getattr(self._live_object, name)(*a)
-
-        def sample_available():
-            return liveobj_valid(self._live_object) and liveobj_valid(self._live_object.sample)
-
-        def call_sample_function(name, *a):
-            if sample_available():
-                return getattr(self._live_object.sample, name)(*a)
-
-        def reset_slices():
-            call_sample_function('reset_slices')
-            self.show_notification(RESET_SLICING_NOTIFICATION)
-
-        def split_slice_available():
-            if sample_available():
-                slices = self._live_object.sample.slices
-                return len(slices) != MAX_NUMBER_SLICES or slices[-1] != self._live_object.view.selected_slice
-            return False
-
-        self.crop_option = DeviceTriggerOption(name='Crop', callback=partial(call_simpler_function, 'crop'))
-        self.reverse_option = DeviceTriggerOption(name='Reverse', callback=partial(call_simpler_function, 'reverse'))
-        self.one_shot_sustain_mode_option = DeviceSwitchOption(name='Trigger Mode', default_label='Trigger', second_label='Gate', parameter=get_parameter_by_name(self, 'Trigger Mode'))
-        self.retrigger_option = DeviceOnOffOption(name='Retrigger', property_host=self._live_object, property_name='retrigger')
-        self.warp_as_x_bars_option = DeviceTriggerOption(name='Warp as X Bars', default_label=self.get_warp_as_option_label(), callback=lambda : call_simpler_function('warp_as', call_simpler_function('guess_playback_length')), is_active=lambda : get_simpler_flag('can_warp_as'))
-        self.warp_half_option = DeviceTriggerOption(name=':2', callback=partial(call_simpler_function, 'warp_half'), is_active=lambda : get_simpler_flag('can_warp_half'))
-        self.warp_double_option = DeviceTriggerOption(name='x2', callback=partial(call_simpler_function, 'warp_double'), is_active=lambda : get_simpler_flag('can_warp_double'))
-        self.lfo_sync_option = DeviceSwitchOption(name='LFO Sync Type', default_label='Free', second_label='Sync', parameter=get_parameter_by_name(self, 'L Sync'))
-        self.loop_option = DeviceOnOffOption(name='Loop', property_host=get_parameter_by_name(self, 'S Loop On'), property_name='value')
-        self.filter_slope_option = DeviceSwitchOption(name='Filter Slope', default_label='12dB', second_label='24dB', parameter=get_parameter_by_name(self, 'Filter Slope'))
-        self.clear_slices_action = DeviceTriggerOption(name='Clear Slices', default_label='Clear Slices', callback=lambda : call_sample_function('clear_slices'), is_active=lambda : sample_available() and len(self._live_object.sample.slices) > 1)
-        self.reset_slices_action = DeviceTriggerOption(name='Reset Slices', default_label='Reset Slices', callback=reset_slices, is_active=lambda : sample_available())
-        self.split_slice_action = DeviceTriggerOption(name='Split Slice', default_label='Split Slice', callback=lambda : insert_new_slice(self._live_object), is_active=split_slice_available)
-
-    def get_parameter_by_name(self, name):
-        return find_if(lambda p: p.name == name, self.parameters)
-
-    @property
-    def options(self):
-        return (self.crop_option,
-         self.reverse_option,
-         self.one_shot_sustain_mode_option,
-         self.retrigger_option,
-         self.warp_as_x_bars_option,
-         self.warp_half_option,
-         self.warp_double_option,
-         self.lfo_sync_option,
-         self.loop_option,
-         self.filter_slope_option,
-         self.clear_slices_action,
-         self.reset_slices_action,
-         self.split_slice_action)
-
-    @listenable_property
-    def waveform_navigation(self):
-        return self.zoom.waveform_navigation
-
-    @property
-    def available_resolutions(self):
-        return (u'1 Bar', u'\xbd', u'\xbc', u'\u215b', u'\ue001', u'\ue002', u'Transients')
-
-    @property
-    def available_slicing_beat_divisions(self):
-        return (u'\ue001', u'\ue001T', u'\u215b', u'\u215bT', u'\xbc', u'\xbcT', u'\xbd', u'\xbdT', u'1 Bar', u'2 Bars', u'4 Bars')
-
-    @listens('parameters')
-    def __on_parameters_changed(self):
-        self.lfo_sync_option.set_parameter(get_parameter_by_name(self, 'L Sync'))
-        self.filter_slope_option.set_parameter(get_parameter_by_name(self, 'Filter Slope'))
-
-    def _reconnect_sample_listeners(self):
-        super(_SimplerDeviceDecorator, self)._reconnect_sample_listeners()
-        self._reconnect_to_markers()
-        self._update_warp_as_label()
-        self.positions.post_sample_changed()
-        self.zoom.post_sample_changed()
-        self.zoom.focus_region_of_interest('start_end_marker', self.get_parameter_by_name('Start'))
-
-    def _reconnect_to_markers(self):
-        self.__on_start_marker_changed.subject = self._live_object.sample
-        self.__on_end_marker_changed.subject = self._live_object.sample
-
-    def _update_warp_as_label(self):
-        self.warp_as_x_bars_option.default_label = self.get_warp_as_option_label()
-
-    @listens('start_marker')
-    def __on_start_marker_changed(self):
-        self._update_warp_as_label()
-
-    @listens('end_marker')
-    def __on_end_marker_changed(self):
-        self._update_warp_as_label()
-
-    @listens('signature_numerator')
-    def __on_signature_numerator_changed(self):
-        self._update_warp_as_label()
-
-    @listens('can_warp_as')
-    def __on_can_warp_as_changed(self):
-        self.warp_as_x_bars_option.notify_active()
-
-    @listens('can_warp_half')
-    def __on_can_warp_half_changed(self):
-        self.warp_half_option.notify_active()
-
-    @listens('can_warp_double')
-    def __on_can_warp_double_changed(self):
-        self.warp_double_option.notify_active()
-
-    @listens('selected_slice')
-    def __on_selected_slice_changed(self):
-        self.split_slice_action.notify_active()
-
-    def _on_sample_changed(self):
-        super(_SimplerDeviceDecorator, self)._on_sample_changed()
-        self.clear_slices_action.notify_active()
-        self.reset_slices_action.notify_active()
-        self.split_slice_action.notify_active()
-
-    def _on_slices_changed(self):
-        super(_SimplerDeviceDecorator, self)._on_slices_changed()
-        self.clear_slices_action.notify_active()
-
-    def get_warp_as_option_label(self):
-        try:
-            bars = int(self._live_object.guess_playback_length() / self._song.signature_numerator)
-            return 'Warp as %d Bar%s' % (bars, 's' if bars > 1 else '')
-        except RuntimeError:
-            return 'Warp as X Bars'
-
-
-class _OperatorDeviceDecorator(EventObject, LiveObjectDecorator):
-
-    def __init__(self, song = None, osc_types_provider = None, *a, **k):
-        super(_OperatorDeviceDecorator, self).__init__(*a, **k)
-        self._osc_types_provider = osc_types_provider if osc_types_provider is not None else OscillatorTypesList()
-        self.__on_parameters_changed.subject = self._live_object
-        self.oscillator = EnumWrappingParameter(name='Oscillator', parent=self, values_host=self._osc_types_provider, index_property_host=self._osc_types_provider, values_property='available_values', index_property='index', value_type=OscillatorType)
-        self.filter_slope_option = DeviceSwitchOption(name='Filter Slope', default_label='12dB', second_label='24dB', parameter=get_parameter_by_name(self, 'Filter Slope'))
-        self.register_disconnectables(self.options)
-
-    @property
-    def parameters(self):
-        return tuple(self._live_object.parameters) + (self.oscillator,)
-
-    @property
-    def options(self):
-        return (self.filter_slope_option,)
-
-    @listens('parameters')
-    def __on_parameters_changed(self):
-        self.filter_slope_option.set_parameter(get_parameter_by_name(self, 'Filter Slope'))
-
-
-class _SamplerDeviceDecorator(EventObject, LiveObjectDecorator):
-
-    def __init__(self, song = None, *a, **k):
-        super(_SamplerDeviceDecorator, self).__init__(*a, **k)
-        self.__on_parameters_changed.subject = self._live_object
-        self.filter_slope_option = DeviceSwitchOption(name='Filter Slope', default_label='12dB', second_label='24dB', parameter=get_parameter_by_name(self, 'Filter Slope'))
+        self.filter_slope_option = DeviceSwitchOption(name=u'Filter Slope', parameter=get_parameter_by_name(self, u'Filter Slope'))
         self.register_disconnectables(self.options)
 
     @property
     def options(self):
         return (self.filter_slope_option,)
 
-    @listens('parameters')
+    @listens(u'parameters')
     def __on_parameters_changed(self):
-        self.filter_slope_option.set_parameter(get_parameter_by_name(self, 'Filter Slope'))
+        self.filter_slope_option.set_parameter(get_parameter_by_name(self, u'Filter Slope'))
 
 
-class _AutoFilterDeviceDecorator(EventObject, LiveObjectDecorator):
+class PedalDeviceDecorator(LiveObjectDecorator):
 
-    def __init__(self, song = None, *a, **k):
-        super(_AutoFilterDeviceDecorator, self).__init__(*a, **k)
-        self.__on_parameters_changed.subject = self._live_object
-        self.slope_option = DeviceSwitchOption(name='Slope', default_label='12dB', second_label='24dB', parameter=get_parameter_by_name(self, 'Slope'))
+    def __init__(self, *a, **k):
+        super(PedalDeviceDecorator, self).__init__(*a, **k)
+        self.mid_freq_option = DeviceSwitchOption(name=u'Mid Freq', parameter=get_parameter_by_name(self, u'Mid Freq'))
         self.register_disconnectables(self.options)
 
     @property
     def options(self):
-        return (self.slope_option,)
-
-    @listens('parameters')
-    def __on_parameters_changed(self):
-        self.slope_option.set_parameter(get_parameter_by_name(self, 'Slope'))
+        return (self.mid_freq_option,)
 
 
-class _Eq8DeviceDecorator(LiveObjectDecorator):
+class DrumBussDeviceDecorator(LiveObjectDecorator):
 
-    def __init__(self, song = None, band_types_provider = None, *a, **k):
-        super(_Eq8DeviceDecorator, self).__init__(*a, **k)
-        self._band_types_provider = band_types_provider if band_types_provider is not None else BandTypesList()
-        self.band = EnumWrappingParameter(name='Band', parent=self, values_host=self._band_types_provider, index_property_host=self._band_types_provider, values_property='available_values', index_property='index')
+    def __init__(self, *a, **k):
+        super(DrumBussDeviceDecorator, self).__init__(*a, **k)
+        self.compressor_option = DeviceOnOffOption(name=u'Compressor', property_host=get_parameter_by_name(self, u'Compressor On'))
+        self.register_disconnectables(self.options)
 
     @property
-    def parameters(self):
-        return tuple(self._live_object.parameters) + (self.band,)
+    def options(self):
+        return (self.compressor_option,)
 
 
-class DeviceDecoratorFactory(DecoratorFactory):
-    DECORATOR_CLASSES = {'OriginalSimpler': _SimplerDeviceDecorator,
-     'Operator': _OperatorDeviceDecorator,
-     'MultiSampler': _SamplerDeviceDecorator,
-     'AutoFilter': _AutoFilterDeviceDecorator,
-     'Eq8': _Eq8DeviceDecorator}
+class PitchParameter(InternalParameter):
 
-    @classmethod
-    def generate_decorated_device(cls, device, additional_properties = {}, song = None, *a, **k):
-        decorated = cls.DECORATOR_CLASSES[device.class_name](live_object=device, additional_properties=additional_properties, song=song, *a, **k)
-        return decorated
+    def __init__(self, integer_value_host = None, decimal_value_host = None, *a, **k):
+        super(PitchParameter, self).__init__(*a, **k)
+        self._integer_value_host = integer_value_host
+        self._decimal_value_host = decimal_value_host
+        self._on_integer_value_changed.subject = integer_value_host
+        self._on_decimal_value_changed.subject = decimal_value_host
+        self._on_integer_value_automation_state_changed.subject = integer_value_host
+        self._on_decimal_value_automation_state_changed.subject = decimal_value_host
+        self._integer_value = getattr(integer_value_host, u'value', 0)
+        self._decimal_value = getattr(decimal_value_host, u'value', 0.0)
+        self.adjust_finegrain = False
 
-    @classmethod
-    def _should_be_decorated(cls, device):
-        return liveobj_valid(device) and device.class_name in cls.DECORATOR_CLASSES
+    @listens(u'value')
+    def _on_integer_value_changed(self):
+        new_integer_value = self._integer_value_host.value
+        if self._integer_value != new_integer_value:
+            self._integer_value = new_integer_value
+            self.notify_value()
 
-    @depends(song=None)
-    def _get_decorated_object(self, device, additional_properties, song = None, *a, **k):
-        return self.generate_decorated_device(device, additional_properties=additional_properties, song=song, *a, **k)
+    @listens(u'value')
+    def _on_decimal_value_changed(self):
+        new_decimal_value = self._decimal_value_host.value
+        if self._decimal_value != new_decimal_value:
+            self._decimal_value = new_decimal_value
+            self.notify_value()
+
+    @listens(u'automation_state')
+    def _on_integer_value_automation_state_changed(self):
+        self.notify_automation_state()
+
+    @listens(u'automation_state')
+    def _on_decimal_value_automation_state_changed(self):
+        self.notify_automation_state()
+
+    @property
+    def _combined_value(self):
+        return getattr(self._integer_value_host, u'value', 0) + (getattr(self._decimal_value_host, u'value', 0.0) - 0.5)
+
+    def _get_value(self):
+        return self._combined_value
+
+    def _set_value(self, new_value):
+        if new_value != self._combined_value:
+            coarse_linear_value = round(new_value)
+            fine_linear_value = new_value - coarse_linear_value + 0.5
+            self._set_coarse(coarse_linear_value)
+            self._set_finegrain(fine_linear_value)
+            self.notify_value()
+
+    value = property(_get_value, _set_value)
+
+    def _get_linear_value(self):
+        if self.adjust_finegrain:
+            return self._decimal_value
+        return self._integer_value
+
+    def _set_linear_value(self, new_value):
+        if self.adjust_finegrain:
+            if self._decimal_value != new_value:
+                self._set_finegrain(new_value)
+                self.notify_value()
+        elif self._integer_value != new_value:
+            self._set_coarse(new_value)
+            self.notify_value()
+
+    linear_value = listenable_property(_get_linear_value, _set_linear_value)
+
+    def _set_coarse(self, new_value):
+        self._integer_value = new_value
+        if liveobj_valid(self._integer_value_host):
+            self._integer_value_host.value = clamp(new_value, self._integer_value_host.min, self._integer_value_host.max)
+
+    def _set_finegrain(self, new_value):
+        if new_value < 0 or new_value > 1:
+            offset = 1 if new_value < 0 else -1
+            new_value += offset
+            self._set_coarse(getattr(self._integer_value_host, u'value', 0) - offset)
+        self._decimal_value = new_value
+        if liveobj_valid(self._decimal_value_host):
+            self._decimal_value_host.value = new_value
+
+    @property
+    def decimal_value_host(self):
+        return self._decimal_value_host
+
+    @property
+    def integer_value_host(self):
+        return self._integer_value_host
+
+    @property
+    def min(self):
+        return getattr(self._integer_value_host, u'min', 0) - getattr(self._decimal_value_host, u'min', 0.0)
+
+    @property
+    def max(self):
+        return getattr(self._integer_value_host, u'max', 1) + getattr(self._decimal_value_host, u'max', 1.0)
+
+    @property
+    def display_value(self):
+        return u'{0:.2f}st'.format(self._combined_value)
+
+    @property
+    def default_value(self):
+        return 0
+
+    @property
+    def automation_state(self):
+        integer_host_automation_state = get_parameter_automation_state(self._integer_value_host)
+        decimal_host_automation_state = get_parameter_automation_state(self._decimal_value_host)
+        if integer_host_automation_state == AutomationState.playing or decimal_host_automation_state == AutomationState.playing:
+            return AutomationState.playing
+        return integer_host_automation_state or decimal_host_automation_state
+
+
+class ModMatrixParameter(InternalParameter):
+    u""" Observe the modulation value for a given source index
+    
+        This object has a static source index and a dynamic target
+        index, i.e. the user can change which modulation target is
+        being observed. This object also has a modulation value host
+        that it uses to update the _modulation_value whenever the
+        _modulation_value_host indicates the modulation_matrix_changed
+    """
+
+    def __init__(self, modulation_value_host = None, modulation_target_index_host = None, modulation_source = None, *a, **k):
+        super(ModMatrixParameter, self).__init__(*a, **k)
+        self._modulation_value_host = modulation_value_host
+        self._target_index_host = modulation_target_index_host
+        self._source = modulation_source
+        self._on_target_index_changed.subject = modulation_target_index_host
+        self._on_modulation_matrix_changed.subject = modulation_value_host
+        self._modulation_value = 0.0
+        self._update_value()
+
+    def _target_index(self):
+        return self._target_index_host.index
+
+    def _update_value(self, force_update = False):
+        old_value = self._modulation_value
+        self._modulation_value = self._modulation_value_host.get_modulation_value(self._target_index(), self._source)
+        if old_value != self._modulation_value or force_update:
+            self.notify_value()
+
+    @listens(u'index')
+    def _on_target_index_changed(self):
+        self._update_value(force_update=True)
+
+    @listens(u'modulation_matrix_changed')
+    def _on_modulation_matrix_changed(self):
+        self._update_value()
+
+    def _get_linear_value(self):
+        return self._modulation_value
+
+    def _set_linear_value(self, new_value):
+        if new_value != self._modulation_value:
+            self._modulation_value_host.set_modulation_value(self._target_index(), self._source, new_value)
+
+    linear_value = property(_get_linear_value, _set_linear_value)
+
+    @property
+    def min(self):
+        return -1.0
+
+    @property
+    def max(self):
+        return 1.0
+
+    @property
+    def display_value(self):
+        percentage = 100.0 * self._modulation_value
+        precision = 1 if abs(percentage) < 10.0 else 0
+        format_str = u'%.' + str(precision) + u'f'
+        return unicode(format_str % percentage)
+
+    @property
+    def default_value(self):
+        return 0
+
+
+class UtilityDeviceDecorator(LiveObjectDecorator, EventObject):
+
+    def __init__(self, *a, **k):
+        super(UtilityDeviceDecorator, self).__init__(*a, **k)
+        self.__on_parameters_changed.subject = self._live_object
+        self.mono_option = DeviceOnOffOption(name=u'Mono', property_host=get_parameter_by_name(self, u'Mono'))
+        self.bass_mono_option = DeviceOnOffOption(name=u'Bass Mono', property_host=get_parameter_by_name(self, u'Bass Mono'))
+        self.dc_filter_option = DeviceOnOffOption(name=u'DC Filter', property_host=get_parameter_by_name(self, u'DC Filter'))
+        self.register_disconnectables(self.options)
+
+    @property
+    def options(self):
+        return (self.mono_option, self.bass_mono_option, self.dc_filter_option)
+
+    @listens(u'parameters')
+    def __on_parameters_changed(self):
+        self.mono_option.set_property_host(get_parameter_by_name(self, u'Mono'))
+        self.bass_mono_option.set_property_host(get_parameter_by_name(self, u'Bass Mono'))
 
 
 class SimplerDecoratedPropertiesCopier(object):
-    ADDITIONAL_PROPERTIES = ['playhead_real_time_channel_id', 'waveform_real_time_channel_id']
+    ADDITIONAL_PROPERTIES = [u'playhead_real_time_channel_id', u'waveform_real_time_channel_id']
 
     def __init__(self, decorated_object = None, factory = None, *a, **k):
         raise liveobj_valid(decorated_object) or AssertionError
@@ -594,7 +544,9 @@ class SimplerDecoratedPropertiesCopier(object):
                 self._copied_additional_properties[prop] = getattr(self._decorated_object, prop)
 
     def apply_properties(self, new_object, song):
-        decorated = self._factory.decorate(new_object, additional_properties=self._copied_additional_properties, song=song)
+        decorated = None
+        with inject(song=const(song)).everywhere():
+            decorated = self._factory.decorate(new_object, additional_properties=self._copied_additional_properties, song=song)
         self._apply_nested_properties(decorated)
         return decorated
 

@@ -1,9 +1,10 @@
 
-from RemoteSLComponent import RemoteSLComponent
-from consts import *
+from __future__ import absolute_import, print_function, unicode_literals
+from .RemoteSLComponent import RemoteSLComponent
+from .consts import *
 
 class DisplayController(RemoteSLComponent):
-    """Controls the 4 display rows of the RemoteSL.
+    u"""Controls the 4 display rows of the RemoteSL.
     The left and right display can be individually controlled. Both displays will
     show in the upper row a freely defineable string, per strip (the parameter or
     track name). The lower rows will always show parameter values.
@@ -21,7 +22,7 @@ class DisplayController(RemoteSLComponent):
         self.__send_clear_displays()
 
     def setup_left_display(self, names, parameters):
-        """Shows the given strings on the upper left row, the parameters values
+        u"""Shows the given strings on the upper left row, the parameters values
         in the lower left row.
         
         'names' can be an array of NUM_CONTROLS_PER_ROW strings, or a list with
@@ -33,7 +34,7 @@ class DisplayController(RemoteSLComponent):
         self.__left_strip_parameters = parameters
 
     def setup_right_display(self, names, parameters):
-        """Shows the given strings on the upper right row, the parameters values
+        u"""Shows the given strings on the upper right row, the parameters values
         in the lower right row.
         
         'names' can be an array of NUM_CONTROLS_PER_ROW strings, or a list with
@@ -46,7 +47,7 @@ class DisplayController(RemoteSLComponent):
 
     def update_display(self):
         for row_id in (1, 2, 3, 4):
-            message_string = ''
+            message_string = u''
             if row_id == 1 or row_id == 2:
                 if row_id == 1:
                     strip_names = self.__left_strip_names
@@ -70,7 +71,7 @@ class DisplayController(RemoteSLComponent):
                         if p:
                             message_string += self.__generate_strip_string(unicode(p))
                         else:
-                            message_string += self.__generate_strip_string('')
+                            message_string += self.__generate_strip_string(u'')
 
                 else:
                     raise False or AssertionError
@@ -101,7 +102,7 @@ class DisplayController(RemoteSLComponent):
         self.send_midi(start_clear_sysex + right_end_sysex)
 
     def __send_display_string(self, message, row_id, offset = 0):
-        """Sends a sysex to update a complete row.
+        u"""Sends a sysex to update a complete row.
         
         'message' must be smaller than NUM_CHARS_PER_DISPLAY_LINE,
         'offset' can be something form 0 to NUM_CHARS_PER_DISPLAY_LINE - 1
@@ -112,10 +113,10 @@ class DisplayController(RemoteSLComponent):
         """
         if not row_id in (1, 2, 3, 4):
             raise AssertionError
-            final_message = ' ' * offset + message
+            final_message = u' ' * offset + message
             if len(final_message) < NUM_CHARS_PER_DISPLAY_LINE:
                 fill_up = NUM_CHARS_PER_DISPLAY_LINE - len(final_message)
-                final_message = final_message + ' ' * fill_up
+                final_message = final_message + u' ' * fill_up
             elif len(final_message) >= NUM_CHARS_PER_DISPLAY_LINE:
                 final_message = final_message[0:NUM_CHARS_PER_DISPLAY_LINE]
             final_offset = 0
@@ -140,23 +141,23 @@ class DisplayController(RemoteSLComponent):
             self.send_midi(full_sysex)
 
     def __generate_strip_string(self, display_string):
-        """ Hack: Shamelessly stolen from the MainDisplayController of the Mackie Control.
+        u""" Hack: Shamelessly stolen from the MainDisplayController of the Mackie Control.
         Should share this in future in a 'Common' package!
         
         returns a 6 char string for of the passed string, trying to remove not so important
         letters and signs first...
         """
         if not display_string:
-            return ' ' * NUM_CHARS_PER_DISPLAY_STRIP
-        if len(display_string.strip()) > NUM_CHARS_PER_DISPLAY_STRIP - 1 and display_string.endswith('dB') and display_string.find('.') != -1:
+            return u' ' * NUM_CHARS_PER_DISPLAY_STRIP
+        if len(display_string.strip()) > NUM_CHARS_PER_DISPLAY_STRIP - 1 and display_string.endswith(u'dB') and display_string.find(u'.') != -1:
             display_string = display_string[:-2]
         if len(display_string) > NUM_CHARS_PER_DISPLAY_STRIP - 1:
-            for um in [' ',
-             'i',
-             'o',
-             'u',
-             'e',
-             'a']:
+            for um in [u' ',
+             u'i',
+             u'o',
+             u'u',
+             u'e',
+             u'a']:
                 while len(display_string) > NUM_CHARS_PER_DISPLAY_STRIP - 1 and display_string.rfind(um, 1) != -1:
                     um_pos = display_string.rfind(um, 1)
                     display_string = display_string[:um_pos] + display_string[um_pos + 1:]
@@ -166,10 +167,10 @@ class DisplayController(RemoteSLComponent):
         ret = u''
         for i in range(NUM_CHARS_PER_DISPLAY_STRIP - 1):
             if ord(display_string[i]) > 127 or ord(display_string[i]) < 0:
-                ret += ' '
+                ret += u' '
             else:
                 ret += display_string[i]
 
-        ret += ' '
+        ret += u' '
         raise len(ret) == NUM_CHARS_PER_DISPLAY_STRIP or AssertionError
         return ret

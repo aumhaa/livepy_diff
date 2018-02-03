@@ -1,9 +1,9 @@
 
-"""
+u"""
 Module implementing a way to resource-based access to controls in an
 unified interface dynamic.
 """
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from itertools import repeat, izip
 from .ControlElement import ControlElementClient
 from .Util import nop
@@ -19,7 +19,7 @@ class UnhandledControlError(LayerError):
 
 
 class SimpleLayerOwner(Disconnectable):
-    """
+    u"""
     Simple owner that grabs a given layer until it's disconnected
     """
 
@@ -32,7 +32,7 @@ class SimpleLayerOwner(Disconnectable):
 
 
 class LayerClient(ControlElementClient):
-    """
+    u"""
     Client of the indivial controls that delivers the controls to the
     layer owner.
     """
@@ -49,19 +49,19 @@ class LayerClient(ControlElementClient):
         owner = self.layer_client
         if not owner:
             raise AssertionError
-            raise control_element in layer._control_to_names or AssertionError('Control not in layer: %s' % (control_element,))
+            raise control_element in layer._control_to_names or AssertionError(u'Control not in layer: %s' % (control_element,))
             names = layer._control_to_names[control_element]
             control_element = grabbed or None
         for name in names:
             try:
-                handler = getattr(owner, 'set_' + name)
+                handler = getattr(owner, u'set_' + name)
             except AttributeError:
                 try:
                     control = getattr(owner, name)
                     handler = control.set_control_element
                 except AttributeError:
-                    if name[0] != '_':
-                        raise UnhandledControlError, 'Component %s has no handler for control_element %s' % (str(owner), name)
+                    if name[0] != u'_':
+                        raise UnhandledControlError, u'Component %s has no handler for control_element %s' % (str(owner), name)
                     else:
                         handler = nop
 
@@ -74,7 +74,7 @@ class LayerBase(object):
 
 
 class CompoundLayer(LayerBase, CompoundResource):
-    """
+    u"""
     A compound resource takes two layers and makes them look like one,
     grabbing both of them.  Both can have different priorities
     thought.
@@ -98,7 +98,7 @@ class CompoundLayer(LayerBase, CompoundResource):
 
 
 class Layer(LayerBase, ExclusiveResource):
-    """
+    u"""
     A layer provides a convenient interface to control resources. In a
     layer, you can group several controls by name.  The layer itself
     is an exclusive resource.  When grabbing the layer, it will try to
@@ -129,6 +129,7 @@ class Layer(LayerBase, ExclusiveResource):
         self._control_to_names = dict()
         self._control_clients = dict()
         for name, control in controls.iteritems():
+            raise control is not None or AssertionError(name)
             self._control_to_names.setdefault(control, []).append(name)
 
     def __add__(self, other):
@@ -140,13 +141,13 @@ class Layer(LayerBase, ExclusiveResource):
     def _set_priority(self, priority):
         if priority != self._priority:
             if self.owner:
-                raise RuntimeError("Cannot change priority of a layer while it's owned")
+                raise RuntimeError(u"Cannot change priority of a layer while it's owned")
             self._priority = priority
 
     priority = property(_get_priority, _set_priority)
 
     def __getattr__(self, name):
-        """ Provides access to controls """
+        u""" Provides access to controls """
         try:
             return self._name_to_controls[name]
         except KeyError:
@@ -159,13 +160,13 @@ class Layer(LayerBase, ExclusiveResource):
         return super(Layer, self).grab(client, *a, **k)
 
     def on_received(self, client, *a, **k):
-        """ Override from ExclusiveResource """
+        u""" Override from ExclusiveResource """
         for control in self._control_to_names.iterkeys():
-            k.setdefault('priority', self._priority)
+            k.setdefault(u'priority', self._priority)
             control.resource.grab(self._get_control_client(client), *a, **k)
 
     def on_lost(self, client):
-        """ Override from ExclusiveResource """
+        u""" Override from ExclusiveResource """
         for control in self._control_to_names.iterkeys():
             control.resource.release(self._get_control_client(client))
 

@@ -1,5 +1,5 @@
 
-from __future__ import with_statement
+from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.ControlSurface import ControlSurface
 from _Framework.Layer import Layer
 from _Framework.DrumRackComponent import DrumRackComponent
@@ -13,13 +13,13 @@ class MidiMap(MidiMapBase):
 
     def __init__(self, *a, **k):
         super(MidiMap, self).__init__(*a, **k)
-        self.add_button('Play', 0, 118, MIDI_CC_TYPE)
-        self.add_button('Record', 0, 119, MIDI_CC_TYPE)
-        self.add_button('Stop', 0, 117, MIDI_CC_TYPE)
-        self.add_button('Loop', 0, 114, MIDI_CC_TYPE)
-        self.add_button('Forward', 0, 116, MIDI_CC_TYPE)
-        self.add_button('Backward', 0, 115, MIDI_CC_TYPE)
-        self.add_matrix('Encoders', make_encoder, 0, [[22,
+        self.add_button(u'Play', 0, 118, MIDI_CC_TYPE)
+        self.add_button(u'Record', 0, 119, MIDI_CC_TYPE)
+        self.add_button(u'Stop', 0, 117, MIDI_CC_TYPE)
+        self.add_button(u'Loop', 0, 114, MIDI_CC_TYPE)
+        self.add_button(u'Forward', 0, 116, MIDI_CC_TYPE)
+        self.add_button(u'Backward', 0, 115, MIDI_CC_TYPE)
+        self.add_matrix(u'Encoders', make_encoder, 0, [[22,
           23,
           24,
           25,
@@ -27,7 +27,7 @@ class MidiMap(MidiMapBase):
           27,
           28,
           29]], MIDI_CC_TYPE)
-        self.add_matrix('Drum_Pads', make_button, 1, [[67,
+        self.add_matrix(u'Drum_Pads', make_button, 1, [[67,
           69,
           71,
           72], [60,
@@ -42,10 +42,10 @@ class MPK225(ControlSurface):
         super(MPK225, self).__init__(*a, **k)
         with self.component_guard():
             midimap = MidiMap()
-            drum_rack = DrumRackComponent(name='Drum_Rack', is_enabled=False, layer=Layer(pads=midimap['Drum_Pads']))
+            drum_rack = DrumRackComponent(name=u'Drum_Rack', is_enabled=False, layer=Layer(pads=midimap[u'Drum_Pads']))
             drum_rack.set_enabled(True)
-            transport = TransportComponent(name='Transport', is_enabled=False, layer=Layer(play_button=midimap['Play'], record_button=midimap['Record'], stop_button=midimap['Stop'], seek_forward_button=midimap['Forward'], seek_backward_button=midimap['Backward'], loop_button=midimap['Loop']))
+            transport = TransportComponent(name=u'Transport', is_enabled=False, layer=Layer(play_button=midimap[u'Play'], record_button=midimap[u'Record'], stop_button=midimap[u'Stop'], seek_forward_button=midimap[u'Forward'], seek_backward_button=midimap[u'Backward'], loop_button=midimap[u'Loop']))
             transport.set_enabled(True)
-            device = DeviceComponent(name='Device', is_enabled=False, layer=Layer(parameter_controls=midimap['Encoders']), device_selection_follows_track_selection=True)
+            device = DeviceComponent(name=u'Device', is_enabled=False, layer=Layer(parameter_controls=midimap[u'Encoders']), device_selection_follows_track_selection=True)
             device.set_enabled(True)
             self.set_device_component(device)

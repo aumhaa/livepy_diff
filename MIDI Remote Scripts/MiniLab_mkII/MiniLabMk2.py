@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial
 from _Framework import Task
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
@@ -29,12 +29,12 @@ class MiniLabMk2(MiniLab):
         self._pad_leds = ButtonMatrixElement(rows=[ [ SysexValueControl(message_prefix=SETUP_MSG_PREFIX + (WRITE_COMMAND,
          WORKING_MEMORY_ID,
          COLOR_PROPERTY,
-         column + 112 + row * 8), default_value=(0,), name='Pad_LED_%d' % (column,)) for column in xrange(8) ] for row in xrange(2) ], name='Pad_LED_Matrix')
-        self._memory_slot_selection = SysexValueControl(message_prefix=SETUP_MSG_PREFIX + (MEMORY_SLOT_PROPERTY,), name='Memory_Slot_Selection')
-        self._hardware_live_mode_switch = SysexValueControl(message_prefix=LIVE_MODE_MSG_HEAD, default_value=(OFF_VALUE,), name='Hardware_Live_Mode_Switch')
+         column + 112 + row * 8), default_value=(0,), name=u'Pad_LED_%d' % (column,)) for column in xrange(8) ] for row in xrange(2) ], name=u'Pad_LED_Matrix')
+        self._memory_slot_selection = SysexValueControl(message_prefix=SETUP_MSG_PREFIX + (MEMORY_SLOT_PROPERTY,), name=u'Memory_Slot_Selection')
+        self._hardware_live_mode_switch = SysexValueControl(message_prefix=LIVE_MODE_MSG_HEAD, default_value=(OFF_VALUE,), name=u'Hardware_Live_Mode_Switch')
 
     def _create_hardware_settings(self):
-        self._hardware_settings = HardwareSettingsComponent(name='Hardware_Settings', is_enabled=False, layer=Layer(memory_slot_selection=self._memory_slot_selection, hardware_live_mode_switch=self._hardware_live_mode_switch))
+        self._hardware_settings = HardwareSettingsComponent(name=u'Hardware_Settings', is_enabled=False, layer=Layer(memory_slot_selection=self._memory_slot_selection, hardware_live_mode_switch=self._hardware_live_mode_switch))
         self._on_live_mode_changed.subject = self._hardware_settings
         self._hardware_settings.set_enabled(True)
 
@@ -43,7 +43,7 @@ class MiniLabMk2(MiniLab):
         self._session.set_enabled(False)
         self._session.set_clip_slot_leds(self._pad_leds)
 
-    @subject_slot('live_mode')
+    @subject_slot(u'live_mode')
     def _on_live_mode_changed(self, is_live_mode_on):
         self._session.set_enabled(is_live_mode_on)
 

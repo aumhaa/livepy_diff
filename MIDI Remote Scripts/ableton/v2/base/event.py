@@ -1,18 +1,18 @@
 
-"""
+u"""
 Module for adding and listening to events.
 """
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from itertools import izip, repeat, chain
 from functools import partial, wraps
 from .disconnectable import Disconnectable, CompoundDisconnectable
 from .live_api_utils import liveobj_valid
 from .signal import Signal
 from .util import instance_decorator, monkeypatch, monkeypatch_extend, NamedTuple
-__all__ = ('EventObject', 'Event', 'EventError', 'listenable_property', 'listens', 'listens_group', 'Slot', 'SlotGroup', 'MultiSlot', 'has_event', 'validate_event_interface')
+__all__ = (u'EventObject', u'Event', u'EventError', u'listenable_property', u'listens', u'listens_group', u'Slot', u'SlotGroup', u'MultiSlot', u'has_event', u'validate_event_interface')
 
 class EventError(Exception):
-    """
+    u"""
     Error that is raised when an object does not meet the required interface of an event
     (you try to register to an event, that an object does not have).
     """
@@ -20,18 +20,18 @@ class EventError(Exception):
 
 
 class Event(NamedTuple):
-    """
+    u"""
     Describes an event of a class. Is used by :class:`~EventObject` in case more control
     over the event configuration is needed.
     """
     name = None
-    doc = ''
+    doc = u''
     signal = Signal
     override = False
 
 
 def add_event(cls, event_name_or_event):
-    """
+    u"""
     Adds an event to a Disconnectable class. event_name_or_event must either be a string
     or an Event object.
     
@@ -44,12 +44,12 @@ def add_event(cls, event_name_or_event):
     
     The disconnect method will be patched to remove all registered listeners.
     """
-    if isinstance(event_name_or_event, str):
+    if isinstance(event_name_or_event, basestring):
         event = Event(name=event_name_or_event)
     else:
         event = event_name_or_event
     raise callable(event.signal) or AssertionError
-    signal_attr = '_' + event.name + '_signal'
+    signal_attr = u'_' + event.name + u'_signal'
 
     def get_signal(self):
         try:
@@ -59,27 +59,27 @@ def add_event(cls, event_name_or_event):
             setattr(self, signal_attr, signal)
             return signal
 
-    kwargs = dict({'doc': event.doc,
-     'override': event.override})
+    kwargs = dict({u'doc': event.doc,
+     u'override': event.override})
 
-    @monkeypatch(cls, (event.name + '_has_listener'), **kwargs)
+    @monkeypatch(cls, (event.name + u'_has_listener'), **kwargs)
     def has_method(self, slot):
         return get_signal(self).is_connected(slot)
 
-    @monkeypatch(cls, ('add_' + event.name + '_listener'), **kwargs)
+    @monkeypatch(cls, (u'add_' + event.name + u'_listener'), **kwargs)
     def add_method(self, slot, identify_sender = False, *a, **k):
         sender = self if identify_sender else None
         return get_signal(self).connect(slot, sender=sender, *a, **k)
 
-    @monkeypatch(cls, ('remove_' + event.name + '_listener'), **kwargs)
+    @monkeypatch(cls, (u'remove_' + event.name + u'_listener'), **kwargs)
     def remove_method(self, slot):
         return get_signal(self).disconnect(slot)
 
-    @monkeypatch(cls, ('notify_' + event.name), **kwargs)
+    @monkeypatch(cls, (u'notify_' + event.name), **kwargs)
     def notify_method(self, *a, **k):
         return get_signal(self)(*a, **k)
 
-    @monkeypatch(cls, (event.name + '_listener_count'), **kwargs)
+    @monkeypatch(cls, (event.name + u'_listener_count'), **kwargs)
     def listener_count_method(self):
         return get_signal(self).count
 
@@ -89,27 +89,27 @@ def add_event(cls, event_name_or_event):
 
 
 def validate_event_interface(obj, event_name):
-    """
+    u"""
     Validates that obj has all required methods available for the given
     event name. Raises EventError if the interface is not available.
     """
-    if not callable(getattr(obj, 'add_' + event_name + '_listener', None)):
-        raise EventError('Object %s missing "add" method for event: %s' % (obj, event_name))
-    if not callable(getattr(obj, 'remove_' + event_name + '_listener', None)):
-        raise EventError('Object %s missing "remove" method for event: %s' % (obj, event_name))
-    if not callable(getattr(obj, event_name + '_has_listener', None)):
-        raise EventError('Object %s missing "has" method for event: %s' % (obj, event_name))
+    if not callable(getattr(obj, u'add_' + event_name + u'_listener', None)):
+        raise EventError(u'Object %s missing "add" method for event: %s' % (obj, event_name))
+    if not callable(getattr(obj, u'remove_' + event_name + u'_listener', None)):
+        raise EventError(u'Object %s missing "remove" method for event: %s' % (obj, event_name))
+    if not callable(getattr(obj, event_name + u'_has_listener', None)):
+        raise EventError(u'Object %s missing "has" method for event: %s' % (obj, event_name))
 
 
 def has_event(obj, event_name):
-    """
+    u"""
     Returns true if obj has all required methods available for the given event name.
     """
-    return callable(getattr(obj, 'add_' + event_name + '_listener', None)) and callable(getattr(obj, 'remove_' + event_name + '_listener', None)) and callable(getattr(obj, event_name + '_has_listener', None))
+    return callable(getattr(obj, u'add_' + event_name + u'_listener', None)) and callable(getattr(obj, u'remove_' + event_name + u'_listener', None)) and callable(getattr(obj, event_name + u'_has_listener', None))
 
 
 class listenable_property_base(object):
-    """
+    u"""
     Base class for properties of a class, for which a corresponding event (with the same
     name as the property) will be created.
     EventObjectMeta will generate an event for every class attribute, whose base class
@@ -117,14 +117,14 @@ class listenable_property_base(object):
     """
 
     def set_property_name(self, name):
-        """
+        u"""
         Is called with the name of the class attribute by EventObjectMeta.
         """
         pass
 
 
 class EventObjectMeta(type):
-    """
+    u"""
     Meta class for EventObject, that generates an events interfaces. An event is
     defined by the __events__ attribute or an attribute that inherits from
     listenable_property_base.
@@ -139,13 +139,13 @@ class EventObjectMeta(type):
         for property_name, obj in listenable_properties:
             obj.set_property_name(property_name)
 
-        events = dct.get('__events__', [])
+        events = dct.get(u'__events__', [])
         property_events = [ event_name for event_name, obj in listenable_properties ]
         has_events = events or property_events
-        if has_events and 'disconnect' not in dct:
-            dct['disconnect'] = lambda self: super(cls, self).disconnect()
+        if has_events and u'disconnect' not in dct:
+            dct[u'disconnect'] = lambda self: super(cls, self).disconnect()
         cls = super(EventObjectMeta, cls).__new__(cls, name, bases, dct)
-        raise not has_events or hasattr(cls, 'disconnect') or AssertionError
+        raise not has_events or hasattr(cls, u'disconnect') or AssertionError
         for lst in chain(events, property_events):
             add_event(cls, lst)
 
@@ -153,7 +153,7 @@ class EventObjectMeta(type):
 
 
 class EventObject(CompoundDisconnectable):
-    """
+    u"""
     Base class to enable defining and listening to events.
     
     Events can be defined in two ways:
@@ -171,7 +171,7 @@ class EventObject(CompoundDisconnectable):
     __metaclass__ = EventObjectMeta
 
     def register_slot(self, *a, **k):
-        """
+        u"""
         Creates a new :class:`~Slot` and registers it, so it gets disconnected.
         All arguments are forwarded to the constructor of :class:`~Slot`.
         In case the argument is already a `Slot`, the object gets simply registered.
@@ -182,7 +182,7 @@ class EventObject(CompoundDisconnectable):
 
 
 class Slot(Disconnectable):
-    """
+    u"""
     This class maintains the relationship between a subject and a
     listener. As soon as both are non-null, it connects the listener to the given 'event'
     of the subject and releases the connection when any of them change.
@@ -211,13 +211,13 @@ class Slot(Disconnectable):
         self.listener = listener
 
     def subject_valid(self, subject):
-        """
+        u"""
         Returns True if a subject is valid and can be connected.
         """
         return liveobj_valid(subject)
 
     def disconnect(self):
-        """
+        u"""
         Disconnects the slot clearing its members.
         """
         self.subject = None
@@ -225,11 +225,11 @@ class Slot(Disconnectable):
         super(Slot, self).disconnect()
 
     def connect(self):
-        """
+        u"""
         Connects the listener with the current subject.
         """
         if not self.is_connected and self.subject_valid(self._subject) and self._listener is not None:
-            add_method = getattr(self._subject, 'add_' + self._event_name + '_listener')
+            add_method = getattr(self._subject, u'add_' + self._event_name + u'_listener')
             all_args = tuple(self._extra_args) + (self._listener,)
             try:
                 add_method(*all_args, **self._extra_kws)
@@ -237,13 +237,13 @@ class Slot(Disconnectable):
                 pass
 
     def soft_disconnect(self):
-        """
+        u"""
         Disconnects the listener from the subject keeping their
         values.
         """
         if self.is_connected and self.subject_valid(self._subject) and self._listener is not None:
             all_args = tuple(self._extra_args) + (self._listener,)
-            remove_method = getattr(self._subject, 'remove_' + self._event_name + '_listener')
+            remove_method = getattr(self._subject, u'remove_' + self._event_name + u'_listener')
             try:
                 remove_method(*all_args)
             except RuntimeError:
@@ -251,13 +251,13 @@ class Slot(Disconnectable):
 
     @property
     def is_connected(self):
-        """
+        u"""
         Returns True if the associated listener is connected to the current subject.
         """
         all_args = tuple(self._extra_args) + (self._listener,)
         connected = False
         try:
-            connected = bool(self.subject_valid(self._subject) and self._listener is not None and getattr(self._subject, self._event_name + '_has_listener')(*all_args))
+            connected = bool(self.subject_valid(self._subject) and self._listener is not None and getattr(self._subject, self._event_name + u'_has_listener')(*all_args))
         except RuntimeError:
             pass
 
@@ -265,7 +265,7 @@ class Slot(Disconnectable):
 
     @property
     def subject(self):
-        """
+        u"""
         The object with the given event, that is connected with the listener.
         """
         return self._subject
@@ -281,7 +281,7 @@ class Slot(Disconnectable):
 
     @property
     def listener(self):
-        """
+        u"""
         The listener, that is called when the event is notified.
         """
         return self._listener
@@ -299,7 +299,7 @@ class Slot(Disconnectable):
 
 
 class SlotGroup(EventObject):
-    """
+    u"""
     A slot that connects a given listener to many subjects.
     """
     listener = None
@@ -318,7 +318,7 @@ class SlotGroup(EventObject):
             self._extra_args = extra_args
 
     def replace_subjects(self, subjects, identifiers = repeat(None)):
-        """
+        u"""
         Replaces all currently connected subjects of this slot with the new subjects.
         All listeners get the notifying subject passed as an argument.
         The `identifiers` argument can be used to notify with an identifier instead of
@@ -329,7 +329,7 @@ class SlotGroup(EventObject):
             self.add_subject(subject, identifier=identifier)
 
     def add_subject(self, subject, identifier = None):
-        """
+        u"""
         Adds a subject to this slot. Listeners get the notifying subject passed as an
         argument, or with identifier if it's not None.
         """
@@ -339,14 +339,14 @@ class SlotGroup(EventObject):
         self.register_slot(subject, listener, self._event_name, self._extra_kws, self._extra_args)
 
     def remove_subject(self, subject):
-        """
+        u"""
         Removes a previously added subject from this slot.
         """
         slot = self.find_disconnectable(lambda x: x.subject == subject)
         self.disconnect_disconnectable(slot)
 
     def has_subject(self, subject):
-        """
+        u"""
         Returns true if the given subject has been added to the slot.
         """
         return liveobj_valid(self.find_disconnectable(lambda x: x.subject == subject))
@@ -359,7 +359,7 @@ class SlotGroup(EventObject):
 
 
 class MultiSlot(EventObject, Slot):
-    """
+    u"""
     A slot that takes a string describing the path to the event to listen to.
     It will make sure that any changes to the elements of this path notify the given
     listener and will follow the changing subjects.
@@ -376,7 +376,7 @@ class MultiSlot(EventObject, Slot):
 
     @property
     def subject(self):
-        """
+        u"""
         The object with the given event, that is connected with the listener.
         """
         return super(MultiSlot, self).subject
@@ -405,7 +405,7 @@ class MultiSlot(EventObject, Slot):
 
 
 def listens(event_path, *a, **k):
-    """
+    u"""
     Decorator for making a method easily connectable with an event.
     
     The method will be made into either a :class:`~Slot` or :class:`~MultiSlot`,
@@ -418,7 +418,7 @@ def listens(event_path, *a, **k):
     def decorator(self, method):
         if not isinstance(self, EventObject):
             raise AssertionError
-            event_name_list = event_path.split('.')
+            event_name_list = event_path.split(u'.')
             slot = len(event_name_list) > 1 and wraps(method)(MultiSlot(event_name_list=event_name_list, extra_kws=k, extra_args=a, listener=partial(method, self)))
         else:
             slot = wraps(method)(Slot(event_name=event_path, extra_kws=k, extra_args=a, listener=partial(method, self)))
@@ -429,7 +429,7 @@ def listens(event_path, *a, **k):
 
 
 def listens_group(event_name, *a, **k):
-    """
+    u"""
     Decorator for making a method easily connectable with a group of subjects, that
     have an event `event_name`.
     
@@ -450,7 +450,7 @@ def listens_group(event_name, *a, **k):
 
 
 class listenable_property(listenable_property_base, property):
-    """
+    u"""
     Can be used like Pythons built-in property and will in addition generate a
     corresponding event for it. The event has the same name as the property. The class
     hosting the property must inherit from :class:`~EventObject`.
@@ -458,7 +458,7 @@ class listenable_property(listenable_property_base, property):
 
     @classmethod
     def managed(cls, default_value):
-        """
+        u"""
         Adds a property to the class and manages the properties value internally. No
         explicit setter and getter is required.
         A corresponding event will be created, which will notify whenever a new value
@@ -477,10 +477,10 @@ class _managed_listenable_property(listenable_property_base):
 
     def set_property_name(self, property_name):
         self._property_name = property_name
-        self._member_name = '__listenable_property_%s' % property_name
+        self._member_name = u'__listenable_property_%s' % property_name
 
     def _get_value(self, obj):
-        raise self._member_name is not None or AssertionError('Cannot get member for managed listenable property. Listenable property might be used without inheriting from EventObject.')
+        raise self._member_name is not None or AssertionError(u'Cannot get member for managed listenable property. Listenable property might be used without inheriting from EventObject.')
         return getattr(obj, self._member_name, self._default_value)
 
     def __get__(self, obj, owner):
@@ -489,7 +489,7 @@ class _managed_listenable_property(listenable_property_base):
     def __set__(self, obj, value):
         if value != self._get_value(obj):
             setattr(obj, self._member_name, value)
-            getattr(obj, 'notify_%s' % self._property_name)(value)
+            getattr(obj, u'notify_%s' % self._property_name)(value)
 
 
 class SerializableListenablePropertiesMeta(EventObjectMeta):
@@ -506,8 +506,8 @@ class SerializableListenablePropertiesMeta(EventObjectMeta):
             for k, v in data.iteritems():
                 setattr(self, k, v)
 
-        dct['__getstate__'] = getstate
-        dct['__setstate__'] = setstate
+        dct[u'__getstate__'] = getstate
+        dct[u'__setstate__'] = setstate
         generated_class = super(SerializableListenablePropertiesMeta, cls).__new__(cls, name, bases, dct)
         return generated_class
 
@@ -522,7 +522,7 @@ class SerializableListenablePropertiesBase(Disconnectable):
 
 
 class SerializableListenableProperties(SerializableListenablePropertiesBase):
-    """
+    u"""
     Installs a meta class, that generates __getstate__ and __setstate__ for
     serializing all listenable properties.
     """

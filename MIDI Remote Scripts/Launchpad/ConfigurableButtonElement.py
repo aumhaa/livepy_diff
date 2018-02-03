@@ -1,9 +1,10 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.ButtonElement import *
 
 class ConfigurableButtonElement(ButtonElement):
-    """ Special button class that can be configured with custom on- and off-values """
+    u""" Special button class that can be configured with custom on- and off-values """
 
     def __init__(self, is_momentary, msg_type, channel, identifier):
         ButtonElement.__init__(self, is_momentary, msg_type, channel, identifier)

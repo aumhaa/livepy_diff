@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from itertools import chain
 
 class SkinColorMissingError(Exception):
@@ -14,16 +14,16 @@ class Skin(object):
         if colors is not None:
             self._fill_colors(colors)
 
-    def _fill_colors(self, colors, pathname = ''):
+    def _fill_colors(self, colors, pathname = u''):
         try:
             self._fill_colors(super(colors))
         except TypeError:
             map(self._fill_colors, colors.__bases__)
 
         for k, v in colors.__dict__.iteritems():
-            if k[:1] != '_':
+            if k[:1] != u'_':
                 if callable(v):
-                    self._fill_colors(v, pathname + k + '.')
+                    self._fill_colors(v, pathname + k + u'.')
                 else:
                     self._colors[pathname + k] = v
 
@@ -31,7 +31,7 @@ class Skin(object):
         try:
             return self._colors[key]
         except KeyError:
-            raise SkinColorMissingError, 'Skin color missing: %s' % str(key)
+            raise SkinColorMissingError, u'Skin color missing: %s' % str(key)
 
     def iteritems(self):
         return self._colors.iteritems()

@@ -1,5 +1,5 @@
 
-from __future__ import with_statement
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.ControlSurface import ControlSurface
 from _Framework.ControlElement import ControlElement
@@ -14,22 +14,22 @@ from _Framework.ClipSlotComponent import ClipSlotComponent
 from _Framework.SceneComponent import SceneComponent
 from _Framework.SessionComponent import SessionComponent
 from _Framework.DeviceComponent import DeviceComponent
-from TransportViewModeSelector import TransportViewModeSelector
-from SpecialMixerComponent import SpecialMixerComponent
+from .TransportViewModeSelector import TransportViewModeSelector
+from .SpecialMixerComponent import SpecialMixerComponent
 IDENTITY_REQUEST = (240, 126, 127, 6, 1, 247)
 IDENTITY_RESPONSE = (240, 126, 127, 6, 2)
 NUM_TRACKS = 8
 GLOBAL_CHANNEL = 15
 
 class Oxygen_3rd_Gen(ControlSurface):
-    """ Script for the 3rd generation of M-Audio's Oxygen controllers """
+    u""" Script for the 3rd generation of M-Audio's Oxygen controllers """
 
     def __init__(self, c_instance):
         ControlSurface.__init__(self, c_instance)
         with self.component_guard():
             is_momentary = True
-            self._suggested_input_port = 'Oxygen'
-            self._suggested_output_port = 'Oxygen'
+            self._suggested_input_port = u'Oxygen'
+            self._suggested_output_port = u'Oxygen'
             self._has_slider_section = True
             self._shift_button = ButtonElement(is_momentary, MIDI_CC_TYPE, GLOBAL_CHANNEL, 57)
             self._shift_button.add_value_listener(self._shift_value)

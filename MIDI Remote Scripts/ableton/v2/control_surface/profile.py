@@ -1,8 +1,8 @@
 
-"""
+u"""
 Provides facilities to ease the profiling of Control Surfaces.
 """
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from functools import wraps, partial
 ENABLE_PROFILING = False
 if ENABLE_PROFILING:
@@ -10,7 +10,7 @@ if ENABLE_PROFILING:
     PROFILER = cProfile.Profile()
 
 def profile(fn):
-    """
+    u"""
     Decorator to mark a function to be profiled.
     """
     if ENABLE_PROFILING:
@@ -20,7 +20,7 @@ def profile(fn):
             if PROFILER:
                 return PROFILER.runcall(partial(fn, self, *a, **k))
             else:
-                print('Can not profile (%s), it is probably reloaded' % fn.__name__)
+                print(u'Can not profile (%s), it is probably reloaded' % fn.__name__)
                 return fn(*a, **k)
 
         return wrapper
@@ -28,8 +28,8 @@ def profile(fn):
         return fn
 
 
-def dump(name = 'default'):
-    """
+def dump(name = u'default'):
+    u"""
     Dumps profiling data to the working directory with the given `name`. Three files
     are created:
     
@@ -42,13 +42,13 @@ def dump(name = 'default'):
     """
     raise ENABLE_PROFILING or AssertionError
     import pstats
-    fname = name + '.profile'
+    fname = name + u'.profile'
     PROFILER.dump_stats(fname)
 
     def save_human_data(sort):
-        s = pstats.Stats(fname, stream=open('%s.%s.txt' % (fname, sort), 'w'))
+        s = pstats.Stats(fname, stream=open(u'%s.%s.txt' % (fname, sort), u'w'))
         s.sort_stats(sort)
         s.print_stats()
 
-    save_human_data('time')
-    save_human_data('cumulative')
+    save_human_data(u'time')
+    save_human_data(u'cumulative')

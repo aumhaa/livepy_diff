@@ -1,5 +1,5 @@
 
-from __future__ import with_statement
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.ControlSurface import ControlSurface
 from _Framework.InputControlElement import *
@@ -11,18 +11,18 @@ from _Framework.ClipSlotComponent import ClipSlotComponent
 from _Framework.ChannelStripComponent import ChannelStripComponent
 from _Framework.SceneComponent import SceneComponent
 from _Framework.SessionComponent import SessionComponent
-from SpecialTransportComponent import SpecialTransportComponent
-from SpecialDeviceComponent import SpecialDeviceComponent
+from .SpecialTransportComponent import SpecialTransportComponent
+from .SpecialDeviceComponent import SpecialDeviceComponent
 
 class OpenLabs(ControlSurface):
-    """ Script for OpenLabs Controllers """
+    u""" Script for OpenLabs Controllers """
 
     def __init__(self, c_instance):
         ControlSurface.__init__(self, c_instance)
         with self.component_guard():
             self._suppress_session_highlight = True
-            self._suggested_input_port = 'Open Labs Midi Driver'
-            self._suggested_output_port = ''
+            self._suggested_input_port = u'Open Labs Midi Driver'
+            self._suggested_output_port = u''
             self.set_pad_translations(((0, 0, 12, 15),
              (1, 0, 13, 15),
              (2, 0, 14, 15),

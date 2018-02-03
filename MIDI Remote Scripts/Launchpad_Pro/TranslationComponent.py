@@ -1,9 +1,10 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 
 class TranslationComponent(ControlSurfaceComponent):
-    """
+    u"""
     Simple component that translates the MIDI channel of a one or more groups
     of buttons and will also enable/disable the buttons.
     """
@@ -16,7 +17,7 @@ class TranslationComponent(ControlSurfaceComponent):
         super(TranslationComponent, self).__init__(*a, **k)
 
     def __getattr__(self, name):
-        if len(name) > 4 and name[:4] == 'set_':
+        if len(name) > 4 and name[:4] == u'set_':
             return partial(self._set_control_elements, name[4:])
         raise AttributeError(name)
 

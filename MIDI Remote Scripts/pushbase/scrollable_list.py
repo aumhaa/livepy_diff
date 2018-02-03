@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial
 from ableton.v2.base import BooleanContext, EventObject, clamp, forward_property, in_range, index_if, listens, task
 from ableton.v2.control_surface import CompoundComponent, defaults
@@ -8,7 +8,7 @@ from ableton.v2.control_surface.components import ScrollComponent, Scrollable
 from . import consts
 
 class ScrollableListItem(object):
-    """
+    u"""
     Wrapper of an item of a scrollable list.
     """
 
@@ -42,12 +42,12 @@ class ScrollableListItem(object):
 
 
 class ScrollableList(EventObject, Scrollable):
-    """
+    u"""
     Class for managing a visual subset of a list of items.
     
     The items will be wrapped in an item_type instance.
     """
-    __events__ = ('selected_item', 'item_activated', 'scroll')
+    __events__ = (u'selected_item', u'item_activated', u'scroll')
     item_type = ScrollableListItem
     fixed_offset = None
 
@@ -101,7 +101,7 @@ class ScrollableList(EventObject, Scrollable):
         return self.items[self._offset:self._offset + self._num_visible_items]
 
     def select_item_index_with_offset(self, index, offset):
-        """
+        u"""
         Selects an item index but moves the view such that there are,
         if possible, 'offset' number of elements visible before the
         selected one.  Does nothing if the item was already selected.
@@ -113,7 +113,7 @@ class ScrollableList(EventObject, Scrollable):
             self._do_set_selected_item_index(index)
 
     def select_item_index_with_border(self, index, border_size):
-        """
+        u"""
         Selects an item with an index. Moves the view if the selection would exceed the
         border of the current view.
         """
@@ -209,7 +209,7 @@ class ScrollableList(EventObject, Scrollable):
 
 
 class ActionListItem(ScrollableListItem):
-    """
+    u"""
     Interface for an list element that can be actuated on.
     """
     supports_action = False
@@ -219,39 +219,39 @@ class ActionListItem(ScrollableListItem):
 
 
 class ActionList(ScrollableList):
-    """
+    u"""
     A scrollable list of items that can be actuated on.
     """
     item_type = ActionListItem
 
 
 class DefaultItemFormatter(object):
-    """
+    u"""
     Item formatter that will indicate selection and show action_message if the item
     is currently performing an action
     """
-    action_message = 'Loading...'
+    action_message = u'Loading...'
 
     def __call__(self, index, item, action_in_progress):
-        display_string = ''
+        display_string = u''
         if item:
-            display_string += consts.CHAR_SELECT if item.is_selected else ' '
+            display_string += consts.CHAR_SELECT if item.is_selected else u' '
             display_string += self.action_message if action_in_progress else unicode(item)
         return display_string
 
 
 class ListComponent(CompoundComponent):
-    """
+    u"""
     Component that handles a ScrollableList.  If an action button is
     passed, it can handle an ActionList.
     """
-    __events__ = ('item_action', 'selected_item')
+    __events__ = (u'item_action', u'selected_item')
     SELECTION_DELAY = 0.5
     ENCODER_FACTOR = 10.0
-    empty_list_message = ''
+    empty_list_message = u''
     _current_action_item = None
     _last_action_item = None
-    action_button = ButtonControl(color='Browser.Load')
+    action_button = ButtonControl(color=u'Browser.Load')
     encoders = control_list(EncoderControl)
 
     def __init__(self, scrollable_list = None, data_sources = tuple(), *a, **k):
@@ -266,9 +266,9 @@ class ListComponent(CompoundComponent):
         self.item_formatter = DefaultItemFormatter()
         for c in (self._scroller, self._pager):
             for button in (c.scroll_up_button, c.scroll_down_button):
-                button.color = 'List.ScrollerOn'
+                button.color = u'List.ScrollerOn'
                 button.pressed_color = None
-                button.disabled_color = 'List.ScrollerOff'
+                button.disabled_color = u'List.ScrollerOff'
 
         if scrollable_list == None:
             self.scrollable_list = ActionList(num_visible_items=len(data_sources))
@@ -311,24 +311,24 @@ class ListComponent(CompoundComponent):
             self._scrollable_list.num_visible_items = len(sources)
         self._update_display()
 
-    select_next_button = forward_property('_scroller')('scroll_down_button')
-    select_prev_button = forward_property('_scroller')('scroll_up_button')
-    next_page_button = forward_property('_pager')('scroll_down_button')
-    prev_page_button = forward_property('_pager')('scroll_up_button')
+    select_next_button = forward_property(u'_scroller')(u'scroll_down_button')
+    select_prev_button = forward_property(u'_scroller')(u'scroll_up_button')
+    next_page_button = forward_property(u'_pager')(u'scroll_down_button')
+    prev_page_button = forward_property(u'_pager')(u'scroll_up_button')
 
     def on_enabled_changed(self):
         super(ListComponent, self).on_enabled_changed()
         if not self.is_enabled():
             self._execute_action_task.kill()
 
-    @listens('scroll')
+    @listens(u'scroll')
     def _on_scroll(self):
         if self._trigger_action_on_scrolling:
             trigger_selected = partial(self._trigger_action, self.selected_item)
             self._action_on_scroll_task.kill()
             self._action_on_scroll_task = self._tasks.add(task.sequence(task.wait(defaults.MOMENTARY_DELAY), task.delay(1), task.run(trigger_selected)))
 
-    @listens('selected_item')
+    @listens(u'selected_item')
     def _on_selected_item_changed(self):
         self._scroller.update()
         self._pager.update()
@@ -373,7 +373,7 @@ class ListComponent(CompoundComponent):
             self._execute_action_task.restart()
 
     def _execute_action(self):
-        """ Is called by the execute action task and should not be called directly
+        u""" Is called by the execute action task and should not be called directly
         use _trigger_action instead """
         if self._current_action_item != None:
             self.do_trigger_action(self._current_action_item)
@@ -402,14 +402,14 @@ class ListComponent(CompoundComponent):
         return self.selected_item == self.last_action_item() and self._can_be_used_for_action(self.next_item)
 
     def _update_action_feedback(self):
-        color = 'Browser.Loading'
+        color = u'Browser.Loading'
         if self._current_action_item == None:
             if self._action_target_is_next_item():
-                color = 'Browser.LoadNext'
+                color = u'Browser.LoadNext'
             elif self._can_be_used_for_action(self.selected_item):
-                color = 'Browser.Load'
+                color = u'Browser.Load'
             else:
-                color = 'Browser.LoadNotPossible'
+                color = u'Browser.LoadNotPossible'
         self.action_button.color = color
 
     def _update_display(self):

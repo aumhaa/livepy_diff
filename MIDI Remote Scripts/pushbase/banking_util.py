@@ -1,12 +1,12 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from math import ceil
 from copy import deepcopy
 from ableton.v2.base import liveobj_valid
 MX_MAIN_BANK_INDEX = -1
-BANK_FORMAT = 'Bank %d'
-PARAMETERS_KEY = 'Parameters'
-MAIN_KEY = 'Main'
+BANK_FORMAT = u'Bank %d'
+PARAMETERS_KEY = u'Parameters'
+MAIN_KEY = u'Main'
 
 def has_bank_count(device):
     if liveobj_valid(device):

@@ -1,18 +1,19 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from _Framework.ButtonElement import ButtonElement
 from _Framework.DisplayDataSource import DisplayDataSource
-from NotifyingMixerComponent import NotifyingMixerComponent
+from .NotifyingMixerComponent import NotifyingMixerComponent
 
 class EncoderMixerModeSelector(ModeSelectorComponent):
-    """ Class that reassigns encoders on the AxiomPro to different mixer functions """
+    u""" Class that reassigns encoders on the AxiomPro to different mixer functions """
 
     def __init__(self, mixer):
         raise isinstance(mixer, NotifyingMixerComponent) or AssertionError
         ModeSelectorComponent.__init__(self)
         self._mixer = mixer
         self._controls = None
-        self._page_names = ('Vol', 'Pan', 'SendA', 'SendB', 'SendC')
+        self._page_names = (u'Vol', u'Pan', u'SendA', u'SendB', u'SendC')
         self._page_name_sources = None
         self._current_page_data_source = DisplayDataSource()
         self._parameter_sources = [ DisplayDataSource() for index in range(8) ]
@@ -118,7 +119,7 @@ class EncoderMixerModeSelector(ModeSelectorComponent):
                     raise AssertionError
                     self._mixer.channel_strip(index).set_send_controls((None, None, self._controls[index]))
                 else:
-                    print 'Invalid mode index'
+                    print(u'Invalid mode index')
                     raise False or AssertionError
 
     def _mixer_assignments_changed(self):

@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.control_surface import Skin
 from .colors import Basic, Rgb, Pulse, Blink, BiLed
 
@@ -43,6 +43,7 @@ class Colors:
         Feedback = Rgb.GREEN
         FeedbackRecord = Rgb.RED.shade(1)
         NoteAction = Rgb.RED
+        SelectedNote = Rgb.TURQUOISE
 
     class Recording:
         On = Basic.FULL

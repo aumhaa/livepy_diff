@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from itertools import imap
 from .Control import PlayableControl, ButtonControl, control_matrix
 from .Dependency import depends
@@ -9,7 +9,7 @@ from .Util import find_if, first, clamp
 BASE_DRUM_RACK_NOTE = 36
 
 class DrumGroupComponent(SlideComponent, Slideable):
-    __subject_events__ = ('pressed_pads',)
+    __subject_events__ = (u'pressed_pads',)
     mute_button = ButtonControl()
     solo_button = ButtonControl()
     delete_button = ButtonControl()
@@ -120,7 +120,7 @@ class DrumGroupComponent(SlideComponent, Slideable):
             super(DrumGroupComponent, self).update()
 
     def _update_drum_pad_listeners(self):
-        """
+        u"""
         add and remove listeners for visible drum pads, including
         mute and solo state
         """
@@ -131,11 +131,11 @@ class DrumGroupComponent(SlideComponent, Slideable):
             self._on_mute_changed.replace_subjects(self._visible_drum_pads)
             self._update_identifier_translations()
 
-    @subject_slot_group('solo')
+    @subject_slot_group(u'solo')
     def _on_solo_changed(self, pad):
         self._update_led_feedback()
 
-    @subject_slot_group('mute')
+    @subject_slot_group(u'mute')
     def _on_mute_changed(self, pad):
         self._update_led_feedback()
 
@@ -148,30 +148,30 @@ class DrumGroupComponent(SlideComponent, Slideable):
                     self._update_pad_led(pad, button, soloed_pads)
 
     def _update_pad_led(self, pad, button, soloed_pads):
-        button_color = 'DrumGroup.PadEmpty'
+        button_color = u'DrumGroup.PadEmpty'
         if pad == self._selected_drum_pad:
             if soloed_pads and not pad.solo and not pad.mute:
-                button_color = 'DrumGroup.PadSelectedNotSoloed'
+                button_color = u'DrumGroup.PadSelectedNotSoloed'
             elif pad.mute and not pad.solo:
-                button_color = 'DrumGroup.PadMutedSelected'
+                button_color = u'DrumGroup.PadMutedSelected'
             elif soloed_pads and pad.solo:
-                button_color = 'DrumGroup.PadSoloedSelected'
+                button_color = u'DrumGroup.PadSoloedSelected'
             else:
-                button_color = 'DrumGroup.PadSelected'
+                button_color = u'DrumGroup.PadSelected'
         elif pad.chains:
             if soloed_pads and not pad.solo:
                 if not pad.mute:
-                    button_color = 'DrumGroup.PadFilled'
+                    button_color = u'DrumGroup.PadFilled'
                 else:
-                    button_color = 'DrumGroup.PadMuted'
+                    button_color = u'DrumGroup.PadMuted'
             elif not soloed_pads and pad.mute:
-                button_color = 'DrumGroup.PadMuted'
+                button_color = u'DrumGroup.PadMuted'
             elif soloed_pads and pad.solo:
-                button_color = 'DrumGroup.PadSoloed'
+                button_color = u'DrumGroup.PadSoloed'
             else:
-                button_color = 'DrumGroup.PadFilled'
+                button_color = u'DrumGroup.PadFilled'
         else:
-            button_color = 'DrumGroup.PadEmpty'
+            button_color = u'DrumGroup.PadEmpty'
         button.color = button_color
 
     def _button_coordinates_to_pad_index(self, first_note, coordinates):
@@ -210,10 +210,10 @@ class DrumGroupComponent(SlideComponent, Slideable):
         if self.solo_button.is_pressed:
             selected_drum_pad.solo = not selected_drum_pad.solo
         if self.quantize_button.is_pressed:
-            pad.color = 'DrumGroup.PadAction'
+            pad.color = u'DrumGroup.PadAction'
             self.quantize_pitch(selected_drum_pad.note)
         if self.delete_button.is_pressed:
-            pad.color = 'DrumGroup.PadAction'
+            pad.color = u'DrumGroup.PadAction'
             self.delete_pitch(selected_drum_pad)
         if self.select_button.is_pressed:
             self._drum_group_device.view.selected_drum_pad = selected_drum_pad
@@ -225,18 +225,18 @@ class DrumGroupComponent(SlideComponent, Slideable):
         if self.mute_button.is_pressed or self.solo_button.is_pressed:
             self._update_led_feedback()
 
-    @subject_slot('visible_drum_pads')
+    @subject_slot(u'visible_drum_pads')
     def _on_visible_drum_pads_changed(self):
         self._update_drum_pad_listeners()
         self._update_led_feedback()
 
-    @subject_slot('drum_pads_scroll_position')
+    @subject_slot(u'drum_pads_scroll_position')
     def _on_drum_pads_scroll_position_changed(self):
         self._update_identifier_translations()
         self._update_led_feedback()
         self.notify_position()
 
-    @subject_slot('selected_drum_pad')
+    @subject_slot(u'selected_drum_pad')
     def _on_selected_drum_pad_changed(self):
         self._selected_drum_pad = self._drum_group_device.view.selected_drum_pad if self._drum_group_device else None
         self._update_led_feedback()
@@ -262,7 +262,7 @@ class DrumGroupComponent(SlideComponent, Slideable):
         self._set_control_pads_from_script(bool(value))
 
     def _set_control_pads_from_script(self, takeover_drums):
-        """
+        u"""
         If takeover_drums, the matrix buttons will be controlled from
         the script. Otherwise they send midi notes to the track
         associated to this drum group.
@@ -325,13 +325,13 @@ class DrumGroupComponent(SlideComponent, Slideable):
         self._set_pad_translations(translations)
 
     def select_drum_pad(self, drum_pad):
-        """ Override when you give it a select button """
+        u""" Override when you give it a select button """
         raise NotImplementedError
 
     def quantize_pitch(self, note):
-        """ Override when you give it a quantize button """
+        u""" Override when you give it a quantize button """
         raise NotImplementedError
 
     def delete_pitch(self, drum_pad):
-        """ Override when you give it a delete button """
+        u""" Override when you give it a delete button """
         raise NotImplementedError

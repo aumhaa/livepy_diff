@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from ableton.v2.base import listenable_property, listens, liveobj_valid, NamedTuple, EventObject, task
 from ableton.v2.control_surface.components import PlayableComponent
@@ -28,7 +28,7 @@ class VelocityLevelsComponent(PlayableComponent):
         self._target_note_provider = target_note_provider or NullTargetNoteProvider()
         self.__on_selected_target_note_changed.subject = self._target_note_provider
         self._played_level = INVALID_LEVEL
-        self.set_skin_base_key(skin_base_key or 'VelocityLevels')
+        self.set_skin_base_key(skin_base_key or u'VelocityLevels')
         self._notification_task = self._tasks.add(task.run(self._update_velocity))
         self._notification_task.kill()
         self.set_velocity_levels(velocity_levels)
@@ -57,7 +57,7 @@ class VelocityLevelsComponent(PlayableComponent):
         self._update_sensitivity_profile()
 
     def _update_sensitivity_profile(self):
-        profile = 'default' if self._takeover_pads else 'drums'
+        profile = u'default' if self._takeover_pads else u'drums'
         for button in self.matrix:
             button.sensitivity_profile = profile
 
@@ -93,11 +93,11 @@ class VelocityLevelsComponent(PlayableComponent):
         self._update_led_feedback()
         self.notify_velocity()
 
-    @listens('selected_target_note')
+    @listens(u'selected_target_note')
     def __on_selected_target_note_changed(self):
         self.update()
 
-    @listens('last_played_level')
+    @listens(u'last_played_level')
     def __on_last_played_level(self):
         if not self._takeover_pads:
             played = self.velocity_levels.last_played_level if liveobj_valid(self.velocity_levels) else INVALID_LEVEL
@@ -116,15 +116,15 @@ class VelocityLevelsComponent(PlayableComponent):
         index = self._button_index(button)
         levels = self.velocity_levels.levels if liveobj_valid(self.velocity_levels) else []
         if index < len(levels) and self._played_level == levels[index]:
-            color = 'SelectedLevel'
+            color = u'SelectedLevel'
         else:
             y, _ = button.coordinate
-            color = 'MidLevel'
+            color = u'MidLevel'
             if y == 0:
-                color = 'HighLevel'
+                color = u'HighLevel'
             elif y == self.height - 1:
-                color = 'LowLevel'
-        button.color = self._skin_base_key + '.' + color
+                color = u'LowLevel'
+        button.color = self._skin_base_key + u'.' + color
 
     def update(self):
         super(VelocityLevelsComponent, self).update()

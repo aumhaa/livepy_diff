@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import clamp, listens, liveobj_valid
 from ableton.v2.control_surface.control import MappedControl as MappedControlBase
 from ableton.v2.control_surface.control.encoder import ValueStepper
@@ -10,20 +10,22 @@ def is_internal_parameter(parameter):
 
 
 def is_zoom_parameter(parameter):
-    """ Returns true for parameters, that provide a zoom method, i.e. Push 2's
+    u""" Returns true for parameters, that provide a zoom method, i.e. Push 2's
         waveform zooming parameter.
     """
-    return hasattr(parameter, 'zoom')
+    return hasattr(parameter, u'zoom')
 
 
 class MappedControl(MappedControlBase):
+    DEFAULT_SENSITIVITY = 1.0
+    FINE_SENSITIVITY = 0.1
 
     class State(MappedControlBase.State):
-        default_sensitivity = 1.0
-        fine_sensitivity = 0.1
 
         def __init__(self, *a, **k):
             super(MappedControl.State, self).__init__(*a, **k)
+            self.default_sensitivity = MappedControl.DEFAULT_SENSITIVITY
+            self.fine_sensitivity = MappedControl.FINE_SENSITIVITY
             self._quantized_stepper = ValueStepper()
 
         def update_sensitivities(self, default, fine):
@@ -51,12 +53,12 @@ class MappedControl(MappedControlBase):
             self._quantized_stepper.reset()
 
         def _update_control_sensitivity(self):
-            if hasattr(self._control_element, 'set_sensitivities'):
+            if hasattr(self._control_element, u'set_sensitivities'):
                 self._control_element.set_sensitivities(self.default_sensitivity, self.fine_sensitivity)
             else:
                 self._control_element.mapping_sensitivity = self.default_sensitivity
 
-        @listens('normalized_value')
+        @listens(u'normalized_value')
         def _control_value(self, value):
             if is_zoom_parameter(self.mapped_parameter):
                 self.mapped_parameter.zoom(value * self._control_element.mapping_sensitivity)

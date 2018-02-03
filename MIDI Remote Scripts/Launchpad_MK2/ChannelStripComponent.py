@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 from itertools import chain
 from _Framework.SubjectSlot import subject_slot
 from _Framework.Control import ButtonControl
@@ -86,61 +87,61 @@ class ChannelStripComponent(ChannelstripComponentBase):
         self._update_send_a_button_led()
         self._update_send_b_button_led()
 
-    @subject_slot('value')
+    @subject_slot(u'value')
     def _on_volume_changed(self):
         self._update_volume_button_led()
 
-    @subject_slot('value')
+    @subject_slot(u'value')
     def _on_pan_changed(self):
         self._update_pan_button_led()
 
-    @subject_slot('value')
+    @subject_slot(u'value')
     def _on_send_a_changed(self):
         self._update_send_a_button_led()
 
-    @subject_slot('value')
+    @subject_slot(u'value')
     def _on_send_b_changed(self):
         self._update_send_b_button_led()
 
     def _update_volume_button_led(self):
         if self._track == None:
-            self.volume_reset_button.color = 'Mixer.Disabled'
+            self.volume_reset_button.color = u'Mixer.Disabled'
         else:
             volume = self._track.mixer_device.volume
             if volume.value != volume.default_value:
-                self.volume_reset_button.color = 'Mixer.Volume.On'
+                self.volume_reset_button.color = u'Mixer.Volume.On'
             else:
-                self.volume_reset_button.color = 'Mixer.Volume.Off'
+                self.volume_reset_button.color = u'Mixer.Volume.Off'
 
     def _update_pan_button_led(self):
         if self._track == None:
-            self.pan_reset_button.color = 'Mixer.Disabled'
+            self.pan_reset_button.color = u'Mixer.Disabled'
         else:
             panning = self._track.mixer_device.panning
             if abs(panning.value) > PAN_VALUE_DEVIATION_TOLERANCE:
-                self.pan_reset_button.color = 'Mixer.Pan.On'
+                self.pan_reset_button.color = u'Mixer.Pan.On'
             else:
-                self.pan_reset_button.color = 'Mixer.Pan.Off'
+                self.pan_reset_button.color = u'Mixer.Pan.Off'
 
     def _update_send_a_button_led(self):
         if self._track == None or len(self._track.mixer_device.sends) < 1:
-            self.send_a_reset_button.color = 'Mixer.Disabled'
+            self.send_a_reset_button.color = u'Mixer.Disabled'
         else:
             send = self._track.mixer_device.sends[0]
             if send.value != send.default_value:
-                self.send_a_reset_button.color = 'Sends.Send0.On'
+                self.send_a_reset_button.color = u'Sends.Send0.On'
             else:
-                self.send_a_reset_button.color = 'Sends.Send0.Off'
+                self.send_a_reset_button.color = u'Sends.Send0.Off'
 
     def _update_send_b_button_led(self):
         if self._track == None or len(self._track.mixer_device.sends) < 2:
-            self.send_b_reset_button.color = 'Mixer.Disabled'
+            self.send_b_reset_button.color = u'Mixer.Disabled'
         else:
             send = self._track.mixer_device.sends[1]
             if send.value != send.default_value:
-                self.send_b_reset_button.color = 'Sends.Send1.On'
+                self.send_b_reset_button.color = u'Sends.Send1.On'
             else:
-                self.send_b_reset_button.color = 'Sends.Send1.Off'
+                self.send_b_reset_button.color = u'Sends.Send1.Off'
 
     @volume_reset_button.pressed
     def volume_reset_button(self, button):

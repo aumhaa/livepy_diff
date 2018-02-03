@@ -1,25 +1,54 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial
 import Live
 from ableton.v2.base import EventObject, const, depends, flatten, nop, listenable_property, listens, listens_group, liveobj_changed, liveobj_valid
+from ableton.v2.control_surface import find_instrument_devices
 from ableton.v2.control_surface.components import SessionRingComponent, right_align_return_tracks_track_assigner
 from ableton.v2.control_surface.components.view_control import has_next_item, next_item, TrackScroller as TrackScrollerBase, ViewControlComponent as ViewControlComponentBase
-from pushbase.device_chain_utils import find_instrument_devices
 from .decoration import TrackDecoratorFactory
 from .item_lister_component import ItemProvider
 from .observable_property_alias import ObservablePropertyAlias
 
+def get_chains_recursive(track_or_chain):
+    instruments = list(find_instrument_devices(track_or_chain))
+    chains = []
+    if instruments and hasattr(instruments[0], u'chains'):
+        for chain in instruments[0].chains:
+            chains.append(chain)
+            instruments = list(find_instrument_devices(chain))
+            if instruments and hasattr(instruments[0], u'chains'):
+                if instruments[0].is_showing_chains:
+                    nested_chains = get_chains_recursive(chain)
+                    chains.extend(nested_chains)
+
+    return chains
+
+
+def get_racks_recursive(track_or_chain):
+    instruments = list(find_instrument_devices(track_or_chain))
+    racks = []
+    if instruments and hasattr(instruments[0], u'chains'):
+        racks.append(instruments[0])
+        for chain in instruments[0].chains:
+            instruments = list(find_instrument_devices(chain))
+            if instruments and hasattr(instruments[0], u'chains'):
+                if instruments[0].can_have_chains:
+                    nested_racks = get_racks_recursive(chain)
+                    racks.extend(nested_racks)
+
+    return racks
+
+
 def get_flattened_track(track):
-    """
+    u"""
     Returns a flat list of a track with its instrument chains (when visible), or just the
     original track
     """
     flat_track = [track]
     if track.can_show_chains and track.is_showing_chains:
-        instruments = list(find_instrument_devices(track))
-        if instruments:
-            flat_track.extend([ c for c in instruments[0].chains ])
+        all_chains = get_chains_recursive(track)
+        flat_track.extend(all_chains)
     return flat_track
 
 
@@ -42,11 +71,11 @@ class SelectedMixerTrackProvider(EventObject):
         self._on_selected_chain_changed.subject = self._view
         self._on_selected_track_changed()
 
-    @listens('selected_track')
+    @listens(u'selected_track')
     def _on_selected_track_changed(self):
         self._on_selected_mixer_track_changed()
 
-    @listens('selected_chain')
+    @listens(u'selected_chain')
     def _on_selected_chain_changed(self):
         self._on_selected_mixer_track_changed()
 
@@ -56,13 +85,11 @@ class SelectedMixerTrackProvider(EventObject):
 
     @selected_mixer_track.setter
     def selected_mixer_track(self, track_or_chain):
-        unwrapped_track = getattr(track_or_chain, 'proxied_object', track_or_chain)
+        unwrapped_track = getattr(track_or_chain, u'proxied_object', track_or_chain)
         if liveobj_changed(self._selected_mixer_track, unwrapped_track):
             if isinstance(unwrapped_track, Live.Chain.Chain):
                 self._view.selected_chain = unwrapped_track
-                instruments = list(find_instrument_devices(self._view.selected_track))
-                if instruments:
-                    instruments[0].view.selected_chain = unwrapped_track
+                unwrapped_track.canonical_parent.view.selected_chain = unwrapped_track
             else:
                 self._view.selected_track = unwrapped_track
 
@@ -86,6 +113,7 @@ class SessionRingTrackProvider(SessionRingComponent, ItemProvider):
         self._decorator_factory = TrackDecoratorFactory()
         super(SessionRingTrackProvider, self).__init__(set_session_highlight=partial(set_session_highlight, include_rack_chains=True), tracks_to_use=self._decorated_tracks_to_use, *a, **k)
         self._artificially_selected_item = None
+        self._selected_item_when_item_artificially_selected = None
         self._update_listeners()
         self._selected_track = self.register_disconnectable(SelectedMixerTrackProvider())
         self._on_selected_item_changed.subject = self._selected_track
@@ -132,30 +160,33 @@ class SessionRingTrackProvider(SessionRingComponent, ItemProvider):
         return self._decorator_factory.decorate_all_mixer_tracks(get_all_mixer_tracks(self.song))
 
     def controlled_tracks(self):
-        return [ getattr(track, 'proxied_object', track) for track in self.items ]
+        return [ getattr(track, u'proxied_object', track) for track in self.items ]
 
     def set_selected_item_without_updating_view(self, item):
-        self._artificially_selected_item = item
-        self.notify_selected_item()
+        all_tracks = get_all_mixer_tracks(self.song)
+        if item in all_tracks:
+            self._artificially_selected_item = item
+            self._selected_item_when_item_artificially_selected = self.song.view.selected_track
+            self.notify_selected_item()
 
     def synchronize_selection_with_live_view(self):
-        """
+        u"""
         Makes sure the currently selected item is also selected in Live.
         """
         if self._artificially_selected_item:
             self.selected_item = self._artificially_selected_item
 
-    @listens_group('is_showing_chains')
+    @listens_group(u'is_showing_chains')
     def _on_is_showing_chains_changed(self, _):
         self._update_track_list()
 
-    @listens_group('chains')
+    @listens_group(u'chains')
     def _on_chains_changed(self, _):
         if not self.song.view.selected_track.can_show_chains:
             self.selected_item = self.song.view.selected_track
         self._update_track_list()
 
-    @listens_group('devices')
+    @listens_group(u'devices')
     def _on_devices_changed(self, _):
         self._update_track_list()
 
@@ -167,9 +198,9 @@ class SessionRingTrackProvider(SessionRingComponent, ItemProvider):
         tracks = self.song.tracks
         self._on_devices_changed.replace_subjects(tracks)
         chain_listenable_tracks = [ track for track in tracks if isinstance(track, Live.Track.Track) and track ]
-        instruments = flattened_list_of_instruments([ find_instrument_devices(track) for track in chain_listenable_tracks if track ])
-        instruments_with_chains = filter(lambda i: i.can_have_chains, instruments)
-        self._on_is_showing_chains_changed.replace_subjects(chain_listenable_tracks)
+        instruments_with_chains = flattened_list_of_instruments([ get_racks_recursive(track) for track in chain_listenable_tracks if track ])
+        tracks_and_chains = chain_listenable_tracks + instruments_with_chains
+        self._on_is_showing_chains_changed.replace_subjects(tracks_and_chains)
         self._on_chains_changed.replace_subjects(instruments_with_chains)
         self._on_instrument_return_chains_changed.replace_subjects(instruments_with_chains)
 
@@ -179,17 +210,19 @@ class SessionRingTrackProvider(SessionRingComponent, ItemProvider):
         if clamped_offset != self.track_offset:
             self.track_offset = clamped_offset
 
-    @listens_group('return_chains')
+    @listens_group(u'return_chains')
     def _on_instrument_return_chains_changed(self, _):
         self._update_track_list()
 
-    @listens('selected_mixer_track')
+    @listens(u'selected_mixer_track')
     def _on_selected_item_changed(self, _):
+        if liveobj_changed(self._selected_item_when_item_artificially_selected, self.song.view.selected_track):
+            self._artificially_selected_item = None
         self.notify_selected_item()
 
 
 class TrackScroller(TrackScrollerBase, EventObject):
-    __events__ = ('scrolled',)
+    __events__ = (u'scrolled',)
 
     @depends(tracks_provider=None)
     def __init__(self, tracks_provider = None, *a, **k):
@@ -215,7 +248,7 @@ class TrackScroller(TrackScrollerBase, EventObject):
 
 
 class ViewControlComponent(ViewControlComponentBase):
-    __events__ = ('selection_changed',)
+    __events__ = (u'selection_changed',)
 
     @depends(tracks_provider=None)
     def __init__(self, tracks_provider = None, *a, **k):
@@ -226,14 +259,14 @@ class ViewControlComponent(ViewControlComponentBase):
 
     def _create_track_scroller(self):
         scroller = TrackScroller(tracks_provider=self._track_provider)
-        self.register_disconnectable(ObservablePropertyAlias(self, property_host=scroller, property_name='scrolled', alias_name='selection_changed'))
+        self.register_disconnectable(ObservablePropertyAlias(self, property_host=scroller, property_name=u'scrolled', alias_name=u'selection_changed'))
         return scroller
 
-    @listens('items')
+    @listens(u'items')
     def _on_items_changed(self):
         self._update_track_scroller()
 
-    @listens('selected_item')
+    @listens(u'selected_item')
     def _on_selected_item_changed(self):
         self._update_track_scroller()
 

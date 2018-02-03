@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial
 import Live
 from ...base import in_range, clamp, listens, task
@@ -12,10 +12,10 @@ TEMPO_FINE_RANGE = 2.56
 SEEK_SPEED = 10.0
 
 class TransportComponent(CompoundComponent):
-    """
+    u"""
     Class encapsulating all functions in Live's transport section.
     """
-    _play_toggle = ToggleButtonControl(toggled_color='Transport.PlayOn', untoggled_color='Transport.PlayOff')
+    _play_toggle = ToggleButtonControl(toggled_color=u'Transport.PlayOn', untoggled_color=u'Transport.PlayOff')
     _stop_button = ButtonControl()
 
     def __init__(self, *a, **k):
@@ -25,7 +25,6 @@ class TransportComponent(CompoundComponent):
         self._tap_tempo_button = None
         self._tempo_control = None
         self._tempo_fine_control = None
-        self._song_position_control = None
         self._rwd_task = task.Task()
         self._ffwd_task = task.Task()
         self._fine_tempo_needs_pickup = True
@@ -33,11 +32,11 @@ class TransportComponent(CompoundComponent):
         self._end_undo_step_task = self._tasks.add(task.sequence(task.wait(1.5), task.run(self.song.end_undo_step)))
         self._end_undo_step_task.kill()
         song = self.song
-        self._loop_toggle, self._punch_in_toggle, self._punch_out_toggle, self._record_toggle, self._nudge_down_toggle, self._nudge_up_toggle, self._metronome_toggle, self._session_record_toggle, self.arrangement_overdub_toggle, self._overdub_toggle = self.register_components(ToggleComponent('loop', song), ToggleComponent('punch_in', song, is_momentary=True), ToggleComponent('punch_out', song, is_momentary=True), ToggleComponent('record_mode', song), ToggleComponent('nudge_down', song, is_momentary=True), ToggleComponent('nudge_up', song, is_momentary=True), ToggleComponent('metronome', song), ToggleComponent('session_record', song), ToggleComponent('arrangement_overdub', song), ToggleComponent('overdub', song))
+        self._loop_toggle, self._punch_in_toggle, self._punch_out_toggle, self._record_toggle, self._nudge_down_toggle, self._nudge_up_toggle, self._metronome_toggle, self._arrangement_overdub_toggle, self._overdub_toggle = self.register_components(ToggleComponent(u'loop', song), ToggleComponent(u'punch_in', song, is_momentary=True), ToggleComponent(u'punch_out', song, is_momentary=True), ToggleComponent(u'record_mode', song), ToggleComponent(u'nudge_down', song, is_momentary=True), ToggleComponent(u'nudge_up', song, is_momentary=True), ToggleComponent(u'metronome', song), ToggleComponent(u'arrangement_overdub', song), ToggleComponent(u'overdub', song))
         self.__on_is_playing_changed.subject = song
         self.__on_is_playing_changed()
 
-    @listens('is_playing')
+    @listens(u'is_playing')
     def __on_is_playing_changed(self):
         self._update_button_states()
 
@@ -116,9 +115,6 @@ class TransportComponent(CompoundComponent):
     def set_metronome_button(self, button):
         self._metronome_toggle.set_toggle_button(button)
 
-    def set_session_overdub_button(self, button):
-        self._session_overdub_toggle.set_toggle_button(button)
-
     def set_arrangement_overdub_button(self, button):
         self._arrangement_overdub_toggle.set_toggle_button(button)
 
@@ -145,17 +141,12 @@ class TransportComponent(CompoundComponent):
             self._fine_tempo_needs_pickup = True
             self._prior_fine_tempo_value = -1
 
-    def set_song_position_control(self, control):
-        if self._song_position_control != control:
-            self._song_position_control = control
-            self.__song_position_value.subject = control
-
     def update(self):
         super(TransportComponent, self).update()
         if self.is_enabled():
             self._update_tap_tempo_button()
 
-    @listens('value')
+    @listens(u'value')
     def __ffwd_value_slot(self, value):
         self._ffwd_value(value)
 
@@ -167,7 +158,7 @@ class TransportComponent(CompoundComponent):
         elif self.is_enabled():
             self.song.current_song_time += 1
 
-    @listens('value')
+    @listens(u'value')
     def __rwd_value_slot(self, value):
         self._rwd_value(value)
 
@@ -185,7 +176,7 @@ class TransportComponent(CompoundComponent):
         song.current_song_time = max(0.0, song.current_song_time + speed * delta)
         return task.RUNNING
 
-    @listens('value')
+    @listens(u'value')
     def __tap_tempo_value(self, value):
         if self.is_enabled():
             if value or not self._tap_tempo_button.is_momentary():
@@ -199,13 +190,13 @@ class TransportComponent(CompoundComponent):
         if self.is_enabled() and self._tap_tempo_button:
             self._tap_tempo_button.set_light(True)
 
-    @listens('value')
+    @listens(u'value')
     def __tempo_value(self, value):
         if self.is_enabled():
             fraction = (TEMPO_TOP - TEMPO_BOTTOM) / 127.0
             self.song.tempo = fraction * value + TEMPO_BOTTOM
 
-    @listens('value')
+    @listens(u'value')
     def __tempo_fine_value(self, value):
         if self.is_enabled():
             if self._fine_tempo_needs_pickup:
@@ -221,7 +212,3 @@ class TransportComponent(CompoundComponent):
                 new_tempo = clamp(self.song.tempo + difference / ratio, TEMPO_BOTTOM, TEMPO_TOP)
                 self.song.tempo = new_tempo
         self._prior_fine_tempo_value = value
-
-    @listens('value')
-    def __song_position_value(self, value):
-        raise NotImplementedError

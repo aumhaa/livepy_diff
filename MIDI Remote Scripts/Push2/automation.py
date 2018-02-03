@@ -1,10 +1,12 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from itertools import ifilter
+from Live import DeviceParameter
 from ableton.v2.base import liveobj_valid, listenable_property, listens
 from pushbase.automation_component import AutomationComponent as AutomationComponentBase
 from pushbase.internal_parameter import InternalParameterBase
 from pushbase.parameter_provider import ParameterInfo
+from .device_decoration import PitchParameter
 
 class StepAutomationParameter(InternalParameterBase):
 
@@ -59,22 +61,27 @@ def make_automation_parameter(parameter_info):
     wrapped_parameter = None
     if parameter_info and liveobj_valid(parameter_info.parameter):
         parameter = parameter_info.parameter
+        if isinstance(parameter, PitchParameter):
+            parameter = parameter.integer_value_host
         wrapped_parameter = ParameterInfo(parameter=StepAutomationParameter(parameter=parameter), name=parameter_info.name, default_encoder_sensitivity=parameter_info.default_encoder_sensitivity, fine_grain_encoder_sensitivity=parameter_info.fine_grain_encoder_sensitivity)
     return wrapped_parameter
 
 
 class AutomationComponent(AutomationComponentBase):
     ENCODER_SENSITIVITY_FACTOR = 0.5
-    __events__ = ('parameters',)
 
     def __init__(self, *a, **k):
         self._parameter_infos = []
         super(AutomationComponent, self).__init__(*a, **k)
         self._drum_pad_selected = False
 
+    @staticmethod
+    def parameter_is_automateable(parameter):
+        return liveobj_valid(parameter) and isinstance(parameter, (DeviceParameter.DeviceParameter, PitchParameter))
+
     @property
     def deviceType(self):
-        device_type = 'default'
+        device_type = u'default'
         device = self.device
         if liveobj_valid(device):
             device = self.parameter_provider.device()
@@ -84,15 +91,15 @@ class AutomationComponent(AutomationComponentBase):
     @listenable_property
     def device(self):
         device = None
-        if hasattr(self.parameter_provider, 'device'):
+        if hasattr(self.parameter_provider, u'device'):
             device = self.parameter_provider.device()
         return device
 
     def _on_parameter_provider_changed(self, provider):
         self.notify_device()
-        self.__on_device_changed.subject = provider if getattr(self.parameter_provider, 'device', None) is not None else None
+        self.__on_device_changed.subject = provider if getattr(self.parameter_provider, u'device', None) is not None else None
 
-    @property
+    @listenable_property
     def parameters(self):
         return map(lambda info: (info.parameter if info else None), self._parameter_infos)
 
@@ -120,10 +127,7 @@ class AutomationComponent(AutomationComponentBase):
         super(AutomationComponent, self)._update_parameters()
 
     def _rebuild_parameter_list(self):
-        if self.is_enabled():
-            self._parameter_infos = map(make_automation_parameter, self._parameter_infos_to_use())
-        else:
-            self._parameter_infos = []
+        self._parameter_infos = map(make_automation_parameter, self._parameter_infos_to_use()) if self.is_enabled() else []
 
     def _update_parameter_values(self):
         for info in ifilter(lambda p: p is not None, self._parameter_infos):
@@ -137,6 +141,6 @@ class AutomationComponent(AutomationComponentBase):
         if parameters[index]:
             return parameters[index].original_parameter
 
-    @listens('device')
+    @listens(u'device')
     def __on_device_changed(self):
         self.notify_device()

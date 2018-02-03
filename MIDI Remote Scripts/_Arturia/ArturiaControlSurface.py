@@ -1,5 +1,5 @@
 
-from __future__ import with_statement
+from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial
 from _Framework import Task
 from _Framework.ControlSurface import ControlSurface
@@ -28,8 +28,8 @@ ENCODER_TWOS_COMPLEMENT_MODE_OPTION = 2
 ON_VALUE = 127
 OFF_VALUE = 0
 LIVE_MODE_MSG_HARDWARE_ID_BYTE = 16
-BUTTON_MSG_TYPES = {'note': BUTTON_NOTE_MODE,
- 'cc': BUTTON_CC_MODE}
+BUTTON_MSG_TYPES = {u'note': BUTTON_NOTE_MODE,
+ u'cc': BUTTON_CC_MODE}
 SETUP_HARDWARE_DELAY = 1.0
 INDIVIDUAL_MESSAGE_DELAY = 0.001
 LIVE_MODE_MSG_HEAD = SETUP_MSG_PREFIX + (WRITE_COMMAND,
@@ -52,13 +52,13 @@ class ArturiaControlSurface(ControlSurface):
         self._start_hardware_setup()
 
     def _collect_setup_messages(self):
-        """
+        u"""
         Override to set up controls on the hardware
         """
         raise NotImplementedError
 
     def _setup_hardware_encoder(self, hardware_id, identifier, channel = 0):
-        """
+        u"""
         Set up a relative encoder using a twos complement coding scheme
         """
         self._set_encoder_cc_msg_type(hardware_id)
@@ -67,15 +67,15 @@ class ArturiaControlSurface(ControlSurface):
         self._set_twos_complement_mode(hardware_id)
 
     def _setup_hardware_slider(self, hardware_id, identifier, channel = 0):
-        """
+        u"""
         Set up a simple hardware fader
         """
         self._set_encoder_cc_msg_type(hardware_id)
         self._set_identifier(hardware_id, identifier)
         self._set_channel(hardware_id, channel)
 
-    def _setup_hardware_button(self, hardware_id, identifier, channel = 0, is_momentary = True, msg_type = 'note'):
-        """
+    def _setup_hardware_button(self, hardware_id, identifier, channel = 0, is_momentary = True, msg_type = u'note'):
+        u"""
         Set up a momentary button sending MIDI notes
         """
         raise msg_type in BUTTON_MSG_TYPES.keys() or AssertionError

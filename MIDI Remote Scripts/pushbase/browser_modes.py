@@ -1,8 +1,8 @@
 
-"""
+u"""
 Different mode objects that turn live into different browsing modes.
 """
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from ableton.v2.base import depends, index_if, liveobj_valid
 from ableton.v2.control_surface.mode import Mode
@@ -38,7 +38,7 @@ class BrowserHotswapMode(Mode):
 
     def _set_hotswap_target(self, hotswap_object):
         self._application.browser.hotswap_target = hotswap_object
-        self._application.view.show_view('Detail/DeviceChain')
+        self._application.view.show_view(u'Detail/DeviceChain')
 
 
 class BrowserAddEffectMode(Mode):
@@ -74,7 +74,7 @@ class BrowserAddEffectMode(Mode):
         return Live.Track.DeviceInsertMode.selected_right
 
     def get_selection_for_insert(self):
-        """
+        u"""
         Device to use for reference of where to insert the device.
         """
         return self._selection_for_insert
@@ -96,7 +96,7 @@ class BrowserAddEffectMode(Mode):
 
 
 def filter_type_between(left, right, supports_midi = False, is_drum_pad = False, supports_instrument = False):
-    """
+    u"""
     Given 'left' and 'right' are two consecutive devices in a valid
     device chain, returns the appropriate browser filter type for valid
     devices fitting between them. Either 'left' or 'right' can be None

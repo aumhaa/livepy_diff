@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from itertools import izip_longest
 from .ChannelStripComponent import ChannelStripComponent, release_control
 from .CompoundComponent import CompoundComponent
@@ -15,7 +15,7 @@ def turn_button_on_off(button, on = True):
 
 
 class MixerComponent(CompoundComponent):
-    """ Class encompassing several channel strips to form a mixer """
+    u""" Class encompassing several channel strips to form a mixer """
 
     def __init__(self, num_tracks = 0, num_returns = 0, auto_name = False, invert_mute_feedback = False, *a, **k):
         if not num_tracks >= 0:
@@ -57,12 +57,12 @@ class MixerComponent(CompoundComponent):
         self._on_return_tracks_changed()
 
         def make_button_slot(name):
-            return self.register_slot(None, getattr(self, '_%s_value' % name), 'value')
+            return self.register_slot(None, getattr(self, u'_%s_value' % name), u'value')
 
-        self._bank_up_button_slot = make_button_slot('bank_up')
-        self._bank_down_button_slot = make_button_slot('bank_down')
-        self._next_track_button_slot = make_button_slot('next_track')
-        self._prev_track_button_slot = make_button_slot('prev_track')
+        self._bank_up_button_slot = make_button_slot(u'bank_up')
+        self._bank_down_button_slot = make_button_slot(u'bank_down')
+        self._next_track_button_slot = make_button_slot(u'next_track')
+        self._prev_track_button_slot = make_button_slot(u'prev_track')
 
     def disconnect(self):
         super(MixerComponent, self).disconnect()
@@ -206,7 +206,7 @@ class MixerComponent(CompoundComponent):
             turn_button_on_off(self._next_track_button, on=selected_track != self.song().master_track)
             turn_button_on_off(self._prev_track_button, on=selected_track != self.song().visible_tracks[0])
 
-    @subject_slot('return_tracks')
+    @subject_slot(u'return_tracks')
     def _on_return_tracks_changed(self):
         num_sends = self.num_sends
         if self._send_index is not None:
@@ -304,8 +304,8 @@ class MixerComponent(CompoundComponent):
                     self.song().view.selected_track = all_tracks[index - 1]
 
     def _auto_name(self):
-        self.name = 'Mixer'
-        self.master_strip().name = 'Master_Channel_Strip'
-        self.selected_strip().name = 'Selected_Channel_Strip'
+        self.name = u'Mixer'
+        self.master_strip().name = u'Master_Channel_Strip'
+        self.selected_strip().name = u'Selected_Channel_Strip'
         for index, strip in enumerate(self._channel_strips):
-            strip.name = 'Channel_Strip_%d' % index
+            strip.name = u'Channel_Strip_%d' % index

@@ -1,12 +1,12 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from .ClipSlotComponent import ClipSlotComponent, find_nearest_color
 from .CompoundComponent import CompoundComponent
 from .SubjectSlot import subject_slot
 from .Util import in_range, nop
 
 class SceneComponent(CompoundComponent):
-    """
+    u"""
     Class representing a scene in Live
     """
     clip_slot_component_type = ClipSlotComponent
@@ -115,7 +115,7 @@ class SceneComponent(CompoundComponent):
         else:
             self._update_requests += 1
 
-    @subject_slot('value')
+    @subject_slot(u'value')
     def _launch_value(self, value):
         if self.is_enabled():
             if self._select_button and self._select_button.is_pressed() and value:
@@ -151,12 +151,12 @@ class SceneComponent(CompoundComponent):
         if launched and self.song().select_on_launch:
             self.song().view.selected_scene = self._scene
 
-    @subject_slot('is_triggered')
+    @subject_slot(u'is_triggered')
     def _on_is_triggered_changed(self):
         raise self._scene != None or AssertionError
         self._update_launch_button()
 
-    @subject_slot('color')
+    @subject_slot(u'color')
     def _on_scene_color_changed(self):
         raise self._scene != None or AssertionError
         self._update_launch_button()

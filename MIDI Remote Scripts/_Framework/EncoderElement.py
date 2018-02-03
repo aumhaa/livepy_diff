@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from .ComboElement import WrapperElement
 from .CompoundElement import CompoundElement
@@ -17,7 +17,7 @@ ENCODER_VALUE_NORMALIZER = {_map_modes.relative_smooth_two_compliment: lambda v:
  _map_modes.relative_smooth_binary_offset: lambda v: v - 64}
 
 class EncoderElement(InputControlElement):
-    """
+    u"""
     Class representing a continuous control on the controller.
     
     The normalized value notifies a delta in the range:
@@ -27,7 +27,7 @@ class EncoderElement(InputControlElement):
     class ProxiedInterface(InputControlElement.ProxiedInterface):
         normalize_value = nop
 
-    __subject_events__ = (SubjectEvent(name='normalized_value', signal=InputSignal),)
+    __subject_events__ = (SubjectEvent(name=u'normalized_value', signal=InputSignal),)
     encoder_sensitivity = 1.0
 
     def __init__(self, msg_type, channel, identifier, map_mode, encoder_sensitivity = None, *a, **k):
@@ -55,7 +55,7 @@ class EncoderElement(InputControlElement):
 
 
 class TouchEncoderElementBase(EncoderElement):
-    """
+    u"""
     Defines the interface necessary to implement a touch encoder, so that it works in
     combination with other parts of the framework (like the EncoderControl).
     """
@@ -66,14 +66,14 @@ class TouchEncoderElementBase(EncoderElement):
         remove_touch_value_listener = nop
         touch_value_has_listener = nop
 
-    __subject_events__ = ('touch_value',)
+    __subject_events__ = (u'touch_value',)
 
     def is_pressed(self):
         raise NotImplementedError
 
 
 class TouchEncoderElement(CompoundElement, TouchEncoderElementBase):
-    """
+    u"""
     Encoder that implements the TouchEncoderElementBase interface, by taking a
     touch_element and forwarding its value event to the touch_event.
     The touch_element is registered as a nested element and respects ownership
@@ -134,7 +134,7 @@ class FineGrainWithModifierEncoderElement(WrapperElement):
     def normalized_value_has_listener(self, listener):
         return listener in self._normalized_value_listeners
 
-    @subject_slot('normalized_value')
+    @subject_slot(u'normalized_value')
     def __on_normalized_value(self, value):
         for listener in self._normalized_value_listeners:
             listener(value)

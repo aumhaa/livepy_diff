@@ -1,10 +1,11 @@
 
-from consts import *
+from __future__ import absolute_import, print_function, unicode_literals
+from .consts import *
 
 class FaderfoxComponent:
     __module__ = __name__
-    __doc__ = 'Baseclass for a subcomponent for Faderfox controllers.'
-    __filter_funcs__ = ['update_display', 'log']
+    __doc__ = u'Baseclass for a subcomponent for Faderfox controllers.'
+    __filter_funcs__ = [u'update_display', u'log']
 
     def __init__(self, parent):
         FaderfoxComponent.realinit(self, parent)

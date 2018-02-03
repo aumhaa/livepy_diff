@@ -1,10 +1,10 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from .ComboElement import ToggleElement
 from .SubjectSlot import SlotManager, subject_slot
 
 class ChoosingElement(ToggleElement, SlotManager):
-    """
+    u"""
     An Element wrapper that enables one of the nested elements based on
     the value of the given flag.
     """
@@ -14,13 +14,13 @@ class ChoosingElement(ToggleElement, SlotManager):
         self._on_flag_changed.subject = flag
         self._on_flag_changed(flag.value)
 
-    @subject_slot('value')
+    @subject_slot(u'value')
     def _on_flag_changed(self, value):
         self.set_toggled(value)
 
 
 class OptionalElement(ChoosingElement):
-    """
+    u"""
     An Element wrapper that enables the nested element IFF some given
     flag is set to a specific value.
     """

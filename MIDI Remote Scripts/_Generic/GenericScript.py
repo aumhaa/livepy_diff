@@ -1,16 +1,30 @@
 
-from __future__ import with_statement
-import Live
+from __future__ import absolute_import, print_function, unicode_literals
+from functools import partial
+from _Framework.ButtonElement import ButtonElement
+from _Framework.ButtonMatrixElement import ButtonMatrixElement
 from _Framework.ControlSurface import ControlSurface
 from _Framework.DeviceComponent import DeviceComponent
-from _Framework.TransportComponent import TransportComponent
-from _Framework.InputControlElement import *
-from _Framework.ButtonElement import ButtonElement
 from _Framework.EncoderElement import EncoderElement
-from SpecialMixerComponent import SpecialMixerComponent
+from _Framework.InputControlElement import MIDI_CC_TYPE
+from _Framework.Layer import Layer
+from _Framework.TransportComponent import TransportComponent
+from .SpecialMixerComponent import SpecialMixerComponent
+
+def is_valid_midi_channel(integer):
+    return 0 <= integer < 16
+
+
+def is_valid_midi_identifier(integer):
+    return 0 <= integer < 128
+
+
+def has_specification_for(control, specifications):
+    return is_valid_midi_identifier(specifications.get(control, -1))
+
 
 class GenericScript(ControlSurface):
-    """ A generic script class with predefined behaviour.
+    u""" A generic script class with predefined behaviour.
         It can be customised to use/not use certain controls on instantiation.
     """
 
@@ -19,16 +33,16 @@ class GenericScript(ControlSurface):
         with self.component_guard():
             global_channel = 0
             if descriptions:
-                if list(descriptions.keys()).count('INPUTPORT') > 0:
-                    self._suggested_input_port = descriptions['INPUTPORT']
-                if list(descriptions.keys()).count('OUTPUTPORT') > 0:
-                    self._suggested_output_port = descriptions['OUTPUTPORT']
-                if list(descriptions.keys()).count('CHANNEL') > 0:
-                    global_channel = descriptions['CHANNEL']
-                    if global_channel not in range(16):
+                if list(descriptions.keys()).count(u'INPUTPORT') > 0:
+                    self._suggested_input_port = descriptions[u'INPUTPORT']
+                if list(descriptions.keys()).count(u'OUTPUTPORT') > 0:
+                    self._suggested_output_port = descriptions[u'OUTPUTPORT']
+                if list(descriptions.keys()).count(u'CHANNEL') > 0:
+                    global_channel = descriptions[u'CHANNEL']
+                    if not is_valid_midi_channel(global_channel):
                         global_channel = 0
-                if list(descriptions.keys()).count('PAD_TRANSLATION') > 0:
-                    self.set_pad_translations(descriptions['PAD_TRANSLATION'])
+                if list(descriptions.keys()).count(u'PAD_TRANSLATION') > 0:
+                    self.set_pad_translations(descriptions[u'PAD_TRANSLATION'])
             self._init_mixer_component(volume_controls, trackarm_controls, mixer_options, global_channel, volume_map_mode)
             self._init_device_component(device_controls, bank_controls, global_channel, macro_map_mode)
             self._init_transport_component(transport_controls, global_channel)
@@ -37,156 +51,135 @@ class GenericScript(ControlSurface):
         pass
 
     def _init_mixer_component(self, volume_controls, trackarm_controls, mixer_options, global_channel, volume_map_mode):
+        momentary_buttons = mixer_options is not None and u'NOTOGGLE' in mixer_options.keys()
+        MixerButton = partial(ButtonElement, momentary_buttons, MIDI_CC_TYPE, global_channel)
+
+        def make_mixer_encoder(cc, channel, name):
+            if is_valid_midi_identifier(cc) and is_valid_midi_channel(channel):
+                return EncoderElement(MIDI_CC_TYPE, channel, cc, volume_map_mode, name=name)
+
+        def make_mixer_button(control, name):
+            return MixerButton(mixer_options[control], name=name)
+
         if volume_controls != None and trackarm_controls != None:
             num_strips = max(len(volume_controls), len(trackarm_controls))
             send_info = []
-            momentary_buttons = False
-            mixer = SpecialMixerComponent(num_strips)
-            mixer.name = 'Mixer'
-            mixer.master_strip().name = 'Master_Channel_Strip'
-            mixer.selected_strip().name = 'Selected_Channel_Strip'
+            mixer = SpecialMixerComponent(num_strips, name=u'Mixer')
+            mixer.master_strip().name = u'Master_Channel_Strip'
+            mixer.selected_strip().name = u'Selected_Channel_Strip'
             if mixer_options != None:
-                if 'MASTERVOLUME' in mixer_options.keys() and mixer_options['MASTERVOLUME'] in range(128):
-                    encoder = EncoderElement(MIDI_CC_TYPE, global_channel, mixer_options['MASTERVOLUME'], volume_map_mode)
-                    encoder.name = 'Master_Volume_Control'
-                    mixer.master_strip().set_volume_control(encoder)
-                if 'NUMSENDS' in mixer_options.keys() and mixer_options['NUMSENDS'] > 0:
-                    for send in range(mixer_options['NUMSENDS']):
-                        key = 'SEND' + str(send + 1)
-                        raise key in mixer_options.keys() or AssertionError
-                        send_info.append(mixer_options[key])
+                if has_specification_for(u'MASTERVOLUME', mixer_options) and is_valid_midi_identifier(mixer_options[u'MASTERVOLUME']):
+                    mixer.master_strip().layer = Layer(volume_control=make_mixer_encoder(mixer_options[u'MASTERVOLUME'], global_channel, u'Master_Volume_Control'))
+                for send in xrange(mixer_options.get(u'NUMSENDS', 0)):
+                    send_info.append(mixer_options[u'SEND%d' % (send + 1)])
 
-                momentary_buttons = 'NOTOGGLE' in mixer_options.keys()
-                next_bank_button = None
-                prev_bank_button = None
-                if 'NEXTBANK' in mixer_options.keys() and mixer_options['NEXTBANK'] in range(128):
-                    next_bank_button = ButtonElement(momentary_buttons, MIDI_CC_TYPE, global_channel, mixer_options['NEXTBANK'])
-                    next_bank_button.name = 'Mixer_Next_Bank_Button'
-                if 'PREVBANK' in mixer_options.keys() and mixer_options['PREVBANK'] in range(128):
-                    prev_bank_button = ButtonElement(momentary_buttons, MIDI_CC_TYPE, global_channel, mixer_options['PREVBANK'])
-                    prev_bank_button.name = 'Mixer_Previous_Bank_Button'
-                mixer.set_bank_buttons(next_bank_button, prev_bank_button)
-            for track in range(num_strips):
+                layer_specs = {}
+                if has_specification_for(u'NEXTBANK', mixer_options):
+                    layer_specs[u'bank_up_button'] = make_mixer_button(u'NEXTBANK', u'Mixer_Next_Bank_Button')
+                if has_specification_for(u'PREVBANK', mixer_options):
+                    layer_specs[u'bank_down_button'] = make_mixer_button(u'PREVBANK', u'Mixer_Previous_Bank_Button')
+                mixer.layer = Layer(**layer_specs)
+            for track in xrange(num_strips):
                 strip = mixer.channel_strip(track)
-                strip.name = 'Channel_Strip_' + str(track)
-                if track in range(len(volume_controls)):
+                strip.name = u'Channel_Strip_' + str(track)
+                layer_specs = {}
+                if 0 <= track < len(volume_controls):
                     channel = global_channel
                     cc = volume_controls[track]
                     if isinstance(volume_controls[track], (tuple, list)):
                         cc = volume_controls[track][0]
-                        if volume_controls[track][1] in range(16):
+                        if is_valid_midi_channel(volume_controls[track][1]):
                             channel = volume_controls[track][1]
-                    if cc in range(128) and channel in range(16):
-                        encoder = EncoderElement(MIDI_CC_TYPE, channel, cc, volume_map_mode)
-                        encoder.name = str(track) + '_Volume_Control'
-                        strip.set_volume_control(encoder)
-                if track in range(len(trackarm_controls)) and trackarm_controls[track] in range(128):
-                    button = ButtonElement(momentary_buttons, MIDI_CC_TYPE, global_channel, trackarm_controls[track])
-                    button.name = str(track) + '_Arm_Button'
-                    strip.set_arm_button(button)
-                send_controls = []
-                for send in send_info:
-                    encoder = None
-                    if track in range(len(send)):
+                    if is_valid_midi_identifier(cc) and is_valid_midi_channel(channel):
+                        layer_specs[u'volume_control'] = make_mixer_encoder(cc, channel, str(track) + u'_Volume_Control')
+                if 0 <= track < len(trackarm_controls) and is_valid_midi_identifier(trackarm_controls[track]):
+                    layer_specs[u'arm_button'] = MixerButton(trackarm_controls[track], name=str(track) + u'_Arm_Button')
+                send_controls_raw = []
+                for index, send in enumerate(send_info):
+                    if 0 <= track < len(send):
                         channel = global_channel
                         cc = send[track]
                         if isinstance(send[track], (tuple, list)):
                             cc = send[track][0]
-                            if send[track][1] in range(16):
+                            if is_valid_midi_channel(send[track][1]):
                                 channel = send[track][1]
-                        if cc in range(128) and channel in range(16):
-                            encoder = EncoderElement(MIDI_CC_TYPE, channel, cc, volume_map_mode)
-                            encoder.name = str(track) + '_Send_' + str(list(send_info).index(send)) + '_Control'
-                    send_controls.append(encoder)
+                        if is_valid_midi_identifier(cc) and is_valid_midi_channel(channel):
+                            send_controls_raw.append(make_mixer_encoder(cc, channel, name=u'%d_Send_%d_Control' % (track, index)))
 
-                strip.set_send_controls(tuple(send_controls))
+                if len(send_controls_raw) > 0:
+                    layer_specs[u'send_controls'] = ButtonMatrixElement(rows=[send_controls_raw])
+                strip.layer = Layer(**layer_specs)
 
     def _init_device_component(self, device_controls, bank_controls, global_channel, macro_map_mode):
         is_momentary = True
+        DeviceButton = partial(ButtonElement, is_momentary, MIDI_CC_TYPE)
+
+        def make_bank_button(control, name, is_momentary = True):
+            return DeviceButton(global_channel, bank_controls[control], name=name)
+
         if device_controls:
-            device = DeviceComponent(device_selection_follows_track_selection=True)
-            device.name = 'Device_Component'
+            device = DeviceComponent(device_selection_follows_track_selection=True, name=u'Device_Component')
+            layer_specs = {}
             if bank_controls:
-                next_button = None
-                prev_button = None
-                if 'NEXTBANK' in bank_controls.keys() and bank_controls['NEXTBANK'] in range(128):
-                    next_button = ButtonElement(is_momentary, MIDI_CC_TYPE, global_channel, bank_controls['NEXTBANK'])
-                    next_button.name = 'Device_Next_Bank_Button'
-                if 'PREVBANK' in bank_controls.keys() and bank_controls['PREVBANK'] in range(128):
-                    prev_button = ButtonElement(is_momentary, MIDI_CC_TYPE, global_channel, bank_controls['PREVBANK'])
-                    prev_button.name = 'Device_Previous_Bank_Button'
-                device.set_bank_nav_buttons(prev_button, next_button)
-                if 'TOGGLELOCK' in bank_controls.keys() and bank_controls['TOGGLELOCK'] in range(128):
-                    lock_button = ButtonElement(is_momentary, MIDI_CC_TYPE, global_channel, bank_controls['TOGGLELOCK'])
-                    lock_button.name = 'Device_Lock_Button'
-                    device.set_lock_button(lock_button)
-                bank_buttons = []
-                for index in range(8):
-                    key = 'BANK' + str(index + 1)
+                if has_specification_for(u'NEXTBANK', bank_controls):
+                    layer_specs[u'bank_next_button'] = make_bank_button(u'NEXTBANK', u'Device_Next_Bank_Button')
+                if has_specification_for(u'PREVBANK', bank_controls):
+                    layer_specs[u'bank_prev_button'] = make_bank_button(u'PREVBANK', u'Device_Previous_Bank_Button')
+                if has_specification_for(u'TOGGLELOCK', bank_controls):
+                    layer_specs[u'lock_button'] = make_bank_button(u'TOGGLELOCK', u'Device_Lock_Button')
+                bank_buttons_raw = []
+                for index in xrange(8):
+                    key = u'BANK' + str(index + 1)
                     if key in bank_controls.keys():
                         control_info = bank_controls[key]
                         channel = global_channel
-                        cc = -1
+                        cc = control_info
                         if isinstance(control_info, (tuple, list)):
                             cc = control_info[0]
-                            if control_info[1] in range(16):
+                            if is_valid_midi_channel(control_info[1]):
                                 channel = control_info[1]
-                        else:
-                            cc = control_info
-                        if cc in range(128) and channel in range(16):
-                            button = ButtonElement(is_momentary, MIDI_CC_TYPE, channel, cc)
-                            button.name = 'Device_Bank_' + str(index) + '_Button'
-                            bank_buttons.append(button)
+                        if is_valid_midi_identifier(cc) and is_valid_midi_channel(channel):
+                            name = u'Device_Bank_' + str(index) + u'_Button'
+                            bank_buttons_raw.append(DeviceButton(channel, cc, name=name))
 
-                if len(bank_buttons) > 0:
-                    device.set_bank_buttons(tuple(bank_buttons))
-            parameter_encoders = []
-            for control_info in device_controls:
+                if len(bank_buttons_raw) > 0:
+                    layer_specs[u'bank_buttons'] = ButtonMatrixElement(rows=[bank_buttons_raw])
+            parameter_encoders_raw = []
+            for index, control_info in enumerate(device_controls):
                 channel = global_channel
-                cc = -1
+                cc = control_info
                 if isinstance(control_info, (tuple, list)):
                     cc = control_info[0]
-                    if control_info[1] in range(16):
+                    if is_valid_midi_channel(control_info[1]):
                         channel = control_info[1]
-                else:
-                    cc = control_info
-                if cc in range(128) and channel in range(16):
-                    encoder = EncoderElement(MIDI_CC_TYPE, channel, cc, macro_map_mode)
-                    encoder.name = 'Device_Parameter_' + str(list(device_controls).index(control_info)) + '_Control'
-                    parameter_encoders.append(encoder)
+                if is_valid_midi_identifier(cc) and is_valid_midi_channel(channel):
+                    name = u'Device_Parameter_%d_Control' % index
+                    parameter_encoders_raw.append(EncoderElement(MIDI_CC_TYPE, channel, cc, macro_map_mode, name=name))
 
-            if len(parameter_encoders) > 0:
-                device.set_parameter_controls(tuple(parameter_encoders))
+            if len(parameter_encoders_raw) > 0:
+                layer_specs[u'parameter_controls'] = ButtonMatrixElement(rows=[parameter_encoders_raw])
+            device.layer = Layer(**layer_specs)
             self.set_device_component(device)
 
     def _init_transport_component(self, transport_controls, global_channel):
-        is_momentary = True
+
+        def make_transport_button(control, name, is_momentary = True):
+            return ButtonElement(is_momentary, MIDI_CC_TYPE, global_channel, transport_controls[control], name=name)
+
         if transport_controls:
-            transport = TransportComponent()
-            transport.name = 'Transport'
-            if 'STOP' in transport_controls.keys() and transport_controls['STOP'] in range(128):
-                stop_button = ButtonElement(is_momentary, MIDI_CC_TYPE, global_channel, transport_controls['STOP'])
-                stop_button.name = 'Stop_Button'
-                transport.set_stop_button(stop_button)
-            if 'PLAY' in transport_controls.keys() and transport_controls['PLAY'] in range(128):
-                play_button = ButtonElement(is_momentary, MIDI_CC_TYPE, global_channel, transport_controls['PLAY'])
-                play_button.name = 'Play_Button'
-                transport.set_play_button(play_button)
-            if 'REC' in transport_controls.keys() and transport_controls['REC'] in range(128):
-                rec_button = ButtonElement(is_momentary, MIDI_CC_TYPE, global_channel, transport_controls['REC'])
-                rec_button.name = 'Record_Button'
-                transport.set_record_button(rec_button)
-            if 'LOOP' in transport_controls.keys() and transport_controls['LOOP'] in range(128):
-                loop_button = ButtonElement(is_momentary, MIDI_CC_TYPE, global_channel, transport_controls['LOOP'])
-                loop_button.name = 'Loop_Button'
-                transport.set_loop_button(loop_button)
-            ffwd_button = None
-            rwd_button = None
-            momentary_seek = 'NORELEASE' not in transport_controls.keys()
-            if 'FFWD' in transport_controls.keys() and transport_controls['FFWD'] in range(128):
-                ffwd_button = ButtonElement(momentary_seek, MIDI_CC_TYPE, global_channel, transport_controls['FFWD'])
-                ffwd_button.name = 'FFwd_Button'
-            if 'RWD' in transport_controls.keys() and transport_controls['RWD'] in range(128):
-                rwd_button = ButtonElement(momentary_seek, MIDI_CC_TYPE, global_channel, transport_controls['RWD'])
-                rwd_button.name = 'Rwd_Button'
-            transport.set_seek_buttons(ffwd_button, rwd_button)
+            momentary_seek = u'NORELEASE' not in transport_controls.keys()
+            layer_specs = {}
+            if has_specification_for(u'STOP', transport_controls):
+                layer_specs[u'stop_button'] = make_transport_button(u'STOP', u'Stop_Button')
+            if has_specification_for(u'PLAY', transport_controls):
+                layer_specs[u'play_button'] = make_transport_button(u'PLAY', u'Play_Button')
+            if has_specification_for(u'REC', transport_controls):
+                layer_specs[u'record_button'] = make_transport_button(u'REC', u'Record_Button')
+            if has_specification_for(u'LOOP', transport_controls):
+                layer_specs[u'loop_button'] = make_transport_button(u'LOOP', u'Loop_Button')
+            if has_specification_for(u'FFWD', transport_controls):
+                layer_specs[u'seek_forward_button'] = make_transport_button(u'FFWD', u'FFwd_Button', is_momentary=momentary_seek)
+            if has_specification_for(u'RWD', transport_controls):
+                layer_specs[u'seek_backward_button'] = make_transport_button(u'RWD', u'Rwd_Button', is_momentary=momentary_seek)
+            transport = TransportComponent(name=u'Transport')
+            transport.layer = Layer(**layer_specs)

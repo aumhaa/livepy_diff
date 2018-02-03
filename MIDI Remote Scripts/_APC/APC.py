@@ -1,5 +1,5 @@
 
-from __future__ import with_statement
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.ControlSurface import ControlSurface
 MANUFACTURER_ID = 71
@@ -7,7 +7,7 @@ ABLETON_MODE = 65
 DO_COMBINE = Live.Application.combine_apcs()
 
 class APC(ControlSurface):
-    """ Script for Akai's line of APC Controllers """
+    u""" Script for Akai's line of APC Controllers """
     _active_instances = []
 
     def _combine_active_instances():
@@ -29,11 +29,12 @@ class APC(ControlSurface):
         super(APC, self).__init__(*a, **k)
         self._suppress_session_highlight = True
         self._suppress_send_midi = True
-        self._suggested_input_port = 'Akai ' + self.__class__.__name__
-        self._suggested_output_port = 'Akai ' + self.__class__.__name__
+        self._suggested_input_port = u'Akai ' + self.__class__.__name__
+        self._suggested_output_port = u'Akai ' + self.__class__.__name__
         self._device_id = 0
         self._common_channel = 0
         self._dongle_challenge = (Live.Application.get_random_int(0, 2000000), Live.Application.get_random_int(2000001, 4000000))
+        self._identity_response_pending = False
 
     def disconnect(self):
         self._do_uncombine()
@@ -52,11 +53,13 @@ class APC(ControlSurface):
 
     def _on_identity_response(self, midi_bytes):
         if midi_bytes[5] == MANUFACTURER_ID and midi_bytes[6] == self._product_model_id_byte():
-            version_bytes = midi_bytes[9:13]
-            self._device_id = midi_bytes[13]
-            self._send_introduction_message()
-            self._send_dongle_challenge()
-            self._log_version(version_bytes)
+            if self._identity_response_pending:
+                self._identity_response_pending = False
+                version_bytes = midi_bytes[9:13]
+                self._device_id = midi_bytes[13]
+                self._send_introduction_message()
+                self._send_dongle_challenge()
+                self._log_version(version_bytes)
 
     def _on_dongle_response(self, midi_bytes):
         if midi_bytes[1] == MANUFACTURER_ID and midi_bytes[3] == self._product_model_id_byte() and midi_bytes[2] == self._device_id and midi_bytes[5] == 0 and midi_bytes[6] == 16:
@@ -101,6 +104,7 @@ class APC(ControlSurface):
         return False
 
     def _send_identity_request(self):
+        self._identity_response_pending = True
         self._send_midi((240, 126, 0, 6, 1, 247))
 
     def _send_introduction_message(self, mode_byte = ABLETON_MODE):
@@ -148,7 +152,7 @@ class APC(ControlSurface):
         self._send_midi(dongle_message)
 
     def _log_version(self, version_bytes):
-        message = self.__class__.__name__ + ': Got response from controller, version ' + str((version_bytes[0] << 4) + version_bytes[1]) + '.' + str((version_bytes[2] << 4) + version_bytes[3])
+        message = self.__class__.__name__ + u': Got response from controller, version ' + str((version_bytes[0] << 4) + version_bytes[1]) + u'.' + str((version_bytes[2] << 4) + version_bytes[3])
         self.log_message(message)
 
     def _activate_combination_mode(self, track_offset, support_devices):
@@ -169,4 +173,4 @@ class APC(ControlSurface):
             APC._combine_active_instances()
 
     def _product_model_id_byte(self):
-        raise AssertionError, 'Function _product_model_id_byte must be overridden by subclass'
+        raise AssertionError, u'Function _product_model_id_byte must be overridden by subclass'

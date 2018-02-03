@@ -1,8 +1,8 @@
 
-"""
+u"""
 Mode handling components.
 """
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from ..base import depends, infinite_context_manager, listens, is_contextmanager, is_iterable, lazy_attribute, listenable_property, NamedTuple, task
 from . import defaults
 from .layer import Layer, CompoundLayer
@@ -16,8 +16,8 @@ def tomode(thing):
         return Mode()
     if isinstance(thing, Mode):
         return thing
-    if isinstance(thing, Component):
-        return ComponentMode(thing)
+    if hasattr(thing, u'set_enabled'):
+        return EnablingMode(thing)
     if isinstance(thing, tuple) and len(thing) == 2:
         if isinstance(thing[0], Component) and isinstance(thing[1], (Layer, CompoundLayer)):
             return LayerMode(*thing)
@@ -37,7 +37,7 @@ def tomode(thing):
 
 
 class Mode(object):
-    """
+    u"""
     Interface to be implemented by modes.  When a mode is enabled,
     enter_mode is called, and leave_mode when disabled.
     """
@@ -56,7 +56,7 @@ class Mode(object):
 
 
 class ContextManagerMode(Mode):
-    """
+    u"""
     Turns any context manager into a mode object.
     """
 
@@ -79,42 +79,43 @@ def generator_mode(function):
     return lambda *a, **k: ContextManagerMode(makecontext(*a, **k))
 
 
-class ComponentMode(Mode):
-    """
-    Enables a component while the mode is active.
+class EnablingMode(Mode):
+    u"""
+    Enables an object while the mode is active,
+    as long is it has a set_enabled method.
     """
 
-    def __init__(self, component = None, *a, **k):
-        super(ComponentMode, self).__init__(*a, **k)
-        raise component is not None or AssertionError
-        self._component = component
+    def __init__(self, enableable = None, *a, **k):
+        super(EnablingMode, self).__init__(*a, **k)
+        raise enableable is not None or AssertionError
+        self._enableable = enableable
 
     def enter_mode(self):
-        self._component.set_enabled(True)
+        self._enableable.set_enabled(True)
 
     def leave_mode(self):
-        self._component.set_enabled(False)
+        self._enableable.set_enabled(False)
 
 
-class LazyComponentMode(Mode):
-    """
+class LazyEnablingMode(Mode):
+    u"""
     Creates the component the first time the mode is entered and
     enables it while the mode is active.
     """
 
-    def __init__(self, component_creator = None, *a, **k):
-        super(LazyComponentMode, self).__init__(*a, **k)
-        self._component_creator = component_creator
+    def __init__(self, factory = None, *a, **k):
+        super(LazyEnablingMode, self).__init__(*a, **k)
+        self._factory = factory
 
     @lazy_attribute
-    def component(self):
-        return self._component_creator()
+    def enableable(self):
+        return self._factory()
 
     def enter_mode(self):
-        self.component.set_enabled(True)
+        self.enableable.set_enabled(True)
 
     def leave_mode(self):
-        self.component.set_enabled(False)
+        self.enableable.set_enabled(False)
 
 
 class LayerModeBase(Mode):
@@ -132,7 +133,7 @@ class LayerModeBase(Mode):
 
 
 class LayerMode(LayerModeBase):
-    """
+    u"""
     Sets the layer of a component to a specific one.  When the mode is
     exited leaves the component without a layer.
     """
@@ -145,7 +146,7 @@ class LayerMode(LayerModeBase):
 
 
 class AddLayerMode(LayerModeBase):
-    """
+    u"""
     Adds an extra layer to a component, independently of the layer
     associated to the component.
     """
@@ -158,7 +159,7 @@ class AddLayerMode(LayerModeBase):
 
 
 class CompoundMode(Mode):
-    """
+    u"""
     A compound mode wraps any number of modes into one. They are
     entered in the given order and left in reversed order.
     """
@@ -177,7 +178,7 @@ class CompoundMode(Mode):
 
 
 class SetAttributeMode(Mode):
-    """
+    u"""
     Changes an attribute of an object to a given value.  Restores it
     to the original value, unless the value has changed while the mode
     was active.
@@ -205,7 +206,7 @@ class SetAttributeMode(Mode):
 
 
 class DelayMode(Mode):
-    """
+    u"""
     Decorates a mode by delaying it.
     """
 
@@ -235,14 +236,14 @@ class DelayMode(Mode):
 
 
 class ModeButtonControl(ButtonControlBase):
-    """
+    u"""
     ButtonControl with special colors for the different mode states
     """
 
     class State(ButtonControlBase.State):
-        mode_selected_color = control_color('DefaultButton.On')
-        mode_unselected_color = control_color('DefaultButton.Off')
-        mode_group_active_color = control_color('DefaultButton.On')
+        mode_selected_color = control_color(u'DefaultButton.On')
+        mode_unselected_color = control_color(u'DefaultButton.Off')
+        mode_group_active_color = control_color(u'DefaultButton.On')
 
         def __init__(self, modes_component = None, mode_name = None, mode_selected_color = None, mode_unselected_color = None, mode_group_active_color = None, *a, **k):
             if not modes_component is not None:
@@ -262,7 +263,7 @@ class ModeButtonControl(ButtonControlBase):
         def mode_name(self):
             return self._mode_name
 
-        @listens('selected_mode')
+        @listens(u'selected_mode')
         def __on_selected_mode_changed(self, mode):
             self._send_current_color()
 
@@ -279,7 +280,7 @@ class ModeButtonControl(ButtonControlBase):
 
 
 class ModeButtonBehaviour(object):
-    """
+    u"""
     Strategy that determines how the mode button of a specific mode
     behaves. The protocol is a follows:
     
@@ -313,7 +314,7 @@ class ModeButtonBehaviour(object):
 
 
 class LatchingBehaviour(ModeButtonBehaviour):
-    """
+    u"""
     Behaviour that will jump back to the previous mode when the button
     is released after having been hold for some time.  If the button
     is quickly pressed, the selected mode will stay.
@@ -331,7 +332,7 @@ class LatchingBehaviour(ModeButtonBehaviour):
 
 
 class ReenterBehaviour(LatchingBehaviour):
-    """
+    u"""
     Like latching, but calls a callback when the mode is-reentered.
     """
 
@@ -373,7 +374,7 @@ def make_mode_button_control(modes_component, mode_name, behaviour, **k):
 
 
 class _ModeEntry(NamedTuple):
-    """
+    u"""
     Used by ModesComponent to store information about modes.
     """
     mode = None
@@ -383,7 +384,7 @@ class _ModeEntry(NamedTuple):
 
 
 class ModesComponent(CompoundComponent):
-    """
+    u"""
     A ModesComponent handles the selection of different modes of the
     component. It improves the ModeSelectorComponent in several ways:
     
@@ -424,7 +425,7 @@ class ModesComponent(CompoundComponent):
 
     @listenable_property
     def selected_mode(self):
-        """
+        u"""
         Mode that is currently the top of the mode stack. Setting the
         selected mode explictly will also cleanup the mode stack.
         """
@@ -455,21 +456,21 @@ class ModesComponent(CompoundComponent):
         return self._mode_stack.clients
 
     def push_mode(self, mode):
-        """
+        u"""
         Selects the current 'mode', leaving the rest of the modes in
         the mode stack.
         """
         self._mode_stack.grab(mode)
 
     def pop_mode(self, mode):
-        """
+        u"""
         Takes 'mode' away from the mode stack.  If the mode was the
         currently selected one, the last pushed mode will be selected.
         """
         self._mode_stack.release(mode)
 
     def pop_groups(self, groups):
-        """
+        u"""
         Pops every mode in groups.
         """
         if not isinstance(groups, set):
@@ -479,14 +480,14 @@ class ModesComponent(CompoundComponent):
                 self._mode_stack.release(client)
 
     def pop_unselected_modes(self):
-        """
+        u"""
         Pops from the mode stack all the modes that are not the
         currently selected one.
         """
         self._mode_stack.release_stacked()
 
     def add_mode(self, name, mode_or_component, cycle_mode_button_color = None, groups = set(), behaviour = None):
-        """
+        u"""
         Adds a mode of the given name into the component.  The mode
         object should be a Mode or Component instance.
         
@@ -517,7 +518,7 @@ class ModesComponent(CompoundComponent):
 
     def add_mode_button_control(self, mode_name, behaviour):
         button_control = make_mode_button_control(self, mode_name, behaviour)
-        self.add_control('%s_button' % mode_name, button_control)
+        self.add_control(u'%s_button' % mode_name, button_control)
         self._update_mode_buttons(self.selected_mode)
 
     def _get_mode_behaviour(self, name):
@@ -531,7 +532,7 @@ class ModesComponent(CompoundComponent):
         return entry and entry.mode
 
     def get_mode_button(self, name):
-        return getattr(self, '%s_button' % name)
+        return getattr(self, u'%s_button' % name)
 
     def _update_mode_buttons(self, selected):
         if self.is_enabled():
@@ -583,14 +584,14 @@ class ModesComponent(CompoundComponent):
 
 
 class EnablingModesComponent(ModesComponent):
-    """
+    u"""
     Adds the two modes 'enabled' and 'disabled'. The provided component will be
     enabled while the 'enabled' mode is active.
     """
 
-    def __init__(self, component = None, enabled_color = 'DefaultButton.On', disabled_color = 'DefaultButton.Off', *a, **k):
+    def __init__(self, component = None, enabled_color = u'DefaultButton.On', disabled_color = u'DefaultButton.Off', *a, **k):
         super(EnablingModesComponent, self).__init__(*a, **k)
         component.set_enabled(False)
-        self.add_mode('disabled', None, disabled_color)
-        self.add_mode('enabled', component, enabled_color)
-        self.selected_mode = 'disabled'
+        self.add_mode(u'disabled', None, disabled_color)
+        self.add_mode(u'enabled', component, enabled_color)
+        self.selected_mode = u'disabled'

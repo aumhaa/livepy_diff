@@ -1,9 +1,9 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from . import Defaults
 
 class MomentaryModeObserver(object):
-    """ Listens to the changes of a given set of controls and decides which mode to use """
+    u""" Listens to the changes of a given set of controls and decides which mode to use """
 
     def __init__(self):
         object.__init__(self)

@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import contextlib
 import logging
 from ..base import const, depends, Disconnectable, in_range, nop, Signal, Event, task
@@ -17,8 +17,16 @@ MIDI_MSG_TYPES = (MIDI_NOTE_TYPE,
  MIDI_SYSEX_TYPE,
  MIDI_INVALID_TYPE)
 
+class ScriptForwarding(int):
+    pass
+
+
+ScriptForwarding.none = ScriptForwarding(0)
+ScriptForwarding.exclusive = ScriptForwarding(1)
+ScriptForwarding.non_consuming = ScriptForwarding(2)
+
 class ParameterSlot(Disconnectable):
-    """
+    u"""
     Maintains the connection between a parameter and
     InputControlElement. Keeps the invariant that whenever both
     parameter and control are set, the parameter is connected to the
@@ -71,7 +79,7 @@ class ParameterSlot(Disconnectable):
 
 
 class InputSignal(Signal):
-    """
+    u"""
     Special signal type that makes sure that interaction with input
     works properly. Special input control elements that define
     value-dependent properties should use this kind of signal.
@@ -108,7 +116,7 @@ class InputSignal(Signal):
 
 
 class InputControlElement(NotifyingControlElement):
-    """
+    u"""
     Base class for all classes representing control elements on a controller
     """
 
@@ -122,7 +130,7 @@ class InputControlElement(NotifyingControlElement):
         mapping_sensitivity = const(None)
         reset_state = nop
 
-    __events__ = (Event(name='value', signal=InputSignal, override=True),)
+    __events__ = (Event(name=u'value', signal=InputSignal, override=True),)
     _input_signal_listener_count = 0
     num_delayed_messages = 1
     send_depends_on_forwarding = True
@@ -151,7 +159,7 @@ class InputControlElement(NotifyingControlElement):
         self._force_next_send = False
         self._mapping_feedback_delay = 0
         self._mapping_sensitivity = 1.0
-        self._suppress_script_forwarding = False
+        self._script_forwarding = ScriptForwarding.exclusive
         self._send_delayed_messages_task = self._tasks.add(task.run(self._send_delayed_messages))
         self._send_delayed_messages_task.kill()
         self._parameter_to_map_to = None
@@ -192,16 +200,25 @@ class InputControlElement(NotifyingControlElement):
 
     @property
     def suppress_script_forwarding(self):
-        return self._suppress_script_forwarding
+        return self._script_forwarding == ScriptForwarding.none
 
     @suppress_script_forwarding.setter
     def suppress_script_forwarding(self, value):
-        if self._suppress_script_forwarding != value:
-            self._suppress_script_forwarding = value
+        self.script_forwarding = ScriptForwarding.none if value else ScriptForwarding.exclusive
+
+    @property
+    def script_forwarding(self):
+        return self._script_forwarding
+
+    @script_forwarding.setter
+    def script_forwarding(self, value):
+        if not isinstance(value, ScriptForwarding):
+            raise AssertionError
+            self._script_forwarding = self._script_forwarding != value and value
             self._request_rebuild()
 
     def force_next_send(self):
-        """
+        u"""
         Enforces sending the next value regardless of wether the
         control is mapped to the script.
         """
@@ -261,22 +278,23 @@ class InputControlElement(NotifyingControlElement):
         if self._parameter_to_map_to != None:
             self._is_mapped = install_mapping(self, self._parameter_to_map_to, self._mapping_feedback_delay, self._mapping_feedback_values())
         if self.script_wants_forwarding():
-            self._is_being_forwarded = install_forwarding(self)
+            self._is_being_forwarded = install_forwarding(self, self.script_forwarding)
             if self._is_being_forwarded and self.send_depends_on_forwarding:
                 self._send_delayed_messages_task.restart()
 
     def script_wants_forwarding(self):
-        """
-        Returns wether the script wants to receive receive the values,
+        u"""
+        Returns wether the script wants to receive the values,
         otherwise, the control will be mapped to the track.
         
         Subclasses that overload this should _request_rebuild()
         whenever the property changes.
         """
-        return not self._suppress_script_forwarding and self._input_signal_listener_count > 0 or self._report_input
+        forwarding_should_be_installed = self._script_forwarding in (ScriptForwarding.exclusive, ScriptForwarding.non_consuming)
+        return forwarding_should_be_installed and self._input_signal_listener_count > 0 or self._report_input
 
     def begin_gesture(self):
-        """
+        u"""
         Begins a modification on the input control element,
         meaning that we should consider the next flow of input data as
         a consistent gesture from the user.
@@ -286,7 +304,7 @@ class InputControlElement(NotifyingControlElement):
             self._parameter_to_map_to.begin_gesture()
 
     def end_gesture(self):
-        """
+        u"""
         Ends a modification of the input control element. See
         begin_gesture.
         """
@@ -295,7 +313,7 @@ class InputControlElement(NotifyingControlElement):
             self._parameter_to_map_to.end_gesture()
 
     def connect_to(self, parameter):
-        """ parameter is a Live.Device.DeviceParameter """
+        u""" parameter is a Live.Device.DeviceParameter """
         if self._parameter_to_map_to != parameter:
             if parameter == None:
                 self.release_parameter()
@@ -325,7 +343,7 @@ class InputControlElement(NotifyingControlElement):
         return status_byte
 
     def identifier_bytes(self):
-        """
+        u"""
         Returns a list with all the MIDI message prefixes that
         identify this control element.
         """
@@ -374,16 +392,16 @@ class InputControlElement(NotifyingControlElement):
         self._last_sent_message = None
 
     def reset(self):
-        """ Send 0 to reset motorized faders and turn off LEDs """
+        u""" Send 0 to reset motorized faders and turn off LEDs """
         self.send_value(0)
 
     def reset_state(self):
         self.use_default_message()
-        self.suppress_script_forwarding = False
+        self.script_forwarding = ScriptForwarding.exclusive
         self.release_parameter()
 
     def receive_value(self, value):
-        value = getattr(value, 'midi_value', value)
+        value = getattr(value, u'midi_value', value)
         self._verify_value(value)
         self._last_sent_message = None
         self.notify_value(value)
@@ -392,7 +410,7 @@ class InputControlElement(NotifyingControlElement):
             self._report_value(value, is_input)
 
     def receive_chunk(self, chunk):
-        """
+        u"""
         Is called when a chunk of MIDI is received in a defined time interval.
         Chunks are only sent if allow_receiving_chunks is True. Oterhwise receive_value
         is called for each MIDI message.
@@ -401,7 +419,7 @@ class InputControlElement(NotifyingControlElement):
             self.receive_value(value)
 
     def set_report_values(self, report_input, report_output):
-        """
+        u"""
         Set boolean values report_input and report_output enabling
         debug information.
         """
@@ -415,16 +433,16 @@ class InputControlElement(NotifyingControlElement):
 
     def _report_value(self, value, is_input):
         self._verify_value(value)
-        message = '('
+        message = u'('
         if self._msg_type == MIDI_NOTE_TYPE:
-            message += 'Note ' + str(self._msg_identifier) + ', '
+            message += u'Note ' + str(self._msg_identifier) + u', '
         elif self._msg_type == MIDI_CC_TYPE:
-            message += 'CC ' + str(self._msg_identifier) + ', '
+            message += u'CC ' + str(self._msg_identifier) + u', '
         else:
-            message += 'PB '
-        message += 'Chan. ' + str(self._msg_channel)
-        message += ') '
-        message += 'received value ' if is_input else 'sent value '
+            message += u'PB '
+        message += u'Chan. ' + str(self._msg_channel)
+        message += u') '
+        message += u'received value ' if is_input else u'sent value '
         message += str(value)
         logger.debug(message)
 

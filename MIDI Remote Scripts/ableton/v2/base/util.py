@@ -1,11 +1,12 @@
 
-"""
+u"""
 Various utilities.
 """
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from contextlib import contextmanager
 from functools import wraps, partial
 from itertools import chain, imap, izip_longest
+import sys
 
 def clamp(val, minv, maxv):
     return max(minv, min(val, maxv))
@@ -60,7 +61,7 @@ def maybe(fn):
 
 
 def memoize(function):
-    """
+    u"""
     Decorator to use automatic memoization on a given function, such
     that results are chached and, if called a second time, the
     function will return the cached value. Example::
@@ -106,7 +107,7 @@ def memoize(function):
 
 @memoize
 def mixin(*args):
-    """
+    u"""
     Dynamically creates a class that inherits from all the classes
     passed as parameters. Example::
     
@@ -123,12 +124,12 @@ def mixin(*args):
     """
     if len(args) == 1:
         return args[0]
-    name = 'Mixin_%s' % '_'.join((cls.__name__ for cls in args))
-    return type(name, args, {})
+    name = u'Mixin_%s' % u'_'.join((cls.__name__ for cls in args))
+    return type(str(name), args, {})
 
 
 def monkeypatch(target, name = None, override = False, doc = None):
-    """
+    u"""
     Decorator that injects the decorated function into the 'target'
     class. If no name is given the decorated function name will be
     used for the injected method name. If the class already has a
@@ -152,10 +153,10 @@ def monkeypatch(target, name = None, override = False, doc = None):
     def patcher(func):
         patchname = func.__name__ if name is None else name
         if not override and hasattr(target, patchname):
-            raise TypeError('Class %s already has method %s' % (target.__name__, patchname))
+            raise TypeError(u'Class %s already has method %s' % (target.__name__, patchname))
         setattr(target, patchname, func)
         try:
-            func.__name__ = patchname
+            func.__name__ = str(patchname)
         except AttributeError:
             pass
 
@@ -167,7 +168,7 @@ def monkeypatch(target, name = None, override = False, doc = None):
 
 
 def monkeypatch_extend(target, name = None):
-    """
+    u"""
     Decorator that injects the decorated function as an extension of a
     method of the 'target' class. If no 'name' is passed, the
     decorated function name will be the name of the method.
@@ -205,7 +206,7 @@ def monkeypatch_extend(target, name = None):
         if hasattr(target, patchname):
             oldfunc = getattr(target, patchname)
             if not callable(oldfunc):
-                raise TypeError('Can not extend non callable attribute')
+                raise TypeError(u'Can not extend non callable attribute')
 
             @wraps(oldfunc)
             def extended(*a, **k):
@@ -215,7 +216,7 @@ def monkeypatch_extend(target, name = None):
 
             newfunc = extended
         else:
-            raise False or AssertionError('Must have something to extend')
+            raise False or AssertionError(u'Must have something to extend')
         setattr(target, patchname, newfunc)
         return func
 
@@ -223,7 +224,7 @@ def monkeypatch_extend(target, name = None):
 
 
 def instance_decorator(decorator):
-    """
+    u"""
     Meta-decorator to define decorators that decorate a method in a
     concrete instance. The decorator method will be passed the
     object instance as first argument and the unbound decorated method
@@ -238,7 +239,7 @@ def instance_decorator(decorator):
         def __init__(self, func = nop, *args, **kws):
             self.__name__ = func.__name__
             self.__doc__ = func.__doc__
-            self._data_name = '%s_%d_decorated_instance' % (func.__name__, id(self))
+            self._data_name = u'%s_%d_decorated_instance' % (func.__name__, id(self))
             self._func = func
             self._args = args
             self._kws = kws
@@ -258,7 +259,7 @@ def instance_decorator(decorator):
 
 
 def forward_property(member):
-    """
+    u"""
     Property that forwards access to a nested object. You can use it
     as a decorator, where the function will be used only to extract
     the name of the property. It is useful when exposing some property
@@ -297,7 +298,7 @@ def forward_property(member):
 
 
 class lazy_attribute(object):
-    """
+    u"""
     Decorator that will turn a method in a lazy attribute. The first
     time the attribute is accessed its value will be computed using
     the decorated method and then cached.
@@ -334,7 +335,7 @@ class lazy_attribute(object):
 
 
 def remove_if(predicate, lst):
-    """
+    u"""
     Returns a new list with elements of the iterable 'lst' excepting
     those satisfying 'predicate'.
     """
@@ -342,7 +343,7 @@ def remove_if(predicate, lst):
 
 
 def flatten(list):
-    """
+    u"""
     Flattens a list of lists into a new list. It does not do that
     recursively, only one level.
     """
@@ -350,7 +351,7 @@ def flatten(list):
 
 
 def group(lst, n):
-    """
+    u"""
     Returns a list of lists with elements from 'lst' grouped in blocks
     of 'n' elements.
     """
@@ -358,7 +359,7 @@ def group(lst, n):
 
 
 def find_if(predicate, seq):
-    """
+    u"""
     Returns the first element in sequence 'seq' satisfying 'predicate'
     or 'None' if no such element exists.
     """
@@ -368,7 +369,7 @@ def find_if(predicate, seq):
 
 
 def index_if(predicate, seq):
-    """
+    u"""
     Returns the index of the first element in sequence 'seq'
     satisfying predicate. If no such element exists returns the length
     of the sequence.
@@ -383,7 +384,7 @@ def index_if(predicate, seq):
 
 
 def union(a, b):
-    """
+    u"""
     Returns a new dictionary with all the entries in dictionaries 'a'
     and 'b'. In case of conflict the entry from 'b' is taken.
     """
@@ -393,7 +394,7 @@ def union(a, b):
 
 
 def product(iter_a, iter_b):
-    """
+    u"""
     Generator that generates all possible tuples combining elements
     from sequence 'iter_a' and 'iter_b'.
     """
@@ -403,14 +404,14 @@ def product(iter_a, iter_b):
 
 
 def next(iter):
-    """
+    u"""
     Equivalent to iter.next()
     """
     return iter.next()
 
 
 def is_iterable(value):
-    """
+    u"""
     Returns True if 'value' is iterable and False otherwise.
     """
     try:
@@ -421,7 +422,7 @@ def is_iterable(value):
 
 
 def recursive_map(fn, element, sequence_type = None):
-    """
+    u"""
     Maps a tree-like data structure built by composing sequences of
     type iterable_type. if no iterable_type is given, it is assumed to
     be the type of the root element.
@@ -442,7 +443,7 @@ def recursive_map(fn, element, sequence_type = None):
 
 
 def is_matrix(iterable):
-    """
+    u"""
     Returns True if 'iterable' is a two dimensional iterable where each iterable is
     not empty
     """
@@ -465,7 +466,7 @@ def third(seq):
 
 
 def compose(*funcs):
-    """
+    u"""
     Returns the composition of all passed functions, similar to the
     mathematical dot.
     
@@ -482,11 +483,11 @@ def compose(*funcs):
 
 
 def is_contextmanager(value):
-    return callable(getattr(value, '__enter__')) and callable(getattr(value, '__exit__'))
+    return callable(getattr(value, u'__enter__')) and callable(getattr(value, u'__exit__'))
 
 
 def infinite_context_manager(generator):
-    """
+    u"""
     contextlib.contextmanager have the consumes the generator, so most
     of the time they can only be used one.  This variant will always
     re-instantiate the generator, such that the context manager can be
@@ -507,8 +508,29 @@ def infinite_context_manager(generator):
     return InfiniteContextManager
 
 
+@contextmanager
+def aggregate_contexts(handlers):
+    for handler in handlers:
+        handler.__enter__()
+
+    err = None
+    exc_info = (None, None, None)
+    try:
+        yield
+    except BaseException as err:
+        exc_info = sys.exc_info()
+
+    for handler in reversed(handlers):
+        if handler.__exit__(*exc_info):
+            err = False
+            exc_info = (None, None, None)
+
+    if err:
+        raise err
+
+
 class BooleanContext(object):
-    """
+    u"""
     This class represents an boolean variable with RAII setting within
     a scope.  It is useful to break recursions in an exception-safe
     way.  The boolean context can be used in nested fashion, as long
@@ -540,7 +562,7 @@ class BooleanContext(object):
         return bool(self._current_value)
 
     def __call__(self, update_value = None):
-        """
+        u"""
         Makes a context manager for the boolean context
         """
         return self.Manager(self, update_value)
@@ -566,8 +588,28 @@ class BooleanContext(object):
             self._managed._current_value = self._old_value
 
 
-def dict_diff(left, right):
+class OutermostOnlyContext(object):
+    u"""
+    This context manager only enters the outermost context it is given in
+    a nested series of when clauses.
     """
+
+    def __init__(self, *a, **k):
+        self._entered_count = 0
+
+    @contextmanager
+    def __call__(self, context):
+        self._entered_count += 1
+        if self._entered_count == 1:
+            with context as result:
+                yield result
+        else:
+            yield
+        self._entered_count -= 1
+
+
+def dict_diff(left, right):
+    u"""
     Computes a dictionary with the elements that are in the right but
     not or different in the left.
     """
@@ -576,7 +618,7 @@ def dict_diff(left, right):
 
 
 class NamedTuple(object):
-    """
+    u"""
     Immutable object that acts like a dictionary whose members can
     also be set via attribute access.  Derivatives can give and
     override default values in the class definition, for example::
@@ -595,14 +637,14 @@ class NamedTuple(object):
             self.__dict__.update(diff)
 
         self.__dict__.update(k)
-        if '_eq_dict' in self.__dict__:
+        if u'_eq_dict' in self.__dict__:
             self._eq_dict.update(k)
 
     def __setattr__(self, name, value):
-        raise AttributeError('Named tuple is constant')
+        raise AttributeError(u'Named tuple is constant')
 
     def __delattr__(self, name):
-        raise AttributeError('Named tuple is constant')
+        raise AttributeError(u'Named tuple is constant')
 
     def __getitem__(self, name):
         return self.__dict__[name]
@@ -611,7 +653,7 @@ class NamedTuple(object):
     def _eq_dict(self):
 
         def public(objdict):
-            return dict(filter(lambda (k, _): not k.startswith('_'), objdict.iteritems()))
+            return dict(filter(lambda (k, _): not k.startswith(u'_'), objdict.iteritems()))
 
         return reduce(lambda a, b: union(b, a), map(lambda c: public(c.__dict__), self.__class__.__mro__), public(self.__dict__))
 
@@ -621,7 +663,7 @@ class NamedTuple(object):
     def __getstate__(self):
         res = dict(self.__dict__)
         try:
-            del res['_eq_dict']
+            del res[u'_eq_dict']
         except KeyError:
             pass
 
@@ -629,7 +671,7 @@ class NamedTuple(object):
 
 
 class Slicer(object):
-    """
+    u"""
     A slicer object can be used to easily write a multi-dimensional
     __getitem__ that use the normal slicing syntax.  An example of
     usage is implementing flexible matrix types, as this example shows
@@ -660,7 +702,7 @@ class Slicer(object):
         new = key if isinstance(key, tuple) else (key,)
         keys = self._keys + new
         if not len(keys) <= self._dimensions:
-            raise AssertionError('Too many dimensions')
+            raise AssertionError(u'Too many dimensions')
             return len(keys) == self._dimensions and self._extractor(*keys)
         else:
             return Slicer(dimensions=self._dimensions, extractor=self._extractor, keys=keys)
@@ -672,7 +714,7 @@ class Slicer(object):
 get_slice = Slicer()
 
 def slicer(dimensions):
-    """
+    u"""
     Slicer decorator.  Returns a decorator that will decorate a
     function into a Slicer object of a given dimension.
     """
@@ -689,11 +731,11 @@ def slicer(dimensions):
 
 
 def print_message(*messages):
-    print(' '.join(map(str, messages)))
+    print(u' '.join(map(str, messages)))
 
 
 class overlaymap(object):
-    """
+    u"""
     A map-like object which takes a list of maps and
     overlays them from left to right.
     
@@ -728,8 +770,8 @@ class overlaymap(object):
             yield (key, self[key])
 
 
-def trace_value(value, msg = 'Value: '):
-    """
+def trace_value(value, msg = u'Value: '):
+    u"""
     Prints value and returns value. Useful when debugging the results
     of sub-expressions.
     """
@@ -738,7 +780,7 @@ def trace_value(value, msg = 'Value: '):
 
 
 class Bindable(object):
-    """
+    u"""
     Utility base class for general bindable function objects.
     Specializations should define the bind()
     """

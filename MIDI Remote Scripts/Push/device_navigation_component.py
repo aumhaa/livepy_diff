@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial
 from contextlib import contextmanager
 import Live.DrumPad
@@ -12,7 +12,7 @@ from pushbase.scrollable_list_component import ScrollableListWithTogglesComponen
 from .navigation_node import make_navigation_node
 
 class DeviceNavigationComponent(CompoundComponent):
-    """
+    u"""
     Component that displays an overview of the devices in the current
     track and navigates in its hierarchy.
     """
@@ -78,13 +78,13 @@ class DeviceNavigationComponent(CompoundComponent):
         else:
             self._set_current_node(self._make_navigation_node(self._selected_track))
 
-    @listens('selected_track')
+    @listens(u'selected_track')
     def _on_selected_track_changed(self):
         self._selected_track = self.song.view.selected_track
         self._on_selected_device_changed.subject = self._selected_track.view
         self.back_to_top()
 
-    @listens('selected_device')
+    @listens(u'selected_device')
     def _on_selected_device_changed(self):
         selected_device = self._selected_track.view.selected_device
         if selected_device == None:
@@ -104,7 +104,7 @@ class DeviceNavigationComponent(CompoundComponent):
                 self._set_current_node(node)
         self._on_device_parameters_changed.subject = selected_device
 
-    @listens('parameters')
+    @listens(u'parameters')
     def _on_device_parameters_changed(self):
         self._update_enter_button()
         self._update_exit_button()
@@ -145,12 +145,12 @@ class DeviceNavigationComponent(CompoundComponent):
         yield
         self._on_state_changed_in_controller.subject = old_subject
 
-    @listens('state')
+    @listens(u'state')
     def _on_state_changed_in_node(self, index, value):
         with self._deactivated_option_listener():
             self._device_list.set_option_state(index, value)
 
-    @listens('children')
+    @listens(u'children')
     def _on_children_changed_in_node(self):
         if self._updating_children:
             return
@@ -163,7 +163,7 @@ class DeviceNavigationComponent(CompoundComponent):
             self._update_enter_button()
             self._update_exit_button()
 
-    @listens('selected_child')
+    @listens(u'selected_child')
     def _on_selected_child_changed_in_node(self, index):
         self._device_list.selected_option = index
         self._update_enter_button()
@@ -174,7 +174,7 @@ class DeviceNavigationComponent(CompoundComponent):
     def _is_deleting(self):
         return self._delete_handler and self._delete_handler.is_deleting
 
-    @listens('toggle_option')
+    @listens(u'toggle_option')
     def _on_state_changed_in_controller(self, index, value):
         if self._current_node:
             if self._is_deleting:
@@ -187,14 +187,14 @@ class DeviceNavigationComponent(CompoundComponent):
                 with self._deactivated_option_listener():
                     self._device_list.set_option_state(index, self._current_node.state[index])
 
-    @listens('change_option')
+    @listens(u'change_option')
     def _on_selection_changed_in_controller(self, value):
         self._current_node.selected_child = value
         self._update_hotswap_target()
         self._update_enter_button()
         self._update_exit_button()
 
-    @listens('press_option', in_front=True)
+    @listens(u'press_option', in_front=True)
     def _on_selection_clicked_in_controller(self, index):
         if self._is_deleting:
             if self._current_node:
@@ -209,7 +209,7 @@ class DeviceNavigationComponent(CompoundComponent):
                 return True
         return index == None
 
-    @listens('value')
+    @listens(u'value')
     def _on_enter_value(self, value):
         if self.is_enabled():
             self._update_enter_button()
@@ -217,7 +217,7 @@ class DeviceNavigationComponent(CompoundComponent):
                 self._set_current_node(self._make_enter_node())
                 self._update_hotswap_target()
 
-    @listens('value')
+    @listens(u'value')
     def _on_exit_value(self, value):
         if self.is_enabled():
             self._update_exit_button()
@@ -245,10 +245,10 @@ class DeviceNavigationComponent(CompoundComponent):
         button = self._on_enter_value.subject
         if self.is_enabled() and button:
             with disconnectable(self._make_enter_node()) as node:
-                button.set_light('DefaultButton.On' if node else 'DefaultButton.Disabled')
+                button.set_light(u'DefaultButton.On' if node else u'DefaultButton.Disabled')
 
     def _update_exit_button(self):
         button = self._on_exit_value.subject
         if self.is_enabled() and button:
             with disconnectable(self._make_exit_node()) as node:
-                button.set_light('DefaultButton.On' if node else 'DefaultButton.Disabled')
+                button.set_light(u'DefaultButton.On' if node else u'DefaultButton.Disabled')

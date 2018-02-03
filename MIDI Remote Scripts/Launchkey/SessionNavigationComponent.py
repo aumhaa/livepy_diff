@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.ScrollComponent import ScrollComponent
 from _Framework import Task
@@ -23,7 +24,7 @@ def is_recording_clip(tracks, check_arrangement):
 
 
 class ArmingTrackScrollComponent(ScrollComponent):
-    """
+    u"""
     ScrollComponent that arms the last visited MIDI track
     """
 
@@ -80,7 +81,7 @@ class ArmingTrackScrollComponent(ScrollComponent):
 
 
 class SessionNavigationComponent(CompoundComponent):
-    """
+    u"""
     Component that controls the session selection 'crosshair'
     """
 
@@ -89,11 +90,11 @@ class SessionNavigationComponent(CompoundComponent):
         self._scroll_tracks, self._scroll_scenes = self.register_components(ArmingTrackScrollComponent(TrackScroller()), ScrollComponent(BasicSceneScroller()))
         song = self.song()
         view = song.view
-        self.register_slot(song, self._scroll_tracks.update, 'visible_tracks')
-        self.register_slot(song, self._scroll_tracks.update, 'return_tracks')
-        self.register_slot(song, self._scroll_scenes.update, 'scenes')
-        self.register_slot(view, self._scroll_tracks.update, 'selected_track')
-        self.register_slot(view, self._scroll_scenes.update, 'selected_scene')
+        self.register_slot(song, self._scroll_tracks.update, u'visible_tracks')
+        self.register_slot(song, self._scroll_tracks.update, u'return_tracks')
+        self.register_slot(song, self._scroll_scenes.update, u'scenes')
+        self.register_slot(view, self._scroll_tracks.update, u'selected_track')
+        self.register_slot(view, self._scroll_scenes.update, u'selected_scene')
 
     def set_next_track_button(self, button):
         self._scroll_tracks.set_scroll_down_button(button)

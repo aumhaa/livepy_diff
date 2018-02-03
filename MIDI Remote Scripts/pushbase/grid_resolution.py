@@ -1,7 +1,8 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
-from ableton.v2.base import EventObject, product, listens
+from ableton.v2.base import listenable_property, product
+from ableton.v2.control_surface.control import control_list, ControlManager, RadioButtonControl
 GridQuantization = Live.Clip.GridQuantization
 QUANTIZATION_FACTOR = 24
 QUANTIZATION_LIST = [2.0,
@@ -26,59 +27,27 @@ CLIP_LENGTH_LIST = [2.0,
  32.0]
 DEFAULT_INDEX = 3
 
-class GridResolution(EventObject):
-    __events__ = ('index',)
+class GridResolution(ControlManager):
+    quantization_buttons = control_list(RadioButtonControl, checked_color=u'NoteEditor.QuantizationSelected', unchecked_color=u'NoteEditor.QuantizationUnselected', control_count=8)
+    index = listenable_property.managed(DEFAULT_INDEX)
 
     def __init__(self, *a, **k):
         super(GridResolution, self).__init__(*a, **k)
-        self._index = DEFAULT_INDEX
-        self._quantization_buttons = []
-        self._quantization_button_slots = self.register_disconnectable(EventObject())
-
-    def _get_index(self):
-        return self._index
-
-    def _set_index(self, index):
-        self._index = index
-        self.notify_index()
-
-    index = property(_get_index, _set_index)
+        self.index = DEFAULT_INDEX
+        self.quantization_buttons[self.index].is_checked = True
 
     @property
     def step_length(self):
-        return QUANTIZATION_LIST[self._index] / QUANTIZATION_FACTOR
+        return QUANTIZATION_LIST[self.index] / QUANTIZATION_FACTOR
 
     @property
     def clip_grid(self):
-        return CLIP_VIEW_GRID_LIST[self._index]
+        return CLIP_VIEW_GRID_LIST[self.index]
 
     @property
     def clip_length(self):
-        return CLIP_LENGTH_LIST[self._index]
+        return CLIP_LENGTH_LIST[self.index]
 
-    def set_buttons(self, buttons):
-        self._quantization_button_slots.disconnect()
-        self._quantization_buttons = buttons or []
-        for button in self._quantization_buttons:
-            if button:
-                button.set_on_off_values('NoteEditor.QuantizationSelected', 'NoteEditor.QuantizationUnselected')
-            self._quantization_button_slots.register_slot(button, self._on_quantization_button_value, 'value', dict(identify_sender=True))
-
-        self._update_quantization_buttons()
-
-    @listens('value')
-    def _on_quantization_button_value(self, value, sender):
-        if value or not sender.is_momentary():
-            self.index = list(self._quantization_buttons).index(sender)
-            self._update_quantization_buttons()
-
-    def _update_quantization_buttons(self):
-        for index, button in enumerate(self._quantization_buttons):
-            if button != None:
-                if index is self.index:
-                    button.turn_on()
-                else:
-                    button.turn_off()
-
-    def update(self):
-        self._update_quantization_buttons()
+    @quantization_buttons.checked
+    def quantization_buttons(self, button):
+        self.index = button.index

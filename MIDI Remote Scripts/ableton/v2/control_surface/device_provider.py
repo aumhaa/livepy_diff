@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from ..base import listenable_property, listens, liveobj_changed, liveobj_valid, EventObject
 
@@ -11,7 +11,7 @@ def device_to_appoint(device):
 
 
 def select_and_appoint_device(song, device_to_select, ignore_unmapped_macros = True):
-    """
+    u"""
     Convenience function for selecting a device for a control surface to control.
     
     This takes care of selecting the device and appointing it for remote control, which
@@ -31,7 +31,7 @@ def select_and_appoint_device(song, device_to_select, ignore_unmapped_macros = T
 
 
 class DeviceProvider(EventObject):
-    """
+    u"""
     Provide "controlled device" to device component
     
     This class abstracts the logic required to provide a controlled device to be used
@@ -65,7 +65,7 @@ class DeviceProvider(EventObject):
 
     @listenable_property
     def is_locked_to_device(self):
-        """
+        u"""
         Indicates whether the provider is currently locked to a device.
         """
         return self._locked_to_device
@@ -97,25 +97,25 @@ class DeviceProvider(EventObject):
             self.song.appointed_device = None
             self.device = None
 
-    @listens('appointed_device')
+    @listens(u'appointed_device')
     def __on_appointed_device_changed(self):
         self.device = device_to_appoint(self.song.appointed_device)
 
-    @listens('has_macro_mappings')
+    @listens(u'has_macro_mappings')
     def __on_has_macro_mappings_changed(self):
         self.song.appointed_device = device_to_appoint(self.song.view.selected_track.view.selected_device)
 
-    @listens('selected_track')
+    @listens(u'selected_track')
     def __on_selected_track_changed(self):
         self.__on_selected_device_changed.subject = self.song.view.selected_track.view
         if self.device_selection_follows_track_selection:
             self.update_device_selection()
 
-    @listens('selected_device')
+    @listens(u'selected_device')
     def __on_selected_device_changed(self):
         self._update_appointed_device()
 
-    @listens('chains')
+    @listens(u'chains')
     def __on_chains_changed(self):
         self._update_appointed_device()
 

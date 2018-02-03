@@ -1,6 +1,7 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.Skin import Skin
-from Colors import Rgb
+from .Colors import Rgb
 
 class Colors:
 

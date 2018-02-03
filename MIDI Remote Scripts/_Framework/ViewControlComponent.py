@@ -1,12 +1,12 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 NavDirection = Live.Application.Application.View.NavDirection
 from .CompoundComponent import CompoundComponent
 from .Dependency import depends
 from .ScrollComponent import ScrollComponent, Scrollable
 from .Util import in_range
-VIEWS = ('Browser', 'Arranger', 'Session', 'Detail', 'Detail/Clip', 'Detail/DeviceChain')
+VIEWS = (u'Browser', u'Arranger', u'Session', u'Detail', u'Detail/Clip', u'Detail/DeviceChain')
 
 class _DeltaSongScroller(Scrollable):
 
@@ -100,7 +100,7 @@ class SceneListScroller(BasicSceneScroller):
 
 
 class ViewControlComponent(CompoundComponent):
-    """
+    u"""
     Component that can toggle the device chain- and clip view of the
     selected track
     """
@@ -110,13 +110,13 @@ class ViewControlComponent(CompoundComponent):
         self._scroll_tracks, self._scroll_scene_list, self._scroll_scenes = self.register_components(ScrollComponent(TrackScroller()), ScrollComponent(SceneListScroller()), ScrollComponent(SceneScroller()))
         song = self.song()
         view = song.view
-        self.register_slot(song, self._scroll_tracks.update, 'visible_tracks')
-        self.register_slot(song, self._scroll_tracks.update, 'return_tracks')
-        self.register_slot(song, self._scroll_scenes.update, 'scenes')
-        self.register_slot(song, self._scroll_scene_list.update, 'scenes')
-        self.register_slot(view, self._scroll_tracks.update, 'selected_track')
-        self.register_slot(view, self._scroll_scenes.update, 'selected_scene')
-        self.register_slot(view, self._scroll_scene_list.update, 'selected_scene')
+        self.register_slot(song, self._scroll_tracks.update, u'visible_tracks')
+        self.register_slot(song, self._scroll_tracks.update, u'return_tracks')
+        self.register_slot(song, self._scroll_scenes.update, u'scenes')
+        self.register_slot(song, self._scroll_scene_list.update, u'scenes')
+        self.register_slot(view, self._scroll_tracks.update, u'selected_track')
+        self.register_slot(view, self._scroll_scenes.update, u'selected_scene')
+        self.register_slot(view, self._scroll_scene_list.update, u'selected_scene')
 
     def set_next_track_button(self, button):
         self._scroll_tracks.set_scroll_down_button(button)
@@ -140,9 +140,9 @@ class ViewControlComponent(CompoundComponent):
         raise view in VIEWS or AssertionError
         app_view = self.application().view
         try:
-            if view == 'Detail/DeviceChain' or 'Detail/Clip':
-                if not app_view.is_view_visible('Detail'):
-                    app_view.show_view('Detail')
+            if view == u'Detail/DeviceChain' or u'Detail/Clip':
+                if not app_view.is_view_visible(u'Detail'):
+                    app_view.show_view(u'Detail')
             if not app_view.is_view_visible(view):
                 app_view.show_view(view)
         except RuntimeError:
@@ -152,7 +152,7 @@ class ViewControlComponent(CompoundComponent):
         if not view in VIEWS:
             raise AssertionError
             app_view = self.application().view
-            if view == 'Detail/DeviceChain' or 'Detail/Clip':
-                if not app_view.is_view_visible('Detail'):
-                    app_view.show_view('Detail')
+            if view == u'Detail/DeviceChain' or u'Detail/Clip':
+                if not app_view.is_view_visible(u'Detail'):
+                    app_view.show_view(u'Detail')
             app_view.is_view_visible(view) or app_view.focus_view(view)

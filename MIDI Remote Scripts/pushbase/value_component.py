@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import listenable_property, listens
 from ableton.v2.control_surface import CompoundComponent, Component, ParameterSlot
 from ableton.v2.control_surface.control import EncoderControl, ButtonControl
@@ -13,13 +13,13 @@ def convert_value_to_graphic(value):
     if index is not None and index < len(consts.GRAPH_VOL):
         graphic_display_string = consts.GRAPH_VOL[index]
     else:
-        graphic_display_string = ' '
+        graphic_display_string = u' '
     return graphic_display_string
 
 
 class ValueDisplayComponentBase(Component):
 
-    def __init__(self, display_label = ' ', display_seg_start = 0, *a, **k):
+    def __init__(self, display_label = u' ', display_seg_start = 0, *a, **k):
         super(ValueDisplayComponentBase, self).__init__(*a, **k)
         self._label_data_source = DisplayDataSource(display_label)
         self._value_data_source = DisplayDataSource()
@@ -59,7 +59,7 @@ class ValueDisplayComponentBase(Component):
 
 
 class ValueComponentBase(CompoundComponent):
-    """
+    u"""
     Component to control one continuous property with a infinite
     touch-sensitive encoder. You can optionally give it a display and
     a button such that the value will be displayed while its pressed.
@@ -68,13 +68,13 @@ class ValueComponentBase(CompoundComponent):
     def create_display_component(self, *a, **k):
         raise NotImplementedError
 
-    def __init__(self, display_label = ' ', display_seg_start = 0, encoder_touch_delay = 0, *a, **k):
+    def __init__(self, display_label = u' ', display_seg_start = 0, encoder_touch_delay = 0, *a, **k):
         super(ValueComponentBase, self).__init__(*a, **k)
         encoder = EncoderControl(touch_event_delay=encoder_touch_delay)
         encoder.touched = ValueComponentBase.__on_encoder_touched
         encoder.released = ValueComponentBase.__on_encoder_released
         encoder.value = ValueComponentBase.__on_encoder_value
-        self.add_control('encoder', encoder)
+        self.add_control(u'encoder', encoder)
         self._display = self.register_component(self.create_display_component(display_label=display_label, display_seg_start=display_seg_start))
         self._display.set_enabled(False)
 
@@ -99,11 +99,11 @@ class ValueComponentBase(CompoundComponent):
 
 
 class ValueDisplayComponent(ValueDisplayComponentBase):
-    """
+    u"""
     Display for values from standard Python properties.
     """
 
-    def __init__(self, property_name = None, subject = None, display_format = '%f', view_transform = None, graphic_transform = None, *a, **k):
+    def __init__(self, property_name = None, subject = None, display_format = u'%f', view_transform = None, graphic_transform = None, *a, **k):
         super(ValueDisplayComponent, self).__init__(*a, **k)
         self._subject = subject
         self._property_name = property_name
@@ -136,7 +136,7 @@ class ValueDisplayComponent(ValueDisplayComponentBase):
 
 
 class ValueComponent(ValueComponentBase):
-    """
+    u"""
     Component to control one continuous property with a infinite
     touch-sensitive encoder. You can optionally give it a display and
     a button such that the value will be displayed while its pressed.
@@ -147,7 +147,7 @@ class ValueComponent(ValueComponentBase):
     def create_display_component(self, *a, **k):
         return ValueDisplayComponent(property_name=self._property_name, subject=self._subject, display_format=self._display_format, view_transform=(lambda x: self.view_transform(x)), graphic_transform=(lambda x: self.graphic_transform(x)), *a, **k)
 
-    def __init__(self, property_name = None, subject = None, display_format = '%f', model_transform = None, view_transform = None, graphic_transform = None, encoder_factor = None, *a, **k):
+    def __init__(self, property_name = None, subject = None, display_format = u'%f', model_transform = None, view_transform = None, graphic_transform = None, encoder_factor = None, *a, **k):
         self._property_name = property_name
         self._subject = subject
         self._display_format = display_format
@@ -163,21 +163,21 @@ class ValueComponent(ValueComponentBase):
         self._original_encoder_factor = self.encoder_factor
 
     def model_transform(self, x):
-        """
+        u"""
         Tranform a value 'x' from the view domain to the domain as
         stored in the subject.
         """
         return x
 
     def view_transform(self, x):
-        """
+        u"""
         Transform a value 'x' from the model domain to the view domain
         as represented to the user.
         """
         return x
 
     def graphic_transform(self, x):
-        """
+        u"""
         Transform a value 'x' from the model domain to [0..1] range to
         be used in the slider-representation of the value.
         """
@@ -198,7 +198,7 @@ class ValueComponent(ValueComponentBase):
 
 
 class ParameterValueDisplayComponent(ValueDisplayComponentBase):
-    """
+    u"""
     Display for values from device parameters.
     """
 
@@ -213,14 +213,14 @@ class ParameterValueDisplayComponent(ValueDisplayComponentBase):
     def get_graphic_string(self):
         return convert_parameter_value_to_graphic(self._on_value_changed.subject)
 
-    @listens('value')
+    @listens(u'value')
     def _on_value_changed(self):
         self.update()
         self.notify_value_string()
 
 
 class ParameterValueComponent(ValueComponentBase):
-    """
+    u"""
     Component to control a device parameter with a infinite
     touch-sensitive encoder. You can optionally give it a display and
     a button such that the value will be displayed while its pressed.

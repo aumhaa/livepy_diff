@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from pushbase.drum_group_component import DrumGroupComponent as DrumGroupComponentBase
 
 class DrumGroupComponent(DrumGroupComponentBase):

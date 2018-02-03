@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from .ControlSurfaceComponent import ControlSurfaceComponent
 from .SubjectSlot import subject_slot
@@ -17,7 +17,7 @@ def find_nearest_color(rgb_table, src_hex_color):
 
 
 class ClipSlotComponent(ControlSurfaceComponent):
-    """
+    u"""
     Component representing a ClipSlot within Live.
     """
 
@@ -93,7 +93,7 @@ class ClipSlotComponent(ControlSurfaceComponent):
         self._clip_palette = palette
 
     def set_clip_rgb_table(self, rgb_table):
-        """ A list of velocity, hex-rgb color pairs that is used, if the color could not
+        u""" A list of velocity, hex-rgb color pairs that is used, if the color could not
         be matched to the clip palette """
         self._clip_rgb_table = rgb_table
 
@@ -143,7 +143,7 @@ class ClipSlotComponent(ControlSurfaceComponent):
                 return self._started_value
             if slot_or_clip.color != None:
                 return self._color_value(slot_or_clip.color)
-            if getattr(slot_or_clip, 'controls_other_clips', True) and self._stopped_value != None:
+            if getattr(slot_or_clip, u'controls_other_clips', True) and self._stopped_value != None:
                 return self._stopped_value
             if self._track_is_armed(track) and self._clip_slot.has_stop_button and self._record_button_value != None:
                 return self._record_button_value
@@ -154,49 +154,49 @@ class ClipSlotComponent(ControlSurfaceComponent):
         self._on_recording_state_changed.subject = clip
         self._on_clip_color_changed.subject = clip
 
-    @subject_slot('has_clip')
+    @subject_slot(u'has_clip')
     def _on_clip_state_changed(self):
         self._update_clip_property_slots()
         self.update()
 
-    @subject_slot('controls_other_clips')
+    @subject_slot(u'controls_other_clips')
     def _on_controls_other_clips_changed(self):
         self._update_clip_property_slots()
         self.update()
 
-    @subject_slot('color')
+    @subject_slot(u'color')
     def _on_clip_color_changed(self):
         self.update()
 
-    @subject_slot('color')
+    @subject_slot(u'color')
     def _on_clip_slot_color_changed(self):
         self.update()
 
-    @subject_slot('playing_status')
+    @subject_slot(u'playing_status')
     def _on_slot_playing_state_changed(self):
         self.update()
 
-    @subject_slot('playing_status')
+    @subject_slot(u'playing_status')
     def _on_clip_playing_state_changed(self):
         self.update()
 
-    @subject_slot('is_recording')
+    @subject_slot(u'is_recording')
     def _on_recording_state_changed(self):
         self.update()
 
-    @subject_slot('arm')
+    @subject_slot(u'arm')
     def _on_arm_value_changed(self):
         self.update()
 
-    @subject_slot('implicit_arm')
+    @subject_slot(u'implicit_arm')
     def _on_implicit_arm_value_changed(self):
         self.update()
 
-    @subject_slot('has_stop_button')
+    @subject_slot(u'has_stop_button')
     def _on_has_stop_button_changed(self):
         self.update()
 
-    @subject_slot('is_triggered')
+    @subject_slot(u'is_triggered')
     def _on_slot_triggered_changed(self):
         if not self.has_clip():
             song = self.song()
@@ -205,7 +205,7 @@ class ClipSlotComponent(ControlSurfaceComponent):
                 view.highlighted_clip_slot = self._clip_slot
             self.update()
 
-    @subject_slot('value')
+    @subject_slot(u'value')
     def _launch_button_value(self, value):
         if self.is_enabled():
             if self._select_button and self._select_button.is_pressed() and value:

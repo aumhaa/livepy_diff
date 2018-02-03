@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from itertools import product
 from _Framework.ClipSlotComponent import ClipSlotComponent as ClipSlotComponentBase
 from _Framework.SceneComponent import SceneComponent as SceneComponentBase

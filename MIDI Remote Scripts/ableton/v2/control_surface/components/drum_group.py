@@ -1,7 +1,7 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from itertools import imap
-from ...base import depends, find_if, first, clamp, listens_group, listens, liveobj_valid
+from ...base import depends, find_if, first, clamp, listenable_property, listens_group, listens, liveobj_changed, liveobj_valid
 from ..control import ButtonControl
 from .slide import SlideComponent, Slideable
 from .playable import PlayableComponent
@@ -55,6 +55,18 @@ class DrumGroupComponent(PlayableComponent, SlideComponent, Slideable):
     def assigned_drum_pads(self):
         return self._assigned_drum_pads
 
+    @property
+    def min_pitch(self):
+        if self.assigned_drum_pads:
+            return self.assigned_drum_pads[0].note
+        return BASE_DRUM_RACK_NOTE
+
+    @property
+    def max_pitch(self):
+        if self.assigned_drum_pads:
+            return self.assigned_drum_pads[-1].note
+        return BASE_DRUM_RACK_NOTE
+
     def _update_assigned_drum_pads(self):
         assigned_drum_pads = []
         visible_drum_pads = self._drum_group_device.visible_drum_pads if liveobj_valid(self._drum_group_device) else None
@@ -88,8 +100,13 @@ class DrumGroupComponent(PlayableComponent, SlideComponent, Slideable):
             self._update_note_translations()
             super(DrumGroupComponent, self).update()
 
+    def update(self):
+        super(DrumGroupComponent, self).update()
+        if self.is_enabled():
+            self.notify_position()
+
     def _update_drum_pad_listeners(self):
-        """
+        u"""
         add and remove listeners for visible drum pads, including
         mute and solo state
         """
@@ -101,11 +118,11 @@ class DrumGroupComponent(PlayableComponent, SlideComponent, Slideable):
             self._update_assigned_drum_pads()
             self._update_note_translations()
 
-    @listens_group('solo')
+    @listens_group(u'solo')
     def __on_solo_changed(self, pad):
         self._update_led_feedback()
 
-    @listens_group('mute')
+    @listens_group(u'mute')
     def __on_mute_changed(self, pad):
         self._update_led_feedback()
 
@@ -115,28 +132,27 @@ class DrumGroupComponent(PlayableComponent, SlideComponent, Slideable):
 
     def _update_button_color(self, button):
         pad = self._pad_for_button(button)
-        if pad:
-            button.color = self._color_for_pad(pad)
+        button.color = self._color_for_pad(pad) if pad else u'DefaultButton.On'
 
     def _color_for_pad(self, pad):
         has_soloed_pads = bool(find_if(lambda pad: pad.solo, self._all_drum_pads))
-        button_color = 'DrumGroup.PadEmpty'
+        button_color = u'DrumGroup.PadEmpty'
         if pad == self._selected_drum_pad:
-            button_color = 'DrumGroup.PadSelected'
+            button_color = u'DrumGroup.PadSelected'
             if has_soloed_pads and not pad.solo and not pad.mute:
-                button_color = 'DrumGroup.PadSelectedNotSoloed'
+                button_color = u'DrumGroup.PadSelectedNotSoloed'
             elif pad.mute and not pad.solo:
-                button_color = 'DrumGroup.PadMutedSelected'
+                button_color = u'DrumGroup.PadMutedSelected'
             elif has_soloed_pads and pad.solo:
-                button_color = 'DrumGroup.PadSoloedSelected'
+                button_color = u'DrumGroup.PadSoloedSelected'
         elif pad.chains:
-            button_color = 'DrumGroup.PadFilled'
+            button_color = u'DrumGroup.PadFilled'
             if has_soloed_pads and not pad.solo:
-                button_color = 'DrumGroup.PadFilled' if not pad.mute else 'DrumGroup.PadMuted'
+                button_color = u'DrumGroup.PadFilled' if not pad.mute else u'DrumGroup.PadMuted'
             elif not has_soloed_pads and pad.mute:
-                button_color = 'DrumGroup.PadMuted'
+                button_color = u'DrumGroup.PadMuted'
             elif has_soloed_pads and pad.solo:
-                button_color = 'DrumGroup.PadSoloed'
+                button_color = u'DrumGroup.PadSoloed'
         return button_color
 
     def _button_coordinates_to_pad_index(self, first_note, coordinates):
@@ -158,10 +174,10 @@ class DrumGroupComponent(PlayableComponent, SlideComponent, Slideable):
         if self.solo_button.is_pressed:
             selected_drum_pad.solo = not selected_drum_pad.solo
         if self.quantize_button.is_pressed:
-            button.color = 'DrumGroup.PadAction'
+            button.color = u'DrumGroup.PadAction'
             self.quantize_pitch(selected_drum_pad.note)
         if self.delete_button.is_pressed:
-            button.color = 'DrumGroup.PadAction'
+            button.color = u'DrumGroup.PadAction'
             self.delete_pitch(selected_drum_pad)
         if self.select_button.is_pressed:
             self._drum_group_device.view.selected_drum_pad = selected_drum_pad
@@ -170,25 +186,27 @@ class DrumGroupComponent(PlayableComponent, SlideComponent, Slideable):
         if self.mute_button.is_pressed or self.solo_button.is_pressed:
             self._update_led_feedback()
 
-    @listens('visible_drum_pads')
+    @listens(u'visible_drum_pads')
     def __on_visible_drum_pads_changed(self):
         self._update_drum_pad_listeners()
         self._update_led_feedback()
 
-    @listens('drum_pads_scroll_position')
+    @listens(u'drum_pads_scroll_position')
     def __on_drum_pads_scroll_position_changed(self):
         self._update_note_translations()
         self._update_led_feedback()
         self.notify_position()
 
-    @listens('selected_drum_pad')
+    @listens(u'selected_drum_pad')
     def __on_selected_drum_pad_changed(self):
         self._update_selected_drum_pad()
-        self._on_selected_drum_pad_changed()
 
     def _update_selected_drum_pad(self):
-        self._selected_drum_pad = self._drum_group_device.view.selected_drum_pad if liveobj_valid(self._drum_group_device) else None
-        self._update_led_feedback()
+        selected_drum_pad = self._drum_group_device.view.selected_drum_pad if liveobj_valid(self._drum_group_device) else None
+        if liveobj_changed(self._selected_drum_pad, selected_drum_pad):
+            self._selected_drum_pad = selected_drum_pad
+            self._update_led_feedback()
+            self._on_selected_drum_pad_changed()
 
     def _on_selected_drum_pad_changed(self):
         pass
@@ -259,13 +277,13 @@ class DrumGroupComponent(PlayableComponent, SlideComponent, Slideable):
             self._set_pad_translations(None)
 
     def select_drum_pad(self, drum_pad):
-        """ Override when you give it a select button """
+        u""" Override when you give it a select button """
         raise NotImplementedError
 
     def quantize_pitch(self, note):
-        """ Override when you give it a quantize button """
+        u""" Override when you give it a quantize button """
         raise NotImplementedError
 
     def delete_pitch(self, drum_pad):
-        """ Override when you give it a delete button """
+        u""" Override when you give it a delete button """
         raise NotImplementedError

@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from itertools import ifilter
 from .ControlElement import ControlElementClient
 from .SubjectSlot import subject_slot_group, SlotManager
@@ -18,7 +18,7 @@ class NestedElementClient(ControlElementClient):
 
 
 class CompoundElement(NotifyingControlElement, SlotManager, ControlElementClient):
-    """
+    u"""
     Utility class that helps in writing Elements that act as a facade
     to nested elements, hiding the complexity oif making sure that
     resource ownership rules are preserved.
@@ -47,25 +47,25 @@ class CompoundElement(NotifyingControlElement, SlotManager, ControlElementClient
         self._listen_nested_requests = 0
 
     def on_nested_control_element_received(self, control):
-        """
+        u"""
         Notifies that the nested control can be used by the compound
         """
         raise NotImplementedError
 
     def on_nested_control_element_lost(self, control):
-        """
+        u"""
         Notifies that we lost control over the control.
         """
         raise NotImplementedError
 
     def on_nested_control_element_value(self, value, control):
-        """
+        u"""
         Notifies that an owned control element has received a value.
         """
         raise NotImplementedError
 
     def get_control_element_priority(self, element, priority):
-        """
+        u"""
         Override to change priority for control element.
         """
         raise self._has_resource or AssertionError
@@ -137,7 +137,7 @@ class CompoundElement(NotifyingControlElement, SlotManager, ControlElementClient
             self.unrequest_listen_nested_control_elements()
 
     def request_listen_nested_control_elements(self):
-        """
+        u"""
         By default, the compound control element will listen to its
         nested control elements IFF he himself has listeners.  This is
         important, because for nested InputControlElements, the
@@ -154,7 +154,7 @@ class CompoundElement(NotifyingControlElement, SlotManager, ControlElementClient
         self._listen_nested_requests += 1
 
     def unrequest_listen_nested_control_elements(self):
-        """
+        u"""
         See request_listen_nested_control_elements()
         """
         if self._listen_nested_requests == 1:
@@ -179,7 +179,7 @@ class CompoundElement(NotifyingControlElement, SlotManager, ControlElementClient
                 self._nested_control_elements[control] = False
         self.on_nested_control_element_lost(control)
 
-    @subject_slot_group('value')
+    @subject_slot_group(u'value')
     def _on_nested_control_element_value(self, value, sender):
         if self.owns_control_element(sender):
             self.on_nested_control_element_value(value, sender)

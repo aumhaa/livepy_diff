@@ -1,9 +1,9 @@
 
-"""
+u"""
 Module for the color interfaces defining all posible ways of turning
 on buttons on Push.
 """
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from itertools import izip, repeat
 from ableton.v2.control_surface.elements import Color, to_midi_value
 
@@ -19,7 +19,7 @@ class PushColor(Color):
 
 
 class RgbColor(PushColor):
-    """
+    u"""
     An a RGB color drawable in RGB pads represented.
     """
     needs_rgb_interface = True
@@ -31,7 +31,7 @@ class RgbColor(PushColor):
             self._rgb_value = rgb_value
 
     def shade(self, shade_level):
-        """
+        u"""
         Generate a new shaded RGB from this color.
         """
         raise shade_level > 0 and shade_level <= 2 or AssertionError
@@ -39,7 +39,7 @@ class RgbColor(PushColor):
         return RgbColor(self.midi_value + shade_level, [ a * b for a, b in izip(self._rgb_value, repeat(shade_factor)) ])
 
     def highlight(self):
-        """
+        u"""
         Generate a new highlighted RGB from this color.
         """
         return RgbColor(self.midi_value - 1, [ a * b for a, b in izip(self._rgb_value, repeat(1.5)) ])
@@ -52,7 +52,7 @@ class RgbColor(PushColor):
 
 
 class FallbackColor(PushColor):
-    """
+    u"""
     Tries to draw the color with a default color object but uses the own midi value if
     it fails. This can be used to define a color that can be either used by a bi-led
     or rgb button.
@@ -70,7 +70,7 @@ class FallbackColor(PushColor):
 
 
 class AnimatedColor(PushColor):
-    """
+    u"""
     Creates an animation between two RGB colors.
     The animation is defined by the channel2.
     """
@@ -94,11 +94,11 @@ class AnimatedColor(PushColor):
         interface.send_value(self.color2.midi_value, channel=self.channel2)
 
     def convert_to_midi_value(self):
-        raise NotImplementedError, 'Animations cannot be serialized'
+        raise NotImplementedError, u'Animations cannot be serialized'
 
 
 class Pulse(AnimatedColor):
-    """
+    u"""
     Smoothly pulsates between two colors.
     """
 
@@ -112,7 +112,7 @@ class Pulse(AnimatedColor):
 
 
 class Blink(AnimatedColor):
-    """
+    u"""
     Blinks jumping between two colors.
     """
 
@@ -126,7 +126,7 @@ class Blink(AnimatedColor):
 
 
 class TransparentColor(object):
-    """
+    u"""
     Color that does not transmit any MIDI data.
     """
 
@@ -135,7 +135,7 @@ class TransparentColor(object):
 
 
 class Rgb:
-    """
+    u"""
     Table of RgbColors for main matrix.
     """
     BLACK = RgbColor(0)
@@ -159,7 +159,7 @@ class Rgb:
 
 
 class Basic:
-    """
+    u"""
     Table of basic colors for side buttons.
     """
     HALF = FallbackColor(Rgb.DARK_GREY, 1)
@@ -174,7 +174,7 @@ class Basic:
 
 
 class BiLed:
-    """
+    u"""
     Table of colors for scene launch buttons.
     """
     GREEN = FallbackColor(RgbColor(122), 22)

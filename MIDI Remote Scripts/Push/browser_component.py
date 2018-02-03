@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial
 from itertools import izip, izip_longest
 import string
@@ -16,8 +16,8 @@ FilterType = Live.Browser.FilterType
 DeviceType = Live.Device.DeviceType
 
 def make_stem_cleaner(stem):
-    """ Returns a function that can be used to remove the stem from a sentence """
-    if stem[-1] == 's':
+    u""" Returns a function that can be used to remove the stem from a sentence """
+    if stem[-1] == u's':
         stem = stem[:-1]
     if len(stem) > 2:
         return _memoized_stem_cleaner(stem)
@@ -29,22 +29,22 @@ def _memoized_stem_cleaner(stem):
     ellipsis = consts.CHAR_ELLIPSIS
     stem = re.escape(stem)
     rule1 = re.compile(u'([a-z])' + stem + u's?([ A-Z])')
-    rule2 = re.compile(u'[' + ellipsis + ' \\-]' + stem + u's?([\\-' + ellipsis + u' A-Z])')
+    rule2 = re.compile(u'[' + ellipsis + u' \\-]' + stem + u's?([\\-' + ellipsis + u' A-Z])')
     rule3 = re.compile(u'' + stem + u's?$')
 
     def cleaner(short_name):
-        short_name = ' ' + short_name
+        short_name = u' ' + short_name
         short_name = rule1.sub(u'\\1' + ellipsis + u'\\2', short_name)
         short_name = rule2.sub(ellipsis + u'\\1', short_name)
         short_name = rule3.sub(ellipsis, short_name)
-        return short_name.strip(' ')
+        return short_name.strip(u' ')
 
     return cleaner
 
 
 def split_stem(sentence):
-    """ Splits camel cased sentence into words """
-    sentence = re.sub('([a-z])([A-Z])', u'\\1 \\2', sentence)
+    u""" Splits camel cased sentence into words """
+    sentence = re.sub(u'([a-z])([A-Z])', u'\\1 \\2', sentence)
     return sentence.split()
 
 
@@ -53,27 +53,27 @@ _stripper_double_ellipsis = re.compile(consts.CHAR_ELLIPSIS + u'+')
 _stripper_space_ellipsis = re.compile(u'[\\- ]?' + consts.CHAR_ELLIPSIS + u'[\\- ]?')
 
 def full_strip(string):
-    """ Strip string for double spaces and dashes """
-    string = _stripper_double_spaces.sub(' ', string)
+    u""" Strip string for double spaces and dashes """
+    string = _stripper_double_spaces.sub(u' ', string)
     string = _stripper_double_ellipsis.sub(consts.CHAR_ELLIPSIS, string)
     string = _stripper_space_ellipsis.sub(consts.CHAR_ELLIPSIS, string)
-    return string.strip(' ')
+    return string.strip(u' ')
 
 
 class BrowserComponent(CompoundComponent):
-    """
+    u"""
     Component for controlling the Live library browser.  It has 4
     browsing columns that are controlled by encoders and state
     buttons.  The contents of these lists are provided by a browser
     model -- see BrowserModel and derivatives.
     """
-    __events__ = ('load_item',)
+    __events__ = (u'load_item',)
     NUM_COLUMNS = 4
     COLUMN_SIZE = 4
     enter_button = ButtonControl(**consts.SIDE_BUTTON_COLORS)
     exit_button = ButtonControl(**consts.SIDE_BUTTON_COLORS)
     shift_button = ButtonControl()
-    prehear_button = ToggleButtonControl(toggled_color='Browser.Prehear', untoggled_color='Browser.PrehearOff')
+    prehear_button = ToggleButtonControl(toggled_color=u'Browser.Prehear', untoggled_color=u'Browser.PrehearOff')
 
     def __init__(self, browser = None, make_browser_model = None, preferences = dict(), *a, **k):
         super(BrowserComponent, self).__init__(*a, **k)
@@ -82,7 +82,7 @@ class BrowserComponent(CompoundComponent):
         self._browser_model = EmptyBrowserModel(browser=self._browser)
         self._make_browser_model = make_browser_model
         num_data_sources = self.NUM_COLUMNS * self.COLUMN_SIZE
-        self._data_sources = map(DisplayDataSource, ('',) * num_data_sources)
+        self._data_sources = map(DisplayDataSource, (u'',) * num_data_sources)
         self._last_loaded_item = None
         self._default_item_formatter = DefaultItemFormatter()
         self._list_components = self.register_components(*[ ListComponent() for _ in xrange(self.NUM_COLUMNS) ])
@@ -107,7 +107,7 @@ class BrowserComponent(CompoundComponent):
         self._skip_next_preselection = False
         self._browser_model_dirty = True
         self._on_content_lists_changed()
-        self.prehear_button.is_toggled = preferences.setdefault('browser_prehear', True)
+        self.prehear_button.is_toggled = preferences.setdefault(u'browser_prehear', True)
         self._last_selected_item = None
 
     def disconnect(self):
@@ -140,15 +140,15 @@ class BrowserComponent(CompoundComponent):
         self._select_buttons = buttons
         buttons = buttons or (None, None, None, None, None, None, None, None)
         for component, button in izip(self._list_components, buttons[1::2]):
-            self._set_button_if_enabled(component, 'action_button', button)
+            self._set_button_if_enabled(component, u'action_button', button)
 
         for component, button in izip(self._list_components, buttons[::2]):
             if self.shift_button.is_pressed:
-                self._set_button_if_enabled(component, 'prev_page_button', button)
-                self._set_button_if_enabled(component, 'select_prev_button', None)
+                self._set_button_if_enabled(component, u'prev_page_button', button)
+                self._set_button_if_enabled(component, u'select_prev_button', None)
             else:
-                self._set_button_if_enabled(component, 'prev_page_button', None)
-                self._set_button_if_enabled(component, 'select_prev_button', button)
+                self._set_button_if_enabled(component, u'prev_page_button', None)
+                self._set_button_if_enabled(component, u'select_prev_button', button)
 
     def set_state_buttons(self, buttons):
         for button in buttons or []:
@@ -160,15 +160,15 @@ class BrowserComponent(CompoundComponent):
         buttons = buttons or (None, None, None, None, None, None, None, None)
         for component, button in izip(self._list_components, buttons[::2]):
             if self.shift_button.is_pressed:
-                self._set_button_if_enabled(component, 'next_page_button', button)
-                self._set_button_if_enabled(component, 'select_next_button', None)
+                self._set_button_if_enabled(component, u'next_page_button', button)
+                self._set_button_if_enabled(component, u'select_next_button', None)
             else:
-                self._set_button_if_enabled(component, 'next_page_button', None)
-                self._set_button_if_enabled(component, 'select_next_button', button)
+                self._set_button_if_enabled(component, u'next_page_button', None)
+                self._set_button_if_enabled(component, u'select_next_button', button)
 
         for button in buttons[1::2]:
             if button and self.is_enabled():
-                button.set_light('DefaultButton.Disabled')
+                button.set_light(u'DefaultButton.Disabled')
 
     @shift_button.value
     def shift_button(self, value, control):
@@ -182,7 +182,7 @@ class BrowserComponent(CompoundComponent):
         else:
             control.set_control_element(None)
             if button and self.is_enabled():
-                button.set_light('DefaultButton.Disabled')
+                button.set_light(u'DefaultButton.Disabled')
 
     def set_encoder_controls(self, encoder_controls):
         if encoder_controls:
@@ -246,7 +246,7 @@ class BrowserComponent(CompoundComponent):
         self.enter_button.enabled = self._scroll_offset < self._max_scroll_offset
 
     def _shorten_item_name(self, shortening_limit, list_index, item_name):
-        """
+        u"""
         Creates the name of an item shortened by removing words from the parents name
         """
 
@@ -272,19 +272,19 @@ class BrowserComponent(CompoundComponent):
         return item_name
 
     def _item_formatter(self, depth, index, item, action_in_progress):
-        display_string = ''
+        display_string = u''
         separator_length = len(self._data_sources[self.COLUMN_SIZE * depth].separator)
         shortening_limit = 16 - separator_length
         if item:
-            item_name = 'Loading...' if action_in_progress else self._shorten_item_name(shortening_limit, depth + self._scroll_offset, unicode(item))
-            display_string = consts.CHAR_SELECT if item and item.is_selected else ' '
+            item_name = u'Loading...' if action_in_progress else self._shorten_item_name(shortening_limit, depth + self._scroll_offset, unicode(item))
+            display_string = consts.CHAR_SELECT if item and item.is_selected else u' '
             display_string += item_name
             if depth == len(self._list_components) - 1 and item.is_selected and self._scroll_offset < self._max_hierarchy:
                 display_string = string.ljust(display_string, consts.DISPLAY_LENGTH / 4 - 1)
                 shortening_limit += 1
                 display_string = display_string[:shortening_limit] + consts.CHAR_ARROW_RIGHT
             if depth == 0 and self._scroll_offset > 0:
-                prefix = consts.CHAR_ARROW_LEFT if index == 0 else ' '
+                prefix = consts.CHAR_ARROW_LEFT if index == 0 else u' '
                 display_string = prefix + display_string
         return display_string[:shortening_limit + 1]
 
@@ -302,19 +302,19 @@ class BrowserComponent(CompoundComponent):
             self._browser.stop_preview()
         elif self._last_selected_item is not None:
             self._last_selected_item.preview()
-        self._preferences['browser_prehear'] = toggled
+        self._preferences[u'browser_prehear'] = toggled
 
-    @listens('hotswap_target')
+    @listens(u'hotswap_target')
     def _on_hotswap_target_changed(self):
         if not self._skip_next_preselection:
             self._set_scroll_offset(0)
         self._update_browser_model()
 
-    @listens('filter_type')
+    @listens(u'filter_type')
     def _on_filter_type_changed(self):
         self._update_browser_model()
 
-    @listens('full_refresh')
+    @listens(u'full_refresh')
     def _on_browser_full_refresh(self):
         self._browser_model_dirty = True
 
@@ -346,17 +346,17 @@ class BrowserComponent(CompoundComponent):
         self._skip_next_preselection = False
         self._browser_model_dirty = False
 
-    @listens_group('item_action')
+    @listens_group(u'item_action')
     def _on_list_item_action(self, item, _):
         self.notify_load_item(item.content)
 
-    @listens_group('selected_item')
+    @listens_group(u'selected_item')
     def _on_selected_item(self, item, _):
         if item is not None and self.prehear_button.is_toggled:
             item.preview()
         self._last_selected_item = item
 
-    @listens('selection_updated')
+    @listens(u'selection_updated')
     def _on_selection_updated(self, index):
         more_content_available = len(self._browser_model.content_lists) > self.NUM_COLUMNS + self._scroll_offset
         required_scroll_offset = index - (self.NUM_COLUMNS - 1)
@@ -364,7 +364,7 @@ class BrowserComponent(CompoundComponent):
             self._set_scroll_offset(self._scroll_offset + 1)
             self._browser_model.update_selection()
 
-    @listens('content_lists')
+    @listens(u'content_lists')
     def _on_content_lists_changed(self):
         self._last_selected_item = None
         components = self._list_components
@@ -393,7 +393,7 @@ class BrowserComponent(CompoundComponent):
         for idx, component in enumerate(head):
             offset = idx * self.COLUMN_SIZE
             sources = self._data_sources[offset:offset + self.COLUMN_SIZE]
-            set_data_sources_with_separator(component, sources, '|')
+            set_data_sources_with_separator(component, sources, u'|')
 
         if last:
             offset = num_head * self.COLUMN_SIZE
@@ -403,7 +403,7 @@ class BrowserComponent(CompoundComponent):
                 map(DisplayDataSource.clear, self._data_sources[offset + self.COLUMN_SIZE:])
             else:
                 sources = self._data_sources[offset:]
-            set_data_sources_with_separator(last[0], sources, '')
+            set_data_sources_with_separator(last[0], sources, u'')
             for component in last[1:]:
                 component.set_enabled(False)
 
@@ -412,14 +412,14 @@ class BrowserComponent(CompoundComponent):
         self.set_encoder_controls(self._encoder_controls)
         self._update_navigation_button_state()
 
-    @listens('value')
+    @listens(u'value')
     def _on_select_matrix_value(self, value, *_):
         pass
 
-    @listens('value')
+    @listens(u'value')
     def _on_state_matrix_value(self, value, *_):
         pass
 
-    @listens('value')
+    @listens(u'value')
     def _on_encoder_matrix_value(self, value, *_):
         pass

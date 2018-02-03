@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial
 from itertools import izip_longest
 from ...base import clamp, first, second, mixin, product, flatten, is_matrix, find_if
@@ -19,7 +19,7 @@ class ControlList(Control):
             self._control_type = control.control_type
             self._controls = []
             self._dynamic_create = False
-            self._unavailable_color = unavailable_color if unavailable_color is not None else 'DefaultButton.Disabled'
+            self._unavailable_color = unavailable_color if unavailable_color is not None else u'DefaultButton.Disabled'
             self._extra_args = a
             self._extra_kws = k
             self.control_count = control.control_count
@@ -66,10 +66,10 @@ class ControlList(Control):
             control = self._control_type(*self._extra_args, **self._extra_kws)
             control._event_listeners = self._event_listeners
             control_state = control._get_state(self._manager)
-            if not hasattr(control_state, 'index'):
+            if not hasattr(control_state, u'index'):
                 control_state.index = index
             else:
-                raise RuntimeError("Cannot set 'index' attribute. Attribute already set.")
+                raise RuntimeError(u"Cannot set 'index' attribute. Attribute already set.")
             return control
 
         def set_control_element(self, control_elements):
@@ -88,7 +88,7 @@ class ControlList(Control):
                     self._send_unavailable_color(element)
 
         def _send_unavailable_color(self, element):
-            if hasattr(element, 'set_light'):
+            if hasattr(element, u'set_light'):
                 element.set_light(self._unavailable_color)
 
         def __getitem__(self, index):
@@ -196,8 +196,8 @@ class MatrixControl(ControlList):
 
         def _make_control(self, index):
             control = super(MatrixControl.State, self)._make_control(index)
-            if hasattr(control._get_state(self._manager), 'coordinate'):
-                raise RuntimeError("Cannot set 'coordinate' attribute. Attribute already set.")
+            if hasattr(control._get_state(self._manager), u'coordinate'):
+                raise RuntimeError(u"Cannot set 'coordinate' attribute. Attribute already set.")
             return control
 
         def _update_coordinates(self):
@@ -207,7 +207,7 @@ class MatrixControl(ControlList):
 
         def set_control_element(self, control_elements):
             dimensions = (None, None)
-            if hasattr(control_elements, 'width') and hasattr(control_elements, 'height'):
+            if hasattr(control_elements, u'width') and hasattr(control_elements, u'height'):
                 dimensions = (control_elements.height(), control_elements.width())
                 if not self._dynamic_create:
                     control_elements = [ control_elements.get_button(row, col) for row, col in product(xrange(self.height), xrange(self.width)) ]
@@ -217,7 +217,7 @@ class MatrixControl(ControlList):
                     control_elements = [ row[0:self.width] for row in control_elements ]
                 control_elements = list(flatten(control_elements))
             elif control_elements is not None:
-                raise RuntimeError('Control Elements must be a matrix')
+                raise RuntimeError(u'Control Elements must be a matrix')
             if self._dynamic_create and None not in dimensions:
                 self._dimensions = dimensions
                 self._create_controls(first(dimensions) * second(dimensions))

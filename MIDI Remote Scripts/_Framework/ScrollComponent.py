@@ -1,12 +1,12 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from . import Defaults
 from . import Task
 from .Control import ButtonControl
 from .ControlSurfaceComponent import ControlSurfaceComponent
 
 class Scrollable(object):
-    """
+    u"""
     Abstract interface for an object that can be scrolled in discreet
     steps in one dimension.
     """
@@ -25,7 +25,7 @@ class Scrollable(object):
 
 
 class ScrollComponent(ControlSurfaceComponent, Scrollable):
-    """
+    u"""
     A component that handles scrolling behavior over a Scrollable
     with a pair of buttons.
     """
@@ -35,7 +35,7 @@ class ScrollComponent(ControlSurfaceComponent, Scrollable):
     default_scrollable = Scrollable()
     default_pager = Scrollable()
     _scrollable = default_scrollable
-    default_scroll_skin = dict(color='Enabled', pressed_color='Pressed', disabled_color=False)
+    default_scroll_skin = dict(color=u'Enabled', pressed_color=u'Pressed', disabled_color=False)
     scroll_up_button = ButtonControl(**default_scroll_skin)
     scroll_down_button = ButtonControl(**default_scroll_skin)
 

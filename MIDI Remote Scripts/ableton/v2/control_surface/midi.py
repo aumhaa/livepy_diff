@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from itertools import imap
 NOTE_ON_STATUS = 144
 NOTE_OFF_STATUS = 128
@@ -50,4 +50,4 @@ def extract_value(midi_bytes):
 
 def pretty_print_bytes(midi_bytes):
     hex_values = imap(hex, midi_bytes)
-    return ' '.join(hex_values)
+    return u' '.join(hex_values)

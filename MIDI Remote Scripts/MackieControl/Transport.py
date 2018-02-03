@@ -1,8 +1,9 @@
 
-from MackieControlComponent import *
+from __future__ import absolute_import, print_function, unicode_literals
+from .MackieControlComponent import *
 
 class Transport(MackieControlComponent):
-    """Representing the transport section of the Mackie Control: """
+    u"""Representing the transport section of the Mackie Control: """
 
     def __init__(self, main_script):
         MackieControlComponent.__init__(self, main_script)
@@ -28,7 +29,7 @@ class Transport(MackieControlComponent):
         self.song().add_punch_in_listener(self.__update_punch_in_button_led)
         self.song().add_can_jump_to_prev_cue_listener(self.__update_prev_cue_button_led)
         self.song().add_can_jump_to_next_cue_listener(self.__update_next_cue_button_led)
-        self.application().view.add_is_view_visible_listener('Session', self.__on_session_is_visible_changed)
+        self.application().view.add_is_view_visible_listener(u'Session', self.__on_session_is_visible_changed)
         self.refresh_state()
 
     def destroy(self):
@@ -39,7 +40,7 @@ class Transport(MackieControlComponent):
         self.song().remove_punch_in_listener(self.__update_punch_in_button_led)
         self.song().remove_can_jump_to_prev_cue_listener(self.__update_prev_cue_button_led)
         self.song().remove_can_jump_to_next_cue_listener(self.__update_next_cue_button_led)
-        self.application().view.remove_is_view_visible_listener('Session', self.__on_session_is_visible_changed)
+        self.application().view.remove_is_view_visible_listener(u'Session', self.__on_session_is_visible_changed)
         for note in transport_control_switch_ids:
             self.send_midi((NOTE_ON_STATUS, note, BUTTON_STATE_OFF))
 
@@ -79,7 +80,7 @@ class Transport(MackieControlComponent):
         self.__update_scrub_button_led()
 
     def session_is_visible(self):
-        return self.application().view.is_view_visible('Session')
+        return self.application().view.is_view_visible(u'Session')
 
     def selected_clip_slot(self):
         return self.song().view.highlighted_clip_slot
@@ -287,30 +288,30 @@ class Transport(MackieControlComponent):
     def __on_cursor_up_pressed(self):
         nav = Live.Application.Application.View.NavDirection
         if self.__zoom_button_down:
-            self.application().view.zoom_view(nav.up, '', self.alt_is_pressed())
+            self.application().view.zoom_view(nav.up, u'', self.alt_is_pressed())
         else:
-            self.application().view.scroll_view(nav.up, '', self.alt_is_pressed())
+            self.application().view.scroll_view(nav.up, u'', self.alt_is_pressed())
 
     def __on_cursor_down_pressed(self):
         nav = Live.Application.Application.View.NavDirection
         if self.__zoom_button_down:
-            self.application().view.zoom_view(nav.down, '', self.alt_is_pressed())
+            self.application().view.zoom_view(nav.down, u'', self.alt_is_pressed())
         else:
-            self.application().view.scroll_view(nav.down, '', self.alt_is_pressed())
+            self.application().view.scroll_view(nav.down, u'', self.alt_is_pressed())
 
     def __on_cursor_left_pressed(self):
         nav = Live.Application.Application.View.NavDirection
         if self.__zoom_button_down:
-            self.application().view.zoom_view(nav.left, '', self.alt_is_pressed())
+            self.application().view.zoom_view(nav.left, u'', self.alt_is_pressed())
         else:
-            self.application().view.scroll_view(nav.left, '', self.alt_is_pressed())
+            self.application().view.scroll_view(nav.left, u'', self.alt_is_pressed())
 
     def __on_cursor_right_pressed(self):
         nav = Live.Application.Application.View.NavDirection
         if self.__zoom_button_down:
-            self.application().view.zoom_view(nav.right, '', self.alt_is_pressed())
+            self.application().view.zoom_view(nav.right, u'', self.alt_is_pressed())
         else:
-            self.application().view.scroll_view(nav.right, '', self.alt_is_pressed())
+            self.application().view.scroll_view(nav.right, u'', self.alt_is_pressed())
 
     def __toggle_record(self):
         self.song().record_mode = not self.song().record_mode

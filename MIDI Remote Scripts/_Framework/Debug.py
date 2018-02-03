@@ -1,8 +1,8 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 enable_debug_output = True
 
 def debug_print(*a):
-    """ Special function for debug output """
+    u""" Special function for debug output """
     if enable_debug_output:
-        print(' '.join(map(str, a)))
+        print(u' '.join(map(str, a)))

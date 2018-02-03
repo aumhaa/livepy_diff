@@ -1,10 +1,11 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from _Framework.ButtonElement import ButtonElement
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
 from _Framework.SessionComponent import SessionComponent
-from SpecialMixerComponent import SpecialMixerComponent
-from PreciseButtonSliderElement import *
+from .SpecialMixerComponent import SpecialMixerComponent
+from .PreciseButtonSliderElement import *
 LED_OFF = 4
 RED_FULL = 7
 RED_HALF = 6
@@ -23,7 +24,7 @@ VOL_VALUE_MAP = (0.0, 0.142882, 0.302414, 0.4, 0.55, 0.7, 0.85, 1.0)
 SEND_VALUE_MAP = (0.0, 0.103536, 0.164219, 0.238439, 0.343664, 0.55, 0.774942, 1.0)
 
 class SubSelectorComponent(ModeSelectorComponent):
-    """ Class that handles different mixer modes """
+    u""" Class that handles different mixer modes """
 
     def __init__(self, matrix, side_buttons, session):
         raise isinstance(matrix, ButtonMatrixElement) or AssertionError
@@ -36,13 +37,13 @@ class SubSelectorComponent(ModeSelectorComponent):
         self._mixer = SpecialMixerComponent(matrix.width())
         self._matrix = matrix
         self._sliders = []
-        self._mixer.name = 'Mixer'
-        self._mixer.master_strip().name = 'Master_Channel_strip'
-        self._mixer.selected_strip().name = 'Selected_Channel_strip'
+        self._mixer.name = u'Mixer'
+        self._mixer.master_strip().name = u'Master_Channel_strip'
+        self._mixer.selected_strip().name = u'Selected_Channel_strip'
         for column in range(matrix.width()):
-            self._mixer.channel_strip(column).name = 'Channel_Strip_' + str(column)
+            self._mixer.channel_strip(column).name = u'Channel_Strip_' + str(column)
             self._sliders.append(PreciseButtonSliderElement(tuple([ matrix.get_button(column, 7 - row) for row in range(8) ])))
-            self._sliders[-1].name = 'Button_Slider_' + str(column)
+            self._sliders[-1].name = u'Button_Slider_' + str(column)
 
         self._side_buttons = side_buttons[4:]
         self._update_callback = None
@@ -66,7 +67,7 @@ class SubSelectorComponent(ModeSelectorComponent):
         ModeSelectorComponent.disconnect(self)
 
     def set_update_callback(self, callback):
-        raise dir(callback).count('im_func') is 1 or AssertionError
+        raise dir(callback).count(u'im_func') is 1 or AssertionError
         self._update_callback = callback
 
     def set_modes_buttons(self, buttons):

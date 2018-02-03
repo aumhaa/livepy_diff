@@ -1,12 +1,12 @@
 
-"""
+u"""
 Object that encapsulates selection in the Push controller.
 """
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import Live
 
 class Selection(object):
-    """
+    u"""
     Object that encapsulates selection.
     
     [jbo] The intent of this object is to grow its interface until no
@@ -18,42 +18,42 @@ class Selection(object):
 
     @property
     def selected_device(self):
-        """
+        u"""
         Device with the blue hand.
         """
         raise NotImplementedError
 
     @property
     def selected_object(self):
-        """
+        u"""
         Current object that is selected.
         """
         raise NotImplementedError
 
     @property
     def selected_track(self):
-        """
+        u"""
         Current track that is selected.
         """
         raise NotImplementedError
 
     @property
     def selected_scene(self):
-        """
+        u"""
         Current scene that is selected.
         """
         raise NotImplementedError
 
     @property
     def hotswap_target(self):
-        """
+        u"""
         Current object that is selected.
         """
         raise NotImplementedError
 
 
 class PushSelection(Selection):
-    """
+    u"""
     Push selection object.  So far it is read-only and just accesses
     the appropiate components.  Ideally we should refactor a bit and
     make all components set and query the selection via this object
@@ -90,7 +90,7 @@ class PushSelection(Selection):
 
     @property
     def hotswap_target(self):
-        """
+        u"""
         Current object that is selected.
         """
         return self._browser.hotswap_target

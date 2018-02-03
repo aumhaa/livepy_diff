@@ -1,13 +1,14 @@
 
+from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.SubjectSlot import Subject, subject_slot, subject_slot_group
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 
 class TargetTrackComponent(ControlSurfaceComponent, Subject):
-    """
+    u"""
     TargetTrackComponent handles determining the track to target for
     note mode-related functionality and notifying listeners.
     """
-    __subject_events__ = ('target_track',)
+    __subject_events__ = (u'target_track',)
     _target_track = None
     _armed_track_stack = []
 
@@ -24,14 +25,14 @@ class TargetTrackComponent(ControlSurfaceComponent, Subject):
         if not self._armed_track_stack:
             self._set_target_track()
 
-    @subject_slot('tracks')
+    @subject_slot(u'tracks')
     def _on_tracks_changed(self):
         tracks = filter(lambda t: t.can_be_armed and t.has_midi_input, self.song().tracks)
         self._on_arm_changed.replace_subjects(tracks)
         self._on_frozen_state_changed.replace_subjects(tracks)
         self._refresh_armed_track_stack(tracks)
 
-    @subject_slot_group('arm')
+    @subject_slot_group(u'arm')
     def _on_arm_changed(self, track):
         if track in self._armed_track_stack:
             self._armed_track_stack.remove(track)
@@ -41,7 +42,7 @@ class TargetTrackComponent(ControlSurfaceComponent, Subject):
         else:
             self._set_target_track()
 
-    @subject_slot_group('is_frozen')
+    @subject_slot_group(u'is_frozen')
     def _on_frozen_state_changed(self, track):
         if track in self._armed_track_stack:
             self._armed_track_stack.remove(track)

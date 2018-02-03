@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from itertools import izip, count
 import Live
 from ableton.v2.base import forward_property, listens, listens_group, liveobj_changed, liveobj_valid
@@ -15,15 +15,15 @@ _Q = Live.Song.Quantization
 
 def convert_length_to_mins_secs(length_in_secs):
     if length_in_secs is None:
-        return '-'
+        return u'-'
     mins = int(length_in_secs / 60.0)
     secs = int(length_in_secs % 60.0)
-    return str(mins) + ':' + str('%02d' % secs)
+    return str(mins) + u':' + str(u'%02d' % secs)
 
 
 def convert_beats_to_mins_secs(length_in_beats, tempo = 120.0):
     if length_in_beats is None:
-        return '-'
+        return u'-'
     length_in_secs = length_in_beats / tempo * 60.0
     return convert_length_to_mins_secs(length_in_secs)
 
@@ -91,7 +91,7 @@ class DuplicateLoopComponent(ActionWithSettingsComponent, Messenger):
         self._on_detail_clip_changed.subject = self.song.view
         self._on_detail_clip_changed()
 
-    @listens('detail_clip')
+    @listens(u'detail_clip')
     def _on_detail_clip_changed(self):
         self.action_button.enabled = self.can_duplicate_loop
 
@@ -112,7 +112,7 @@ class DuplicateLoopComponent(ActionWithSettingsComponent, Messenger):
 
 
 class DeleteSelectedClipComponent(ActionWithSettingsComponent, Messenger):
-    """
+    u"""
     Component that deletes the selected clip when tapping
     """
 
@@ -135,7 +135,7 @@ class DeleteSelectedClipComponent(ActionWithSettingsComponent, Messenger):
 
 
 class DeleteSelectedSceneComponent(ActionWithSettingsComponent, Messenger):
-    """
+    u"""
     Component for deleting the selected scene and launch the previous
     one in scene list mode
     """
@@ -155,7 +155,7 @@ class DeleteSelectedSceneComponent(ActionWithSettingsComponent, Messenger):
 
 
 class SelectionDisplayComponent(Component):
-    """
+    u"""
     This component handles display of selected objects.
     """
     num_segments = 4
@@ -176,11 +176,11 @@ class SelectionDisplayComponent(Component):
 
     def reset_display(self):
         for idx in xrange(self.num_segments):
-            self._data_sources[idx].set_display_string(' ')
+            self._data_sources[idx].set_display_string(u' ')
 
     def reset_display_right(self):
         for idx in xrange(self.num_segments / 2, self.num_segments):
-            self._data_sources[idx].set_display_string(' ')
+            self._data_sources[idx].set_display_string(u' ')
 
 
 def select_clip_and_get_name_from_slot(clip_slot, song):
@@ -193,32 +193,32 @@ def select_clip_and_get_name_from_slot(clip_slot, song):
 
 
 def get_clip_name(clip):
-    if clip.name != '':
+    if clip.name != u'':
         return clip.name
-    return '[unnamed]'
+    return u'[unnamed]'
 
 
 def clip_name_from_clip_slot(clip_slot):
-    clip_name = '[none]'
+    clip_name = u'[none]'
     if liveobj_valid(clip_slot):
         clip = clip_slot.clip
-        clip_name = '[empty slot]'
+        clip_name = u'[empty slot]'
         if liveobj_valid(clip):
             clip_name = get_clip_name(clip)
     return clip_name
 
 
 def select_scene_and_get_name(scene, song):
-    scene_name = '[none]'
+    scene_name = u'[none]'
     if liveobj_valid(scene):
         if song.view.selected_scene != scene:
             song.view.selected_scene = scene
-        scene_name = scene.name if scene.name != '' else '[unnamed]'
+        scene_name = scene.name if scene.name != u'' else u'[unnamed]'
     return scene_name
 
 
 class SelectComponent(CompoundComponent):
-    """
+    u"""
     This component handles selection of objects.
     """
     select_button = ButtonControl(**SIDE_BUTTON_COLORS)
@@ -229,7 +229,7 @@ class SelectComponent(CompoundComponent):
         self._selection_display = self.register_component(SelectionDisplayComponent())
         self._selection_display.set_enabled(False)
 
-    selection_display_layer = forward_property('_selection_display')('layer')
+    selection_display_layer = forward_property(u'_selection_display')(u'layer')
 
     def set_selected_clip(self, clip):
         self._selected_clip = clip
@@ -239,12 +239,12 @@ class SelectComponent(CompoundComponent):
         clip_name = select_clip_and_get_name_from_slot(clip_slot, self.song)
         if liveobj_valid(clip_slot):
             self.set_selected_clip(clip_slot.clip)
-        self._selection_display.set_display_string('Clip Selection:')
+        self._selection_display.set_display_string(u'Clip Selection:')
         self._selection_display.set_display_string(clip_name, 1)
         self._do_show_time_remaining()
         self._selection_display.set_enabled(True)
 
-    @listens('playing_position')
+    @listens(u'playing_position')
     def _on_playing_position_changed(self):
         self._do_show_time_remaining()
 
@@ -252,45 +252,45 @@ class SelectComponent(CompoundComponent):
         clip = self._selected_clip
         if liveobj_valid(clip) and (clip.is_triggered or clip.is_playing):
             if clip.is_recording:
-                label = 'Record Count:'
+                label = u'Record Count:'
                 length = (clip.playing_position - clip.loop_start) * clip.signature_denominator / clip.signature_numerator
                 time = convert_beat_length_to_bars_beats_sixteenths((clip.signature_numerator, clip.signature_denominator), length)
             else:
-                label = 'Time Remaining:'
+                label = u'Time Remaining:'
                 length = clip.loop_end - clip.playing_position
                 if clip.is_audio_clip and not clip.warping:
                     time = convert_length_to_mins_secs(length)
                 else:
                     time = convert_beats_to_mins_secs(length, self.song.tempo)
         else:
-            label = ' '
-            time = ' '
+            label = u' '
+            time = u' '
         self._selection_display.set_display_string(label, 2)
         self._selection_display.set_display_string(time, 3)
 
     def on_select_scene(self, scene):
         scene_name = select_scene_and_get_name(scene, self.song)
-        self._selection_display.set_display_string('Scene Selection:')
+        self._selection_display.set_display_string(u'Scene Selection:')
         self._selection_display.set_display_string(scene_name, 1)
         self._selection_display.reset_display_right()
         self._selection_display.set_enabled(True)
 
     def on_select_track(self, track):
         if liveobj_valid(track):
-            track_name = track.name if track.name != '' else '[unnamed]'
+            track_name = track.name if track.name != u'' else u'[unnamed]'
         else:
-            track_name = '[none]'
-        self._selection_display.set_display_string('Track Selection:')
+            track_name = u'[none]'
+        self._selection_display.set_display_string(u'Track Selection:')
         self._selection_display.set_display_string(track_name, 1)
         self._selection_display.reset_display_right()
         self._selection_display.set_enabled(True)
 
     def on_select_drum_pad(self, drum_pad):
         if liveobj_valid(drum_pad):
-            drum_pad_name = drum_pad.name if drum_pad.name != '' else '[unnamed]'
+            drum_pad_name = drum_pad.name if drum_pad.name != u'' else u'[unnamed]'
         else:
-            drum_pad_name = '[none]'
-        self._selection_display.set_display_string('Pad Selection:')
+            drum_pad_name = u'[none]'
+        self._selection_display.set_display_string(u'Pad Selection:')
         self._selection_display.set_display_string(drum_pad_name, 1)
         self._selection_display.reset_display_right()
         self._selection_display.set_enabled(True)
@@ -303,7 +303,7 @@ class SelectComponent(CompoundComponent):
 
 
 class DeleteComponent(Component, Messenger):
-    """
+    u"""
     Component for handling deletion of parameters
     """
 
@@ -328,7 +328,7 @@ class DeleteComponent(Component, Messenger):
         playing_clip = None
         song = self.song
         selected_track = song.view.selected_track
-        if hasattr(selected_track, 'playing_slot_index'):
+        if hasattr(selected_track, u'playing_slot_index'):
             playing_slot_index = selected_track.playing_slot_index
             if playing_slot_index >= 0:
                 playing_clip = selected_track.clip_slots[playing_slot_index].clip
@@ -350,7 +350,7 @@ def is_clip_stop_pending(track):
 
 class StopClipComponent(Component):
     stop_all_clips_button = ButtonControl()
-    stop_track_clips_buttons = control_list(ButtonControl, color='Session.StoppedClip')
+    stop_track_clips_buttons = control_list(ButtonControl, color=u'Session.StoppedClip')
 
     def __init__(self, session_ring = None, *a, **k):
         super(StopClipComponent, self).__init__(*a, **k)
@@ -359,7 +359,7 @@ class StopClipComponent(Component):
         self._on_track_offset_changed.subject = self._track_provider
         self._update_listeners()
 
-    @listens('offset')
+    @listens(u'offset')
     def _on_track_offset_changed(self, track_offset, scene_offset):
         self._update_all_stop_buttons()
 
@@ -374,7 +374,7 @@ class StopClipComponent(Component):
     def _stop_clips_in_track(self, track):
         track.stop_all_clips()
 
-    @listens('tracks')
+    @listens(u'tracks')
     def _on_tracks_changed(self):
         self._update_listeners()
 
@@ -387,11 +387,11 @@ class StopClipComponent(Component):
         self._on_fired_slot_index_changed.replace_subjects(tracks, count())
         self._on_playing_slot_index_changed.replace_subjects(tracks, count())
 
-    @listens_group('fired_slot_index')
+    @listens_group(u'fired_slot_index')
     def _on_fired_slot_index_changed(self, track_index):
         self._update_stop_button_by_index(track_index)
 
-    @listens_group('playing_slot_index')
+    @listens_group(u'playing_slot_index')
     def _on_playing_slot_index_changed(self, track_index):
         self._update_stop_button_by_index(track_index)
 
@@ -407,11 +407,11 @@ class StopClipComponent(Component):
 
     def _color_for_button(self, track):
         if is_clip_stop_pending(track):
-            color = 'Session.StopClipTriggered'
+            color = u'Session.StopClipTriggered'
         elif track.playing_slot_index >= 0:
-            color = 'Session.StopClip'
+            color = u'Session.StopClip'
         else:
-            color = 'Session.StoppedClip'
+            color = u'Session.StoppedClip'
         return color
 
     def _update_stop_button(self, track, button):

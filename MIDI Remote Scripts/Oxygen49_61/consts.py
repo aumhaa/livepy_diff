@@ -1,6 +1,5 @@
 
-""" The following consts should be substituted with the Sys Ex messages for requesting
-a controller's ID response and that response to allow for automatic lookup"""
+from __future__ import absolute_import, print_function, unicode_literals
 ID_REQUEST = 0
 ID_RESP = 0
 GENERIC_STOP = 23

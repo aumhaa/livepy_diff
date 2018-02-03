@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import const, in_range
 from ableton.v2.control_surface import Skin, SkinColorMissingError
 from ableton.v2.control_surface.elements import ButtonElement, ON_VALUE, OFF_VALUE
@@ -7,7 +7,7 @@ from .colors import Basic
 from .matrix_maps import NON_FEEDBACK_CHANNEL
 
 class ConfigurableButtonElement(ButtonElement):
-    """
+    u"""
     Special button class that can be configured with custom on-
     and off-values.
     
@@ -25,8 +25,8 @@ class ConfigurableButtonElement(ButtonElement):
             Alert = Basic.FULL_BLINK_FAST
 
     default_skin = Skin(Colors)
-    default_states = {True: 'DefaultButton.On',
-     False: 'DefaultButton.Off'}
+    default_states = {True: u'DefaultButton.On',
+     False: u'DefaultButton.Off'}
     num_delayed_messages = 2
     send_depends_on_forwarding = False
 
@@ -63,7 +63,7 @@ class ConfigurableButtonElement(ButtonElement):
 
     def reset(self):
         self.states = dict(self.default_states)
-        self.set_light('DefaultButton.Disabled')
+        self.set_light(u'DefaultButton.Disabled')
         self.set_identifier(self._original_identifier)
         self.set_channel(NON_FEEDBACK_CHANNEL)
         self.set_enabled(True)
@@ -110,7 +110,7 @@ class ConfigurableButtonElement(ButtonElement):
 
 
 class PadButtonElement(ConfigurableButtonElement):
-    """
+    u"""
     Button element for holding Push pressure-sensitive pad. The pad_id
     parameter defines the Pad coordine id used in the sysex protocol.
     """
@@ -121,7 +121,7 @@ class PadButtonElement(ConfigurableButtonElement):
     def __init__(self, pad_id = None, pad_sensitivity_update = None, *a, **k):
         raise pad_id is not None or AssertionError
         super(PadButtonElement, self).__init__(*a, **k)
-        self._sensitivity_profile = 'default'
+        self._sensitivity_profile = u'default'
         self._pad_id = pad_id
         self._pad_sensitivity_update = pad_sensitivity_update
 
@@ -136,5 +136,5 @@ class PadButtonElement(ConfigurableButtonElement):
     sensitivity_profile = property(_get_sensitivity_profile, _set_sensitivity_profile)
 
     def reset(self):
-        self.sensitivity_profile = 'default'
+        self.sensitivity_profile = u'default'
         super(PadButtonElement, self).reset()
