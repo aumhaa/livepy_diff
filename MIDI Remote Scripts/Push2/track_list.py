@@ -142,10 +142,7 @@ class TrackListComponent(ModesComponent, Messenger):
         self.__on_is_playing_changed.subject = self.song
         self._update_track_and_chain_listeners()
         self._update_playheads_real_time_data()
-<<<<<<< HEAD
-=======
         self._update_realtime_channels_ability()
->>>>>>> master
 
     @listenable_property
     def playhead_real_time_channels(self):
@@ -167,15 +164,9 @@ class TrackListComponent(ModesComponent, Messenger):
         return list(tracks).index(selected_track)
 
     def _setup_action_mode(self, name, handler, exit_handler = nop, feedback_provider = mixable_button_color):
-<<<<<<< HEAD
-        self.add_mode(name, [(partial(self._enter_action_mode, handler=handler, feedback_provider=feedback_provider), exit_handler)] + self._playheads_real_time_data, behaviour=TrackListBehaviour())
-        self.get_mode_button(name).mode_selected_color = 'DefaultButton.Transparent'
-        self.get_mode_button(name).mode_unselected_color = 'DefaultButton.Transparent'
-=======
         self.add_mode(name, [(partial(self._enter_action_mode, handler=handler, feedback_provider=feedback_provider), exit_handler)], behaviour=TrackListBehaviour())
         self.get_mode_button(name).mode_selected_color = u'DefaultButton.Transparent'
         self.get_mode_button(name).mode_unselected_color = u'DefaultButton.Transparent'
->>>>>>> alpha
 
     def _enter_action_mode(self, handler, feedback_provider):
         self._button_handler = handler
@@ -210,30 +201,15 @@ class TrackListComponent(ModesComponent, Messenger):
         self._update_track_and_chain_listeners()
         self._update_playheads_real_time_data()
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-    @listens('is_playing')
-    def __on_is_playing_changed(self):
-        self._update_playheads_real_time_data()
-
->>>>>>> master
-    @listens_group('is_frozen')
-=======
     @listens(u'is_playing')
     def __on_is_playing_changed(self):
         self._update_playheads_real_time_data()
 
     @listens_group(u'is_frozen')
->>>>>>> alpha
     def __on_track_is_frozen_state_changed(self, track):
         self._update_all_button_colors()
 
     def _update_playheads_real_time_data(self):
-<<<<<<< HEAD
-        for track, real_time_data in zip(self.tracks, self._playheads_real_time_data):
-            real_time_data.set_data(self._playing_clip(track))
-=======
         if self.song.is_playing:
             for track, real_time_data in zip(self.tracks, self._playheads_real_time_data):
                 real_time_data.set_data(playing_clip(track))
@@ -241,7 +217,6 @@ class TrackListComponent(ModesComponent, Messenger):
         else:
             for track, real_time_data in zip(self.tracks, self._playheads_real_time_data):
                 real_time_data.set_data(None)
->>>>>>> master
 
         self.notify_playhead_real_time_channels()
 

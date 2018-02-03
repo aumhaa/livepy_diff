@@ -1,7 +1,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 from Live import DeviceParameter
-from ableton.v2.base import listenable_property, liveobj_valid, nop, EventError, EventObject, forward_property, Proxy, Slot
+from ableton.v2.base import clamp, listenable_property, liveobj_valid, nop, EventError, EventObject, forward_property, Proxy, Slot
 
 def identity(value, _parent):
     return value
@@ -373,25 +373,29 @@ class ProxyParameter(Proxy):
 
 class IntegerParameter(InternalParameter):
 
-    def __init__(self, integer_value_host = None, integer_value_property_name = None, min_value = None, max_value = None, *a, **k):
+    def __init__(self, integer_value_host = None, integer_value_property_name = None, min_value = None, max_value = None, show_as_quantized = False, *a, **k):
         super(IntegerParameter, self).__init__(display_value_conversion=unicode, *a, **k)
         self._integer_value_host = integer_value_host
         self._integer_value_property_name = integer_value_property_name
         self._min_value = min_value if min_value is not None else 0
         self._max_value = max_value if max_value is not None else 1
-        self._value = self._get_integer_value()
+        self._show_as_quantized = show_as_quantized
+        self._value = self._get_value()
         try:
             self.register_slot(integer_value_host, self.notify_value, integer_value_property_name)
         except EventError:
             pass
 
     def _get_value(self):
-        return self._get_integer_value()
+        value = self._get_integer_value()
+        if self._show_as_quantized:
+            return self._index_from_value(value)
+        return value
 
     def _set_value(self, new_value):
         if new_value != self._value:
             self._value = new_value
-            self._set_integer_value(new_value)
+            self._set_integer_value(self._index_to_value(new_value) if self._show_as_quantized else new_value)
 
     value = property(_get_value, _set_value)
 
@@ -410,16 +414,42 @@ class IntegerParameter(InternalParameter):
     def _get_integer_value(self):
         if liveobj_valid(self._integer_value_host):
             return getattr(self._integer_value_host, self._integer_value_property_name)
-        return self.min
+        return self._min_value
 
     def _set_integer_value(self, new_value):
-        raise self.min <= new_value <= self.max or AssertionError(u'Invalid value {}'.format(new_value))
+        raise self._min_value <= new_value <= self._max_value or AssertionError(u'Invalid value {}'.format(new_value))
         setattr(self._integer_value_host, self._integer_value_property_name, int(new_value))
+
+    def _index_to_value(self, index):
+        return clamp(self._min_value, index + self._min_value, self._max_value)
+
+    def _index_from_value(self, value):
+        return clamp(self._min_index, value - self._min_value, self._max_index)
+
+    @property
+    def _min_index(self):
+        return 0
+
+    @property
+    def _max_index(self):
+        return self._max_value - self._min_value
 
     @property
     def min(self):
+        if self._show_as_quantized:
+            return self._min_index
         return self._min_value
 
     @property
     def max(self):
+        if self._show_as_quantized:
+            return self._max_index
         return self._max_value
+
+    @property
+    def is_quantized(self):
+        return self._show_as_quantized
+
+    @property
+    def value_items(self):
+        return range(self._min_value, self._max_value + 1)

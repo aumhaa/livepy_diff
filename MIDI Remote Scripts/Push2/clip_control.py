@@ -813,9 +813,9 @@ class MidiClipControllerComponent(CompoundComponent):
             color = COLOR_INDEX_TO_SCREEN_COLOR[self.clip.color_index]
             view_data[u'ClipColor'] = color.as_remote_script_color()
             view_data[u'PageIndex'] = self._most_recent_page_index
-            view_data[u'PageLength'] = self._most_recent_page_length
+            view_data[u'PageLength'] = float(self._most_recent_page_length)
             view_data[u'RowStartTimes'] = make_vector(self._most_recent_row_start_times)
-            view_data[u'StepLength'] = self._most_recent_step_length
+            view_data[u'StepLength'] = float(self._most_recent_step_length)
             self._update_grid_window_pitch_range(view_data)
             self._update_minimum_pitch(view_data)
             self._update_maximum_sequenceable_pitch(view_data)
@@ -824,8 +824,8 @@ class MidiClipControllerComponent(CompoundComponent):
             view_data[u'IsRecording'] = liveobj_valid(self.clip) and self.clip.is_recording and not self.clip.is_overdubbing
             if hasattr(self.clip, u'zoom'):
                 visible_region = self.clip.zoom.visible_region
-                view_data[u'DisplayStartTime'] = visible_region.start
-                view_data[u'DisplayEndTime'] = visible_region.end
+                view_data[u'DisplayStartTime'] = float(visible_region.start)
+                view_data[u'DisplayEndTime'] = float(visible_region.end)
             if hasattr(self.clip, u'timeline_navigation'):
                 focus_marker = self.clip.timeline_navigation.focus_marker
                 view_data[u'FocusMarkerName'] = focus_marker.name

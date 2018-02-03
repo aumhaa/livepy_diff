@@ -1,31 +1,13 @@
 
-<<<<<<< HEAD
-from __future__ import absolute_import, print_function
-<<<<<<< HEAD
-from itertools import izip_longest
-import Live
-=======
->>>>>>> master
-=======
 from __future__ import absolute_import, print_function, unicode_literals
->>>>>>> alpha
 from ableton.v2.base import clamp, depends, listens, liveobj_valid
 from ableton.v2.control_surface import CompoundComponent
-from ableton.v2.control_surface.mode import ModesComponent
 from ableton.v2.control_surface.control import control_list, ButtonControl
 from pushbase.mapped_control import MappedControl
 from pushbase.mixer_utils import has_pan_mode, is_set_to_split_stereo
 from .real_time_channel import RealTimeDataComponent
 from .item_lister_component import SimpleItemSlot
-<<<<<<< HEAD
-from .mixer_control_component import find_parent_track, assign_parameters
-=======
 from .mixer_control_component import assign_parameters
-<<<<<<< HEAD
->>>>>>> master
-MAX_RETURN_TRACKS = 6
-=======
->>>>>>> alpha
 
 class TrackMixerControlComponent(CompoundComponent):
     __events__ = (u'parameters', u'scroll_offset', u'items')

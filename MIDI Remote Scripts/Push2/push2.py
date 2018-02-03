@@ -601,19 +601,9 @@ class Push2(IdentifiableControlSurface, PushBase):
     def _create_main_mixer_modes(self):
         self._mixer_control = MixerControlComponent(name=u'Global_Mix_Component', view_model=self._model.mixerView, tracks_provider=self._session_ring, is_enabled=False, layer=Layer(controls=u'fine_grain_param_controls', volume_button=u'track_state_buttons_raw[0]', panning_button=u'track_state_buttons_raw[1]', send_slot_one_button=u'track_state_buttons_raw[2]', send_slot_two_button=u'track_state_buttons_raw[3]', send_slot_three_button=u'track_state_buttons_raw[4]', send_slot_four_button=u'track_state_buttons_raw[5]', send_slot_five_button=u'track_state_buttons_raw[6]', cycle_sends_button=u'track_state_buttons_raw[7]'))
         self._model.mixerView.realtimeMeterData = self._mixer_control.real_time_meter_handlers
-<<<<<<< HEAD
-        track_mixer_control = TrackMixerControlComponent(name='Track_Mix_Component', is_enabled=False, tracks_provider=self._session_ring, layer=Layer(controls='fine_grain_param_controls', scroll_left_button='track_state_buttons_raw[6]', scroll_right_button='track_state_buttons_raw[7]'))
-<<<<<<< HEAD
-        routing_control = RoutingControlComponent(is_enabled=False, layer=Layer(monitor_state_encoder='parameter_controls_raw[0]', input_output_choice_encoder='parameter_controls_raw[1]', routing_target_encoder='parameter_controls_raw[2]', routing_sub_target_encoders=self.elements.global_param_controls.submatrix[3:7, :], routing_channel_position_encoder='parameter_controls_raw[7]'))
-=======
-        routing_control = RoutingControlComponent(is_enabled=False, layer=Layer(monitor_state_encoder='parameter_controls_raw[0]', input_output_choice_encoder='parameter_controls_raw[1]', routing_type_encoder='parameter_controls_raw[2]', routing_channel_encoders=self.elements.global_param_controls.submatrix[3:7, :], routing_channel_position_encoder='parameter_controls_raw[7]'))
->>>>>>> master
-        track_mix_or_routing_chooser = TrackOrRoutingControlChooserComponent(tracks_provider=self._session_ring, track_mixer_component=track_mixer_control, routing_control_component=routing_control, is_enabled=False, layer=Layer(mix_button='track_state_buttons_raw[0]', routing_button='track_state_buttons_raw[1]'))
-=======
         track_mixer_control = TrackMixerControlComponent(name=u'Track_Mix_Component', is_enabled=False, tracks_provider=self._session_ring, layer=Layer(controls=u'fine_grain_param_controls', scroll_left_button=u'track_state_buttons_raw[6]', scroll_right_button=u'track_state_buttons_raw[7]'))
         routing_control = RoutingControlComponent(is_enabled=False, layer=Layer(monitor_state_encoder=u'parameter_controls_raw[0]', input_output_choice_encoder=u'parameter_controls_raw[1]', routing_type_encoder=u'parameter_controls_raw[2]', routing_channel_encoders=self.elements.global_param_controls.submatrix[3:7, :], routing_channel_position_encoder=u'parameter_controls_raw[7]'))
         track_mix_or_routing_chooser = TrackOrRoutingControlChooserComponent(tracks_provider=self._session_ring, track_mixer_component=track_mixer_control, routing_control_component=routing_control, is_enabled=False, layer=Layer(mix_button=u'track_state_buttons_raw[0]', routing_button=u'track_state_buttons_raw[1]'))
->>>>>>> alpha
         self._model.mixerView.trackControlView = track_mix_or_routing_chooser
         self._mix_modes = ModesComponent(is_enabled=False)
         self._mix_modes.add_mode(u'global', self._mixer_control)

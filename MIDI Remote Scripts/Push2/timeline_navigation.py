@@ -141,7 +141,7 @@ class TimelineNavigation(EventObject):
     u""" Class for managing a visible area of a timeline """
     visible_region = listenable_property.managed(Region(0, 1))
     animate_visible_region = listenable_property.managed(False)
-    focus_marker = listenable_property.managed(FocusMarker(u'', 0))
+    focus_marker = listenable_property.managed(FocusMarker(u'', 0.0))
     show_focus = listenable_property.managed(False)
     ZOOM_SENSITIVITY = 1.5
     TIMELINE_WIDTH_IN_PX = 933
@@ -445,7 +445,7 @@ class TimelineNavigation(EventObject):
             self.set_visible_region(self._add_margin_to_region(new_region), source_action=u'show_objects %r' % identifiers)
             self._request_select_region = True
             self._locked_roi = None
-        self.focus_marker = FocusMarker(u'', 0)
+        self.focus_marker = FocusMarker(u'', 0.0)
 
     def _focus_object_by_identifier(self, identifier, animate = False):
         u""" Focuses the object in the timeline and brings it into the visible range.

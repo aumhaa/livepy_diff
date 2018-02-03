@@ -44,10 +44,6 @@ class FixedLengthRecording(EventObject):
         self._song = song
         self._clip_creator = clip_creator
         self._fixed_length_setting = fixed_length_setting
-<<<<<<< HEAD
-        self._clip_creator.fixed_length = 8.0
-=======
->>>>>>> master
         self._clip_creator.legato_launch = self._fixed_length_setting.legato_launch
         self.__on_setting_selected_index_changes.subject = self._fixed_length_setting
         self.__on_setting_legato_launch_changes.subject = self._fixed_length_setting
@@ -134,11 +130,6 @@ class FixedLengthSessionRecordingComponent(SessionRecordingComponent, Messenger)
             pass
 
     @arrangement_record_button.pressed
-<<<<<<< HEAD
-    def arrangement_record_button(self, button):
-        self._toggle_arrangement_recording()
-
-=======
     def arrangement_record_button(self, _):
         self._on_arrangement_record_button_pressed()
 
@@ -161,16 +152,10 @@ class FixedLengthSessionRecordingComponent(SessionRecordingComponent, Messenger)
     def _on_arrangement_record_button_released(self):
         self._trigger_recording_action(self._toggle_arrangement_recording)
 
-<<<<<<< HEAD
->>>>>>> master
-    def _toggle_arrangement_recording(self):
-        self.song.record_mode = not self.song.record_mode
-=======
     def _trigger_recording_action(self, recording_action):
         if self._should_trigger_recording:
             recording_action()
         self._should_trigger_recording = True
->>>>>>> alpha
 
     def _clip_slot_index_to_record_into(self):
         song = self.song
