@@ -8,17 +8,16 @@ import weakref
 import Live
 import MidiRemoteScript
 from ableton.v2.base import const, inject, listens, listens_group, task, EventObject, NamedTuple
-from ableton.v2.control_surface import BackgroundLayer, Component, IdentifiableControlSurface, Layer, get_element
+from ableton.v2.control_surface import BackgroundLayer, Component, IdentifiableControlSurface, Layer, get_element, find_instrument_meeting_requirement
 from ableton.v2.control_surface.control import ButtonControl
 from ableton.v2.control_surface.defaults import TIMER_DELAY
 from ableton.v2.control_surface.elements import ButtonMatrixElement, ComboElement, SysexElement
-from ableton.v2.control_surface.mode import EnablingModesComponent, ModesComponent, LayerMode, LazyComponentMode, ReenterBehaviour, SetAttributeMode
+from ableton.v2.control_surface.mode import EnablingModesComponent, ModesComponent, LayerMode, LazyEnablingMode, ReenterBehaviour, SetAttributeMode
 from pushbase.actions import select_clip_and_get_name_from_slot, select_scene_and_get_name
 from pushbase.device_parameter_component import DeviceParameterComponentBase as DeviceParameterComponent
 from pushbase.pad_sensitivity import PadUpdateComponent
 from pushbase.quantization_component import QUANTIZATION_NAMES_UNICODE, QuantizationComponent, QuantizationSettingsComponent
 from pushbase.selection import PushSelection
-from pushbase.percussion_instrument_finder import find_drum_group_device
 from pushbase import consts
 from pushbase.push_base import PushBase, NUM_TRACKS, NUM_SCENES
 from pushbase.track_frozen_mode import TrackFrozenModesComponent
@@ -416,9 +415,9 @@ class Push2(IdentifiableControlSurface, PushBase):
     def _init_browse_mode(self):
         application = Live.Application.get_application()
         browser = application.browser
-        self._main_modes.add_mode('browse', [BrowseMode(application=application, song=self.song, browser=browser, drum_group_component=self._drum_component, component_mode=self._browser_component_mode)], behaviour=BrowserModeBehaviour())
-        self._main_modes.add_mode('add_device', [AddDeviceMode(application=application, song=self.song, browser=browser, drum_group_component=self._drum_component, component_mode=self._browser_component_mode)], behaviour=BrowserModeBehaviour())
-        self._main_modes.add_mode('add_track', [AddTrackMode(browser=browser, component_mode=self._new_track_browser_component_mode)], behaviour=BrowserModeBehaviour())
+        self._main_modes.add_mode('browse', [BrowseMode(application=application, song=self.song, browser=browser, drum_group_component=self._drum_component, enabling_mode=self._browser_component_mode)], behaviour=BrowserModeBehaviour())
+        self._main_modes.add_mode('add_device', [AddDeviceMode(application=application, song=self.song, browser=browser, drum_group_component=self._drum_component, enabling_mode=self._browser_component_mode)], behaviour=BrowserModeBehaviour())
+        self._main_modes.add_mode('add_track', [AddTrackMode(browser=browser, enabling_mode=self._new_track_browser_component_mode)], behaviour=BrowserModeBehaviour())
 
     def _create_browser_layer(self):
         return (BackgroundLayer('select_buttons', 'track_state_buttons', priority=consts.DIALOG_PRIORITY), Layer(up_button='nav_up_button', down_button='nav_down_button', right_button='nav_right_button', left_button='nav_left_button', back_button='track_state_buttons_raw[-2]', open_button='track_state_buttons_raw[-1]', load_button='select_buttons_raw[-1]', scroll_encoders=self.elements.global_param_controls.submatrix[:-1, :], scroll_focused_encoder='parameter_controls_raw[-1]', close_button='track_state_buttons_raw[0]', prehear_button='track_state_buttons_raw[1]', priority=consts.DIALOG_PRIORITY))
@@ -444,7 +443,7 @@ class Push2(IdentifiableControlSurface, PushBase):
             browser = Live.Application.get_application().browser
             if browser.hotswap_target is None:
                 self._main_modes.selected_mode = 'device'
-            drum_rack = find_drum_group_device(self.song.view.selected_track)
+            drum_rack = find_instrument_meeting_requirement(lambda i: i.can_have_drum_pads, self.song.view.selected_track)
             if drum_rack and is_empty_rack(drum_rack):
                 self._device_navigation.request_drum_pad_selection()
             if drum_rack and self._device_navigation.is_drum_pad_selected:
@@ -564,7 +563,7 @@ class Push2(IdentifiableControlSurface, PushBase):
 
     def _init_dialog_modes(self):
         self._dialog_modes = ModesComponent(is_root=True)
-        self._dialog_modes.add_mode('convert', LazyComponentMode(self._create_convert))
+        self._dialog_modes.add_mode('convert', LazyEnablingMode(self._create_convert))
         self.__dialog_mode_button_value.replace_subjects([self.elements.scale_presets_button, self.elements.convert_button])
 
     @listens_group('value')
@@ -630,7 +629,7 @@ class Push2(IdentifiableControlSurface, PushBase):
         return Layer(mix_button='mix_button', clip_button='clip_mode_button', device_button='device_mode_button', browse_button='browse_mode_button', add_device_button='create_device_button', add_track_button='create_track_button') + Layer(user_button='user_button', priority=consts.USER_BUTTON_PRIORITY)
 
     def _should_send_palette(self):
-        return self._firmware_version < FirmwareVersion(1, 0, 59)
+        return self._firmware_version < FirmwareVersion(1, 0, 59) or self._firmware_version > FirmwareVersion(1, 0, 62)
 
     def _send_color_palette(self):
         if self._should_send_palette():

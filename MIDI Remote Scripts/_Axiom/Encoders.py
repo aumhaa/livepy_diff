@@ -111,9 +111,8 @@ class Encoders:
                 self.__parent.request_rebuild_midi_map()
 
     def set_appointed_device(self, device):
-        if self.__device_locked:
-            self.__device_locked = False
-        self.__change_appointed_device(device)
+        if not self.__device_locked:
+            self.__change_appointed_device(device)
 
     def set_bank(self, new_bank):
         result = False

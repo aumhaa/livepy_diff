@@ -7,7 +7,7 @@ from ableton.v2.base import task, nop, listens, listens_group, mixin, get_slice
 from ableton.v2.control_surface import BackgroundLayer, Layer
 from ableton.v2.control_surface.defaults import TIMER_DELAY
 from ableton.v2.control_surface.elements import ComboElement
-from ableton.v2.control_surface.mode import AddLayerMode, EnablingModesComponent, LazyComponentMode, ModesComponent, ReenterBehaviour
+from ableton.v2.control_surface.mode import AddLayerMode, EnablingModesComponent, LazyEnablingMode, ModesComponent, ReenterBehaviour
 from pushbase import consts
 from pushbase.actions import SelectComponent, StopClipComponent
 from pushbase.colors import CLIP_COLOR_TABLE, RGB_COLOR_TABLE
@@ -251,7 +251,7 @@ class Push(PushBase):
         class BrowserMode(MultiEntryMode):
 
             def __init__(self, create_browser = nop, *a, **k):
-                super(BrowserMode, self).__init__(LazyComponentMode(create_browser), *a, **k)
+                super(BrowserMode, self).__init__(LazyEnablingMode(create_browser), *a, **k)
 
             def enter_mode(browser_mode_self):
                 super(BrowserMode, browser_mode_self).enter_mode()
@@ -259,7 +259,7 @@ class Push(PushBase):
 
             @property
             def component(self):
-                return self._mode.component
+                return self._mode.enableable
 
         self._browser_mode = BrowserMode(self._create_browser)
         self._browser_hotswap_mode = MultiEntryMode(BrowserHotswapMode(application=self.application))
@@ -267,10 +267,10 @@ class Push(PushBase):
 
     def _init_browse_mode(self):
         self._main_modes.add_mode('browse', [self._when_track_is_not_frozen(self._enable_stop_mute_solo_as_modifiers, partial(self._view_control.show_view, 'Browser'), self._browser_back_to_top, self._browser_hotswap_mode, self._browser_mode, self._browser_reset_load_memory)], groups=['add_effect', 'add_track', 'browse'], behaviour=mixin(DynamicBehaviourMixin, CancellableBehaviour)(lambda : not self._browser_hotswap_mode._mode.can_hotswap() and 'add_effect_left'))
-        self._main_modes.add_mode('add_effect_right', [self._when_track_is_not_frozen(self._enable_stop_mute_solo_as_modifiers, self._browser_back_to_top, LazyComponentMode(self._create_create_device_right))], behaviour=mixin(ExcludingBehaviourMixin, CancellableBehaviour)(['add_track', 'browse']), groups=['add_effect'])
-        self._main_modes.add_mode('add_effect_left', [self._when_track_is_not_frozen(self._enable_stop_mute_solo_as_modifiers, self._browser_back_to_top, LazyComponentMode(self._create_create_device_left))], behaviour=mixin(ExcludingBehaviourMixin, CancellableBehaviour)(['add_track', 'browse']), groups=['add_effect'])
-        self._main_modes.add_mode('add_instrument_track', [self._enable_stop_mute_solo_as_modifiers, self._browser_back_to_top, LazyComponentMode(self._create_create_instrument_track)], behaviour=mixin(ExcludingBehaviourMixin, AlternativeBehaviour)(excluded_groups=['browse', 'add_effect'], alternative_mode='add_default_track'), groups=['add_track'])
-        self._main_modes.add_mode('add_default_track', [self._enable_stop_mute_solo_as_modifiers, self._browser_back_to_top, LazyComponentMode(self._create_create_default_track)], groups=['add_track'])
+        self._main_modes.add_mode('add_effect_right', [self._when_track_is_not_frozen(self._enable_stop_mute_solo_as_modifiers, self._browser_back_to_top, LazyEnablingMode(self._create_create_device_right))], behaviour=mixin(ExcludingBehaviourMixin, CancellableBehaviour)(['add_track', 'browse']), groups=['add_effect'])
+        self._main_modes.add_mode('add_effect_left', [self._when_track_is_not_frozen(self._enable_stop_mute_solo_as_modifiers, self._browser_back_to_top, LazyEnablingMode(self._create_create_device_left))], behaviour=mixin(ExcludingBehaviourMixin, CancellableBehaviour)(['add_track', 'browse']), groups=['add_effect'])
+        self._main_modes.add_mode('add_instrument_track', [self._enable_stop_mute_solo_as_modifiers, self._browser_back_to_top, LazyEnablingMode(self._create_create_instrument_track)], behaviour=mixin(ExcludingBehaviourMixin, AlternativeBehaviour)(excluded_groups=['browse', 'add_effect'], alternative_mode='add_default_track'), groups=['add_track'])
+        self._main_modes.add_mode('add_default_track', [self._enable_stop_mute_solo_as_modifiers, self._browser_back_to_top, LazyEnablingMode(self._create_create_default_track)], groups=['add_track'])
         self._main_modes.add_effect_right_button.mode_unselected_color = self._main_modes.add_effect_left_button.mode_unselected_color = self._main_modes.add_instrument_track_button.mode_unselected_color = 'DefaultButton.On'
 
     @listens('browse_mode')

@@ -2,8 +2,8 @@
 from __future__ import absolute_import, print_function
 from itertools import ifilter, izip
 from ableton.v2.base import flatten, listens_group, liveobj_valid
+from ableton.v2.control_surface import find_instrument_devices
 from ableton.v2.control_surface.control import ButtonControl
-from pushbase.device_chain_utils import find_instrument_devices
 from pushbase.drum_group_component import DrumGroupComponent as DrumGroupComponentBase, DrumPadCopyHandler as DrumPadCopyHandlerBase
 from .colors import IndexedColor
 from .decoration import find_decorated_object

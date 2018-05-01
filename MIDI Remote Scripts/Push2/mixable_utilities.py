@@ -1,7 +1,7 @@
 
 from __future__ import absolute_import, print_function
 import Live
-from pushbase.device_chain_utils import find_instrument_meeting_requirement
+from ableton.v2.control_surface import find_instrument_meeting_requirement
 
 def is_chain(track_or_chain):
     return isinstance(getattr(track_or_chain, 'proxied_object', track_or_chain), Live.Chain.Chain)

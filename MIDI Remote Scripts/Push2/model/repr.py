@@ -479,7 +479,7 @@ class TrackAdapter(ModelAdapter):
 
     @property
     def containsDrumRack(self):
-        from pushbase.device_chain_utils import find_instrument_meeting_requirement
+        from ableton.v2.control_surface import find_instrument_meeting_requirement
         return find_instrument_meeting_requirement(lambda i: i.can_have_drum_pads, self._adaptee) is not None
 
     @property

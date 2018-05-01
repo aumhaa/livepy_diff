@@ -4,10 +4,10 @@ from contextlib import contextmanager
 from functools import partial
 from itertools import imap
 from ableton.v2.base import clamp, const, inject, listens, listens_group, NamedTuple, nop
-from ableton.v2.control_surface import BackgroundLayer, ClipCreator, ControlSurface, DeviceBankRegistry, Layer, midi
+from ableton.v2.control_surface import BackgroundLayer, ClipCreator, ControlSurface, DeviceBankRegistry, PercussionInstrumentFinder, Layer, midi
 from ableton.v2.control_surface.components import BackgroundComponent, M4LInterfaceComponent, ModifierBackgroundComponent, SessionNavigationComponent, SessionRingComponent, SessionOverviewComponent, ViewControlComponent
 from ableton.v2.control_surface.elements import ButtonElement, ButtonMatrixElement, ChoosingElement, ComboElement, DoublePressContext, MultiElement, OptionalElement, to_midi_value
-from ableton.v2.control_surface.mode import AddLayerMode, LayerMode, LazyComponentMode, ReenterBehaviour, ModesComponent, EnablingModesComponent
+from ableton.v2.control_surface.mode import AddLayerMode, LayerMode, LazyEnablingMode, ReenterBehaviour, ModesComponent, EnablingModesComponent
 from .accent_component import AccentComponent
 from .actions import CaptureAndInsertSceneComponent, DeleteAndReturnToDefaultComponent, DeleteComponent, DeleteSelectedClipComponent, DeleteSelectedSceneComponent, DuplicateDetailClipComponent, DuplicateLoopComponent, UndoRedoComponent
 from .auto_arm_component import AutoArmComponent
@@ -31,7 +31,6 @@ from .select_playing_clip_component import SelectPlayingClipComponent
 from .session_recording_component import FixedLengthRecording
 from .skin_default import make_default_skin
 from .step_seq_component import StepSeqComponent
-from .percussion_instrument_finder import PercussionInstrumentFinder
 from .touch_strip_controller import TouchStripControllerComponent, TouchStripEncoderConnection, TouchStripPitchModComponent
 from .track_frozen_mode import TrackFrozenModesComponent
 from .transport_component import TransportComponent
@@ -377,8 +376,8 @@ class PushBase(ControlSurface):
         self._session_ring = SessionRingComponent(num_tracks=NUM_TRACKS, num_scenes=NUM_SCENES, tracks_to_use=partial(tracks_to_use_from_song, self.song), is_enabled=True, is_root=True)
 
     def _init_session(self):
-        self._session_mode = LazyComponentMode(self._create_session)
-        self._session_overview_mode = LazyComponentMode(self._create_session_overview)
+        self._session_mode = LazyEnablingMode(self._create_session)
+        self._session_overview_mode = LazyEnablingMode(self._create_session_overview)
         self._session_navigation = SessionNavigationComponent(session_ring=self._session_ring, is_enabled=False, layer=self._create_session_navigation_layer())
 
     def _create_session_navigation_layer(self):
@@ -402,7 +401,7 @@ class PushBase(ControlSurface):
          self._track_note_editor_mode])
 
     def _create_clip_mode(self):
-        return [self._when_track_is_not_frozen(partial(self._view_control.show_view, 'Detail/Clip'), LazyComponentMode(self._create_clip_control))]
+        return [self._when_track_is_not_frozen(partial(self._view_control.show_view, 'Detail/Clip'), LazyEnablingMode(self._create_clip_control))]
 
     def _init_main_modes(self):
 

@@ -38,7 +38,6 @@ class SessionRecordingComponent(CompoundComponent):
 
     def __init__(self, view_controller = None, *a, **k):
         super(SessionRecordingComponent, self).__init__(*a, **k)
-        raise view_controller or AssertionError
         self._target_slots = []
         self._view_controller = view_controller
         self._new_button = None
@@ -309,7 +308,8 @@ class SessionRecordingComponent(CompoundComponent):
         view = self.song.view
         if view.highlighted_clip_slot.clip:
             view.detail_clip = view.highlighted_clip_slot.clip
-        self._view_controller.show_view('Detail/Clip')
+        if self._view_controller is not None:
+            self._view_controller.show_view('Detail/Clip')
 
     def _reconnect_track_listeners(self):
         manager = self._track_subject_slots

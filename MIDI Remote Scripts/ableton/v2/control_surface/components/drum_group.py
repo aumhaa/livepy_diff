@@ -115,8 +115,7 @@ class DrumGroupComponent(PlayableComponent, SlideComponent, Slideable):
 
     def _update_button_color(self, button):
         pad = self._pad_for_button(button)
-        if pad:
-            button.color = self._color_for_pad(pad)
+        button.color = self._color_for_pad(pad) if pad else 'DefaultButton.On'
 
     def _color_for_pad(self, pad):
         has_soloed_pads = bool(find_if(lambda pad: pad.solo, self._all_drum_pads))

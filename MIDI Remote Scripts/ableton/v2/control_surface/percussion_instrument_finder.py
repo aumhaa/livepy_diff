@@ -2,9 +2,9 @@
 from __future__ import absolute_import, print_function
 import Live
 from itertools import chain
-from ableton.v2.base import EventObject, listens_group, liveobj_changed, liveobj_valid
-from ableton.v2.control_surface.mode import Mode
+from ..base import EventObject, listens_group, liveobj_changed, liveobj_valid
 from .device_chain_utils import find_instrument_devices, find_instrument_meeting_requirement
+from .mode import Mode
 
 class PercussionInstrumentFinder(Mode, EventObject):
     """

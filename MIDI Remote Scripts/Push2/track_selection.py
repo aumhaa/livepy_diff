@@ -3,9 +3,9 @@ from __future__ import absolute_import, print_function
 from functools import partial
 import Live
 from ableton.v2.base import EventObject, const, depends, flatten, nop, listenable_property, listens, listens_group, liveobj_changed, liveobj_valid
+from ableton.v2.control_surface import find_instrument_devices
 from ableton.v2.control_surface.components import SessionRingComponent, right_align_return_tracks_track_assigner
 from ableton.v2.control_surface.components.view_control import has_next_item, next_item, TrackScroller as TrackScrollerBase, ViewControlComponent as ViewControlComponentBase
-from pushbase.device_chain_utils import find_instrument_devices
 from .decoration import TrackDecoratorFactory
 from .item_lister_component import ItemProvider
 from .observable_property_alias import ObservablePropertyAlias

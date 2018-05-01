@@ -2,7 +2,7 @@
 from __future__ import absolute_import, print_function
 import Live
 from ableton.v2.base import depends, liveobj_valid
-from ableton.v2.control_surface.mode import LazyComponentMode, Mode, ModeButtonBehaviour
+from ableton.v2.control_surface.mode import LazyEnablingMode, Mode, ModeButtonBehaviour
 from pushbase.browser_modes import BrowserHotswapMode
 from pushbase.device_chain_utils import is_empty_drum_pad
 
@@ -22,7 +22,7 @@ class BrowserModeBehaviour(ModeButtonBehaviour):
             component.push_mode(mode)
 
 
-class BrowserComponentMode(LazyComponentMode):
+class BrowserComponentMode(LazyEnablingMode):
 
     def __init__(self, model_ref, *a, **k):
         super(BrowserComponentMode, self).__init__(*a, **k)
@@ -30,23 +30,23 @@ class BrowserComponentMode(LazyComponentMode):
 
     def enter_mode(self):
         model = self._model_ref()
-        model.browserView = self.component
-        model.browserData = self.component
+        model.browserView = self.enableable
+        model.browserData = self.enableable
         super(BrowserComponentMode, self).enter_mode()
 
 
 class BrowseModeBase(Mode):
 
-    def __init__(self, component_mode = None, *a, **k):
-        raise component_mode is not None or AssertionError
+    def __init__(self, enabling_mode = None, *a, **k):
+        raise enabling_mode is not None or AssertionError
         super(BrowseModeBase, self).__init__()
-        self._component_mode = component_mode
+        self.enabling_mode = enabling_mode
 
     def enter_mode(self):
-        self._component_mode.enter_mode()
+        self.enabling_mode.enter_mode()
 
     def leave_mode(self):
-        self._component_mode.leave_mode()
+        self.enabling_mode.leave_mode()
 
 
 class HotswapBrowseMode(BrowseModeBase):
@@ -112,7 +112,7 @@ class BrowseMode(HotswapBrowseMode):
         self._browser = browser
 
     def enter_mode(self):
-        if self._component_mode.component.browse_for_audio_clip:
+        if self.enabling_mode.enableable.browse_for_audio_clip:
             self._browser.filter_type = Live.Browser.FilterType.samples
         else:
             self._enter_hotswap_mode()
