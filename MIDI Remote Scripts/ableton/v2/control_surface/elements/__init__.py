@@ -1,6 +1,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
-from .button import ButtonElement, ButtonElementMixin, ButtonValue, DummyUndoStepHandler, ON_VALUE, OFF_VALUE
+from .button import ButtonElement, ButtonElementMixin, DummyUndoStepHandler
 from .button_matrix import ButtonMatrixElement
 from .button_slider import ButtonSliderElement
 from .color import Color, DynamicColorBase, SelectedTrackColor, SelectedTrackColorFactory, SelectedClipColorFactory, to_midi_value
