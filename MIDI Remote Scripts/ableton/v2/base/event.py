@@ -1,4 +1,3 @@
-
 u"""
 Module for adding and listening to events.
 """
@@ -48,7 +47,7 @@ def add_event(cls, event_name_or_event):
         event = Event(name=event_name_or_event)
     else:
         event = event_name_or_event
-    raise callable(event.signal) or AssertionError
+    assert callable(event.signal)
     signal_attr = u'_' + event.name + u'_signal'
 
     def get_signal(self):
@@ -145,7 +144,7 @@ class EventObjectMeta(type):
         if has_events and u'disconnect' not in dct:
             dct[u'disconnect'] = lambda self: super(cls, self).disconnect()
         cls = super(EventObjectMeta, cls).__new__(cls, name, bases, dct)
-        raise not has_events or hasattr(cls, u'disconnect') or AssertionError
+        assert not has_events or hasattr(cls, u'disconnect')
         for lst in chain(events, property_events):
             add_event(cls, lst)
 
@@ -199,12 +198,12 @@ class Slot(Disconnectable):
 
     def __init__(self, subject = None, listener = None, event_name = None, extra_kws = None, extra_args = None, *a, **k):
         super(Slot, self).__init__(*a, **k)
-        if not event_name:
-            raise AssertionError
-            self._event_name = event_name
-            if extra_kws is not None:
-                self._extra_kws = extra_kws
-            self._extra_args = extra_args is not None and extra_args
+        assert event_name
+        self._event_name = event_name
+        if extra_kws is not None:
+            self._extra_kws = extra_kws
+        if extra_args is not None:
+            self._extra_args = extra_args
         self._subject = None
         self._listener = None
         self.subject = subject
@@ -387,7 +386,7 @@ class MultiSlot(EventObject, Slot):
             super(MultiSlot, MultiSlot).subject.fset(self, subject)
         except EventError:
             if self._nested_slot is None:
-                raise 
+                raise
         finally:
             self._slot_subject = subject
             self._update_nested_subject()
@@ -416,10 +415,10 @@ def listens(event_path, *a, **k):
 
     @instance_decorator
     def decorator(self, method):
-        if not isinstance(self, EventObject):
-            raise AssertionError
-            event_name_list = event_path.split(u'.')
-            slot = len(event_name_list) > 1 and wraps(method)(MultiSlot(event_name_list=event_name_list, extra_kws=k, extra_args=a, listener=partial(method, self)))
+        assert isinstance(self, EventObject)
+        event_name_list = event_path.split(u'.')
+        if len(event_name_list) > 1:
+            slot = wraps(method)(MultiSlot(event_name_list=event_name_list, extra_kws=k, extra_args=a, listener=partial(method, self)))
         else:
             slot = wraps(method)(Slot(event_name=event_path, extra_kws=k, extra_args=a, listener=partial(method, self)))
         self.register_slot(slot)
@@ -441,7 +440,7 @@ def listens_group(event_name, *a, **k):
 
     @instance_decorator
     def decorator(self, method):
-        raise isinstance(self, EventObject) or AssertionError
+        assert isinstance(self, EventObject)
         slot = wraps(method)(SlotGroup(event_name=event_name, extra_kws=k, extra_args=a, listener=partial(method, self)))
         self.register_disconnectable(slot)
         return slot
@@ -480,7 +479,7 @@ class _managed_listenable_property(listenable_property_base):
         self._member_name = u'__listenable_property_%s' % property_name
 
     def _get_value(self, obj):
-        raise self._member_name is not None or AssertionError(u'Cannot get member for managed listenable property. Listenable property might be used without inheriting from EventObject.')
+        assert self._member_name is not None, u'Cannot get member for managed listenable property. Listenable property might be used without inheriting from EventObject.'
         return getattr(obj, self._member_name, self._default_value)
 
     def __get__(self, obj, owner):

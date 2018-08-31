@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.DeviceComponent import DeviceComponent
@@ -18,8 +17,8 @@ class BestBankDeviceComponent(DeviceComponent):
         self._device_best_banks = DEVICE_BOB_DICT
         for device_name, current_banks in self._device_banks.iteritems():
             if len(current_banks) > 1:
-                raise device_name in self._device_best_banks.keys() or AssertionError(u"Could not find best-of-banks for '%s'" % device_name)
-                raise device_name in self._device_bank_names.keys() or AssertionError(u"Could not find bank names for '%s'" % device_name)
+                assert device_name in self._device_best_banks.keys(), u"Could not find best-of-banks for '%s'" % device_name
+                assert device_name in self._device_bank_names.keys(), u"Could not find bank names for '%s'" % device_name
                 current_banks = self._device_best_banks[device_name] + current_banks
                 new_bank_names[device_name] = (BOP_BANK_NAME,) + self._device_bank_names[device_name]
             new_banks[device_name] = current_banks

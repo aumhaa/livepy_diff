@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 SYSEX_START = (240, 0, 1, 5, 32, 127)
 IDENTITY_REQUEST = (240, 126, 127, 6, 1, 247)

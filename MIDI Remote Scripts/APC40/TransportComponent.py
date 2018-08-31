@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.Control import ButtonControl
@@ -18,10 +17,10 @@ class TransportComponent(TransportComponentBase):
 
     @rec_quantization_button.pressed
     def rec_quantization_button(self, value):
-        if not self._last_quant_value != Live.Song.RecordingQuantization.rec_q_no_q:
-            raise AssertionError
-            quant_value = self.song().midi_recording_quantization
-            self._last_quant_value = quant_value != Live.Song.RecordingQuantization.rec_q_no_q and quant_value
+        assert self._last_quant_value != Live.Song.RecordingQuantization.rec_q_no_q
+        quant_value = self.song().midi_recording_quantization
+        if quant_value != Live.Song.RecordingQuantization.rec_q_no_q:
+            self._last_quant_value = quant_value
             self.song().midi_recording_quantization = Live.Song.RecordingQuantization.rec_q_no_q
         else:
             self.song().midi_recording_quantization = self._last_quant_value

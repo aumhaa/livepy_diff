@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ...base import in_range, listens, liveobj_valid
 from ..component import Component
@@ -11,18 +10,18 @@ class SessionOverviewComponent(Component):
 
     def __init__(self, session_ring = None, enable_skinning = False, *a, **k):
         super(SessionOverviewComponent, self).__init__(*a, **k)
-        if not session_ring is not None:
-            raise AssertionError
-            self._buttons = None
-            self._scene_bank_index = 0
-            self._empty_value = 0
-            self._stopped_value = 100
-            self._playing_value = 127
-            self._selected_value = 64
-            self._session_ring = session_ring
-            self.__on_session_offset_changes.subject = self._session_ring
-            self.__on_scene_list_changed.subject = self.song
-            enable_skinning and self._enable_skinning()
+        assert session_ring is not None
+        self._buttons = None
+        self._scene_bank_index = 0
+        self._empty_value = 0
+        self._stopped_value = 100
+        self._playing_value = 127
+        self._selected_value = 64
+        self._session_ring = session_ring
+        self.__on_session_offset_changes.subject = self._session_ring
+        self.__on_scene_list_changed.subject = self.song
+        if enable_skinning:
+            self._enable_skinning()
 
     def _enable_skinning(self):
         self.set_stopped_value(u'Zooming.Stopped')

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from itertools import cycle, izip
 from _Framework.ButtonMatrixElement import ButtonMatrixElement

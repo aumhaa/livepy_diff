@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from itertools import count
@@ -16,20 +15,20 @@ class SessionComponent(CompoundComponent):
 
     def __init__(self, session_ring = None, auto_name = False, *a, **k):
         super(SessionComponent, self).__init__(*a, **k)
-        if not session_ring is not None:
-            raise AssertionError
-            self._session_ring = session_ring
-            self.__on_offsets_changed.subject = self._session_ring
-            self._stop_all_button = None
-            self._stop_track_clip_buttons = None
-            self._stop_clip_triggered_value = u'Session.StopClipTriggered'
-            self._stop_clip_value = u'Session.StopClip'
-            self._track_slots = self.register_disconnectable(EventObject())
-            self._selected_scene = self.register_component(self._create_scene())
-            self._scenes = self.register_components(*[ self._create_scene() for _ in xrange(self._session_ring.num_scenes) ])
-            if self._session_component_ends_initialisation:
-                self._end_initialisation()
-            auto_name and self._auto_name()
+        assert session_ring is not None
+        self._session_ring = session_ring
+        self.__on_offsets_changed.subject = self._session_ring
+        self._stop_all_button = None
+        self._stop_track_clip_buttons = None
+        self._stop_clip_triggered_value = u'Session.StopClipTriggered'
+        self._stop_clip_value = u'Session.StopClip'
+        self._track_slots = self.register_disconnectable(EventObject())
+        self._selected_scene = self.register_component(self._create_scene())
+        self._scenes = self.register_components(*[ self._create_scene() for _ in xrange(self._session_ring.num_scenes) ])
+        if self._session_component_ends_initialisation:
+            self._end_initialisation()
+        if auto_name:
+            self._auto_name()
         self.__on_track_list_changed.subject = self.song
         self.__on_scene_list_changed.subject = self.song
         self.__on_selected_scene_changed.subject = self.song.view
@@ -42,7 +41,7 @@ class SessionComponent(CompoundComponent):
         return self.scene_component_type(session_ring=self._session_ring)
 
     def scene(self, index):
-        raise in_range(index, 0, len(self._scenes)) or AssertionError
+        assert in_range(index, 0, len(self._scenes))
         return self._scenes[index]
 
     def selected_scene(self):
@@ -73,7 +72,7 @@ class SessionComponent(CompoundComponent):
         self._update_stop_track_clip_buttons()
 
     def set_clip_launch_buttons(self, buttons):
-        raise not buttons or buttons.width() == self._session_ring.num_tracks and buttons.height() == self._session_ring.num_scenes or AssertionError
+        assert not buttons or buttons.width() == self._session_ring.num_tracks and buttons.height() == self._session_ring.num_scenes
         if buttons:
             for button, (x, y) in buttons.iterbuttons():
                 scene = self.scene(y)
@@ -87,7 +86,7 @@ class SessionComponent(CompoundComponent):
                 slot.set_launch_button(None)
 
     def set_scene_launch_buttons(self, buttons):
-        raise not buttons or buttons.width() == self._session_ring.num_scenes and buttons.height() == 1 or AssertionError
+        assert not buttons or buttons.width() == self._session_ring.num_scenes and buttons.height() == 1
         if buttons:
             for button, (x, _) in buttons.iterbuttons():
                 scene = self.scene(x)

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import forward_property, listens, listens_group
 from ableton.v2.control_surface import Component

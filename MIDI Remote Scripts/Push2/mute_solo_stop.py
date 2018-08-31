@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial
 from ableton.v2.base import listenable_property, listens, listens_group, liveobj_valid, EventObject, MultiSlot
@@ -44,20 +43,20 @@ class GlobalMixerActionComponent(Component):
     action_button = ButtonControl(delay_time=GLOBAL_ACTION_LOCK_MODE_DELAY)
 
     def __init__(self, track_list_component = None, mode = None, immediate_action = None, default_color_indicator = None, mode_locked_color = None, mode_active_color = None, *a, **k):
-        if not track_list_component is not None:
-            raise AssertionError
-            raise mode is not None or AssertionError
-            raise mode in track_list_component.modes or AssertionError
-            super(GlobalMixerActionComponent, self).__init__(*a, **k)
-            self._mode = mode
-            self._immediate_action = immediate_action
-            self._mode_locked = False
-            self._default_color_indicator = None
-            self._locked_color = mode_locked_color
-            self._active_color = mode_active_color if mode_active_color is not None else u'DefaultButton.On'
-            self._allow_released_immediately_action = True
-            self._track_list_component = track_list_component
-            self._default_color_indicator = default_color_indicator is not None and self.register_disconnectable(default_color_indicator)
+        assert track_list_component is not None
+        assert mode is not None
+        assert mode in track_list_component.modes
+        super(GlobalMixerActionComponent, self).__init__(*a, **k)
+        self._mode = mode
+        self._immediate_action = immediate_action
+        self._mode_locked = False
+        self._default_color_indicator = None
+        self._locked_color = mode_locked_color
+        self._active_color = mode_active_color if mode_active_color is not None else u'DefaultButton.On'
+        self._allow_released_immediately_action = True
+        self._track_list_component = track_list_component
+        if default_color_indicator is not None:
+            self._default_color_indicator = self.register_disconnectable(default_color_indicator)
             self.__on_default_color_changed.subject = default_color_indicator
         self._update_default_color()
 

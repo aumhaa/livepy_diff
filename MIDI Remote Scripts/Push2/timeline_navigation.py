@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import math
@@ -95,7 +94,7 @@ class RegionOfInterest(object):
     """
 
     def __init__(self, start_identifier = None, end_identifier = None, getter = None, add_margin = nop, *a, **k):
-        raise getter is not None or AssertionError
+        assert getter is not None
         super(RegionOfInterest, self).__init__(*a, **k)
         self.start_identifier = start_identifier
         self.end_identifier = end_identifier

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.Layer import Layer, SimpleLayerOwner
 from _APC.ControlElementUtils import make_slider

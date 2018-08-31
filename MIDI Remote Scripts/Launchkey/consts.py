@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 SIZE_QUERY = (240, 126, 127, 6, 1, 247)
 SIZE_RESPONSE = (240, 126, 127, 6, 2, 0, 32, 41, 0, 25, 0)

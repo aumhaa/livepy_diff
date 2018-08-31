@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 ID_REQUEST = 0
 ID_RESP = 0

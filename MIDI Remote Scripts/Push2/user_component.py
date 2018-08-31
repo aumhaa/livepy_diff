@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from contextlib import contextmanager
 from ableton.v2.control_surface.mode import ModeButtonBehaviour
@@ -8,7 +7,7 @@ from . import sysex
 class UserButtonBehavior(ModeButtonBehaviour):
 
     def __init__(self, user_component = None, *a, **k):
-        raise user_component is not None or AssertionError
+        assert user_component is not None
         super(UserButtonBehavior, self).__init__(*a, **k)
         self._previous_mode = None
         self._user_component = user_component
@@ -24,8 +23,8 @@ class UserButtonBehavior(ModeButtonBehaviour):
         self._leave_user_mode(component)
 
     def _leave_user_mode(self, component):
-        if not (component.selected_mode == u'user' and self._user_component.mode == sysex.USER_MODE and self._previous_mode is not None):
-            raise AssertionError
+        if component.selected_mode == u'user' and self._user_component.mode == sysex.USER_MODE:
+            assert self._previous_mode is not None
             component.selected_mode = self._previous_mode
             self._previous_mode = None
 

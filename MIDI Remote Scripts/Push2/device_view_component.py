@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import EventObject, const, listenable_property, listens, liveobj_valid
 from ableton.v2.control_surface import Component
@@ -24,9 +23,9 @@ def get_view_parameter(parameter, name):
 class DeviceViewConnector(Component):
 
     def __init__(self, device_component = None, parameter_provider = None, device_type_provider = const(u'default'), view = None, *a, **k):
-        raise device_component is not None or AssertionError
-        raise parameter_provider is not None or AssertionError
-        raise view is not None or AssertionError
+        assert device_component is not None
+        assert parameter_provider is not None
+        assert view is not None
         super(DeviceViewConnector, self).__init__(*a, **k)
         self._device_component = device_component
         self._parameter_provider = parameter_provider
@@ -64,7 +63,7 @@ class SimplerDeviceViewConnector(DeviceViewConnector):
     def update(self):
         super(SimplerDeviceViewConnector, self).update()
         device = self._value_for_state(self._device_component.device(), None)
-        raise device == None or device.class_name == u'OriginalSimpler' or AssertionError
+        assert device == None or device.class_name == u'OriginalSimpler'
         self._view.properties = device
         self._view.bank_view_description = self._parameter_provider.device_component.bank_view_description
 
@@ -74,10 +73,10 @@ class CompressorDeviceViewConnector(DeviceViewConnector):
     def update(self):
         super(CompressorDeviceViewConnector, self).update()
         device = self._value_for_state(self._device_component.device(), None)
-        if not (not liveobj_valid(device) or device.class_name == u'Compressor2'):
-            raise AssertionError
-            self._view.bank_view_description = self._parameter_provider.device_component.bank_view_description
-            self._view.routing_type_list = liveobj_valid(device) and device.routing_type_list
+        assert not liveobj_valid(device) or device.class_name == u'Compressor2'
+        self._view.bank_view_description = self._parameter_provider.device_component.bank_view_description
+        if liveobj_valid(device):
+            self._view.routing_type_list = device.routing_type_list
             self._view.routing_channel_list = device.routing_channel_list
             self._view.routing_channel_position_list = device.routing_channel_position_list
 
@@ -85,8 +84,8 @@ class CompressorDeviceViewConnector(DeviceViewConnector):
 class DeviceViewComponent(ModesComponent):
 
     def __init__(self, device_component = None, view_model = None, *a, **k):
-        raise device_component is not None or AssertionError
-        raise view_model is not None or AssertionError
+        assert device_component is not None
+        assert view_model is not None
         super(DeviceViewComponent, self).__init__(*a, **k)
         self._get_device = device_component.device
         for view, connector, name in ((view_model.deviceParameterView, DeviceViewConnector, u'default'), (view_model.simplerDeviceView, SimplerDeviceViewConnector, u'OriginalSimpler'), (view_model.compressorDeviceView, CompressorDeviceViewConnector, u'Compressor2')):

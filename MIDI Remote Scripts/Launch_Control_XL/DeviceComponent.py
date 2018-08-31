@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.Control import control_list, ButtonControl
@@ -44,7 +43,7 @@ class DeviceModeComponent(EnablingModesComponent):
 
     def __init__(self, device_settings_mode = None, *a, **k):
         super(DeviceModeComponent, self).__init__(*a, **k)
-        raise device_settings_mode is not None or AssertionError
+        assert device_settings_mode is not None
         self._device_settings_mode = tomode(device_settings_mode)
 
     @device_mode_button.released_immediately

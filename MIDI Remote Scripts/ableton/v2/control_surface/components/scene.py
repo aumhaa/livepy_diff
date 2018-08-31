@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from itertools import izip
 from ...base import listens, liveobj_valid, liveobj_changed
@@ -14,8 +13,8 @@ class SceneComponent(CompoundComponent):
     launch_button = ButtonControl()
 
     def __init__(self, session_ring = None, *a, **k):
-        raise session_ring is not None or AssertionError
-        raise session_ring.num_tracks >= 0 or AssertionError
+        assert session_ring is not None
+        assert session_ring.num_tracks >= 0
         super(SceneComponent, self).__init__(*a, **k)
         self._session_ring = session_ring
         self._scene = None
@@ -57,9 +56,9 @@ class SceneComponent(CompoundComponent):
         self._delete_button = button
 
     def set_track_offset(self, offset):
-        if not offset >= 0:
-            raise AssertionError
-            self._track_offset = offset != self._track_offset and offset
+        assert offset >= 0
+        if offset != self._track_offset:
+            self._track_offset = offset
             self.update()
 
     def set_color_palette(self, palette):
@@ -165,12 +164,12 @@ class SceneComponent(CompoundComponent):
 
     @listens(u'is_triggered')
     def __on_is_triggered_changed(self):
-        raise liveobj_valid(self._scene) or AssertionError
+        assert liveobj_valid(self._scene)
         self._update_launch_button()
 
     @listens(u'color')
     def __on_scene_color_changed(self):
-        raise liveobj_valid(self._scene) or AssertionError
+        assert liveobj_valid(self._scene)
         self._update_launch_button()
 
     def _color_value(self, color):

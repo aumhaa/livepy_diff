@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from contextlib import contextmanager
 from functools import partial
@@ -78,34 +77,34 @@ class LoopSelectorComponent(Component, Messenger):
 
     def __init__(self, clip_creator = None, measure_length = 4.0, follow_detail_clip = False, paginator = None, default_size = None, *a, **k):
         super(LoopSelectorComponent, self).__init__(*a, **k)
-        if not default_size is not None:
-            raise AssertionError
-            self._clip_creator = clip_creator
-            self._sequencer_clip = None
-            self._paginator = Paginator()
-            self._loop_start = 0
-            self._loop_end = 0
-            self._loop_length = 0
-            self._default_size = default_size
-            self._pressed_pages = []
-            self._page_colors = []
-            self._measure_length = measure_length
-            self._last_playhead_page = -1
+        assert default_size is not None
+        self._clip_creator = clip_creator
+        self._sequencer_clip = None
+        self._paginator = Paginator()
+        self._loop_start = 0
+        self._loop_end = 0
+        self._loop_length = 0
+        self._default_size = default_size
+        self._pressed_pages = []
+        self._page_colors = []
+        self._measure_length = measure_length
+        self._last_playhead_page = -1
 
-            def set_is_following_true():
-                self.is_following = True
+        def set_is_following_true():
+            self.is_following = True
 
-            self._follow_task = self._tasks.add(task.sequence(task.wait(defaults.MOMENTARY_DELAY), task.run(set_is_following_true)))
-            self._follow_task.kill()
-            self.set_step_duplicator(None)
-            self._notification_reference = partial(nop, None)
-            self.is_deleting = False
-            if follow_detail_clip:
-                self._on_detail_clip_changed.subject = self.song.view
-                self._on_detail_clip_changed()
-            self._on_session_record_changed.subject = self.song
-            self._on_song_playback_status_changed.subject = self.song
-            paginator is not None and self.set_paginator(paginator)
+        self._follow_task = self._tasks.add(task.sequence(task.wait(defaults.MOMENTARY_DELAY), task.run(set_is_following_true)))
+        self._follow_task.kill()
+        self.set_step_duplicator(None)
+        self._notification_reference = partial(nop, None)
+        self.is_deleting = False
+        if follow_detail_clip:
+            self._on_detail_clip_changed.subject = self.song.view
+            self._on_detail_clip_changed()
+        self._on_session_record_changed.subject = self.song
+        self._on_song_playback_status_changed.subject = self.song
+        if paginator is not None:
+            self.set_paginator(paginator)
 
     def set_paginator(self, paginator):
         self._paginator = paginator or Paginator()

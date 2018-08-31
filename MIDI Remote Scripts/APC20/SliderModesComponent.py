@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.ButtonElement import ButtonElement
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
@@ -7,7 +6,7 @@ class SliderModesComponent(ModeSelectorComponent):
     u""" SelectorComponent that assigns sliders to different functions """
 
     def __init__(self, mixer, sliders, *a, **k):
-        raise len(sliders) == 8 or AssertionError
+        assert len(sliders) == 8
         super(SliderModesComponent, self).__init__(*a, **k)
         self._mixer = mixer
         self._sliders = sliders
@@ -19,14 +18,14 @@ class SliderModesComponent(ModeSelectorComponent):
         self._sliders = None
 
     def set_mode_buttons(self, buttons):
-        raise isinstance(buttons, (tuple, type(None))) or AssertionError
+        assert isinstance(buttons, (tuple, type(None)))
         for button in self._modes_buttons:
             button.remove_value_listener(self._mode_value)
 
         self._modes_buttons = []
         if buttons != None:
             for button in buttons:
-                raise isinstance(button, ButtonElement) or AssertionError
+                assert isinstance(button, ButtonElement)
                 identify_sender = True
                 button.add_value_listener(self._mode_value, identify_sender)
                 self._modes_buttons.append(button)
@@ -38,8 +37,8 @@ class SliderModesComponent(ModeSelectorComponent):
 
     def update(self):
         super(SliderModesComponent, self).update()
-        if not (self.is_enabled() and self._mode_index in range(self.number_of_modes())):
-            raise AssertionError
+        if self.is_enabled():
+            assert self._mode_index in range(self.number_of_modes())
             for index in range(len(self._modes_buttons)):
                 if index == self._mode_index:
                     self._modes_buttons[index].turn_on()

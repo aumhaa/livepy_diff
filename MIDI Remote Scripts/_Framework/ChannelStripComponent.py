@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from itertools import chain
 import Live
@@ -23,9 +22,9 @@ class ChannelStripComponent(ControlSurfaceComponent):
     def number_of_arms_pressed():
         result = 0
         for strip in ChannelStripComponent._active_instances:
-            if not isinstance(strip, ChannelStripComponent):
-                raise AssertionError
-                strip.arm_button_pressed() and result += 1
+            assert isinstance(strip, ChannelStripComponent)
+            if strip.arm_button_pressed():
+                result += 1
 
         return result
 
@@ -34,9 +33,9 @@ class ChannelStripComponent(ControlSurfaceComponent):
     def number_of_solos_pressed():
         result = 0
         for strip in ChannelStripComponent._active_instances:
-            if not isinstance(strip, ChannelStripComponent):
-                raise AssertionError
-                strip.solo_button_pressed() and result += 1
+            assert isinstance(strip, ChannelStripComponent)
+            if strip.solo_button_pressed():
+                result += 1
 
         return result
 
@@ -114,20 +113,20 @@ class ChannelStripComponent(ControlSurfaceComponent):
         super(ChannelStripComponent, self).disconnect()
 
     def set_track(self, track):
-        if not isinstance(track, (type(None), Live.Track.Track)):
-            raise AssertionError
-            for control in self._all_controls():
-                release_control(control)
+        assert isinstance(track, (type(None), Live.Track.Track))
+        for control in self._all_controls():
+            release_control(control)
 
-            self._track = track
-            for slot in self._track_property_slots:
-                slot.subject = track
+        self._track = track
+        for slot in self._track_property_slots:
+            slot.subject = track
 
-            for slot in self._mixer_device_property_slots:
-                slot.subject = track.mixer_device if track != None else None
+        for slot in self._mixer_device_property_slots:
+            slot.subject = track.mixer_device if track != None else None
 
-            raise self._track != None and (isinstance(self._track, Live.Track.Track) or AssertionError)
-            raise self._track in tuple(self.song().tracks) + tuple(self.song().return_tracks) + (self.song().master_track,) or AssertionError
+        if self._track != None:
+            assert isinstance(self._track, Live.Track.Track)
+            assert self._track in tuple(self.song().tracks) + tuple(self.song().return_tracks) + (self.song().master_track,)
             for button in (self._select_button,
              self._mute_button,
              self._solo_button,
@@ -209,9 +208,9 @@ class ChannelStripComponent(ControlSurfaceComponent):
             self.update()
 
     def set_invert_mute_feedback(self, invert_feedback):
-        if not isinstance(invert_feedback, type(False)):
-            raise AssertionError
-            self._invert_mute_feedback = invert_feedback != self._invert_mute_feedback and invert_feedback
+        assert isinstance(invert_feedback, type(False))
+        if invert_feedback != self._invert_mute_feedback:
+            self._invert_mute_feedback = invert_feedback
             self.update()
 
     def on_enabled_changed(self):
@@ -284,21 +283,21 @@ class ChannelStripComponent(ControlSurfaceComponent):
             self._update_requests += 1
 
     def _select_value(self, value):
-        if not self._select_button != None:
-            raise AssertionError
-            if not isinstance(value, int):
-                raise AssertionError
-                if self.is_enabled():
-                    if self._track != None:
-                        self.song().view.selected_track = (value != 0 or not self._select_button.is_momentary()) and self.song().view.selected_track != self._track and self._track
+        assert self._select_button != None
+        assert isinstance(value, int)
+        if self.is_enabled():
+            if self._track != None:
+                if value != 0 or not self._select_button.is_momentary():
+                    if self.song().view.selected_track != self._track:
+                        self.song().view.selected_track = self._track
 
     def _mute_value(self, value):
-        if not self._mute_button != None:
-            raise AssertionError
-            if not isinstance(value, int):
-                raise AssertionError
-                if self.is_enabled():
-                    self._track.mute = self._track != None and self._track != self.song().master_track and (not self._mute_button.is_momentary() or value != 0) and not self._track.mute
+        assert self._mute_button != None
+        assert isinstance(value, int)
+        if self.is_enabled():
+            if self._track != None and self._track != self.song().master_track:
+                if not self._mute_button.is_momentary() or value != 0:
+                    self._track.mute = not self._track.mute
 
     def update_solo_state(self, solo_exclusive, new_value, respect_multi_selection, track):
         if track == self._track or respect_multi_selection and track.is_part_of_selection:
@@ -307,13 +306,13 @@ class ChannelStripComponent(ControlSurfaceComponent):
             track.solo = False
 
     def _solo_value(self, value):
-        if not self._solo_button != None:
-            raise AssertionError
-            if not value in range(128):
-                raise AssertionError
-                if self.is_enabled():
-                    self._solo_pressed = self._track != None and self._track != self.song().master_track and value != 0 and self._solo_button.is_momentary()
-                    expected_solos_pressed = (value != 0 or not self._solo_button.is_momentary()) and (1 if self._solo_pressed else 0)
+        assert self._solo_button != None
+        assert value in range(128)
+        if self.is_enabled():
+            if self._track != None and self._track != self.song().master_track:
+                self._solo_pressed = value != 0 and self._solo_button.is_momentary()
+                if value != 0 or not self._solo_button.is_momentary():
+                    expected_solos_pressed = 1 if self._solo_pressed else 0
                     solo_exclusive = self.song().exclusive_solo != self._shift_pressed and (not self._solo_button.is_momentary() or ChannelStripComponent.number_of_solos_pressed() == expected_solos_pressed)
                     new_value = not self._track.solo
                     respect_multi_selection = self._track.is_part_of_selection
@@ -321,13 +320,13 @@ class ChannelStripComponent(ControlSurfaceComponent):
                         self.update_solo_state(solo_exclusive, new_value, respect_multi_selection, track)
 
     def _arm_value(self, value):
-        if not self._arm_button != None:
-            raise AssertionError
-            if not value in range(128):
-                raise AssertionError
-                if self.is_enabled():
-                    self._arm_pressed = self._track != None and self._track.can_be_armed and value != 0 and self._arm_button.is_momentary()
-                    expected_arms_pressed = (not self._arm_button.is_momentary() or value != 0) and (1 if self._arm_pressed else 0)
+        assert self._arm_button != None
+        assert value in range(128)
+        if self.is_enabled():
+            if self._track != None and self._track.can_be_armed:
+                self._arm_pressed = value != 0 and self._arm_button.is_momentary()
+                if not self._arm_button.is_momentary() or value != 0:
+                    expected_arms_pressed = 1 if self._arm_pressed else 0
                     arm_exclusive = self.song().exclusive_arm != self._shift_pressed and (not self._arm_button.is_momentary() or ChannelStripComponent.number_of_arms_pressed() == expected_arms_pressed)
                     new_value = not self._track.arm
                     respect_multi_selection = self._track.is_part_of_selection
@@ -339,16 +338,16 @@ class ChannelStripComponent(ControlSurfaceComponent):
                                 track.arm = False
 
     def _shift_value(self, value):
-        raise self._shift_button != None or AssertionError
+        assert self._shift_button != None
         self._shift_pressed = value != 0
 
     def _crossfade_toggle_value(self, value):
-        if not self._crossfade_toggle != None:
-            raise AssertionError
-            if not isinstance(value, int):
-                raise AssertionError
-                if self.is_enabled():
-                    self._track.mixer_device.crossfade_assign = self._track != None and (value != 0 or not self._crossfade_toggle.is_momentary()) and (self._track.mixer_device.crossfade_assign - 1) % len(self._track.mixer_device.crossfade_assignments.values)
+        assert self._crossfade_toggle != None
+        assert isinstance(value, int)
+        if self.is_enabled():
+            if self._track != None:
+                if value != 0 or not self._crossfade_toggle.is_momentary():
+                    self._track.mixer_device.crossfade_assign = (self._track.mixer_device.crossfade_assign - 1) % len(self._track.mixer_device.crossfade_assignments.values)
 
     def _on_sends_changed(self):
         if self.is_enabled():
@@ -396,6 +395,6 @@ class ChannelStripComponent(ControlSurfaceComponent):
                 self._crossfade_toggle.turn_off()
 
     def _on_input_routing_changed(self):
-        if not self._track != None:
-            raise AssertionError
-            self.is_enabled() and self._on_arm_changed()
+        assert self._track != None
+        if self.is_enabled():
+            self._on_arm_changed()

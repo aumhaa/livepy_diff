@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from itertools import chain
 from contextlib import contextmanager
@@ -45,7 +44,7 @@ class LoopSetting(WrappingParameter):
 
     def __init__(self, use_length_conversion = False, *a, **k):
         super(LoopSetting, self).__init__(*a, **k)
-        raise self.canonical_parent is not None or AssertionError
+        assert self.canonical_parent is not None
         self._conversion = convert_beat_length_to_bars_beats_sixteenths if use_length_conversion else convert_beat_time_to_bars_beats_sixteenths
         self._recording = False
         self.set_property_host(self._parent)
@@ -847,11 +846,11 @@ class ClipControlComponent(CompoundComponent):
     __events__ = (u'clip',)
 
     def __init__(self, midi_loop_controller = None, audio_loop_controller = None, audio_clip_controller = None, midi_clip_controller = None, mode_selector = None, decorator_factory = None, *a, **k):
-        raise audio_loop_controller is not None or AssertionError
-        raise midi_loop_controller is not None or AssertionError
-        raise audio_clip_controller is not None or AssertionError
-        raise midi_clip_controller is not None or AssertionError
-        raise mode_selector is not None or AssertionError
+        assert audio_loop_controller is not None
+        assert midi_loop_controller is not None
+        assert audio_clip_controller is not None
+        assert midi_clip_controller is not None
+        assert mode_selector is not None
         super(ClipControlComponent, self).__init__(*a, **k)
         self._clip = None
         self._midi_loop_controller = self.register_component(midi_loop_controller)

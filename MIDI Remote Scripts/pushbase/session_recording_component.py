@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from itertools import ifilter
 import Live
@@ -37,9 +36,9 @@ def have_other_recording_clips(tracks, recording_clip):
 class FixedLengthRecording(EventObject):
 
     def __init__(self, song = None, clip_creator = None, fixed_length_setting = None, *a, **k):
-        raise song is not None or AssertionError
-        raise clip_creator is not None or AssertionError
-        raise fixed_length_setting is not None or AssertionError
+        assert song is not None
+        assert clip_creator is not None
+        assert fixed_length_setting is not None
         super(FixedLengthRecording, self).__init__(*a, **k)
         self._song = song
         self._clip_creator = clip_creator
@@ -102,8 +101,8 @@ class FixedLengthSessionRecordingComponent(SessionRecordingComponent, Messenger)
     capture_midi_button = ButtonControl()
 
     def __init__(self, clip_creator = None, fixed_length_setting = None, *a, **k):
-        raise clip_creator is not None or AssertionError
-        raise fixed_length_setting is not None or AssertionError
+        assert clip_creator is not None
+        assert fixed_length_setting is not None
         super(FixedLengthSessionRecordingComponent, self).__init__(*a, **k)
         self._fixed_length_recording = self.register_disconnectable(FixedLengthRecording(song=self.song, clip_creator=clip_creator, fixed_length_setting=fixed_length_setting))
         self.footswitch_toggles_arrangement_recording = False

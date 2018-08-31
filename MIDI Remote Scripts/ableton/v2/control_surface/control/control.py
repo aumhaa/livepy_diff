@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial
 from ...base import lazy_attribute, mixin, nop, task, Disconnectable, EventObject, NamedTuple
@@ -63,7 +62,7 @@ def control_event(event_name):
     def event_decorator(self):
 
         def event_listener_decorator(event_listener):
-            raise event_listener not in self._event_listeners or AssertionError
+            assert event_listener not in self._event_listeners
             self._event_listeners[event_name] = event_listener
             return self
 
@@ -131,8 +130,8 @@ class Control(object):
 
         def __init__(self, control = None, manager = None, *a, **k):
             super(Control.State, self).__init__(*a, **k)
-            raise control is not None or AssertionError
-            raise manager is not None or AssertionError
+            assert control is not None
+            assert manager is not None
             self._colors = dict()
             self._manager = manager
             self._event_listeners = control._event_listeners
@@ -300,7 +299,7 @@ class ProxyControl(object):
     def __init__(self, control = None, *a, **k):
         super(ProxyControl, self).__init__(*a, **k)
         self._control = control
-        raise not self._control._event_listeners or AssertionError(u'Cannot forward control that already has events.')
+        assert not self._control._event_listeners, u'Cannot forward control that already has events.'
 
     def _make_control_state(self, manager):
         u"""
@@ -347,7 +346,7 @@ class Connectable(EventObject):
         
         Only one property can be connected at a time.
         """
-        raise subject is not None or AssertionError
+        assert subject is not None
         self.disconnect_property()
         self._connection = NamedTuple(slot=self._register_property_slot(subject, property_name), getter=partial(getattr, subject, property_name), setter=partial(setattr, subject, property_name), transform=transform)
 

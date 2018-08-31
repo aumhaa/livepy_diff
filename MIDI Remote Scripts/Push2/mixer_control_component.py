@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from contextlib import contextmanager
 from functools import partial
@@ -60,9 +59,9 @@ class MixerControlComponent(ModesComponent):
 
     @depends(tracks_provider=None, real_time_mapper=None, register_real_time_data=None)
     def __init__(self, view_model = None, tracks_provider = None, real_time_mapper = None, register_real_time_data = None, *a, **k):
-        raise liveobj_valid(real_time_mapper) or AssertionError
-        raise view_model is not None or AssertionError
-        raise tracks_provider is not None or AssertionError
+        assert liveobj_valid(real_time_mapper)
+        assert view_model is not None
+        assert tracks_provider is not None
         super(MixerControlComponent, self).__init__(*a, **k)
         self._send_offset = 0
         self.real_time_meter_handlers = [ RealTimeDataComponent(channel_type=u'meter', real_time_mapper=real_time_mapper, register_real_time_data=register_real_time_data, is_enabled=False) for _ in xrange(8) ]

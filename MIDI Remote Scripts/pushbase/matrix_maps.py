@@ -1,4 +1,3 @@
-
 u"""
 Pad Translations for Drum Rack (pad_x, pad_y, note, channel)
 """

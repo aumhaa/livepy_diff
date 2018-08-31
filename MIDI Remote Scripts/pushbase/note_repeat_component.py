@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import listens, task
 from ableton.v2.control_surface import CompoundComponent
@@ -124,7 +123,7 @@ class NoteRepeatEnabler(CompoundComponent):
     repeat_button = ButtonControl()
 
     def __init__(self, note_repeat_component = None, *a, **k):
-        raise note_repeat_component is not None or AssertionError
+        assert note_repeat_component is not None
         super(NoteRepeatEnabler, self).__init__(*a, **k)
         self._note_repeat_component = self.register_component(note_repeat_component)
         self.__on_selected_track_changed.subject = self.song.view

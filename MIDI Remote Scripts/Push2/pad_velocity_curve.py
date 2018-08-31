@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import math
 from ableton.v2.base import SerializableListenableProperties, chunks, clamp, listenable_property, task
@@ -179,10 +178,10 @@ class PadVelocityCurveSender(Component):
     curve_points = listenable_property.managed([])
 
     def __init__(self, curve_sysex_element = None, threshold_sysex_element = None, settings = None, chunk_size = None, *a, **k):
-        raise curve_sysex_element is not None or AssertionError
-        raise threshold_sysex_element is not None or AssertionError
-        raise settings is not None or AssertionError
-        raise chunk_size is not None or AssertionError
+        assert curve_sysex_element is not None
+        assert threshold_sysex_element is not None
+        assert settings is not None
+        assert chunk_size is not None
         super(PadVelocityCurveSender, self).__init__(*a, **k)
         self._curve_sysex_element = curve_sysex_element
         self._threshold_sysex_element = threshold_sysex_element

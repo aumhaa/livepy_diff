@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ...base import listens
 from ..compound_component import CompoundComponent
@@ -8,7 +7,7 @@ class SessionRingScroller(Scrollable):
 
     def __init__(self, session_ring = None, *a, **k):
         super(SessionRingScroller, self).__init__(*a, **k)
-        raise session_ring is not None or AssertionError
+        assert session_ring is not None
         self._session_ring = session_ring
 
     do_scroll_up = NotImplemented
@@ -102,7 +101,7 @@ class SessionNavigationComponent(CompoundComponent):
 
     def __init__(self, session_ring = None, *a, **k):
         super(SessionNavigationComponent, self).__init__(*a, **k)
-        raise session_ring is not None or AssertionError
+        assert session_ring is not None
         self._session_ring = session_ring
         self.__on_offset_changed.subject = self._session_ring
         self.__on_tracks_changed.subject = self._session_ring

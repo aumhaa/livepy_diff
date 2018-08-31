@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from itertools import count, izip_longest
 from _Framework.SubjectSlot import subject_slot, subject_slot_group

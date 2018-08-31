@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import _Framework.Capabilities as caps
 from .MPD232 import MPD232

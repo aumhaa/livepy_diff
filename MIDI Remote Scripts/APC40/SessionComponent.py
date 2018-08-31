@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.Control import ButtonControl
 from _APC.SessionComponent import SessionComponent as SessionComponentBase

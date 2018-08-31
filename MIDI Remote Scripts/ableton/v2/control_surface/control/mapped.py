@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from .control import InputControl
 
@@ -13,8 +12,8 @@ class MappedControl(InputControl):
         """
 
         def __init__(self, control = None, manager = None, *a, **k):
-            raise control is not None or AssertionError
-            raise manager is not None or AssertionError
+            assert control is not None
+            assert manager is not None
             super(MappedControl.State, self).__init__(control=control, manager=manager, *a, **k)
             self._direct_mapping = None
 

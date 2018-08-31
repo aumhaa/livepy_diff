@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.ControlSurface import ControlSurface
@@ -111,13 +110,13 @@ class SpecialChanStripComponent(ChannelStripComponent):
     for use with mixer.selected_strip() """
 
     def set_arm_button(self, button):
-        if not (button == None or isinstance(button, ButtonElement)):
-            raise AssertionError
-            if button != self._arm_button:
-                if self._arm_button != None:
-                    self._arm_button.remove_value_listener(self._arm_value)
-                    self._arm_button.reset()
-                self._arm_pressed = False
-                self._arm_button = button
-                self._arm_button != None and self._arm_button.add_value_listener(self._arm_value)
+        assert button == None or isinstance(button, ButtonElement)
+        if button != self._arm_button:
+            if self._arm_button != None:
+                self._arm_button.remove_value_listener(self._arm_value)
+                self._arm_button.reset()
+            self._arm_pressed = False
+            self._arm_button = button
+            if self._arm_button != None:
+                self._arm_button.add_value_listener(self._arm_value)
             self.update()

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from .CompoundComponent import CompoundComponent
 from .ScrollComponent import ScrollComponent
@@ -13,27 +12,27 @@ class SessionZoomingComponent(CompoundComponent):
 
     def __init__(self, session = None, enable_skinning = False, *a, **k):
         super(SessionZoomingComponent, self).__init__(*a, **k)
-        if not session:
-            raise AssertionError
-            self._buttons = None
-            self._scene_bank_buttons = None
-            self._scene_bank_button_slots = self.register_slot_manager()
-            self._scene_bank_index = 0
-            self._empty_value = 0
-            self._stopped_value = 100
-            self._playing_value = 127
-            self._selected_value = 64
-            self._session, self._vertical_scroll, self._horizontal_scroll = self.register_components(session, ScrollComponent(), ScrollComponent())
-            self._vertical_scroll.can_scroll_up = self._can_scroll_up
-            self._vertical_scroll.can_scroll_down = self._can_scroll_down
-            self._vertical_scroll.scroll_up = self._scroll_up
-            self._vertical_scroll.scroll_down = self._scroll_down
-            self._horizontal_scroll.can_scroll_up = self._can_scroll_left
-            self._horizontal_scroll.can_scroll_down = self._can_scroll_right
-            self._horizontal_scroll.scroll_up = self._scroll_left
-            self._horizontal_scroll.scroll_down = self._scroll_right
-            self.register_slot(self._session, self._on_session_offset_changes, u'offset')
-            enable_skinning and self._enable_skinning()
+        assert session
+        self._buttons = None
+        self._scene_bank_buttons = None
+        self._scene_bank_button_slots = self.register_slot_manager()
+        self._scene_bank_index = 0
+        self._empty_value = 0
+        self._stopped_value = 100
+        self._playing_value = 127
+        self._selected_value = 64
+        self._session, self._vertical_scroll, self._horizontal_scroll = self.register_components(session, ScrollComponent(), ScrollComponent())
+        self._vertical_scroll.can_scroll_up = self._can_scroll_up
+        self._vertical_scroll.can_scroll_down = self._can_scroll_down
+        self._vertical_scroll.scroll_up = self._scroll_up
+        self._vertical_scroll.scroll_down = self._scroll_down
+        self._horizontal_scroll.can_scroll_up = self._can_scroll_left
+        self._horizontal_scroll.can_scroll_down = self._can_scroll_right
+        self._horizontal_scroll.scroll_up = self._scroll_left
+        self._horizontal_scroll.scroll_down = self._scroll_right
+        self.register_slot(self._session, self._on_session_offset_changes, u'offset')
+        if enable_skinning:
+            self._enable_skinning()
 
     def _enable_skinning(self):
         self.set_stopped_value(u'Zooming.Stopped')

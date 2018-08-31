@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from hashlib import md5
 from contextlib import contextmanager
@@ -23,7 +22,7 @@ class AdapterAwareSlot(Slot):
 class ModelUpdateNotifier(object):
 
     def __init__(self, step = None, parent = None, delegate = None):
-        raise parent is not None or step is None or AssertionError((parent, step))
+        assert parent is not None or step is None, (parent, step)
         self._step = step
         self._delegate = delegate
         self.path = [] if self._step is None else parent.path + [self._step]
@@ -81,8 +80,8 @@ class NullValueWrapper(SimpleWrapper):
 class BoundListWrapper(EventObject, SimpleWrapper):
 
     def __init__(self, parent_object, name = None, wrapper = None, notifier = ModelUpdateNotifier(), *a, **k):
-        raise wrapper is not None or AssertionError
-        raise name is not None or AssertionError
+        assert wrapper is not None
+        assert name is not None
         super(BoundListWrapper, self).__init__([], notifier=notifier, *a, **k)
         self.wrapper = wrapper
         self.attrgetter = partial(getattr, parent_object, name)
@@ -114,7 +113,7 @@ class BoundAttributeWrapper(WrapperBase):
 
     def __init__(self, bound_object, attr_getter = None, *a, **k):
         super(BoundAttributeWrapper, self).__init__(*a, **k)
-        raise attr_getter is not None or AssertionError
+        assert attr_getter is not None
         self.attrgetter = partial(attr_getter, bound_object)
 
     def get(self):
@@ -130,14 +129,14 @@ class BoundAttributeWrapper(WrapperBase):
 class BoundObjectWrapper(EventObject, SimpleWrapper):
 
     def __init__(self, bound_object, wrappers = None, adapter = None, *a, **k):
-        if not adapter is not None:
-            raise AssertionError
-            raise wrappers is not None or AssertionError
-            bound_object = adapter(bound_object) if bound_object != None else None
-            super(BoundObjectWrapper, self).__init__(bound_object, *a, **k)
-            self.wrappers = wrappers
-            self.values = {}
-            bound_object is not None and self.register_disconnectable(bound_object)
+        assert adapter is not None
+        assert wrappers is not None
+        bound_object = adapter(bound_object) if bound_object != None else None
+        super(BoundObjectWrapper, self).__init__(bound_object, *a, **k)
+        self.wrappers = wrappers
+        self.values = {}
+        if bound_object is not None:
+            self.register_disconnectable(bound_object)
             for name in wrappers.keys():
                 self._update_wrapper(name)
 
@@ -200,8 +199,8 @@ class NotifyingList(WrapperBase):
 
     def __init__(self, value, wrapper = None, *a, **k):
         super(NotifyingList, self).__init__(*a, **k)
-        raise wrapper is not None or AssertionError
-        raise value is not None or AssertionError
+        assert wrapper is not None
+        assert value is not None
         self.wrapper = wrapper
         self.data = [ self.wrapper(item, notifier=self._notifier.step(i)) for i, item in enumerate(value) ]
 

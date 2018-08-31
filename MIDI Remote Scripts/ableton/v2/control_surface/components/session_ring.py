@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ...base import const, depends, nop, listens
 from ..component import Component
@@ -6,9 +5,9 @@ from ..component import Component
 class SessionRingModel(object):
 
     def __init__(self, num_tracks, num_scenes, set_session_highlight = nop):
-        raise num_tracks >= 0 or AssertionError
-        raise num_scenes >= 0 or AssertionError
-        raise callable(set_session_highlight) or AssertionError
+        assert num_tracks >= 0
+        assert num_scenes >= 0
+        assert callable(set_session_highlight)
         self.num_tracks = num_tracks
         self.num_scenes = num_scenes
         self.track_offset = 0
@@ -25,8 +24,8 @@ class SessionRingModel(object):
         return len(return_tracks) > 0 and return_tracks[0] in tracks
 
     def move(self, tracks, scenes):
-        raise self.track_offset + tracks >= 0 or AssertionError
-        raise self.scene_offset + scenes >= 0 or AssertionError
+        assert self.track_offset + tracks >= 0
+        assert self.scene_offset + scenes >= 0
         self.track_offset += tracks
         self.scene_offset += scenes
 
@@ -47,16 +46,16 @@ class SessionRingComponent(Component):
         super(SessionRingComponent, self).__init__(*a, **k)
         self._session_ring = SessionRingModel(num_tracks, num_scenes, set_session_highlight=set_session_highlight)
         if tracks_to_use != None:
-            if not callable(tracks_to_use):
-                raise AssertionError
-                self._tracks_to_use = tracks_to_use
-            else:
-                self._tracks_to_use = lambda : self.song.visible_tracks
-            self._cached_track_list = []
-            self._update_track_list()
-            self._snap_offsets = always_snap_track_offset
-            self.notify_offset(0, 0)
-            self.is_enabled() and self._update_highlight()
+            assert callable(tracks_to_use)
+            self._tracks_to_use = tracks_to_use
+        else:
+            self._tracks_to_use = lambda : self.song.visible_tracks
+        self._cached_track_list = []
+        self._update_track_list()
+        self._snap_offsets = always_snap_track_offset
+        self.notify_offset(0, 0)
+        if self.is_enabled():
+            self._update_highlight()
         self.__on_track_list_changed.subject = self.song
         self.__on_visible_tracks_changed.subject = self.song
         self.__on_scene_list_changed.subject = self.song
@@ -68,14 +67,14 @@ class SessionRingComponent(Component):
         return self.song.scenes
 
     def set_offsets(self, track_offset, scene_offset):
-        if not track_offset >= 0:
-            raise AssertionError
-            if not scene_offset >= 0:
-                raise AssertionError
-                track_increment = 0
-                scene_increment = 0
-                track_increment = len(self.tracks_to_use()) > track_offset and track_offset - self.track_offset
-            scene_increment = len(self.song.scenes) > scene_offset and scene_offset - self.scene_offset
+        assert track_offset >= 0
+        assert scene_offset >= 0
+        track_increment = 0
+        scene_increment = 0
+        if len(self.tracks_to_use()) > track_offset:
+            track_increment = track_offset - self.track_offset
+        if len(self.song.scenes) > scene_offset:
+            scene_increment = scene_offset - self.scene_offset
         self.move(track_increment, scene_increment)
 
     def move(self, tracks, scenes):

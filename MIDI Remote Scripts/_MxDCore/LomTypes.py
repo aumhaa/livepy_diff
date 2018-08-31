@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import ast
 from collections import namedtuple
@@ -700,9 +699,9 @@ def get_root_prop(external_device, prop_key):
     root_properties = {LIVE_APP: Live.Application.get_application,
      LIVE_SET: lambda : Live.Application.get_application().get_document(),
      CONTROL_SURFACES: get_control_surfaces}
-    if not prop_key in ROOT_KEYS:
-        raise AssertionError
-        return prop_key == THIS_DEVICE and external_device
+    assert prop_key in ROOT_KEYS
+    if prop_key == THIS_DEVICE:
+        return external_device
     return root_properties[prop_key]()
 
 

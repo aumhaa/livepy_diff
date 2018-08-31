@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.control_surface import Component
 from ableton.v2.base import depends, listenable_property, liveobj_changed, liveobj_valid
@@ -21,8 +20,8 @@ class RealTimeDataComponent(Component):
 
     @depends(real_time_mapper=None, register_real_time_data=None)
     def __init__(self, real_time_mapper = None, register_real_time_data = None, channel_type = None, *a, **k):
-        raise channel_type is not None or AssertionError
-        raise liveobj_valid(real_time_mapper) or AssertionError
+        assert channel_type is not None
+        assert liveobj_valid(real_time_mapper)
         super(RealTimeDataComponent, self).__init__(*a, **k)
         self._channel_type = channel_type
         self._real_time_channel_id = u''

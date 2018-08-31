@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.PhysicalDisplayElement import PhysicalDisplayElement
 from .NumericalDisplaySegment import NumericalDisplaySegment
@@ -27,19 +26,19 @@ class NumericalDisplayElement(PhysicalDisplayElement):
             self._logical_segments.append(new_segment)
 
     def display_message(self, message):
-        if not self._message_header != None:
-            raise AssertionError
-            raise message != None or AssertionError
-            raise isinstance(message, str) or AssertionError
-            message = self._block_messages or NumericalDisplaySegment.adjust_string(message, self._width)
+        assert self._message_header != None
+        assert message != None
+        assert isinstance(message, str)
+        if not self._block_messages:
+            message = NumericalDisplaySegment.adjust_string(message, self._width)
             self.send_midi(self._message_header + tuple([ self._translate_char(c) for c in message ]) + self._message_tail)
 
     def _translate_char(self, char_to_translate):
-        if not char_to_translate != None:
-            raise AssertionError
-            raise isinstance(char_to_translate, str) or isinstance(char_to_translate, unicode) or AssertionError
-            raise len(char_to_translate) == 1 or AssertionError
-            result = char_to_translate in self._translation_table.keys() and self._translation_table[char_to_translate]
+        assert char_to_translate != None
+        assert isinstance(char_to_translate, str) or isinstance(char_to_translate, unicode)
+        assert len(char_to_translate) == 1
+        if char_to_translate in self._translation_table.keys():
+            result = self._translation_table[char_to_translate]
         else:
             result = self._translation_table[u'0']
         return result

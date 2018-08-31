@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ...base import EventObject, listenable_property, listens, liveobj_valid, nop
 
@@ -31,7 +30,7 @@ class Color(object):
 class DynamicColorFactory(object):
 
     def __init__(self, transformation = nop, *a, **k):
-        raise callable(transformation) or AssertionError
+        assert callable(transformation)
         super(DynamicColorFactory, self).__init__(*a, **k)
         self._transform = transformation
 
@@ -47,7 +46,7 @@ class DynamicColorBase(Color, EventObject):
     midi_value = listenable_property.managed(0)
 
     def __init__(self, transformation = nop, *a, **k):
-        raise callable(transformation) or AssertionError
+        assert callable(transformation)
         super(DynamicColorBase, self).__init__(*a, **k)
         self._transformation = transformation
 
@@ -59,7 +58,7 @@ class DynamicColorBase(Color, EventObject):
 class SelectedTrackColor(DynamicColorBase):
 
     def __init__(self, song_view = None, *a, **k):
-        raise liveobj_valid(song_view) or AssertionError
+        assert liveobj_valid(song_view)
         super(SelectedTrackColor, self).__init__(*a, **k)
         self.__on_color_changed.subject = song_view
         self.__on_color_changed()
@@ -72,7 +71,7 @@ class SelectedTrackColor(DynamicColorBase):
 class SelectedClipColor(DynamicColorBase):
 
     def __init__(self, song_view = None, *a, **k):
-        raise liveobj_valid(song_view) or AssertionError
+        assert liveobj_valid(song_view)
         super(SelectedClipColor, self).__init__(*a, **k)
         self.__on_color_changed.subject = song_view
         self.__on_color_changed()
@@ -93,3 +92,16 @@ class SelectedClipColorFactory(DynamicColorFactory):
 
     def instantiate(self, song):
         return SelectedClipColor(song_view=song.view, transformation=self._transform)
+
+
+class AnimatedColor(Color):
+    _channel = None
+
+    def __init__(self, color1 = None, color2 = None, *a, **k):
+        super(AnimatedColor, self).__init__(*a, **k)
+        self._color1 = color1
+        self._color2 = color2
+
+    def draw(self, interface):
+        interface.send_value(self._color1.midi_value)
+        interface.send_value(self._color2.midi_value, channel=self._channel)

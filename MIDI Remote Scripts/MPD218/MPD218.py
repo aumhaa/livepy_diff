@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from _MPDMkIIBase.MPDMkIIBase import MPDMkIIBase
 PAD_CHANNEL = 9

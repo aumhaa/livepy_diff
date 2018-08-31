@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from itertools import count
 import Live
@@ -24,49 +23,49 @@ class SessionComponent(CompoundComponent):
 
     def __init__(self, num_tracks = 0, num_scenes = 0, auto_name = False, enable_skinning = False, *a, **k):
         super(SessionComponent, self).__init__(*a, **k)
-        raise num_tracks >= 0 or AssertionError
-        if not num_scenes >= 0:
-            raise AssertionError
-            self._track_offset = -1
-            self._scene_offset = -1
-            self._num_tracks = num_tracks
-            self._num_scenes = num_scenes
-            self._vertical_banking, self._horizontal_banking, self._vertical_paginator, self._horizontal_paginator = self.register_components(ScrollComponent(), ScrollComponent(), ScrollComponent(), ScrollComponent())
-            self._vertical_banking.can_scroll_up = self._can_bank_up
-            self._vertical_banking.can_scroll_down = self._can_bank_down
-            self._vertical_banking.scroll_up = self._bank_up
-            self._vertical_banking.scroll_down = self._bank_down
-            self._horizontal_banking.can_scroll_up = self._can_bank_left
-            self._horizontal_banking.can_scroll_down = self._can_bank_right
-            self._horizontal_banking.scroll_up = self._bank_left
-            self._horizontal_banking.scroll_down = self._bank_right
-            self._vertical_paginator.can_scroll_up = self._can_scroll_page_up
-            self._vertical_paginator.can_scroll_down = self._can_scroll_page_down
-            self._vertical_paginator.scroll_up = self._scroll_page_up
-            self._vertical_paginator.scroll_down = self._scroll_page_down
-            self._horizontal_paginator.can_scroll_up = self._can_scroll_page_left
-            self._horizontal_paginator.can_scroll_down = self._can_scroll_page_right
-            self._horizontal_paginator.scroll_up = self._scroll_page_left
-            self._horizontal_paginator.scroll_down = self._scroll_page_right
-            self._page_left_button = None
-            self._page_right_button = None
-            self._stop_all_button = None
-            self._next_scene_button = None
-            self._prev_scene_button = None
-            self._stop_track_clip_buttons = None
-            self._stop_clip_triggered_value = 127
-            self._stop_clip_value = None
-            self._highlighting_callback = None
-            self._show_highlight = num_tracks > 0 and num_scenes > 0
-            self._mixer = None
-            self._track_slots = self.register_slot_manager()
-            self._selected_scene = self.register_component(self._create_scene())
-            self._scenes = self.register_components(*[ self._create_scene() for _ in xrange(num_scenes) ])
-            if self._session_component_ends_initialisation:
-                self._end_initialisation()
-            if auto_name:
-                self._auto_name()
-            enable_skinning and self._enable_skinning()
+        assert num_tracks >= 0
+        assert num_scenes >= 0
+        self._track_offset = -1
+        self._scene_offset = -1
+        self._num_tracks = num_tracks
+        self._num_scenes = num_scenes
+        self._vertical_banking, self._horizontal_banking, self._vertical_paginator, self._horizontal_paginator = self.register_components(ScrollComponent(), ScrollComponent(), ScrollComponent(), ScrollComponent())
+        self._vertical_banking.can_scroll_up = self._can_bank_up
+        self._vertical_banking.can_scroll_down = self._can_bank_down
+        self._vertical_banking.scroll_up = self._bank_up
+        self._vertical_banking.scroll_down = self._bank_down
+        self._horizontal_banking.can_scroll_up = self._can_bank_left
+        self._horizontal_banking.can_scroll_down = self._can_bank_right
+        self._horizontal_banking.scroll_up = self._bank_left
+        self._horizontal_banking.scroll_down = self._bank_right
+        self._vertical_paginator.can_scroll_up = self._can_scroll_page_up
+        self._vertical_paginator.can_scroll_down = self._can_scroll_page_down
+        self._vertical_paginator.scroll_up = self._scroll_page_up
+        self._vertical_paginator.scroll_down = self._scroll_page_down
+        self._horizontal_paginator.can_scroll_up = self._can_scroll_page_left
+        self._horizontal_paginator.can_scroll_down = self._can_scroll_page_right
+        self._horizontal_paginator.scroll_up = self._scroll_page_left
+        self._horizontal_paginator.scroll_down = self._scroll_page_right
+        self._page_left_button = None
+        self._page_right_button = None
+        self._stop_all_button = None
+        self._next_scene_button = None
+        self._prev_scene_button = None
+        self._stop_track_clip_buttons = None
+        self._stop_clip_triggered_value = 127
+        self._stop_clip_value = None
+        self._highlighting_callback = None
+        self._show_highlight = num_tracks > 0 and num_scenes > 0
+        self._mixer = None
+        self._track_slots = self.register_slot_manager()
+        self._selected_scene = self.register_component(self._create_scene())
+        self._scenes = self.register_components(*[ self._create_scene() for _ in xrange(num_scenes) ])
+        if self._session_component_ends_initialisation:
+            self._end_initialisation()
+        if auto_name:
+            self._auto_name()
+        if enable_skinning:
+            self._enable_skinning()
 
     def _end_initialisation(self):
         self.on_selected_scene_changed()
@@ -81,13 +80,13 @@ class SessionComponent(CompoundComponent):
         super(CompoundComponent, self).disconnect()
 
     def set_highlighting_callback(self, callback):
-        if not (not callback or callable(callback)):
-            raise AssertionError
-            self._highlighting_callback = self._highlighting_callback != callback and callback
+        assert not callback or callable(callback)
+        if self._highlighting_callback != callback:
+            self._highlighting_callback = callback
             self._do_show_highlight()
 
     def scene(self, index):
-        raise in_range(index, 0, len(self._scenes)) or AssertionError
+        assert in_range(index, 0, len(self._scenes))
         return self._scenes[index]
 
     def selected_scene(self):
@@ -243,7 +242,7 @@ class SessionComponent(CompoundComponent):
         self._update_select_buttons()
 
     def set_clip_launch_buttons(self, buttons):
-        raise not buttons or buttons.width() == self._num_tracks and buttons.height() == self._num_scenes or AssertionError
+        assert not buttons or buttons.width() == self._num_tracks and buttons.height() == self._num_scenes
         if buttons:
             for button, (x, y) in buttons.iterbuttons():
                 scene = self.scene(y)
@@ -257,7 +256,7 @@ class SessionComponent(CompoundComponent):
                 slot.set_launch_button(None)
 
     def set_scene_launch_buttons(self, buttons):
-        raise not buttons or buttons.width() == self._num_scenes and buttons.height() == 1 or AssertionError
+        assert not buttons or buttons.width() == self._num_scenes and buttons.height() == 1
         if buttons:
             for button, (x, _) in buttons.iterbuttons():
                 scene = self.scene(x)
@@ -275,12 +274,12 @@ class SessionComponent(CompoundComponent):
             self._mixer.set_track_offset(self.track_offset())
 
     def set_offsets(self, track_offset, scene_offset):
-        if not track_offset >= 0:
-            raise AssertionError
-            raise scene_offset >= 0 or AssertionError
-            track_increment = 0
-            scene_increment = 0
-            self._is_linked() and SessionComponent._perform_offset_change(track_offset - self._track_offset, scene_offset - self._scene_offset)
+        assert track_offset >= 0
+        assert scene_offset >= 0
+        track_increment = 0
+        scene_increment = 0
+        if self._is_linked():
+            SessionComponent._perform_offset_change(track_offset - self._track_offset, scene_offset - self._scene_offset)
         else:
             if len(self.tracks_to_use()) > track_offset:
                 track_increment = track_offset - self._track_offset
@@ -434,11 +433,11 @@ class SessionComponent(CompoundComponent):
 
     def _change_offsets(self, track_increment, scene_increment):
         offsets_changed = track_increment != 0 or scene_increment != 0
-        offsets_changed and self._track_offset += track_increment
-        self._scene_offset += scene_increment
-        raise self._track_offset >= 0 or AssertionError
-        if not self._scene_offset >= 0:
-            raise AssertionError
+        if offsets_changed:
+            self._track_offset += track_increment
+            self._scene_offset += scene_increment
+            assert self._track_offset >= 0
+            assert self._scene_offset >= 0
             if self._mixer != None:
                 self._mixer.set_track_offset(self.track_offset())
             self._reassign_tracks()
@@ -551,42 +550,42 @@ class SessionComponent(CompoundComponent):
         return self in SessionComponent._linked_session_instances
 
     def _link(self):
-        raise not self._is_linked() or AssertionError
+        assert not self._is_linked()
         SessionComponent._linked_session_instances.append(self)
 
     def _unlink(self):
-        raise self._is_linked() or AssertionError
+        assert self._is_linked()
         SessionComponent._linked_session_instances.remove(self)
 
     @staticmethod
     def _perform_offset_change(track_increment, scene_increment):
         u""" Performs the given offset changes on all linked instances """
-        if not len(SessionComponent._linked_session_instances) > 0:
-            raise AssertionError
-            scenes = Live.Application.get_application().get_document().scenes
-            instances_covering_session = 0
-            found_negative_offset = False
-            minimal_track_offset = -1
-            minimal_scene_offset = -1
-            for instance in SessionComponent._linked_session_instances:
-                new_track_offset = instance.track_offset() + track_increment
-                new_scene_offset = instance.scene_offset() + scene_increment
-                if new_track_offset >= 0 and new_scene_offset >= 0:
-                    if new_track_offset < len(instance.tracks_to_use()) and new_scene_offset < len(scenes):
-                        instances_covering_session += 1
-                        if minimal_track_offset < 0:
-                            minimal_track_offset = new_track_offset
-                        else:
-                            minimal_track_offset = min(minimal_track_offset, new_track_offset)
-                        if minimal_scene_offset < 0:
-                            minimal_scene_offset = new_scene_offset
-                        else:
-                            minimal_scene_offset = min(minimal_scene_offset, new_scene_offset)
-                else:
-                    found_negative_offset = True
-                    break
+        assert len(SessionComponent._linked_session_instances) > 0
+        scenes = Live.Application.get_application().get_document().scenes
+        instances_covering_session = 0
+        found_negative_offset = False
+        minimal_track_offset = -1
+        minimal_scene_offset = -1
+        for instance in SessionComponent._linked_session_instances:
+            new_track_offset = instance.track_offset() + track_increment
+            new_scene_offset = instance.scene_offset() + scene_increment
+            if new_track_offset >= 0 and new_scene_offset >= 0:
+                if new_track_offset < len(instance.tracks_to_use()) and new_scene_offset < len(scenes):
+                    instances_covering_session += 1
+                    if minimal_track_offset < 0:
+                        minimal_track_offset = new_track_offset
+                    else:
+                        minimal_track_offset = min(minimal_track_offset, new_track_offset)
+                    if minimal_scene_offset < 0:
+                        minimal_scene_offset = new_scene_offset
+                    else:
+                        minimal_scene_offset = min(minimal_scene_offset, new_scene_offset)
+            else:
+                found_negative_offset = True
+                break
 
-            SessionComponent._minimal_track_offset = not found_negative_offset and instances_covering_session > 0 and minimal_track_offset
+        if not found_negative_offset and instances_covering_session > 0:
+            SessionComponent._minimal_track_offset = minimal_track_offset
             SessionComponent._minimal_scene_offset = minimal_scene_offset
             for instance in SessionComponent._linked_session_instances:
                 instance._change_offsets(track_increment, scene_increment)

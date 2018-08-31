@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.MixerComponent import MixerComponent
 from _Framework.PhysicalDisplayElement import PhysicalDisplayElement
@@ -16,21 +15,21 @@ class NotifyingMixerComponent(MixerComponent):
         self._update_callback = None
 
     def set_update_callback(self, callback):
-        raise callback == None or dir(callback).count(u'im_func') is 1 or AssertionError
+        assert callback == None or dir(callback).count(u'im_func') is 1
         self._update_callback = callback
 
     def set_bank_display(self, display):
-        raise isinstance(display, PhysicalDisplayElement) or AssertionError
+        assert isinstance(display, PhysicalDisplayElement)
         self._bank_display = display
 
     def on_selected_track_changed(self):
         MixerComponent.on_selected_track_changed(self)
         selected_track = self.song().view.selected_track
         num_strips = len(self._channel_strips)
-        track_index = selected_track in self._tracks_to_use() and list(self._tracks_to_use()).index(selected_track)
-        new_offset = track_index - track_index % num_strips
-        if not new_offset / num_strips == int(new_offset / num_strips):
-            raise AssertionError
+        if selected_track in self._tracks_to_use():
+            track_index = list(self._tracks_to_use()).index(selected_track)
+            new_offset = track_index - track_index % num_strips
+            assert new_offset / num_strips == int(new_offset / num_strips)
             self.set_track_offset(new_offset)
 
     def update(self):

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from _Framework.ButtonElement import ButtonElement
@@ -9,7 +8,7 @@ class EncoderMixerModeSelector(ModeSelectorComponent):
     u""" Class that reassigns encoders on the AxiomPro to different mixer functions """
 
     def __init__(self, mixer):
-        raise isinstance(mixer, NotifyingMixerComponent) or AssertionError
+        assert isinstance(mixer, NotifyingMixerComponent)
         ModeSelectorComponent.__init__(self)
         self._mixer = mixer
         self._controls = None
@@ -33,7 +32,7 @@ class EncoderMixerModeSelector(ModeSelectorComponent):
         ModeSelectorComponent.disconnect(self)
 
     def set_modes_buttons(self, buttons):
-        raise buttons == None or isinstance(buttons, tuple) or len(buttons) == self.number_of_modes() or AssertionError
+        assert buttons == None or isinstance(buttons, tuple) or len(buttons) == self.number_of_modes()
         identify_sender = True
         for button in self._modes_buttons:
             button.remove_value_listener(self._mode_value)
@@ -41,7 +40,7 @@ class EncoderMixerModeSelector(ModeSelectorComponent):
         self._modes_buttons = []
         if buttons != None:
             for button in buttons:
-                raise isinstance(button, ButtonElement) or AssertionError
+                assert isinstance(button, ButtonElement)
                 self._modes_buttons.append(button)
                 button.add_value_listener(self._mode_value, identify_sender)
 
@@ -49,31 +48,31 @@ class EncoderMixerModeSelector(ModeSelectorComponent):
         self.update()
 
     def set_controls(self, controls):
-        raise controls == None or isinstance(controls, tuple) and len(controls) == 8 or AssertionError
+        assert controls == None or isinstance(controls, tuple) and len(controls) == 8
         self._controls = controls
         self.set_mode(0)
         self.update()
 
     def set_show_volume_page(self, show):
-        if not isinstance(show, type(False)):
-            raise AssertionError
-            if show != self._show_volume_page:
-                self._show_volume_page = show
-                if self._page_name_sources != None:
-                    offset = 0
-                    offset = self._show_volume_page or 1
+        assert isinstance(show, type(False))
+        if show != self._show_volume_page:
+            self._show_volume_page = show
+            if self._page_name_sources != None:
+                offset = 0
+                if not self._show_volume_page:
+                    offset = 1
                 for idx in range(4):
                     self._page_name_sources[idx].set_display_string(self._page_names[idx + offset])
 
             self.update()
 
     def page_name_data_source(self, index):
-        if not index in range(4):
-            raise AssertionError
-            if self._page_name_sources == None:
-                self._page_name_sources = []
-                offset = 0
-                offset = self._show_volume_page or 1
+        assert index in range(4)
+        if self._page_name_sources == None:
+            self._page_name_sources = []
+            offset = 0
+            if not self._show_volume_page:
+                offset = 1
             for idx in range(4):
                 self._page_name_sources.append(DisplayDataSource())
                 self._page_name_sources[idx].set_display_string(self._page_names[idx + offset])
@@ -81,8 +80,8 @@ class EncoderMixerModeSelector(ModeSelectorComponent):
         return self._page_name_sources[index]
 
     def parameter_data_source(self, index):
-        raise self._controls != None or AssertionError
-        raise index in range(len(self._controls)) or AssertionError
+        assert self._controls != None
+        assert index in range(len(self._controls))
         return self._mixer.channel_strip(index).track_name_data_source()
 
     def current_page_data_source(self):
@@ -93,11 +92,11 @@ class EncoderMixerModeSelector(ModeSelectorComponent):
 
     def update(self):
         super(EncoderMixerModeSelector, self).update()
-        if not self._modes_buttons != None:
-            raise AssertionError
-            if self.is_enabled() and self._controls != None:
-                mode = self._mode_index
-                self._show_volume_page or mode += 1
+        assert self._modes_buttons != None
+        if self.is_enabled() and self._controls != None:
+            mode = self._mode_index
+            if not self._show_volume_page:
+                mode += 1
             self._current_page_data_source.set_display_string(self._page_names[mode])
             for index in range(len(self._controls)):
                 self._controls[index].release_parameter()
@@ -106,8 +105,8 @@ class EncoderMixerModeSelector(ModeSelectorComponent):
                 self._mixer.channel_strip(index).set_send_controls((None, None, None))
                 if self._show_volume_page:
                     self._mixer.channel_strip(index).set_volume_control(None)
-                if not (mode == 0 and self._show_volume_page):
-                    raise AssertionError
+                if mode == 0:
+                    assert self._show_volume_page
                     self._mixer.channel_strip(index).set_volume_control(self._controls[index])
                 elif mode == 1:
                     self._mixer.channel_strip(index).set_pan_control(self._controls[index])
@@ -115,12 +114,12 @@ class EncoderMixerModeSelector(ModeSelectorComponent):
                     self._mixer.channel_strip(index).set_send_controls((self._controls[index], None, None))
                 elif mode == 3:
                     self._mixer.channel_strip(index).set_send_controls((None, self._controls[index], None))
-                elif not (mode == 4 and not self._show_volume_page):
-                    raise AssertionError
+                elif mode == 4:
+                    assert not self._show_volume_page
                     self._mixer.channel_strip(index).set_send_controls((None, None, self._controls[index]))
                 else:
                     print(u'Invalid mode index')
-                    raise False or AssertionError
+                    assert False
 
     def _mixer_assignments_changed(self):
         self.update()

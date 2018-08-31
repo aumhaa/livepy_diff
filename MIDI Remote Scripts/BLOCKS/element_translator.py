@@ -1,11 +1,10 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 
 class ElementTranslator(object):
 
     def __init__(self, elements = None, feedback_channel = None, non_feedback_channel = None, *a, **k):
         super(ElementTranslator, self).__init__(*a, **k)
-        raise elements is not None or AssertionError
+        assert elements is not None
         self._elements = elements
         self._feedback_channel = feedback_channel
         self._non_feedback_channel = non_feedback_channel

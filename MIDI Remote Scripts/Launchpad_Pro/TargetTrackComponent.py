@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.SubjectSlot import Subject, subject_slot, subject_slot_group
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent

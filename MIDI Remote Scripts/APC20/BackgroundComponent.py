@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.BackgroundComponent import BackgroundComponent as BackgroundComponentBase
 from _Framework.Util import nop

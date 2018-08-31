@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Generic.Devices import device_parameters_to_map, number_of_parameter_banks, parameter_banks, parameter_bank_names, best_of_parameter_bank
@@ -187,7 +186,7 @@ class DeviceComponent(ControlSurfaceComponent, Subject):
         self._update_lock_button()
 
     def set_lock_button(self, button):
-        raise button == None or isinstance(button, ButtonElement) or AssertionError
+        assert button == None or isinstance(button, ButtonElement)
         self._lock_button = button
         self._lock_button_slot.subject = button
         self._update_lock_button()
@@ -229,9 +228,9 @@ class DeviceComponent(ControlSurfaceComponent, Subject):
             self._update_device_bank_nav_buttons()
 
     def _bank_up_value(self, value):
-        raise self._bank_up_button != None or AssertionError
-        raise value != None or AssertionError
-        raise isinstance(value, int) or AssertionError
+        assert self._bank_up_button != None
+        assert value != None
+        assert isinstance(value, int)
         if self.is_enabled():
             if not self._bank_up_button.is_momentary() or value is not 0:
                 if self._device != None:
@@ -246,31 +245,31 @@ class DeviceComponent(ControlSurfaceComponent, Subject):
                         self.update()
 
     def _bank_down_value(self, value):
-        if not self._bank_down_button != None:
-            raise AssertionError
-            raise value != None or AssertionError
-            if not isinstance(value, int):
-                raise AssertionError
-                if self.is_enabled():
-                    self._bank_name = (not self._bank_down_button.is_momentary() or value is not 0) and self._device != None and (self._bank_index == None or self._bank_index > 0) and u''
+        assert self._bank_down_button != None
+        assert value != None
+        assert isinstance(value, int)
+        if self.is_enabled():
+            if not self._bank_down_button.is_momentary() or value is not 0:
+                if self._device != None and (self._bank_index == None or self._bank_index > 0):
+                    self._bank_name = u''
                     self._bank_index = self._bank_index - 1 if self._bank_index != None else max(0, self._number_of_parameter_banks() - 1)
                     self.update()
 
     def _lock_value(self, value):
-        if not self._lock_button != None:
-            raise AssertionError
-            raise self._lock_callback != None or AssertionError
-            raise value != None or AssertionError
-            raise isinstance(value, int) or AssertionError
-            (not self._lock_button.is_momentary() or value is not 0) and self._lock_callback()
+        assert self._lock_button != None
+        assert self._lock_callback != None
+        assert value != None
+        assert isinstance(value, int)
+        if not self._lock_button.is_momentary() or value is not 0:
+            self._lock_callback()
 
     def _on_off_value(self, value):
-        if not self._on_off_button != None:
-            raise AssertionError
-            if not value in range(128):
-                raise AssertionError
-                parameter = (not self._on_off_button.is_momentary() or value is not 0) and self._on_off_parameter()
-                parameter.value = parameter != None and parameter.is_enabled and float(int(parameter.value == 0.0))
+        assert self._on_off_button != None
+        assert value in range(128)
+        if not self._on_off_button.is_momentary() or value is not 0:
+            parameter = self._on_off_parameter()
+            if parameter != None and parameter.is_enabled:
+                parameter.value = float(int(parameter.value == 0.0))
 
     @subject_slot_group(u'value')
     def _on_bank_value(self, value, button):
@@ -295,9 +294,9 @@ class DeviceComponent(ControlSurfaceComponent, Subject):
         return direct_banking or roundtrip_banking or increment_banking
 
     def _assign_parameters(self):
-        raise self.is_enabled() or AssertionError
-        raise self._device != None or AssertionError
-        raise self._parameter_controls != None or AssertionError
+        assert self.is_enabled()
+        assert self._device != None
+        assert self._parameter_controls != None
         self._bank_name, bank = self._current_bank_details()
         for control, parameter in zip(self._parameter_controls, bank):
             if control != None:

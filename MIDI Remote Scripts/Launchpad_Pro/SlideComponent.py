@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.Util import clamp
 from _Framework.SubjectSlot import subject_slot, Subject

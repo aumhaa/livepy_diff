@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import depends, listenable_property, listens, liveobj_changed
 from ableton.v2.control_surface.mode import ModesComponent

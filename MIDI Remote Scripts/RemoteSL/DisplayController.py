@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from .RemoteSLComponent import RemoteSLComponent
 from .consts import *
@@ -28,8 +27,8 @@ class DisplayController(RemoteSLComponent):
         'names' can be an array of NUM_CONTROLS_PER_ROW strings, or a list with
         exactly one string, which then will fill up the whole display
         """
-        raise len(parameters) == NUM_CONTROLS_PER_ROW or AssertionError
-        raise len(names) == NUM_CONTROLS_PER_ROW or len(names) == 1 or AssertionError
+        assert len(parameters) == NUM_CONTROLS_PER_ROW
+        assert len(names) == NUM_CONTROLS_PER_ROW or len(names) == 1
         self.__left_strip_names = names
         self.__left_strip_parameters = parameters
 
@@ -40,8 +39,8 @@ class DisplayController(RemoteSLComponent):
         'names' can be an array of NUM_CONTROLS_PER_ROW strings, or a list with
         exactly one string, which then will fill up the whole display
         """
-        raise len(parameters) == NUM_CONTROLS_PER_ROW or AssertionError
-        raise len(names) == NUM_CONTROLS_PER_ROW or len(names) == 1 or AssertionError
+        assert len(parameters) == NUM_CONTROLS_PER_ROW
+        assert len(names) == NUM_CONTROLS_PER_ROW or len(names) == 1
         self.__right_strip_names = names
         self.__right_strip_parameters = parameters
 
@@ -58,23 +57,22 @@ class DisplayController(RemoteSLComponent):
                         message_string += self.__generate_strip_string(s)
 
                 else:
-                    raise len(strip_names) == 1 or AssertionError
+                    assert len(strip_names) == 1
                     message_string += strip_names[0]
-            else:
-                if row_id == 3 or row_id == 4:
-                    parameters = row_id == 3 and self.__left_strip_parameters
+            elif row_id == 3 or row_id == 4:
+                if row_id == 3:
+                    parameters = self.__left_strip_parameters
                 else:
                     parameters = self.__right_strip_parameters
-                if not len(parameters) == NUM_CONTROLS_PER_ROW:
-                    raise AssertionError
-                    for p in parameters:
-                        if p:
-                            message_string += self.__generate_strip_string(unicode(p))
-                        else:
-                            message_string += self.__generate_strip_string(u'')
+                assert len(parameters) == NUM_CONTROLS_PER_ROW
+                for p in parameters:
+                    if p:
+                        message_string += self.__generate_strip_string(unicode(p))
+                    else:
+                        message_string += self.__generate_strip_string(u'')
 
-                else:
-                    raise False or AssertionError
+            else:
+                assert False
             self.__send_display_string(message_string, row_id, offset=0)
 
     def refresh_state(self):
@@ -111,33 +109,33 @@ class DisplayController(RemoteSLComponent):
         'row_id' is defined as followed: left_row1 = 1 | left_row2 = 2
            left_row1 = 3] | left_row2 = 4
         """
-        if not row_id in (1, 2, 3, 4):
-            raise AssertionError
-            final_message = u' ' * offset + message
-            if len(final_message) < NUM_CHARS_PER_DISPLAY_LINE:
-                fill_up = NUM_CHARS_PER_DISPLAY_LINE - len(final_message)
-                final_message = final_message + u' ' * fill_up
-            elif len(final_message) >= NUM_CHARS_PER_DISPLAY_LINE:
-                final_message = final_message[0:NUM_CHARS_PER_DISPLAY_LINE]
-            final_offset = 0
-            sysex_header = (240,
-             0,
-             32,
-             41,
-             3,
-             3,
-             18,
-             0,
-             ABLETON_PID,
-             0,
-             2,
-             1)
-            sysex_pos = (final_offset, row_id)
-            sysex_text_command = (4,)
-            sysex_text = tuple([ ord(c) for c in final_message ])
-            sysex_close_up = (247,)
-            full_sysex = sysex_header + sysex_pos + sysex_text_command + sysex_text + sysex_close_up
-            self.__last_send_row_id_messages[row_id] = self.__last_send_row_id_messages[row_id] != full_sysex and full_sysex
+        assert row_id in (1, 2, 3, 4)
+        final_message = u' ' * offset + message
+        if len(final_message) < NUM_CHARS_PER_DISPLAY_LINE:
+            fill_up = NUM_CHARS_PER_DISPLAY_LINE - len(final_message)
+            final_message = final_message + u' ' * fill_up
+        elif len(final_message) >= NUM_CHARS_PER_DISPLAY_LINE:
+            final_message = final_message[0:NUM_CHARS_PER_DISPLAY_LINE]
+        final_offset = 0
+        sysex_header = (240,
+         0,
+         32,
+         41,
+         3,
+         3,
+         18,
+         0,
+         ABLETON_PID,
+         0,
+         2,
+         1)
+        sysex_pos = (final_offset, row_id)
+        sysex_text_command = (4,)
+        sysex_text = tuple([ ord(c) for c in final_message ])
+        sysex_close_up = (247,)
+        full_sysex = sysex_header + sysex_pos + sysex_text_command + sysex_text + sysex_close_up
+        if self.__last_send_row_id_messages[row_id] != full_sysex:
+            self.__last_send_row_id_messages[row_id] = full_sysex
             self.send_midi(full_sysex)
 
     def __generate_strip_string(self, display_string):
@@ -172,5 +170,5 @@ class DisplayController(RemoteSLComponent):
                 ret += display_string[i]
 
         ret += u' '
-        raise len(ret) == NUM_CHARS_PER_DISPLAY_STRIP or AssertionError
+        assert len(ret) == NUM_CHARS_PER_DISPLAY_STRIP
         return ret

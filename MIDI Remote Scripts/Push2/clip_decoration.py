@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import liveobj_valid, listenable_property, listens, EventObject
 from pushbase.decoration import DecoratorFactory, LiveObjectDecorator
@@ -20,23 +19,23 @@ class ClipPositions(EventObject):
     use_beat_time = listenable_property.managed(False)
 
     def __init__(self, clip = None, *a, **k):
-        if not clip is not None:
-            raise AssertionError
-            super(ClipPositions, self).__init__(*a, **k)
-            self._clip = clip
-            self._looping = self._clip.looping
-            self.__on_is_recording_changed.subject = clip
-            self.__on_looping_changed.subject = clip
-            self.__on_start_marker_changed.subject = clip
-            self.__on_end_marker_changed.subject = clip
-            self.__on_loop_start_changed.subject = clip
-            self.__on_loop_end_changed.subject = clip
-            self.__on_loop_start_changed()
-            self.__on_loop_end_changed()
-            if clip.is_audio_clip:
-                self.__on_warping_changed.subject = clip
-                self.__on_warp_markers_changed.subject = clip
-            self.__on_notes_changed.subject = clip.is_midi_clip and clip
+        assert clip is not None
+        super(ClipPositions, self).__init__(*a, **k)
+        self._clip = clip
+        self._looping = self._clip.looping
+        self.__on_is_recording_changed.subject = clip
+        self.__on_looping_changed.subject = clip
+        self.__on_start_marker_changed.subject = clip
+        self.__on_end_marker_changed.subject = clip
+        self.__on_loop_start_changed.subject = clip
+        self.__on_loop_end_changed.subject = clip
+        self.__on_loop_start_changed()
+        self.__on_loop_end_changed()
+        if clip.is_audio_clip:
+            self.__on_warping_changed.subject = clip
+            self.__on_warp_markers_changed.subject = clip
+        if clip.is_midi_clip:
+            self.__on_notes_changed.subject = clip
             self._update_start_end_note_times()
         self.update_all()
 

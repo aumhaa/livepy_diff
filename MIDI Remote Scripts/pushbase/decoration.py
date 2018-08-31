@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from itertools import ifilter
 import Live
@@ -35,7 +34,7 @@ class LiveObjectDict(dict):
         return super(LiveObjectDict, self).get(self._transform_key(key), *default)
 
     def _transform_key(self, key):
-        raise hasattr(key, u'_live_ptr') or AssertionError
+        assert hasattr(key, u'_live_ptr')
         return key._live_ptr
 
     def update(self, *a, **k):
@@ -55,7 +54,7 @@ class LiveObjectDict(dict):
 class LiveObjectDecorator(CompoundDisconnectable, Proxy):
 
     def __init__(self, live_object = None, additional_properties = {}):
-        raise live_object is not None or AssertionError
+        assert live_object is not None
         super(LiveObjectDecorator, self).__init__(proxied_object=live_object)
         self._live_object = live_object
         for name, value in additional_properties.iteritems():

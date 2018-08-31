@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from .RemoteSLComponent import RemoteSLComponent
@@ -47,17 +46,17 @@ class EffectController(RemoteSLComponent):
             strip = self.__strips[cc_no - FX_ENCODER_ROW_BASE_CC]
             strip.on_encoder_moved(cc_value)
         elif cc_no in fx_lower_button_row_ccs:
-            raise False or AssertionError(u'Lower Button CCS should be passed to Live!')
+            assert False, u'Lower Button CCS should be passed to Live!'
         elif cc_no in fx_poti_row_ccs:
-            raise False or AssertionError(u'Poti CCS should be passed to Live!')
+            assert False, u'Poti CCS should be passed to Live!'
         else:
-            raise False or AssertionError(u'unknown FX midi message')
+            assert False, u'unknown FX midi message'
 
     def receive_midi_note(self, note, velocity):
         if note in fx_drum_pad_row_notes:
-            raise False or AssertionError(u'DrumPad CCS should be passed to Live!')
+            assert False, u'DrumPad CCS should be passed to Live!'
         else:
-            raise False or AssertionError(u'unknown FX midi message')
+            assert False, u'unknown FX midi message'
 
     def build_midi_map(self, script_handle, midi_map_handle):
         needs_takeover = True
@@ -149,22 +148,22 @@ class EffectController(RemoteSLComponent):
                 self.send_midi((self.cc_status_byte(), cc_no, CC_VAL_BUTTON_RELEASED))
 
     def __handle_page_up_down_ccs(self, cc_no, cc_value):
-        new_bank = self.__assigned_device != None and self.__bank
-        if cc_value == CC_VAL_BUTTON_PRESSED:
-            if cc_no == FX_DISPLAY_PAGE_UP:
-                new_bank = min(self.__bank + 1, number_of_parameter_banks(self.__assigned_device) - 1)
-            elif cc_no == FX_DISPLAY_PAGE_DOWN:
-                new_bank = max(self.__bank - 1, 0)
-            else:
-                if not False:
-                    raise AssertionError(u'unknown Display midi message')
-                if not self.__bank == new_bank:
-                    self.__show_bank = True
-                    if not self.__assigned_device_is_locked:
-                        self.__bank = new_bank
-                        self.__reassign_strips()
-                    else:
-                        self.__assigned_device.store_chosen_bank(self.__parent.instance_identifier(), new_bank)
+        if self.__assigned_device != None:
+            new_bank = self.__bank
+            if cc_value == CC_VAL_BUTTON_PRESSED:
+                if cc_no == FX_DISPLAY_PAGE_UP:
+                    new_bank = min(self.__bank + 1, number_of_parameter_banks(self.__assigned_device) - 1)
+                elif cc_no == FX_DISPLAY_PAGE_DOWN:
+                    new_bank = max(self.__bank - 1, 0)
+                else:
+                    assert False, u'unknown Display midi message'
+            if not self.__bank == new_bank:
+                self.__show_bank = True
+                if not self.__assigned_device_is_locked:
+                    self.__bank = new_bank
+                    self.__reassign_strips()
+                else:
+                    self.__assigned_device.store_chosen_bank(self.__parent.instance_identifier(), new_bank)
 
     def __handle_select_button_ccs(self, cc_no, cc_value):
         if cc_no == FX_SELECT_FIRST_BUTTON_ROW:
@@ -185,7 +184,7 @@ class EffectController(RemoteSLComponent):
             if cc_value == CC_VAL_BUTTON_PRESSED:
                 self.song().stop_all_clips()
         else:
-            raise False or AssertionError(u'unknown select row midi message')
+            assert False, u'unknown select row midi message'
 
     def __update_select_row_leds(self):
         if self.__assigned_device_is_locked:
@@ -276,4 +275,4 @@ class EffectChannelStrip():
                 self.__assigned_parameter.value = self.__assigned_parameter.default_value
 
     def on_encoder_moved(self, cc_value):
-        raise self.__assigned_parameter == None or AssertionError(u'should only be reached when the encoder was not realtime mapped ')
+        assert self.__assigned_parameter == None, u'should only be reached when the encoder was not realtime mapped '

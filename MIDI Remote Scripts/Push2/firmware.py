@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import fnmatch
 import logging
@@ -89,8 +88,8 @@ class FirmwareUpdateComponent(Component):
         self._firmware = None
 
     def start(self, firmware):
-        raise firmware is not None or AssertionError
-        raise self.state == u'welcome' or AssertionError
+        assert firmware is not None
+        assert self.state == u'welcome'
         logger.info(u'Start firmware update using %r', firmware.filename)
         self._firmware = firmware
         self.notify_firmware_file()
@@ -102,10 +101,10 @@ class FirmwareUpdateComponent(Component):
         self._tasks.add(task.sequence(task.wait(WELCOME_STATE_TIME), task.run(set_state)))
 
     def process_firmware_response(self, data):
-        if not self.state == u'start':
-            raise AssertionError(u"'%s' != 'start'" % self.state)
-            entry = find_if(lambda entry: entry[u'type'] == u'firmware', data)
-            self.state = entry and (u'success' if entry[u'success'] else u'failure')
+        assert self.state == u'start', u"'%s' != 'start'" % self.state
+        entry = find_if(lambda entry: entry[u'type'] == u'firmware', data)
+        if entry:
+            self.state = u'success' if entry[u'success'] else u'failure'
 
     @listenable_property
     def firmware_file(self):
@@ -124,9 +123,9 @@ class FirmwareSwitcher(object):
     """
 
     def __init__(self, firmware_collector = None, firmware_update = None, installed_firmware_version = None, *a, **k):
-        raise firmware_collector is not None or AssertionError
-        raise firmware_update is not None or AssertionError
-        raise installed_firmware_version is not None or AssertionError
+        assert firmware_collector is not None
+        assert firmware_update is not None
+        assert installed_firmware_version is not None
         super(FirmwareSwitcher, self).__init__(*a, **k)
         self._installed_version = installed_firmware_version
         self._update = firmware_update

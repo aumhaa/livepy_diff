@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from itertools import ifilter
 from .ControlSurfaceComponent import ControlSurfaceComponent
@@ -17,8 +16,8 @@ class DrumRackComponent(ControlSurfaceComponent):
     @depends(set_pad_translations=None, request_rebuild_midi_map=None)
     def __init__(self, set_pad_translations = None, request_rebuild_midi_map = None, *a, **k):
         super(DrumRackComponent, self).__init__(*a, **k)
-        raise callable(set_pad_translations) or AssertionError
-        raise callable(request_rebuild_midi_map) or AssertionError
+        assert callable(set_pad_translations)
+        assert callable(request_rebuild_midi_map)
         self._set_pad_translations = set_pad_translations
         self._request_rebuild_midi_map = request_rebuild_midi_map
 

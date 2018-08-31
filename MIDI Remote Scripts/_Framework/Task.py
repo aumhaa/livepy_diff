@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import functools
 import traceback
@@ -121,7 +120,7 @@ class WrapperTask(Task):
 class FuncTask(Task):
 
     def __init__(self, func = None, equivalent = None, *a, **k):
-        raise func != None or AssertionError
+        assert func != None
         super(FuncTask, self).__init__(*a, **k)
         self._func = func
         self._equivalent = equivalent
@@ -152,7 +151,7 @@ class GeneratorTask(Task):
         delta = 0
 
     def __init__(self, generator = None, equivalent = None, *a, **k):
-        raise generator != None and callable(generator) or AssertionError
+        assert generator != None and callable(generator)
         super(GeneratorTask, self).__init__(*a, **k)
         self._param = GeneratorTask.Param()
         self._set_generator(generator)

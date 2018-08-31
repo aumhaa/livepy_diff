@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import listens, task
 from ableton.v2.control_surface import Component
@@ -9,7 +8,7 @@ class UserComponentBase(Component):
     defer_sysex_sending = False
 
     def __init__(self, value_control = None, *a, **k):
-        raise value_control is not None or AssertionError
+        assert value_control is not None
         super(UserComponentBase, self).__init__(*a, **k)
         self._value_control = value_control
         self.__on_value.subject = self._value_control

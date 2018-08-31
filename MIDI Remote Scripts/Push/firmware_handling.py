@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from os import path
 VERSION_PREFIX = str(u'10F4000041444139204E69636F6C6C73')

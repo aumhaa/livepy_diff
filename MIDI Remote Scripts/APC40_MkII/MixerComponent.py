@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from itertools import ifilter, izip_longest
 from _Framework.Control import RadioButtonControl, control_list

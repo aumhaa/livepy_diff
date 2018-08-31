@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 AUTO_FILTER_PARAMS = {u'LFO Sync Rate': u'LFO Synced Rate'}
 AUTO_PAN_PARAMS = {u'Sync Rate': u'Synced Rate'}

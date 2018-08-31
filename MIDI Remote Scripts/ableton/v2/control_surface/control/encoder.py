@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import logging
 from ...base import clamp, const, lazy_attribute, task, sign
@@ -22,8 +21,8 @@ class EncoderControl(InputControl):
         """
 
         def __init__(self, control = None, manager = None, touch_event_delay = 0, *a, **k):
-            raise control is not None or AssertionError
-            raise manager is not None or AssertionError
+            assert control is not None
+            assert manager is not None
             super(EncoderControl.State, self).__init__(control=control, manager=manager, *a, **k)
             self._is_touched = False
             self._touch_value_slot = None

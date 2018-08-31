@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import EventObject
 from pushbase.decoration import LiveObjectDecorator, NotifyingList, get_parameter_by_name

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import Live
 import MidiRemoteScript
@@ -194,10 +193,10 @@ class FireOne:
 
     def __transport_message(self, note, value):
         u""" One of the transport buttons was pressed or release """
-        if not note in FIRE_ONE_TRANSPORT:
-            raise AssertionError
-            if note is PLAY_NOTE and value != 0:
-                self.__shift_pressed and self.song().continue_playing()
+        assert note in FIRE_ONE_TRANSPORT
+        if note is PLAY_NOTE and value != 0:
+            if self.__shift_pressed:
+                self.song().continue_playing()
             else:
                 self.song().is_playing = True
         elif note is STOP_NOTE and value != 0:
@@ -227,7 +226,7 @@ class FireOne:
 
     def __jog_dial_message(self, cc_no, cc_value):
         u""" Jog Dial: the function is based on the shift status and the active view """
-        raise cc_value in range(128) or AssertionError
+        assert cc_value in range(128)
         moved_forward = cc_value in range(1, 64)
         if not self.__shift_pressed:
             if self.application().view.is_view_visible(u'Session'):
@@ -263,13 +262,13 @@ class FireOne:
     def __f_key_message(self, f_key, value):
         index = list(FIRE_ONE_F_KEYS).index(f_key)
         tracks = self.song().visible_tracks
-        raise index >= 0 or AssertionError
-        raise len(tracks) > index or AssertionError
+        assert index >= 0
+        assert len(tracks) > index
         track = tracks[index]
-        if not track != None:
-            raise AssertionError
-            if value > 0:
-                if self.__shift_pressed:
-                    track.arm = track.can_be_armed and not track.arm
+        assert track != None
+        if value > 0:
+            if self.__shift_pressed:
+                if track.can_be_armed:
+                    track.arm = not track.arm
             else:
                 track.mute = not track.mute

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from ableton.v2.base import const, depends, forward_property, inject, listens, liveobj_valid
@@ -88,7 +87,7 @@ class DuplicateSceneComponent(Component, Messenger):
 
     def __init__(self, session_ring = None, *a, **k):
         super(DuplicateSceneComponent, self).__init__(*a, **k)
-        raise session_ring is not None or AssertionError
+        assert session_ring is not None
         self._session_ring = session_ring
         self._scene_buttons = None
 
@@ -114,8 +113,8 @@ class SpecialClipSlotComponent(ClipSlotComponent, Messenger):
 
     @depends(copy_handler=const(None), fixed_length_recording=const(None))
     def __init__(self, copy_handler = None, fixed_length_recording = None, *a, **k):
-        raise copy_handler is not None or AssertionError
-        raise fixed_length_recording is not None or AssertionError
+        assert copy_handler is not None
+        assert fixed_length_recording is not None
         super(SpecialClipSlotComponent, self).__init__(*a, **k)
         self._copy_handler = copy_handler
         self._fixed_length_recording = fixed_length_recording

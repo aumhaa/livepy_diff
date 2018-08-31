@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from .MackieControlComponent import *
 
@@ -34,7 +33,7 @@ class MainDisplay(MackieControlComponent):
         elif display_row == 1:
             offset = NUM_CHARS_PER_DISPLAY_LINE + 2 + cursor_offset
         else:
-            raise 0 or AssertionError
+            assert 0
         message_string = [ ord(c) for c in display_string ]
         for i in range(len(message_string)):
             if message_string[i] >= 128:

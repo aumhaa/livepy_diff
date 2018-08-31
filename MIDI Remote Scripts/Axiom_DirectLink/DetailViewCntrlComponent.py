@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
@@ -21,19 +20,19 @@ class DetailViewCntrlComponent(ControlSurfaceComponent):
             self._right_button = None
 
     def set_device_nav_buttons(self, left_button, right_button):
-        if not (left_button == None or isinstance(left_button, ButtonElement)):
-            raise AssertionError
-            if not (right_button == None or isinstance(right_button, ButtonElement)):
-                raise AssertionError
-                identify_sender = True
-                if self._left_button != None:
-                    self._left_button.remove_value_listener(self._nav_value)
-                self._left_button = left_button
-                if self._left_button != None:
-                    self._left_button.add_value_listener(self._nav_value, identify_sender)
-                self._right_button != None and self._right_button.remove_value_listener(self._nav_value)
-            self._right_button = right_button
-            self._right_button != None and self._right_button.add_value_listener(self._nav_value, identify_sender)
+        assert left_button == None or isinstance(left_button, ButtonElement)
+        assert right_button == None or isinstance(right_button, ButtonElement)
+        identify_sender = True
+        if self._left_button != None:
+            self._left_button.remove_value_listener(self._nav_value)
+        self._left_button = left_button
+        if self._left_button != None:
+            self._left_button.add_value_listener(self._nav_value, identify_sender)
+        if self._right_button != None:
+            self._right_button.remove_value_listener(self._nav_value)
+        self._right_button = right_button
+        if self._right_button != None:
+            self._right_button.add_value_listener(self._nav_value, identify_sender)
         self.update()
 
     def on_enabled_changed(self):
@@ -48,7 +47,7 @@ class DetailViewCntrlComponent(ControlSurfaceComponent):
                 self._right_button.turn_off()
 
     def _nav_value(self, value, sender):
-        raise sender != None and sender in (self._left_button, self._right_button) or AssertionError
+        assert sender != None and sender in (self._left_button, self._right_button)
         if self.is_enabled():
             if not sender.is_momentary() or value != 0:
                 modifier_pressed = True

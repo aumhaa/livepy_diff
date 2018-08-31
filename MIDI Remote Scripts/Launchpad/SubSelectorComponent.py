@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from _Framework.ButtonElement import ButtonElement
@@ -27,11 +26,11 @@ class SubSelectorComponent(ModeSelectorComponent):
     u""" Class that handles different mixer modes """
 
     def __init__(self, matrix, side_buttons, session):
-        raise isinstance(matrix, ButtonMatrixElement) or AssertionError
-        raise matrix.width() == 8 and matrix.height() == 8 or AssertionError
-        raise isinstance(side_buttons, tuple) or AssertionError
-        raise len(side_buttons) == 8 or AssertionError
-        raise isinstance(session, SessionComponent) or AssertionError
+        assert isinstance(matrix, ButtonMatrixElement)
+        assert matrix.width() == 8 and matrix.height() == 8
+        assert isinstance(side_buttons, tuple)
+        assert len(side_buttons) == 8
+        assert isinstance(session, SessionComponent)
         ModeSelectorComponent.__init__(self)
         self._session = session
         self._mixer = SpecialMixerComponent(matrix.width())
@@ -67,11 +66,11 @@ class SubSelectorComponent(ModeSelectorComponent):
         ModeSelectorComponent.disconnect(self)
 
     def set_update_callback(self, callback):
-        raise dir(callback).count(u'im_func') is 1 or AssertionError
+        assert dir(callback).count(u'im_func') is 1
         self._update_callback = callback
 
     def set_modes_buttons(self, buttons):
-        raise buttons == None or isinstance(buttons, tuple) or len(buttons) == self.number_of_modes() or AssertionError
+        assert buttons == None or isinstance(buttons, tuple) or len(buttons) == self.number_of_modes()
         identify_sender = True
         for button in self._modes_buttons:
             button.remove_value_listener(self._mode_value)
@@ -79,15 +78,15 @@ class SubSelectorComponent(ModeSelectorComponent):
         self._modes_buttons = []
         if buttons != None:
             for button in buttons:
-                raise isinstance(button, ButtonElement) or AssertionError
+                assert isinstance(button, ButtonElement)
                 self._modes_buttons.append(button)
                 button.add_value_listener(self._mode_value, identify_sender)
 
     def set_mode(self, mode):
-        if not isinstance(mode, int):
-            raise AssertionError
-            raise mode in range(-1, self.number_of_modes()) or AssertionError
-            self._mode_index = (self._mode_index != mode or mode == -1) and mode
+        assert isinstance(mode, int)
+        assert mode in range(-1, self.number_of_modes())
+        if self._mode_index != mode or mode == -1:
+            self._mode_index = mode
             self.update()
 
     def mode(self):
@@ -127,39 +126,39 @@ class SubSelectorComponent(ModeSelectorComponent):
 
     def update(self):
         super(SubSelectorComponent, self).update()
-        if not self._modes_buttons != None:
-            raise AssertionError
-            if self.is_enabled():
-                if self._modes_buttons != None:
-                    for index in range(len(self._modes_buttons)):
-                        self._modes_buttons[index].set_on_off_values(GREEN_FULL, GREEN_THIRD)
-                        if index == self._mode_index:
-                            self._modes_buttons[index].turn_on()
-                        else:
-                            self._modes_buttons[index].turn_off()
+        assert self._modes_buttons != None
+        if self.is_enabled():
+            if self._modes_buttons != None:
+                for index in range(len(self._modes_buttons)):
+                    self._modes_buttons[index].set_on_off_values(GREEN_FULL, GREEN_THIRD)
+                    if index == self._mode_index:
+                        self._modes_buttons[index].turn_on()
+                    else:
+                        self._modes_buttons[index].turn_off()
 
-                for button in self._side_buttons:
-                    button.set_on_off_values(127, LED_OFF)
-                    button.turn_off()
+            for button in self._side_buttons:
+                button.set_on_off_values(127, LED_OFF)
+                button.turn_off()
 
-                for index in range(self._matrix.width()):
-                    self._sliders[index].set_disabled(self._mode_index == -1)
+            for index in range(self._matrix.width()):
+                self._sliders[index].set_disabled(self._mode_index == -1)
 
-                self._mixer.set_allow_update(False)
-                self._session.set_allow_update(False)
-                if self._mode_index == -1:
-                    self._setup_mixer_overview()
-                elif self._mode_index == 0:
-                    self._setup_volume_mode()
-                elif self._mode_index == 1:
-                    self._setup_pan_mode()
-                elif self._mode_index == 2:
-                    self._setup_send1_mode()
-                elif self._mode_index == 3:
-                    self._setup_send2_mode()
-                else:
-                    raise False or AssertionError
-                self._update_callback != None and self._update_callback()
+            self._mixer.set_allow_update(False)
+            self._session.set_allow_update(False)
+            if self._mode_index == -1:
+                self._setup_mixer_overview()
+            elif self._mode_index == 0:
+                self._setup_volume_mode()
+            elif self._mode_index == 1:
+                self._setup_pan_mode()
+            elif self._mode_index == 2:
+                self._setup_send1_mode()
+            elif self._mode_index == 3:
+                self._setup_send2_mode()
+            else:
+                assert False
+            if self._update_callback != None:
+                self._update_callback()
             self._mixer.set_allow_update(True)
             self._session.set_allow_update(True)
         else:

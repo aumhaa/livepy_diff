@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ...base import listenable_property
 from ..compound_component import CompoundComponent

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial
 from ableton.v2.base import first, find_if, const
@@ -30,8 +29,8 @@ class PathBrowserQuery(BrowserQuery):
     """
 
     def __init__(self, path = tuple(), root_name = None, *a, **k):
-        raise root_name is not None or AssertionError
-        raise path or AssertionError
+        assert root_name is not None
+        assert path
         super(PathBrowserQuery, self).__init__(*a, **k)
         self.path = path
         self.root_name = root_name
@@ -58,7 +57,7 @@ class TagBrowserQuery(BrowserQuery):
     """
 
     def __init__(self, include = tuple(), exclude = tuple(), root_name = None, *a, **k):
-        raise root_name is not None or AssertionError
+        assert root_name is not None
         super(TagBrowserQuery, self).__init__(*a, **k)
         self.include = include
         self.exclude = exclude

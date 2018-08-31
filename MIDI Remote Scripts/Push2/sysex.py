@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import chunks
 from ableton.v2.control_surface import midi
@@ -12,13 +11,13 @@ def make_mono_aftertouch_enabled_message(scene, track, is_enabled):
 
 
 def make_aftertouch_mode_message(mode_id):
-    raise mode_id in (u'polyphonic', u'mono') or AssertionError
+    assert mode_id in (u'polyphonic', u'mono')
     mode_byte = 0 if mode_id == u'mono' else 1
     return make_message(30, (mode_byte,))
 
 
 def make_mode_switch_messsage(mode_id):
-    raise mode_id[0] in (LIVE_MODE, USER_MODE) or AssertionError
+    assert mode_id[0] in (LIVE_MODE, USER_MODE)
     return make_message(MODE_SWITCH_MESSAGE_ID, mode_id)
 
 
@@ -102,7 +101,7 @@ def make_pad_velocity_curve_message(index, velocities):
     Updates a chunk of velocities in the voltage to velocity table.
     The index refers to the first entry in the velocities list.
     """
-    raise len(velocities) == PAD_VELOCITY_CURVE_CHUNK_SIZE or AssertionError
+    assert len(velocities) == PAD_VELOCITY_CURVE_CHUNK_SIZE
     return make_message(32, (index,) + tuple(velocities))
 
 
@@ -122,7 +121,7 @@ def make_led_brightness_message(brightness):
     brightness may be limited to a maximum value (e.g. 32) internally
     when power supply is not connected.
     """
-    raise 0 <= brightness <= 127 or AssertionError
+    assert 0 <= brightness <= 127
     return make_message(6, (brightness,))
 
 
@@ -136,7 +135,7 @@ def make_display_brightness_message(brightness):
     via MIDI, the remaining values are set by the firmware, depending
     on the power source.
     """
-    raise 0 <= brightness <= 255 or AssertionError
+    assert 0 <= brightness <= 255
     return make_message(8, to_7L1M(brightness))
 
 
@@ -172,9 +171,9 @@ def make_pad_setting_message(scene_index, track_index, setting):
     track_index - 1 (left) ... 8(right), or 0 for all pads
     setting     - (0-regular, 1-less sensitive)
     """
-    raise 0 <= scene_index <= 8 or AssertionError
-    raise 0 <= track_index <= 8 or AssertionError
-    raise 0 <= setting <= 2 or AssertionError
+    assert 0 <= scene_index <= 8
+    assert 0 <= track_index <= 8
+    assert 0 <= setting <= 2
     return make_message(40, (scene_index, track_index, setting))
 
 

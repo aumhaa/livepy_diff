@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import lazy_attribute, NamedTuple
 from .sysex import to_bytes

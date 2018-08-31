@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 IMAGE_ID_TO_FILENAME = {u'amp_bass': (u'amp_bass.svg', u''),
  u'amp_blues': (u'amp_blues.svg', u''),

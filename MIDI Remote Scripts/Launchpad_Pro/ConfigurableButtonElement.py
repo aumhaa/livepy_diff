@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.Skin import SkinColorMissingError
 from _Framework.ButtonElement import ButtonElement, ON_VALUE, OFF_VALUE

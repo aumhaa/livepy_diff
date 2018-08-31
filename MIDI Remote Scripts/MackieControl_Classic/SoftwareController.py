@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from .MackieControlComponent import *
 
@@ -34,7 +33,7 @@ class SoftwareController(MackieControlComponent):
         MackieControlComponent.destroy(self)
 
     def handle_function_key_switch_ids(self, switch_id, value):
-        raise 0 or AssertionError
+        assert 0
 
     def handle_software_controls_switch_ids(self, switch_id, value):
         if switch_id == SID_MOD_SHIFT:
@@ -104,11 +103,12 @@ class SoftwareController(MackieControlComponent):
                 self.application().view.focus_view(u'Session')
             else:
                 self.application().view.hide_view(u'Session')
-        elif not self.application().view.is_view_visible(u'Arranger'):
-            raise AssertionError
-            self.shift_is_pressed() and self.application().view.focus_view(u'Arranger')
         else:
-            self.application().view.hide_view(u'Arranger')
+            assert self.application().view.is_view_visible(u'Arranger')
+            if self.shift_is_pressed():
+                self.application().view.focus_view(u'Arranger')
+            else:
+                self.application().view.hide_view(u'Arranger')
 
     def __toggle_detail_sub_view(self):
         if self.application().view.is_view_visible(u'Detail/Clip'):

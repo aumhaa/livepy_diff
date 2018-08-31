@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
@@ -43,27 +42,27 @@ class TrackFilterComponent(ControlSurfaceComponent):
         self.update()
 
     def set_track(self, track):
-        if not (track == None or isinstance(track, Live.Track.Track)):
-            raise AssertionError
-            if self._track != None:
-                self._track.remove_devices_listener(self._on_devices_changed)
-                if self._device != None:
-                    if self._freq_control != None:
-                        self._freq_control.release_parameter()
-                    if self._reso_control != None:
-                        self._reso_control.release_parameter()
-            self._track = track
-            self._track != None and self._track.add_devices_listener(self._on_devices_changed)
+        assert track == None or isinstance(track, Live.Track.Track)
+        if self._track != None:
+            self._track.remove_devices_listener(self._on_devices_changed)
+            if self._device != None:
+                if self._freq_control != None:
+                    self._freq_control.release_parameter()
+                if self._reso_control != None:
+                    self._reso_control.release_parameter()
+        self._track = track
+        if self._track != None:
+            self._track.add_devices_listener(self._on_devices_changed)
         self._on_devices_changed()
 
     def set_filter_controls(self, freq, reso):
-        if not isinstance(freq, EncoderElement):
-            raise AssertionError
-            if not isinstance(freq, EncoderElement):
-                raise AssertionError
-                if self._device != None:
-                    self._freq_control != None and self._freq_control.release_parameter()
-                self._reso_control != None and self._reso_control.release_parameter()
+        assert isinstance(freq, EncoderElement)
+        assert isinstance(freq, EncoderElement)
+        if self._device != None:
+            if self._freq_control != None:
+                self._freq_control.release_parameter()
+            if self._reso_control != None:
+                self._reso_control.release_parameter()
         self._freq_control = freq
         self._reso_control = reso
         self.update()

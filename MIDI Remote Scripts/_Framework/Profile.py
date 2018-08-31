@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from functools import wraps, partial
 ENABLE_PROFILING = False
@@ -26,7 +25,7 @@ def profile(fn):
 
 
 def dump(name = u'default'):
-    raise ENABLE_PROFILING or AssertionError
+    assert ENABLE_PROFILING
     import pstats
     fname = name + u'.profile'
     PROFILER.dump_stats(fname)

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from ...base import listens, liveobj_valid
@@ -73,7 +72,7 @@ class ClipSlotComponent(Component):
         self._duplicate_button = button
 
     def set_clip_palette(self, palette):
-        raise palette != None or AssertionError
+        assert palette != None
         self._clip_palette = palette
 
     def set_clip_rgb_table(self, rgb_table):
@@ -82,7 +81,7 @@ class ClipSlotComponent(Component):
         self._clip_rgb_table = rgb_table
 
     def has_clip(self):
-        raise liveobj_valid(self._clip_slot) or AssertionError
+        assert liveobj_valid(self._clip_slot)
         return self._clip_slot.has_clip
 
     def update(self):

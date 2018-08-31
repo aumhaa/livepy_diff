@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from collections import namedtuple
 from math import ceil
@@ -26,7 +25,7 @@ class ScalesComponent(Component):
     NUM_DISPLAY_COLUMNS = int(ceil(float(len(SCALES)) / NUM_DISPLAY_ROWS))
 
     def __init__(self, note_layout = None, *a, **k):
-        raise note_layout is not None or AssertionError
+        assert note_layout is not None
         super(ScalesComponent, self).__init__(*a, **k)
         self._note_layout = note_layout
         self._scale_list = list(SCALES)
@@ -152,8 +151,8 @@ class ScalesEnabler(Component):
     toggle_button = ButtonControl(color=u'DefaultButton.On')
 
     def __init__(self, enter_dialog_mode = None, exit_dialog_mode = None, *a, **k):
-        raise enter_dialog_mode is not None or AssertionError
-        raise exit_dialog_mode is not None or AssertionError
+        assert enter_dialog_mode is not None
+        assert exit_dialog_mode is not None
         super(ScalesEnabler, self).__init__(*a, **k)
         self._enable_dialog_mode = partial(enter_dialog_mode, u'scales')
         self._exit_dialog_mode = partial(exit_dialog_mode, u'scales')

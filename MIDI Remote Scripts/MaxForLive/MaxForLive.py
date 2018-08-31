@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.control_surface import ControlSurface
 from ableton.v2.control_surface.input_control_element import InputControlElement, MIDI_NOTE_TYPE, MIDI_CC_TYPE, MIDI_PB_TYPE

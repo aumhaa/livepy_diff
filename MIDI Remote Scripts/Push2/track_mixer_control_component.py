@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import clamp, depends, listens, liveobj_valid
 from ableton.v2.control_surface import CompoundComponent
@@ -18,8 +17,8 @@ class TrackMixerControlComponent(CompoundComponent):
 
     @depends(tracks_provider=None, real_time_mapper=None, register_real_time_data=None)
     def __init__(self, real_time_mapper = None, register_real_time_data = None, tracks_provider = None, *a, **k):
-        raise liveobj_valid(real_time_mapper) or AssertionError
-        raise tracks_provider is not None or AssertionError
+        assert liveobj_valid(real_time_mapper)
+        assert tracks_provider is not None
         super(TrackMixerControlComponent, self).__init__(*a, **k)
         self._tracks_provider = tracks_provider
         self._on_return_tracks_changed.subject = self.song

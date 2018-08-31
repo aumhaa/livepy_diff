@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from ableton.v2.control_surface import CompoundElement, MIDI_CC_TYPE
@@ -9,7 +8,7 @@ RING_VALUE_MAX = 27
 class RingedEncoderElement(CompoundElement, EncoderElement):
 
     def __init__(self, msg_type = MIDI_CC_TYPE, channel = 0, identifier = 0, map_mode = Live.MidiMap.MapMode.absolute, ring_element = None, *a, **k):
-        raise ring_element is not None or AssertionError
+        assert ring_element is not None
         super(RingedEncoderElement, self).__init__(msg_type=msg_type, channel=channel, identifier=identifier, map_mode=map_mode, *a, **k)
         self._ring_element = self.register_control_element(ring_element)
         self.request_listen_nested_control_elements()

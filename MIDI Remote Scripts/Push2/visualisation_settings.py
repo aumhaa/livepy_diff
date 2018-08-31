@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import math
 from .colors import COLOR_INDEX_TO_SCREEN_COLOR, COLOR_INDEX_TO_SCREEN_COLOR_SHADES

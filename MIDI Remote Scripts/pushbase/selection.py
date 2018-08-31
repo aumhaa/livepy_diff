@@ -1,4 +1,3 @@
-
 u"""
 Object that encapsulates selection in the Push controller.
 """

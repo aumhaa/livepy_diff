@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from pushbase.parameter_provider import is_parameter_quantized
 DEFAULT_SENSITIVITY_KEY = u'normal_sensitivity'

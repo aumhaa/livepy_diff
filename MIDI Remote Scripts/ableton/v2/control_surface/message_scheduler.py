@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from collections import namedtuple
 
@@ -29,10 +28,10 @@ class MessageScheduler(object):
         return u'MessageScheduler(state={}, owner={})'.format(self._state, self._owner)
 
     def _process_request(self, request):
-        if not (self._owner == None or self._owner == request.owner):
-            raise AssertionError
-            if request.action == u'send':
-                (self._state == u'idle' or self._state == u'grabbed' and self._owner == request.owner) and self._send_message_callback(request.message)
+        assert self._owner == None or self._owner == request.owner
+        if request.action == u'send':
+            if self._state == u'idle' or self._state == u'grabbed' and self._owner == request.owner:
+                self._send_message_callback(request.message)
                 return True
             else:
                 return False
@@ -47,33 +46,32 @@ class MessageScheduler(object):
                 return True
             else:
                 return False
-        else:
-            if request.action == u'release':
-                self._state == u'idle' and request.owner.report_error(u'unexpected release')
+        elif request.action == u'release':
+            if self._state == u'idle':
+                request.owner.report_error(u'unexpected release')
                 return True
-            if self._state == u'grabbed':
-                if not self._owner == request.owner:
-                    raise AssertionError
-                    self._owner.send_reply(u'release', u'1')
-                    self._state = u'idle'
-                    self._owner = None
-                    return True
-                else:
-                    return False
-            elif request.action == u'send_receive':
-                if self._state == u'idle':
-                    self._send_message_callback(request.message)
-                    self._state = u'wait'
-                    self._owner = request.owner
-                    self._timer.start(request.timeout, self.handle_timeout)
-                    return True
-                elif self._state == u'grabbed' and self._owner == request.owner:
-                    self._send_message_callback(request.message)
-                    self._state = u'grabbed_wait'
-                    self._timer.start(request.timeout, self.handle_timeout)
-                    return True
-                else:
-                    return False
+            elif self._state == u'grabbed':
+                assert self._owner == request.owner
+                self._owner.send_reply(u'release', u'1')
+                self._state = u'idle'
+                self._owner = None
+                return True
+            else:
+                return False
+        elif request.action == u'send_receive':
+            if self._state == u'idle':
+                self._send_message_callback(request.message)
+                self._state = u'wait'
+                self._owner = request.owner
+                self._timer.start(request.timeout, self.handle_timeout)
+                return True
+            elif self._state == u'grabbed' and self._owner == request.owner:
+                self._send_message_callback(request.message)
+                self._state = u'grabbed_wait'
+                self._timer.start(request.timeout, self.handle_timeout)
+                return True
+            else:
+                return False
 
     def _queue(self, request):
         if request.owner is not None:

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from pushbase.device_decorator_factory import DeviceDecoratorFactory as DeviceDecoratorFactoryBase
 from .auto_filter import AutoFilterDeviceDecorator

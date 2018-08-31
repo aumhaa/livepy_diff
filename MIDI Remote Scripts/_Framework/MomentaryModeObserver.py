@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from . import Defaults
 
@@ -15,12 +14,12 @@ class MomentaryModeObserver(object):
         self._reset()
 
     def set_mode_details(self, base_mode, controls, mode_callback = None):
-        if not isinstance(base_mode, int):
-            raise AssertionError
-            raise isinstance(controls, (type(None), tuple)) or AssertionError
-            raise mode_callback == None or callable(mode_callback) or AssertionError
-            self._reset()
-            self._controls = controls != None and controls
+        assert isinstance(base_mode, int)
+        assert isinstance(controls, (type(None), tuple))
+        assert mode_callback == None or callable(mode_callback)
+        self._reset()
+        if controls != None:
+            self._controls = controls
             for control in self._controls:
                 control.add_value_listener(self._control_changed)
 

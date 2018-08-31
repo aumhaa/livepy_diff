@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import re
 from functools import partial
@@ -90,7 +89,7 @@ def determine_color_label_index(item):
 class ModelAdapter(EventObject):
 
     def __init__(self, adaptee = None, *a, **k):
-        raise liveobj_valid(adaptee) or AssertionError
+        assert liveobj_valid(adaptee)
         super(ModelAdapter, self).__init__(*a, **k)
         self._adaptee = adaptee
 

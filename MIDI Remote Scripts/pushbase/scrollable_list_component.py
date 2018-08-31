@@ -1,4 +1,3 @@
-
 u"""
 Scrollable list component.
 """
@@ -71,8 +70,8 @@ class ScrollableListComponent(Component):
         return self._selected_option
 
     def _set_selected_option(self, selected_option):
-        if not (selected_option != self._selected_option and (selected_option == None or in_range(selected_option, 0, self._option_names))):
-            raise AssertionError
+        if selected_option != self._selected_option:
+            assert selected_option == None or in_range(selected_option, 0, self._option_names)
             self._selected_option = selected_option
             self.notify_change_option(selected_option)
             self.update()

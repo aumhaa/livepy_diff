@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import sys
 import types
@@ -160,7 +159,7 @@ def is_control_surfaces_list(path_component):
 
 
 def wrap_control_surfaces_list(parent):
-    raise parent in (None, get_root_prop(None, LIVE_APP)) or AssertionError
+    assert parent in (None, get_root_prop(None, LIVE_APP))
     return TupleWrapper.get_tuple_wrapper(parent, u'control_surfaces', element_filter=lambda e: isinstance(e, cs_base_classes()))
 
 
@@ -267,9 +266,9 @@ class LomPathResolver(object):
         components = [lom_object]
         for component in path_components[1:]:
             try:
-                raise component.isdigit() and (is_object_iterable(lom_object) or AssertionError)
-                if not prev_component in TUPLE_TYPES.keys():
-                    raise AssertionError
+                if component.isdigit():
+                    assert is_object_iterable(lom_object)
+                    assert prev_component in TUPLE_TYPES.keys()
                     index = int(component)
                     if is_control_surfaces_list(prev_component):
                         parent = components[-2] if len(components) > 1 else None
@@ -293,8 +292,8 @@ class LomPathResolver(object):
 
     def _calculate_object_from_path(self, path_components):
         lom_object = None
-        if not (len(path_components) > 0 and path_components[0] in ROOT_KEYS):
-            raise AssertionError
+        if len(path_components) > 0:
+            assert path_components[0] in ROOT_KEYS
             selector = self._tuple_element_from_path if path_components[-1] in TUPLE_TYPES.keys() else self._property_object_from_path
             lom_object = selector(path_components)
         return lom_object

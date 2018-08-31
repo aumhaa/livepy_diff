@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ..input_control_element import InputControlElement, MIDI_SYSEX_TYPE
 from .. import midi
@@ -29,15 +28,18 @@ class SysexElement(InputControlElement):
         self._default_value = default_value
 
     def send_value(self, *arguments):
-        raise self._send_message_generator is not None or AssertionError
+        assert self._send_message_generator is not None
         message = self._send_message_generator(*arguments)
-        raise midi.is_valid_sysex(message) or AssertionError(u'Trying to send sysex message %r, which is not valid.' % map(hex, message))
-        self.send_midi(message)
+        assert midi.is_valid_sysex(message), u'Trying to send sysex message %r, which is not valid.' % map(hex, message)
+        self._do_send_value(message)
 
     def enquire_value(self):
-        raise self._enquire_message is not None or AssertionError
+        assert self._enquire_message is not None
         self.send_midi(self._enquire_message)
 
     def reset(self):
         if self._default_value is not None:
             self.send_value(self._default_value)
+
+    def _do_send_value(self, message):
+        self.send_midi(message)

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from .InputControlElement import InputControlElement, MIDI_SYSEX_TYPE
 
@@ -18,7 +17,7 @@ class SysexValueControl(InputControlElement):
         self.send_midi(self.message_sysex_identifier() + value_bytes + (247,))
 
     def enquire_value(self):
-        raise self._value_enquiry != None or AssertionError
+        assert self._value_enquiry != None
         self.send_midi(self._value_enquiry)
 
     def reset(self):

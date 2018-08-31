@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.control_surface import Skin
 from ableton.v2.control_surface.elements import Color
@@ -19,6 +18,8 @@ class Colors:
         MuteOn = Color(0)
         SoloOn = Color(127)
         SoloOff = Color(0)
+        ArmOn = Color(127)
+        ArmOff = Color(0)
 
 
 def make_default_skin():

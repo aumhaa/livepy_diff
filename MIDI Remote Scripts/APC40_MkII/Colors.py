@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 LIVE_COLORS_TO_MIDI_VALUES = {10927616: 74,
  16149507: 84,

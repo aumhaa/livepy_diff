@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from Live import DeviceParameter
 from ableton.v2.base import clamp, listenable_property, liveobj_valid, nop, EventError, EventObject, forward_property, Proxy, Slot
@@ -22,7 +21,7 @@ class InternalParameterBase(EventObject):
     is_quantized = False
 
     def __init__(self, name = None, *a, **k):
-        raise name is not None or AssertionError
+        assert name is not None
         super(InternalParameterBase, self).__init__(*a, **k)
         self._name = name
         self._state = DeviceParameter.ParameterState.enabled
@@ -72,7 +71,7 @@ class InternalParameterBase(EventObject):
 
     @state.setter
     def state(self, new_state):
-        raise new_state in (DeviceParameter.ParameterState.enabled, DeviceParameter.ParameterState.irrelevant, DeviceParameter.ParameterState.disabled) or AssertionError
+        assert new_state in (DeviceParameter.ParameterState.enabled, DeviceParameter.ParameterState.irrelevant, DeviceParameter.ParameterState.disabled)
         self._state = new_state
         self.notify_state()
 
@@ -116,7 +115,7 @@ class InternalParameter(InternalParameterBase):
         return self.min
 
     def _set_value(self, new_value):
-        raise self.min <= new_value <= self.max or AssertionError(u'Invalid value %f' % new_value)
+        assert self.min <= new_value <= self.max, u'Invalid value %f' % new_value
         self.linear_value = self._to_internal(new_value, self._parent)
 
     value = property(_get_value, _set_value)
@@ -156,10 +155,10 @@ class PropertyHostMixin(object):
 class WrappingParameter(InternalParameter, PropertyHostMixin):
 
     def __init__(self, property_host = None, source_property = None, from_property_value = None, to_property_value = None, display_value_conversion = nop, value_items = [], *a, **k):
-        raise source_property is not None or AssertionError
+        assert source_property is not None
         super(WrappingParameter, self).__init__(display_value_conversion=display_value_conversion, *a, **k)
         self._property_host = property_host
-        raise self._property_host == None or hasattr(self._property_host, source_property) or source_property in dir(self._property_host) or AssertionError
+        assert self._property_host == None or hasattr(self._property_host, source_property) or source_property in dir(self._property_host)
         self._source_property = source_property
         self._value_items = value_items
         self.set_scaling_functions(to_property_value, from_property_value)
@@ -183,7 +182,7 @@ class WrappingParameter(InternalParameter, PropertyHostMixin):
             return self.min
 
     def _set_value(self, new_value):
-        raise self.min <= new_value <= self.max or AssertionError(u'Invalid value %f' % new_value)
+        assert self.min <= new_value <= self.max, u'Invalid value %f' % new_value
         if liveobj_valid(self._property_host):
             try:
                 setattr(self._property_host, self._source_property, self._to_internal(new_value, self._property_host))
@@ -215,9 +214,9 @@ class EnumWrappingParameter(InternalParameterBase, PropertyHostMixin):
     is_quantized = True
 
     def __init__(self, parent = None, index_property_host = None, values_host = None, values_property = None, index_property = None, value_type = int, to_index_conversion = None, from_index_conversion = None, *a, **k):
-        raise parent is not None or AssertionError
-        raise values_property is not None or AssertionError
-        raise index_property is not None or AssertionError
+        assert parent is not None
+        assert values_property is not None
+        assert index_property is not None
         super(EnumWrappingParameter, self).__init__(*a, **k)
         self._parent = parent
         self._values_host = values_host
@@ -310,7 +309,7 @@ class ConstantParameter(InternalParameterBase):
     forward_from_original = forward_property(u'_original_parameter')
 
     def __init__(self, original_parameter = None, *a, **k):
-        raise original_parameter is not None or AssertionError
+        assert original_parameter is not None
         super(InternalParameterBase, self).__init__(*a, **k)
         self._original_parameter = original_parameter
 
@@ -417,7 +416,7 @@ class IntegerParameter(InternalParameter):
         return self._min_value
 
     def _set_integer_value(self, new_value):
-        raise self._min_value <= new_value <= self._max_value or AssertionError(u'Invalid value {}'.format(new_value))
+        assert self._min_value <= new_value <= self._max_value, u'Invalid value {}'.format(new_value)
         setattr(self._integer_value_host, self._integer_value_property_name, int(new_value))
 
     def _index_to_value(self, index):

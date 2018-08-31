@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 SYSEX_IDENTITY_REQUEST = (240, 126, 127, 6, 1, 247)
 DEVICE_CODE = (81, 0)

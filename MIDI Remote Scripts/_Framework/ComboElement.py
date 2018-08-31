@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from itertools import imap
 from contextlib import contextmanager
@@ -99,7 +98,7 @@ class ComboElement(WrapperElement):
 
     def __init__(self, control = None, modifiers = [], negative_modifiers = [], *a, **k):
         super(ComboElement, self).__init__(wrapped_control=control, *a, **k)
-        raise all(imap(lambda x: x.is_momentary(), modifiers + negative_modifiers)) or AssertionError
+        assert all(imap(lambda x: x.is_momentary(), modifiers + negative_modifiers))
         self._combo_modifiers = dict(map(lambda x: (x, True), modifiers) + map(lambda x: (x, False), negative_modifiers))
         self.register_control_elements(*self._combo_modifiers.keys())
         self.request_listen_nested_control_elements()
@@ -110,7 +109,7 @@ class ComboElement(WrapperElement):
 
     def get_control_element_priority(self, element, priority):
         if element == self._wrapped_control:
-            raise priority is None or 1 - priority + int(priority) > self.priority_increment or AssertionError(u'Attempting to increase the priority over a whole unit. ' + u'Make sure the combo element is not inside another combo element')
+            assert priority is None or 1 - priority + int(priority) > self.priority_increment, u'Attempting to increase the priority over a whole unit. ' + u'Make sure the combo element is not inside another combo element'
             priority = DEFAULT_PRIORITY if priority is None else priority
             return priority + self.priority_increment
         return priority
@@ -156,8 +155,8 @@ class EventElement(NotifyingControlElement, SlotManager, ProxyBase, ButtonElemen
     _subject = None
 
     def __init__(self, subject = None, event = None, *a, **k):
-        raise subject is not None or AssertionError
-        raise event is not None or AssertionError
+        assert subject is not None
+        assert event is not None
         super(EventElement, self).__init__(*a, **k)
         self._subject = subject
         self.register_slot(subject, self._on_event, event)

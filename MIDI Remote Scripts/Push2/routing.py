@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial
 from itertools import imap, izip
@@ -20,11 +19,11 @@ class RoutingMeterRealTimeChannelAssigner(CompoundComponent):
     list_index_to_pool_index_mapping = listenable_property.managed({})
 
     def __init__(self, real_time_mapper = None, register_real_time_data = nop, sliding_window_size = None, *a, **k):
-        if not real_time_mapper is not None:
-            raise AssertionError
-            super(RoutingMeterRealTimeChannelAssigner, self).__init__(*a, **k)
-            sliding_window_size = sliding_window_size is None and real_time_mapper.METER_POOLSIZE
-        raise sliding_window_size > 0 or AssertionError
+        assert real_time_mapper is not None
+        super(RoutingMeterRealTimeChannelAssigner, self).__init__(*a, **k)
+        if sliding_window_size is None:
+            sliding_window_size = real_time_mapper.METER_POOLSIZE
+        assert sliding_window_size > 0
         self._half_window_size = sliding_window_size // 2
         self._routing_channels = []
         self._selected_index = -1
@@ -164,9 +163,9 @@ class Router(EventObject):
     current_target_index = listenable_property.managed(-1)
 
     def __init__(self, routing_level = None, routing_direction = None, song = None, *a, **k):
-        raise song is not None or AssertionError
-        raise routing_level is not None or AssertionError
-        raise routing_direction is not None or AssertionError
+        assert song is not None
+        assert routing_level is not None
+        assert routing_direction is not None
         super(Router, self).__init__(*a, **k)
         self._song = song
         self._current_target_property = u'%s_routing_%s' % (routing_direction, routing_level)
@@ -368,7 +367,7 @@ class InputChannelAndPositionRouter(EventObject):
         List of postfixes found in the names of Live's routing channels with position.
         Only use if has_input_channel_position is true.
         """
-        raise self.has_input_channel_position or AssertionError
+        assert self.has_input_channel_position
         return self._input_channel_postfixes
 
     @listenable_property
@@ -377,13 +376,13 @@ class InputChannelAndPositionRouter(EventObject):
         Index into input_channel_positions of current channel position.
         Only use if has_input_channel_position is true.
         """
-        raise self.has_input_channel_position or AssertionError
+        assert self.has_input_channel_position
         slice_size = len(self.live_position_postfixes)
         return self._input_channel_router.current_target_index % slice_size
 
     @input_channel_position_index.setter
     def input_channel_position_index(self, new_index):
-        raise self.has_input_channel_position or AssertionError
+        assert self.has_input_channel_position
         complete_list = self._input_channel_router.routing_targets
         index_in_complete_list = self._input_channel_router.current_target_index
         slice_size = len(self.live_position_postfixes)
@@ -395,10 +394,10 @@ class InputChannelAndPositionRouter(EventObject):
         Name of the input type.
         Only use if has_input_channel_position is true.
         """
-        if not self.has_input_channel_position:
-            raise AssertionError
-            current_target = self._input_type_router.current_target
-            return current_target and getattr(current_target.attached_object, u'name', u'')
+        assert self.has_input_channel_position
+        current_target = self._input_type_router.current_target
+        if current_target:
+            return getattr(current_target.attached_object, u'name', u'')
         return u''
 
     def _update_channel_grouping(self):
@@ -470,7 +469,7 @@ class RoutingTargetList(EventObject):
     APPLY_SELECTION_DELAY = 0.2
 
     def __init__(self, router = None, parent_task_group = None, *a, **k):
-        raise router is not None or AssertionError
+        assert router is not None
         super(RoutingTargetList, self).__init__(*a, **k)
         self._router = router
         self._targets = []
@@ -575,7 +574,7 @@ class RoutingTypeList(RoutingTargetList):
 class RoutingChannelList(RoutingTargetList):
 
     def __init__(self, rt_channel_assigner = None, router = None, *a, **k):
-        raise rt_channel_assigner is not None or AssertionError
+        assert rt_channel_assigner is not None
         self._rt_channel_assigner = rt_channel_assigner
         self._rt_channel_assigner.routing_channels = router.routing_targets
         self._rt_channel_assigner.selected_index = router.current_target_index

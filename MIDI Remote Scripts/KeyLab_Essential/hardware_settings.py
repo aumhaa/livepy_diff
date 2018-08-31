@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import listens
 from ableton.v2.control_surface import Component
@@ -27,7 +26,7 @@ class HardwareSettingsComponent(Component):
 
     def set_hardware_live_mode_enabled(self, enable):
         if self._hardware_live_mode_switch and self.is_enabled():
-            self._hardware_live_mode_switch.send_value(sysex.LIVE_MODE_ON if enable else sysex.LIVE_MODE_OFF)
+            self._hardware_live_mode_switch.send_value(sysex.ON_VALUE if enable else sysex.OFF_VALUE)
 
     def select_memory_preset(self, preset_index):
         if self._memory_preset_switch and self.is_enabled():

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from .clip_creator import ClipCreator
 from .component import Component

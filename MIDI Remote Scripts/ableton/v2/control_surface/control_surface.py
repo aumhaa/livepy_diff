@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import traceback
@@ -52,10 +51,10 @@ class SimpleControlSurface(EventObject):
 
     def __init__(self, c_instance = None, publish_self = True, *a, **k):
         super(SimpleControlSurface, self).__init__(*a, **k)
-        if not c_instance:
-            raise AssertionError
-            self.canonical_parent = None
-            publish_self and publish_control_surface(self)
+        assert c_instance
+        self.canonical_parent = None
+        if publish_self:
+            publish_control_surface(self)
         self._c_instance = c_instance
         self._pad_translations = None
         self._components = []
@@ -153,8 +152,8 @@ class SimpleControlSurface(EventObject):
         
         Live can ask for a suitable mapping mode for a given CC
         """
-        raise midi.is_valid_value(cc_no) or AssertionError
-        raise midi.is_valid_channel(channel) or AssertionError
+        assert midi.is_valid_value(cc_no)
+        assert midi.is_valid_channel(channel)
         suggested_map_mode = -1
         for control in self.controls:
             if isinstance(control, InputControlElement) and control.message_type() == MIDI_CC_TYPE and control.message_identifier() == cc_no and control.message_channel() == channel:
@@ -174,7 +173,7 @@ class SimpleControlSurface(EventObject):
         u"""
         Displays the given message in Live's status bar.
         """
-        raise isinstance(message, (str, unicode)) or AssertionError
+        assert isinstance(message, (str, unicode))
         self._c_instance.show_message(message)
 
     def connect_script_instances(self, instanciated_scripts):
@@ -196,9 +195,9 @@ class SimpleControlSurface(EventObject):
         to be sure that its not too often called, because its
         time-critical.
         """
-        if not not self._in_build_midi_map:
-            raise AssertionError
-            self._suppress_requests_counter > 0 and self._rebuild_requests_during_suppression += 1
+        assert not self._in_build_midi_map
+        if self._suppress_requests_counter > 0:
+            self._rebuild_requests_during_suppression += 1
         else:
             self._c_instance.request_rebuild_midi_map()
 
@@ -374,26 +373,27 @@ class SimpleControlSurface(EventObject):
             self._set_suppress_rebuild_requests(False)
 
     def _set_suppress_rebuild_requests(self, suppress_requests):
-        if not not self._in_build_midi_map:
-            raise AssertionError
-            suppress_requests and self._suppress_requests_counter += 1
-        elif not self._suppress_requests_counter > 0:
-            raise AssertionError
+        assert not self._in_build_midi_map
+        if suppress_requests:
+            self._suppress_requests_counter += 1
+        else:
+            assert self._suppress_requests_counter > 0
             self._suppress_requests_counter -= 1
-            self._suppress_requests_counter == 0 and self._rebuild_requests_during_suppression > 0 and self.request_rebuild_midi_map()
-            self._rebuild_requests_during_suppression = 0
+            if self._suppress_requests_counter == 0 and self._rebuild_requests_during_suppression > 0:
+                self.request_rebuild_midi_map()
+                self._rebuild_requests_during_suppression = 0
 
     def set_pad_translations(self, pad_translations):
 
         def check_translation(translation):
-            raise len(translation) == 4 or AssertionError
-            raise in_range(translation[0], 0, 4) or AssertionError
-            raise in_range(translation[1], 0, 4) or AssertionError
-            raise in_range(translation[2], -1, 128) or AssertionError
-            raise in_range(translation[3], -1, 16) or AssertionError
+            assert len(translation) == 4
+            assert in_range(translation[0], 0, 4)
+            assert in_range(translation[1], 0, 4)
+            assert in_range(translation[2], -1, 128)
+            assert in_range(translation[3], -1, 16)
             return True
 
-        raise pad_translations is None or all(imap(check_translation, pad_translations)) and len(pad_translations) <= 16 or AssertionError
+        assert pad_translations is None or all(imap(check_translation, pad_translations)) and len(pad_translations) <= 16
         self._pad_translations = pad_translations
 
     def set_enabled(self, enable):
@@ -408,23 +408,23 @@ class SimpleControlSurface(EventObject):
 
     def schedule_message(self, delay_in_ticks, callback, parameter = None):
         u""" Schedule a callback to be called after a specified time """
-        if not delay_in_ticks > 0:
-            raise AssertionError
-            if not callable(callback):
-                raise AssertionError
-                self._is_sending_scheduled_messages or delay_in_ticks -= 1
-            message_reference = [None]
+        assert delay_in_ticks > 0
+        assert callable(callback)
+        if not self._is_sending_scheduled_messages:
+            delay_in_ticks -= 1
+        message_reference = [None]
 
-            def message(delta):
-                if parameter:
-                    callback(parameter)
-                else:
-                    callback()
-                self._remaining_scheduled_messages.remove(message_reference)
+        def message(delta):
+            if parameter:
+                callback(parameter)
+            else:
+                callback()
+            self._remaining_scheduled_messages.remove(message_reference)
 
-            message_reference[0] = message
-            self._remaining_scheduled_messages.append(message_reference)
-            delay_in_ticks and self._task_group.add(task.sequence(task.delay(delay_in_ticks), message))
+        message_reference[0] = message
+        self._remaining_scheduled_messages.append(message_reference)
+        if delay_in_ticks:
+            self._task_group.add(task.sequence(task.delay(delay_in_ticks), message))
         else:
             self._task_group.add(message)
 
@@ -433,7 +433,7 @@ class SimpleControlSurface(EventObject):
 
     def set_controlled_track(self, track):
         u""" Sets the track that will send its feedback to the control surface """
-        raise liveobj_valid(track) or isinstance(track, Live.Track.Track) or AssertionError
+        assert liveobj_valid(track) or isinstance(track, Live.Track.Track)
         self._c_instance.set_controlled_track(track)
 
     def release_controlled_track(self):
@@ -442,19 +442,19 @@ class SimpleControlSurface(EventObject):
 
     def _register_control(self, control):
         u""" puts control into the list of controls for triggering updates """
-        if not control is not None:
-            raise AssertionError
-            if not control not in self.controls:
-                raise AssertionError(u'Control registered twice')
-                self.controls.append(control)
-                control.canonical_parent = self
-                isinstance(control, PhysicalDisplayElement) and self._displays.append(control)
-            control._is_resource_based = hasattr(control, u'_is_resource_based') and True
+        assert control is not None
+        assert control not in self.controls, u'Control registered twice'
+        self.controls.append(control)
+        control.canonical_parent = self
+        if isinstance(control, PhysicalDisplayElement):
+            self._displays.append(control)
+        if hasattr(control, u'_is_resource_based'):
+            control._is_resource_based = True
 
     def _register_component(self, component):
         u""" puts component into the list of controls for triggering updates """
-        raise component is not None or AssertionError
-        raise component not in self._components or AssertionError(u'Component registered twice')
+        assert component is not None
+        assert component not in self._components, u'Component registered twice'
         self._components.append(component)
         component.canonical_parent = self
 
@@ -532,7 +532,7 @@ class SimpleControlSurface(EventObject):
         return True
 
     def _flush_midi_messages(self):
-        raise self._accumulate_midi_messages or AssertionError
+        assert self._accumulate_midi_messages
         sorted_messages = sorted(chain(self._midi_message_list, self._midi_message_dict.itervalues()), key=first)
         for _, message in sorted_messages:
             self._do_send_midi(message)
@@ -552,75 +552,75 @@ class SimpleControlSurface(EventObject):
         return True
 
     def _install_mapping(self, midi_map_handle, control, parameter, feedback_delay, feedback_map):
-        if not self._in_build_midi_map:
-            raise AssertionError
-            raise control is not None and liveobj_valid(parameter) or AssertionError
-            raise isinstance(parameter, Live.DeviceParameter.DeviceParameter) or AssertionError
-            raise isinstance(control, InputControlElement) or AssertionError
-            raise isinstance(feedback_delay, int) or AssertionError
-            if not isinstance(feedback_map, tuple):
-                raise AssertionError
-                success = False
-                feedback_rule = None
-                feedback_rule = control.message_type() == MIDI_NOTE_TYPE and Live.MidiMap.NoteFeedbackRule()
-                feedback_rule.note_no = control.message_identifier()
-                feedback_rule.vel_map = feedback_map
-            elif control.message_type() == MIDI_CC_TYPE:
-                feedback_rule = Live.MidiMap.CCFeedbackRule()
-                feedback_rule.cc_no = control.message_identifier()
-                feedback_rule.cc_value_map = feedback_map
-            elif control.message_type() == MIDI_PB_TYPE:
-                feedback_rule = Live.MidiMap.PitchBendFeedbackRule()
-                feedback_rule.value_pair_map = feedback_map
-            if not feedback_rule is not None:
-                raise AssertionError
-                feedback_rule.channel = control.message_channel()
-                feedback_rule.delay_in_ms = feedback_delay
-                success = control.message_type() == MIDI_NOTE_TYPE and Live.MidiMap.map_midi_note_with_feedback_map(midi_map_handle, parameter, control.message_channel(), control.message_identifier(), feedback_rule)
-            elif control.message_type() == MIDI_CC_TYPE:
-                success = Live.MidiMap.map_midi_cc_with_feedback_map(midi_map_handle, parameter, control.message_channel(), control.message_identifier(), control.message_map_mode(), feedback_rule, not control.needs_takeover(), control.mapping_sensitivity)
-            elif control.message_type() == MIDI_PB_TYPE:
-                success = Live.MidiMap.map_midi_pitchbend_with_feedback_map(midi_map_handle, parameter, control.message_channel(), feedback_rule, not control.needs_takeover())
-            success and Live.MidiMap.send_feedback_for_parameter(midi_map_handle, parameter)
+        assert self._in_build_midi_map
+        assert control is not None and liveobj_valid(parameter)
+        assert isinstance(parameter, Live.DeviceParameter.DeviceParameter)
+        assert isinstance(control, InputControlElement)
+        assert isinstance(feedback_delay, int)
+        assert isinstance(feedback_map, tuple)
+        success = False
+        feedback_rule = None
+        if control.message_type() == MIDI_NOTE_TYPE:
+            feedback_rule = Live.MidiMap.NoteFeedbackRule()
+            feedback_rule.note_no = control.message_identifier()
+            feedback_rule.vel_map = feedback_map
+        elif control.message_type() == MIDI_CC_TYPE:
+            feedback_rule = Live.MidiMap.CCFeedbackRule()
+            feedback_rule.cc_no = control.message_identifier()
+            feedback_rule.cc_value_map = feedback_map
+        elif control.message_type() == MIDI_PB_TYPE:
+            feedback_rule = Live.MidiMap.PitchBendFeedbackRule()
+            feedback_rule.value_pair_map = feedback_map
+        assert feedback_rule is not None
+        feedback_rule.channel = control.message_channel()
+        feedback_rule.delay_in_ms = feedback_delay
+        if control.message_type() == MIDI_NOTE_TYPE:
+            success = Live.MidiMap.map_midi_note_with_feedback_map(midi_map_handle, parameter, control.message_channel(), control.message_identifier(), feedback_rule)
+        elif control.message_type() == MIDI_CC_TYPE:
+            success = Live.MidiMap.map_midi_cc_with_feedback_map(midi_map_handle, parameter, control.message_channel(), control.message_identifier(), control.message_map_mode(), feedback_rule, not control.needs_takeover(), control.mapping_sensitivity)
+        elif control.message_type() == MIDI_PB_TYPE:
+            success = Live.MidiMap.map_midi_pitchbend_with_feedback_map(midi_map_handle, parameter, control.message_channel(), feedback_rule, not control.needs_takeover())
+        if success:
+            Live.MidiMap.send_feedback_for_parameter(midi_map_handle, parameter)
         return success
 
     def _install_forwarding(self, midi_map_handle, control, forwarding_type = ScriptForwarding.exclusive):
-        if not self._in_build_midi_map:
-            raise AssertionError
-            raise control is not None or AssertionError
-            raise isinstance(control, InputControlElement) or AssertionError
-            if not isinstance(forwarding_type, ScriptForwarding):
-                raise AssertionError
-                success = False
-                should_consume_event = forwarding_type == ScriptForwarding.exclusive
-                success = control.message_type() == MIDI_NOTE_TYPE and Live.MidiMap.forward_midi_note(self._c_instance.handle(), midi_map_handle, control.message_channel(), control.message_identifier(), should_consume_event)
-            elif control.message_type() == MIDI_CC_TYPE:
-                success = Live.MidiMap.forward_midi_cc(self._c_instance.handle(), midi_map_handle, control.message_channel(), control.message_identifier(), should_consume_event)
-            elif control.message_type() == MIDI_PB_TYPE:
-                success = Live.MidiMap.forward_midi_pitchbend(self._c_instance.handle(), midi_map_handle, control.message_channel())
-            else:
-                raise control.message_type() == MIDI_SYSEX_TYPE or AssertionError
-                success = True
-            forwarding_keys = success and control.identifier_bytes()
+        assert self._in_build_midi_map
+        assert control is not None
+        assert isinstance(control, InputControlElement)
+        assert isinstance(forwarding_type, ScriptForwarding)
+        success = False
+        should_consume_event = forwarding_type == ScriptForwarding.exclusive
+        if control.message_type() == MIDI_NOTE_TYPE:
+            success = Live.MidiMap.forward_midi_note(self._c_instance.handle(), midi_map_handle, control.message_channel(), control.message_identifier(), should_consume_event)
+        elif control.message_type() == MIDI_CC_TYPE:
+            success = Live.MidiMap.forward_midi_cc(self._c_instance.handle(), midi_map_handle, control.message_channel(), control.message_identifier(), should_consume_event)
+        elif control.message_type() == MIDI_PB_TYPE:
+            success = Live.MidiMap.forward_midi_pitchbend(self._c_instance.handle(), midi_map_handle, control.message_channel())
+        else:
+            assert control.message_type() == MIDI_SYSEX_TYPE
+            success = True
+        if success:
+            forwarding_keys = control.identifier_bytes()
             for key in forwarding_keys:
                 registry = self._forwarding_registry if control.message_type() != MIDI_SYSEX_TYPE else self._forwarding_long_identifier_registry
-                raise key not in registry.keys() or AssertionError(u'Registry key %s registered twice. Check Midi messages!' % str(key))
+                assert key not in registry.keys(), u'Registry key %s registered twice. Check Midi messages!' % str(key)
                 registry[key] = control
 
         return success
 
     def _translate_message(self, type, from_identifier, from_channel, to_identifier, to_channel):
-        if not type in (MIDI_CC_TYPE, MIDI_NOTE_TYPE):
-            raise AssertionError
-            raise midi.is_valid_identifier(from_identifier) or AssertionError
-            raise midi.is_valid_channel(from_channel) or AssertionError
-            raise midi.is_valid_identifier(to_identifier) or AssertionError
-            raise midi.is_valid_identifier(to_channel) or AssertionError
-            type == MIDI_CC_TYPE and self._c_instance.set_cc_translation(from_identifier, from_channel, to_identifier, to_channel)
+        assert type in (MIDI_CC_TYPE, MIDI_NOTE_TYPE)
+        assert midi.is_valid_identifier(from_identifier)
+        assert midi.is_valid_channel(from_channel)
+        assert midi.is_valid_identifier(to_identifier)
+        assert midi.is_valid_identifier(to_channel)
+        if type == MIDI_CC_TYPE:
+            self._c_instance.set_cc_translation(from_identifier, from_channel, to_identifier, to_channel)
         elif type == MIDI_NOTE_TYPE:
             self._c_instance.set_note_translation(from_identifier, from_channel, to_identifier, to_channel)
         else:
-            raise False or AssertionError
+            assert False
 
     @lazy_attribute
     def preferences(self):
@@ -700,7 +700,7 @@ class ControlSurface(SimpleControlSurface):
         
         Called by Live when the user enables the lock to device setting.
         """
-        raise self._device_provider is not None or AssertionError
+        assert self._device_provider is not None
         with self.component_guard():
             self._device_provider.lock_to_device(device)
 
@@ -710,8 +710,8 @@ class ControlSurface(SimpleControlSurface):
         
         Called by Live when the user disables the lock to device setting.
         """
-        raise self._device_provider is not None or AssertionError
-        raise self._device_provider.is_locked_to_device or AssertionError
+        assert self._device_provider is not None
+        assert self._device_provider.is_locked_to_device
         with self.component_guard():
             self._device_provider.unlock_from_device()
 
@@ -721,10 +721,10 @@ class ControlSurface(SimpleControlSurface):
         
         Live tells the script which bank to use.
         """
-        if not self._device_provider is not None:
-            raise AssertionError
-            device = self._device_provider.device
-            with self._device_provider.is_locked_to_device and liveobj_valid(device) and self.component_guard():
+        assert self._device_provider is not None
+        device = self._device_provider.device
+        if self._device_provider.is_locked_to_device and liveobj_valid(device):
+            with self.component_guard():
                 self._device_bank_registry.set_device_bank(device, bank_index)
 
     def toggle_lock(self):

@@ -1,4 +1,3 @@
-
 u"""
 Component that navigates a series of pages.
 """

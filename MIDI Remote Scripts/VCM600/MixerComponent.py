@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from _Framework.MixerComponent import MixerComponent as MixerComponentBase
 from .TrackEQComponent import TrackEQComponent
@@ -14,11 +13,11 @@ class MixerComponent(MixerComponentBase):
         map(self.register_components, self._track_filters)
 
     def track_eq(self, index):
-        raise index in range(len(self._track_eqs)) or AssertionError
+        assert index in range(len(self._track_eqs))
         return self._track_eqs[index]
 
     def track_filter(self, index):
-        raise index in range(len(self._track_filters)) or AssertionError
+        assert index in range(len(self._track_filters))
         return self._track_filters[index]
 
     def _reassign_tracks(self):

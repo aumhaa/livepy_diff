@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.control_surface.mode import tomode, Mode
 
@@ -22,9 +21,9 @@ class MultiEntryMode(Mode):
         self._entry_count += 1
 
     def leave_mode(self):
-        if not self._entry_count > 0:
-            raise AssertionError
-            self._entry_count == 1 and self._mode.leave_mode()
+        assert self._entry_count > 0
+        if self._entry_count == 1:
+            self._mode.leave_mode()
         self._entry_count -= 1
 
     @property

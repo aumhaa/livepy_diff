@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from contextlib import contextmanager
 from itertools import ifilter
@@ -17,7 +16,7 @@ DEFAULT_SCALE = SCALES[0]
 class NoteLayout(EventObject):
 
     def __init__(self, song = None, preferences = dict(), *a, **k):
-        raise liveobj_valid(song) or AssertionError
+        assert liveobj_valid(song)
         super(NoteLayout, self).__init__(*a, **k)
         self._song = song
         self._scale = self._get_scale_from_name(self._song.scale_name)
@@ -106,7 +105,7 @@ class InstrumentComponent(PlayableComponent, CompoundComponent, Slideable, Messe
     delete_button = ButtonControl()
 
     def __init__(self, note_layout = None, *a, **k):
-        raise note_layout is not None or AssertionError
+        assert note_layout is not None
         super(InstrumentComponent, self).__init__(*a, **k)
         self._note_layout = note_layout
         self._first_note = self.page_length * 3 + self.page_offset
@@ -419,7 +418,7 @@ class SelectedNotesProvider(EventObject):
 class SelectedNotesInstrumentComponent(InstrumentComponent):
 
     def __init__(self, note_editor_component = None, *a, **k):
-        raise note_editor_component is not None or AssertionError
+        assert note_editor_component is not None
         super(SelectedNotesInstrumentComponent, self).__init__(*a, **k)
         self.selected_notes_provider = self.register_disconnectable(SelectedNotesProvider())
         with self._updating_selected_notes_model():

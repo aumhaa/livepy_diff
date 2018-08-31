@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import const
 from ableton.v2.control_surface.elements import ButtonElement
@@ -13,7 +12,7 @@ class PadButtonElement(ButtonElement):
         sensitivity_profile = const(None)
 
     def __init__(self, pad_id = None, pad_sensitivity_update = None, *a, **k):
-        raise pad_id is not None or AssertionError
+        assert pad_id is not None
         super(PadButtonElement, self).__init__(*a, **k)
         self._sensitivity_profile = u'default'
         self._pad_id = pad_id

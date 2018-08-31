@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import find_if, listenable_property, listens_group, liveobj_valid, EventObject
 RESULTING_NAME_KEY = u'ResultingName'
@@ -83,7 +82,7 @@ class ParameterSlotDescription(EventObject):
         return self
 
     def chain_condition(self, operand, parameter_name):
-        raise len(self._conditions) > 0 and len(self._conditions[-1][CONDITIONS_LIST_NAME_KEY]) > 0 and not self._default_parameter_name or AssertionError
+        assert len(self._conditions) > 0 and len(self._conditions[-1][CONDITIONS_LIST_NAME_KEY]) > 0 and not self._default_parameter_name
         self._conditions[-1][CONDITIONS_LIST_NAME_KEY].append({CONDITION_NAME_KEY: parameter_name,
          OPERAND_NAME_KEY: operand})
         return self
@@ -95,7 +94,7 @@ class ParameterSlotDescription(EventObject):
         return self.chain_condition(OR, parameter_name)
 
     def _add_condition_predicate(self, predicate):
-        raise len(self._conditions) > 0 and PREDICATE_KEY not in self._conditions[-1][CONDITIONS_LIST_NAME_KEY][-1] or AssertionError
+        assert len(self._conditions) > 0 and PREDICATE_KEY not in self._conditions[-1][CONDITIONS_LIST_NAME_KEY][-1]
         self._conditions[-1][CONDITIONS_LIST_NAME_KEY][-1][PREDICATE_KEY] = predicate
 
     def has_value(self, value):

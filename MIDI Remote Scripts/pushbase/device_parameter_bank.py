@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import EventObject, find_if, listens, listens_group, listenable_property, liveobj_valid, clamp
 from .banking_util import PARAMETERS_KEY, MAIN_KEY, BANK_FORMAT, all_parameters
@@ -6,7 +5,7 @@ from .banking_util import PARAMETERS_KEY, MAIN_KEY, BANK_FORMAT, all_parameters
 class DeviceParameterBank(EventObject):
 
     def __init__(self, size = None, device = None, banking_info = None, *a, **k):
-        raise size is not None or AssertionError
+        assert size is not None
         super(DeviceParameterBank, self).__init__(*a, **k)
         self._size = size
         self._device = device
@@ -119,7 +118,7 @@ class MaxDeviceParameterBank(DeviceParameterBank):
 
     def __init__(self, *a, **k):
         super(MaxDeviceParameterBank, self).__init__(*a, **k)
-        raise hasattr(self._device, u'get_bank_count') or AssertionError
+        assert hasattr(self._device, u'get_bank_count')
         self._on_bank_parameters_changed.subject = self.device
 
     def _calc_name(self):

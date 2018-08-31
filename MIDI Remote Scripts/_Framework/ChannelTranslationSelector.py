@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from .InputControlElement import InputControlElement
 from .ModeSelectorComponent import ModeSelectorComponent
@@ -16,11 +15,11 @@ class ChannelTranslationSelector(ModeSelectorComponent):
         self._controls_to_translate = None
 
     def set_controls_to_translate(self, controls):
-        raise self._controls_to_translate == None or AssertionError
-        raise controls != None or AssertionError
-        raise isinstance(controls, tuple) or AssertionError
+        assert self._controls_to_translate == None
+        assert controls != None
+        assert isinstance(controls, tuple)
         for control in controls:
-            raise isinstance(control, InputControlElement) or AssertionError
+            assert isinstance(control, InputControlElement)
 
         self._controls_to_translate = controls
 

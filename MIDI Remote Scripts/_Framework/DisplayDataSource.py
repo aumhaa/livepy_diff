@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial
 
@@ -12,22 +11,22 @@ def adjust_string(original, length):
     characters or adding spaces. The algorithm is adopted from ede's
     old implementation for the Mackie.
     """
-    if not length > 0:
-        raise AssertionError
-        resulting_string = original
+    assert length > 0
+    resulting_string = original
+    if len(resulting_string) > length:
+        unit_db = resulting_string.endswith(u'dB') and resulting_string.find(u'.') != -1
+        if len(resulting_string.strip()) > length and unit_db:
+            resulting_string = resulting_string[:-2]
         if len(resulting_string) > length:
-            unit_db = resulting_string.endswith(u'dB') and resulting_string.find(u'.') != -1
-            if len(resulting_string.strip()) > length and unit_db:
-                resulting_string = resulting_string[:-2]
-            if len(resulting_string) > length:
-                for char in (u' ', u'_', u'i', u'o', u'u', u'e', u'a'):
-                    offset = 0 if char == u' ' else 1
-                    while len(resulting_string) > length and resulting_string.rfind(char, offset) > 0:
-                        char_pos = resulting_string.rfind(char, offset)
-                        resulting_string = resulting_string[:char_pos] + resulting_string[char_pos + 1:]
+            for char in (u' ', u'_', u'i', u'o', u'u', u'e', u'a'):
+                offset = 0 if char == u' ' else 1
+                while len(resulting_string) > length and resulting_string.rfind(char, offset) > 0:
+                    char_pos = resulting_string.rfind(char, offset)
+                    resulting_string = resulting_string[:char_pos] + resulting_string[char_pos + 1:]
 
-                resulting_string = resulting_string[:length]
-        resulting_string = len(resulting_string) < length and resulting_string.ljust(length)
+            resulting_string = resulting_string[:length]
+    if len(resulting_string) < length:
+        resulting_string = resulting_string.ljust(length)
     return resulting_string
 
 
@@ -60,10 +59,10 @@ class DisplayDataSource(object):
     separator = property(_get_separator, _set_separator)
 
     def set_update_callback(self, update_callback):
-        if not (not update_callback or callable(update_callback)):
-            raise AssertionError
-            self._update_callback = update_callback
-            update_callback and self.update()
+        assert not update_callback or callable(update_callback)
+        self._update_callback = update_callback
+        if update_callback:
+            self.update()
 
     def set_display_string(self, new_string):
         if self._display_string != new_string:
@@ -75,10 +74,10 @@ class DisplayDataSource(object):
         self.separator = u''
 
     def update(self):
-        if not not self._in_update:
-            raise AssertionError
-            self._in_update = True
-            self._update_callback != None and self._update_callback()
+        assert not self._in_update
+        self._in_update = True
+        if self._update_callback != None:
+            self._update_callback()
         self._in_update = False
 
     def display_string(self):

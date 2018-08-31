@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from itertools import ifilter, izip
 from ableton.v2.base import EventObject, flatten, listenable_property, listens, listens_group, liveobj_valid
@@ -50,7 +49,7 @@ class DrumPadColorAdapter(object):
     u""" Adapter that takes care of coloring all chains """
 
     def __init__(self, drum_pad = None, *a, **k):
-        raise drum_pad is not None or AssertionError
+        assert drum_pad is not None
         super(DrumPadColorAdapter, self).__init__(*a, **k)
         self._drum_pad = drum_pad
 
@@ -137,7 +136,7 @@ class DrumGroupComponent(DrumGroupComponentBase):
     select_color_button = ButtonControl()
 
     def __init__(self, tracks_provider = None, device_decorator_factory = None, color_chooser = None, *a, **k):
-        raise tracks_provider is not None or AssertionError
+        assert tracks_provider is not None
         self._decorator_factory = device_decorator_factory
         super(DrumGroupComponent, self).__init__(*a, **k)
         self.mute_button.color = u'DefaultButton.Transparent'
@@ -201,10 +200,10 @@ class DrumGroupComponent(DrumGroupComponentBase):
 
     def _chain_color_for_pad(self, pad, color):
         if color == u'DrumGroup.PadFilled':
-            raise pad.chains and liveobj_valid(pad.chains[0]) or AssertionError(u'Filled pads should have a chain')
+            assert pad.chains and liveobj_valid(pad.chains[0]), u'Filled pads should have a chain'
             color = IndexedColor.from_live_index(pad.chains[0].color_index)
         elif color == u'DrumGroup.PadMuted':
-            raise pad.chains and liveobj_valid(pad.chains[0]) or AssertionError(u'Filled pads should have a chain')
+            assert pad.chains and liveobj_valid(pad.chains[0]), u'Filled pads should have a chain'
             color = IndexedColor.from_live_index(pad.chains[0].color_index, shade_level=1)
         return color
 

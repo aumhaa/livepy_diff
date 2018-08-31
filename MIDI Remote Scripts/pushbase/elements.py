@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import depends, recursive_map
 from ableton.v2.control_surface import MIDI_NOTE_TYPE, PrioritizedResource
@@ -12,12 +11,12 @@ BASE_ENCODER_SENSITIVITY = 0.5
 class Elements(object):
 
     def __init__(self, deleter = None, undo_handler = None, pad_sensitivity_update = None, playhead = None, velocity_levels = None, continuous_mapping_sensitivity = None, fine_grained_continuous_mapping_sensitivity = None, full_velocity = None, *a, **k):
-        raise deleter is not None or AssertionError
-        raise undo_handler is not None or AssertionError
-        raise playhead is not None or AssertionError
-        raise velocity_levels is not None or AssertionError
-        raise continuous_mapping_sensitivity is not None or AssertionError
-        raise fine_grained_continuous_mapping_sensitivity is not None or AssertionError
+        assert deleter is not None
+        assert undo_handler is not None
+        assert playhead is not None
+        assert velocity_levels is not None
+        assert continuous_mapping_sensitivity is not None
+        assert fine_grained_continuous_mapping_sensitivity is not None
         super(Elements, self).__init__(*a, **k)
         self.foot_pedal_button = DoublePressElement(create_button(69, u'Foot_Pedal', is_rgb=True))
         self.nav_up_button = create_button(46, u'Up_Arrow')

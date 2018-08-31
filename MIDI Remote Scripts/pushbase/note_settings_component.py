@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import math
 from functools import partial
@@ -167,7 +166,7 @@ class NoteSettingsComponentBase(Component):
         self._add_setting(NoteVelocitySetting(grid_resolution=grid_resolution))
 
     def _add_setting(self, setting):
-        raise len(self._settings) < 8 or AssertionError(u'Cannot show more than 8 settings')
+        assert len(self._settings) < 8, u'Cannot show more than 8 settings'
         self._settings.append(setting)
         self._update_encoders()
         self.register_disconnectable(setting)
@@ -286,7 +285,7 @@ class NoteEditorSettingsComponent(ModesComponent):
 
     def __init__(self, note_settings_component = None, automation_component = None, initial_encoder_layer = None, encoder_layer = None, *a, **k):
         super(NoteEditorSettingsComponent, self).__init__(*a, **k)
-        raise encoder_layer or AssertionError
+        assert encoder_layer
         self.settings = self.register_component(note_settings_component)
         self.settings.set_enabled(False)
         self._automation = self.register_component(automation_component)
@@ -338,7 +337,7 @@ class NoteEditorSettingsComponent(ModesComponent):
         return len(self._active_note_regions()) > 0
 
     def add_editor(self, editor):
-        raise editor != None or AssertionError
+        assert editor != None
         self._editors.append(editor)
         self._on_active_note_regions_changed.add_subject(editor)
         self._on_notes_changed.replace_subjects(self._editors)

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from pushbase.colors import Pulse
 from pushbase.sliced_simpler_component import SlicedSimplerComponent

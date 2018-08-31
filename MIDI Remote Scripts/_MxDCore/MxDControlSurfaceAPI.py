@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from collections import namedtuple
 from _MxDCore.LomTypes import is_control_surface, get_control_surfaces

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from .control import ControlManager
@@ -19,10 +18,10 @@ class Component(ControlManager):
 
     @depends(register_component=None, song=None)
     def __init__(self, name = u'', register_component = None, song = None, layer = None, is_enabled = True, is_root = False, *a, **k):
-        raise callable(register_component) or AssertionError
+        assert callable(register_component)
         super(Component, self).__init__(*a, **k)
         self.name = name
-        raise layer is None or not is_enabled or AssertionError
+        assert layer is None or not is_enabled
         self._explicit_is_enabled = is_enabled
         self._recursive_is_enabled = True
         self._is_enabled = self._explicit_is_enabled
@@ -119,7 +118,7 @@ class Component(ControlManager):
     def _grab_all_layers(self):
         for layer in self._get_layer_iterable():
             grabbed = layer.grab(self)
-            raise grabbed or AssertionError(u'Only one component can use a layer at atime')
+            assert grabbed, u'Only one component can use a layer at atime'
 
     def _release_all_layers(self):
         for layer in self._get_layer_iterable():
@@ -146,8 +145,8 @@ class Component(ControlManager):
         u"""
         DEPRECATED. Use tasks instead
         """
-        raise callable(callback) or AssertionError
-        raise parent_task_group.find(callback) is None or AssertionError
+        assert callable(callback)
+        assert parent_task_group.find(callback) is None
 
         def wrapper(delta):
             callback()
@@ -160,7 +159,7 @@ class Component(ControlManager):
         u"""
         DEPRECATED. Use tasks instead
         """
-        raise callable(callback) or AssertionError
+        assert callable(callback)
         t = parent_task_group.find(callback)
-        raise t is not None or AssertionError
+        assert t is not None
         parent_task_group.remove(t)

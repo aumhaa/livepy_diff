@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import const
 from pushbase.note_layout_switcher import ModeSwitcherBase
@@ -6,7 +5,7 @@ from pushbase.note_layout_switcher import ModeSwitcherBase
 class SimpleModeSwitcher(ModeSwitcherBase):
 
     def __init__(self, session_modes = None, *a, **k):
-        raise session_modes is not None or AssertionError
+        assert session_modes is not None
         super(SimpleModeSwitcher, self).__init__(*a, **k)
         self._session_modes = session_modes
         self._cycle_mode = session_modes.cycle_mode

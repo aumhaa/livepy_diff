@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from ...base import BooleanContext, const, in_range, has_event, listens
@@ -62,7 +61,7 @@ class ButtonElement(InputControlElement, ButtonElementMixin):
         return self._is_momentary
 
     def message_map_mode(self):
-        raise self.message_type() is MIDI_CC_TYPE or AssertionError
+        assert self.message_type() is MIDI_CC_TYPE
         return Live.MidiMap.MapMode.absolute
 
     def is_pressed(self):

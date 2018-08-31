@@ -1,4 +1,3 @@
-
 u"""
 Component that automatically selects the playing clip in the selected track.
 """

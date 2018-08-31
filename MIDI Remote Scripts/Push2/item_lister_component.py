@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from itertools import izip
 from ableton.v2.base import forward_property, listenable_property, listens, EventObject
@@ -49,7 +48,7 @@ class SimpleItemSlot(EventObject):
 class ItemSlot(SimpleItemSlot):
 
     def __init__(self, item = None, nesting_level = 0, **k):
-        raise item != None or AssertionError
+        assert item != None
         super(ItemSlot, self).__init__(item=item, name=item.name, nesting_level=nesting_level, **k)
 
     def __eq__(self, other):

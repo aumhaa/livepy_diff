@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import Live
 import sys
@@ -136,4 +135,4 @@ class FaderfoxScript:
 
             self.param_map.receive_midi_note(channel, status, note_no, note_vel)
         else:
-            raise False or AssertionError(u'Unknown MIDI message %s' % str(midi_bytes))
+            assert False, u'Unknown MIDI message %s' % str(midi_bytes)

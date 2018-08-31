@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.ControlSurface import ControlSurface
@@ -233,13 +232,13 @@ class Axiom_DirectLink(ControlSurface):
         self._show_current_track_name()
 
     def _shift_value(self, value):
-        if not value in range(128):
-            raise AssertionError
-            self._shift_pressed = value > 0
-            for encoder in self._encoders:
-                encoder.set_peek_mode(self._shift_pressed)
+        assert value in range(128)
+        self._shift_pressed = value > 0
+        for encoder in self._encoders:
+            encoder.set_peek_mode(self._shift_pressed)
 
-            self._shift_pressed and self._mixer.set_select_buttons(None, None)
+        if self._shift_pressed:
+            self._mixer.set_select_buttons(None, None)
             self._session.set_track_bank_buttons(self._next_nav_button, self._prev_nav_button)
             self._device_component.set_bank_nav_buttons(None, None)
             self._device_navigation.set_device_nav_buttons(self._device_bank_buttons[0], self._device_bank_buttons[1])
@@ -251,75 +250,75 @@ class Axiom_DirectLink(ControlSurface):
         self.request_rebuild_midi_map()
 
     def _encoder_value(self, value, sender):
-        if not sender in self._encoders:
-            raise AssertionError
-            if not value in range(128):
-                raise AssertionError
-                display_string = self._device_component.is_enabled() and u' - '
-                display_string = sender.mapped_parameter() != None and sender.mapped_parameter().name
+        assert sender in self._encoders
+        assert value in range(128)
+        if self._device_component.is_enabled():
+            display_string = u' - '
+            if sender.mapped_parameter() != None:
+                display_string = sender.mapped_parameter().name
             self._display_data_source.set_display_string(display_string)
             self._set_display_data_source(self._display_data_source)
             self._display_reset_delay = STANDARD_DISPLAY_DELAY
 
     def _slider_value(self, value, sender):
-        if not sender in tuple(self._sliders) + (self._master_slider,):
-            raise AssertionError
-            if not value in range(128):
-                raise AssertionError
-                if self._mixer.is_enabled():
-                    display_string = u' - '
-                    if sender.mapped_parameter() != None:
-                        master = self.song().master_track
-                        tracks = self.song().tracks
-                        returns = self.song().return_tracks
-                        track = None
-                        if sender == self._master_slider:
-                            track = self._has_sliders and master
-                        else:
-                            track = self.song().view.selected_track
+        assert sender in tuple(self._sliders) + (self._master_slider,)
+        assert value in range(128)
+        if self._mixer.is_enabled():
+            display_string = u' - '
+            if sender.mapped_parameter() != None:
+                master = self.song().master_track
+                tracks = self.song().tracks
+                returns = self.song().return_tracks
+                track = None
+                if sender == self._master_slider:
+                    if self._has_sliders:
+                        track = master
                     else:
-                        track = self._mixer.channel_strip(self._sliders.index(sender))._track
-                    display_string = track == master and u'Ma'
+                        track = self.song().view.selected_track
+                else:
+                    track = self._mixer.channel_strip(self._sliders.index(sender))._track
+                if track == master:
+                    display_string = u'Ma'
                 elif track in tracks:
                     display_string = str(list(tracks).index(track) + 1)
                 elif track in returns:
                     display_string = str(chr(ord(u'A') + list(returns).index(track)))
                 else:
-                    raise False or AssertionError
+                    assert False
                 display_string += u' Vol'
             self._display_data_source.set_display_string(display_string)
             self._set_display_data_source(self._display_data_source)
             self._display_reset_delay = STANDARD_DISPLAY_DELAY
 
     def _mixer_button_value(self, value, sender):
-        if not sender in tuple(self._strip_buttons) + (self._selected_mute_solo_button,):
-            raise AssertionError
-            if not value in range(128):
-                raise AssertionError
-                if self._mixer.is_enabled() and value > 0:
-                    strip = None
-                    strip = sender == self._selected_mute_solo_button and self._mixer.selected_strip()
-                else:
-                    strip = self._mixer.channel_strip(self._strip_buttons.index(sender))
-                strip != None and self._set_display_data_source(strip.track_name_data_source())
+        assert sender in tuple(self._strip_buttons) + (self._selected_mute_solo_button,)
+        assert value in range(128)
+        if self._mixer.is_enabled() and value > 0:
+            strip = None
+            if sender == self._selected_mute_solo_button:
+                strip = self._mixer.selected_strip()
+            else:
+                strip = self._mixer.channel_strip(self._strip_buttons.index(sender))
+            if strip != None:
+                self._set_display_data_source(strip.track_name_data_source())
             else:
                 self._display_data_source.set_display_string(u' - ')
                 self._set_display_data_source(self._display_data_source)
             self._display_reset_delay = STANDARD_DISPLAY_DELAY
 
     def _device_bank_value(self, value):
-        if not value in range(128):
-            raise AssertionError
-            if self._device_component.is_enabled() and value > 0:
-                data_source = self._device_component.bank_name_data_source()
-                data_source = self._shift_pressed and self._device_component.device_name_data_source()
+        assert value in range(128)
+        if self._device_component.is_enabled() and value > 0:
+            data_source = self._device_component.bank_name_data_source()
+            if self._shift_pressed:
+                data_source = self._device_component.device_name_data_source()
             self._set_display_data_source(data_source)
             self._display_reset_delay = STANDARD_DISPLAY_DELAY
 
     def _inst_value(self, value):
-        if not value in range(128):
-            raise AssertionError
-            value > 0 and self._device_component.is_enabled() and self.song().view.selected_track.view.select_instrument() and self._set_display_data_source(self._device_component.device_name_data_source())
+        assert value in range(128)
+        if value > 0 and self._device_component.is_enabled() and self.song().view.selected_track.view.select_instrument():
+            self._set_display_data_source(self._device_component.device_name_data_source())
             self._display_reset_delay = STANDARD_DISPLAY_DELAY
 
     def _show_current_track_name(self):
@@ -331,6 +330,6 @@ class Axiom_DirectLink(ControlSurface):
         self._display_reset_delay = INITIAL_DISPLAY_DELAY
 
     def _set_display_data_source(self, data_source):
-        raise isinstance(data_source, DisplayDataSource) or AssertionError
+        assert isinstance(data_source, DisplayDataSource)
         self._display.segment(0).set_data_source(data_source)
         data_source.update()

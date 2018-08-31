@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial
 from _Framework.Util import group
@@ -597,9 +596,9 @@ def parameter_banks(device, device_dict = DEVICE_DICT):
 
 
 def best_of_parameter_bank(device, device_bob_dict = DEVICE_BOB_DICT):
-    bobs = device and device.class_name in device_bob_dict and device_bob_dict[device.class_name]
-    if not len(bobs) == 1:
-        raise AssertionError
+    if device and device.class_name in device_bob_dict:
+        bobs = device_bob_dict[device.class_name]
+        assert len(bobs) == 1
         return map(partial(get_parameter_by_name, device), bobs[0])
     if device.class_name in MAX_DEVICES:
         try:

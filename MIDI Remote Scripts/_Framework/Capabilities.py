@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 GENERIC_SCRIPT_KEY = u'generic_script'
 PORTS_KEY = u'ports'
@@ -21,19 +20,19 @@ REMOTE = u'remote'
 PLAIN_OLD_MIDI = u'plain_old_midi'
 
 def __create_port_dict(direction, port_name, mac_name, props):
-    if not isinstance(direction, basestring):
-        raise AssertionError
-        raise isinstance(port_name, basestring) or AssertionError
-        raise props == None or type(props) is list or AssertionError
-        if props:
-            for prop in props:
-                raise isinstance(prop, basestring) or AssertionError
+    assert isinstance(direction, basestring)
+    assert isinstance(port_name, basestring)
+    assert props == None or type(props) is list
+    if props:
+        for prop in props:
+            assert isinstance(prop, basestring)
 
-        raise mac_name == None or isinstance(mac_name, basestring) or AssertionError
-        capabilities = {DIRECTIONKEY: direction,
-         PORTNAMEKEY: port_name,
-         PROPSKEY: props}
-        capabilities[MACNAMEKEY] = mac_name and mac_name
+    assert mac_name == None or isinstance(mac_name, basestring)
+    capabilities = {DIRECTIONKEY: direction,
+     PORTNAMEKEY: port_name,
+     PROPSKEY: props}
+    if mac_name:
+        capabilities[MACNAMEKEY] = mac_name
     return capabilities
 
 
@@ -49,14 +48,14 @@ def outport(port_name = u'', props = [], mac_name = None):
 
 def controller_id(vendor_id, product_ids, model_name):
     u""" Generate a hardwareId dict"""
-    if not type(vendor_id) is int:
-        raise AssertionError
-        raise type(product_ids) is list or AssertionError
-        for product_id in product_ids:
-            raise type(product_id) is int or AssertionError
+    assert type(vendor_id) is int
+    assert type(product_ids) is list
+    for product_id in product_ids:
+        assert type(product_id) is int
 
-        raise isinstance(model_name, (basestring, list)) or AssertionError
-        model_names = isinstance(model_name, basestring) and [model_name]
+    assert isinstance(model_name, (basestring, list))
+    if isinstance(model_name, basestring):
+        model_names = [model_name]
     else:
         model_names = model_name
     return {VENDORID: vendor_id,

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from ableton.v2.base import depends, liveobj_valid
@@ -38,7 +37,7 @@ class BrowserComponentMode(LazyEnablingMode):
 class BrowseModeBase(Mode):
 
     def __init__(self, enabling_mode = None, *a, **k):
-        raise enabling_mode is not None or AssertionError
+        assert enabling_mode is not None
         super(BrowseModeBase, self).__init__()
         self.enabling_mode = enabling_mode
 

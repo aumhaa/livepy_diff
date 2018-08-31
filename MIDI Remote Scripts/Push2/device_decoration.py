@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import EventObject, const, inject, listenable_property, listens, liveobj_valid
 from pushbase.decoration import LiveObjectDecorator, get_parameter_by_name
@@ -130,7 +129,7 @@ class SimplerPositions(EventObject):
     use_beat_time = listenable_property.managed(False)
 
     def __init__(self, simpler = None, *a, **k):
-        raise simpler is not None or AssertionError
+        assert simpler is not None
         super(SimplerPositions, self).__init__(*a, **k)
         self._simpler = simpler
         self.__on_active_start_changed.subject = simpler.view
@@ -375,9 +374,9 @@ class SimplerDecoratedPropertiesCopier(object):
     ADDITIONAL_PROPERTIES = [u'playhead_real_time_channel_id', u'waveform_real_time_channel_id']
 
     def __init__(self, decorated_object = None, factory = None, *a, **k):
-        raise liveobj_valid(decorated_object) or AssertionError
-        raise factory is not None or AssertionError
-        raise decorated_object in factory.decorated_objects or AssertionError
+        assert liveobj_valid(decorated_object)
+        assert factory is not None
+        assert decorated_object in factory.decorated_objects
         super(SimplerDecoratedPropertiesCopier, self).__init__(*a, **k)
         self._decorated_object = decorated_object
         self._factory = factory

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import Live
 RCK_BANK1 = (u'Macro 1', u'Macro 2', u'Macro 3', u'Macro 4', u'Macro 5', u'Macro 6', u'Macro 7', u'Macro 8')

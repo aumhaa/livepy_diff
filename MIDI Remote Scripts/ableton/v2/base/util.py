@@ -1,4 +1,3 @@
-
 u"""
 Various utilities.
 """
@@ -216,7 +215,7 @@ def monkeypatch_extend(target, name = None):
 
             newfunc = extended
         else:
-            raise False or AssertionError(u'Must have something to extend')
+            assert False, u'Must have something to extend'
         setattr(target, patchname, newfunc)
         return func
 
@@ -693,7 +692,7 @@ class Slicer(object):
 
     def __init__(self, dimensions = 1, extractor = nop, keys = tuple(), *a, **k):
         super(Slicer, self).__init__(*a, **k)
-        raise len(keys) < dimensions or AssertionError
+        assert len(keys) < dimensions
         self._keys = keys
         self._dimensions = dimensions
         self._extractor = extractor
@@ -701,9 +700,9 @@ class Slicer(object):
     def __getitem__(self, key):
         new = key if isinstance(key, tuple) else (key,)
         keys = self._keys + new
-        if not len(keys) <= self._dimensions:
-            raise AssertionError(u'Too many dimensions')
-            return len(keys) == self._dimensions and self._extractor(*keys)
+        assert len(keys) <= self._dimensions, u'Too many dimensions'
+        if len(keys) == self._dimensions:
+            return self._extractor(*keys)
         else:
             return Slicer(dimensions=self._dimensions, extractor=self._extractor, keys=keys)
 

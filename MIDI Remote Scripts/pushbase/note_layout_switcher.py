@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import nop
 from ableton.v2.control_surface import Component
@@ -75,7 +74,7 @@ class ModeSwitcherBase(Component, Messenger):
 class NoteLayoutSwitcher(ModeSwitcherBase):
 
     def __init__(self, switch_note_mode_layout = None, get_current_alternative_layout_mode = None, *a, **k):
-        raise switch_note_mode_layout is not None or AssertionError
+        assert switch_note_mode_layout is not None
         super(NoteLayoutSwitcher, self).__init__(*a, **k)
         self._get_current_alternative_mode = get_current_alternative_layout_mode
         self._cycle_mode = self._cycle_alternative_note_layout

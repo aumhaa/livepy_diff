@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import liveobj_valid
 from pushbase.parameter_provider import is_parameter_quantized

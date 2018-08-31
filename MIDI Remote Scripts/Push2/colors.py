@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from colorsys import rgb_to_hsv, hsv_to_rgb
 import MidiRemoteScript
@@ -22,10 +21,10 @@ def make_blinking_track_color(track, blink_to_color):
 
 
 def determine_shaded_color_index(color_index, shade_level):
-    if not (in_range(color_index, 1, 27) or color_index == WHITE_MIDI_VALUE):
-        raise AssertionError
-        raise 0 <= shade_level <= 2 or AssertionError
-        return shade_level == 0 and color_index
+    assert in_range(color_index, 1, 27) or color_index == WHITE_MIDI_VALUE
+    assert 0 <= shade_level <= 2
+    if shade_level == 0:
+        return color_index
     elif color_index == WHITE_MIDI_VALUE:
         return color_index + shade_level
     else:
@@ -65,7 +64,7 @@ def inverse_translate_color_index(translated_index):
     Translates a color index coming with the reduced palette of Push [1..26] to the best
     matching color of Live [0..69].
     """
-    raise 1 <= translated_index <= len(PUSH_INDEX_TO_COLOR_INDEX) or AssertionError
+    assert 1 <= translated_index <= len(PUSH_INDEX_TO_COLOR_INDEX)
     return PUSH_INDEX_TO_COLOR_INDEX[translated_index - 1]
 
 
@@ -77,11 +76,11 @@ class SelectedDrumPadColor(DynamicColorBase):
 
     @depends(percussion_instrument_finder=nop)
     def __init__(self, song = None, percussion_instrument_finder = None, *a, **k):
-        if not liveobj_valid(song):
-            raise AssertionError
-            super(SelectedDrumPadColor, self).__init__(*a, **k)
-            self.song = song
-            self.__on_selected_track_color_index_changed.subject = percussion_instrument_finder is not None and self.song.view
+        assert liveobj_valid(song)
+        super(SelectedDrumPadColor, self).__init__(*a, **k)
+        self.song = song
+        if percussion_instrument_finder is not None:
+            self.__on_selected_track_color_index_changed.subject = self.song.view
             self.__on_instrument_changed.subject = percussion_instrument_finder
             self.__on_instrument_changed()
 

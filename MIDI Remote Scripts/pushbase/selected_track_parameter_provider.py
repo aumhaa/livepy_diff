@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import depends, listens, liveobj_valid
 from .mixer_utils import is_set_to_split_stereo
@@ -38,7 +37,7 @@ class SelectedTrackParameterProvider(ParameterProvider):
         return []
 
     def _track_parameter_names(self):
-        raise liveobj_valid(self._track) or AssertionError
+        assert liveobj_valid(self._track)
         names = (u'Volume',)
         names += (u'L Split', u'R Split') if is_set_to_split_stereo(self._track.mixer_device) else (u'Pan',)
         return names + SEND_PARAMETER_NAMES

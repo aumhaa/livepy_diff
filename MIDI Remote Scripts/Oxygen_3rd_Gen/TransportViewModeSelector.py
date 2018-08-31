@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
@@ -10,11 +9,11 @@ class TransportViewModeSelector(ModeSelectorComponent):
     u""" Class that reassigns specific buttons based on the views visible in Live """
 
     def __init__(self, transport, session, ffwd_button, rwd_button, loop_button):
-        raise isinstance(transport, TransportComponent) or AssertionError
-        raise isinstance(session, SessionComponent) or AssertionError
-        raise isinstance(ffwd_button, ButtonElement) or AssertionError
-        raise isinstance(rwd_button, ButtonElement) or AssertionError
-        raise isinstance(loop_button, ButtonElement) or AssertionError
+        assert isinstance(transport, TransportComponent)
+        assert isinstance(session, SessionComponent)
+        assert isinstance(ffwd_button, ButtonElement)
+        assert isinstance(rwd_button, ButtonElement)
+        assert isinstance(loop_button, ButtonElement)
         ModeSelectorComponent.__init__(self)
         self._transport = transport
         self._session = session

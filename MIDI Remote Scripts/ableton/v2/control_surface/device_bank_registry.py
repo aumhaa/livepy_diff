@@ -1,4 +1,3 @@
-
 u"""
 Classes to keep a global registry of the currently selected bank for
 given device instances.

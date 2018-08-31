@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import has_event, NamedTuple, listenable_property, listens, listens_group, liveobj_valid, nop
 from ableton.v2.control_surface import Component
@@ -9,8 +8,8 @@ from .item_lister_component import ItemListerComponent, ItemProvider
 class BankProvider(ItemProvider):
 
     def __init__(self, bank_registry = None, banking_info = None, *a, **k):
-        raise bank_registry is not None or AssertionError
-        raise banking_info is not None or AssertionError
+        assert bank_registry is not None
+        assert banking_info is not None
         super(BankProvider, self).__init__(*a, **k)
         self._bank_registry = bank_registry
         self._banking_info = banking_info

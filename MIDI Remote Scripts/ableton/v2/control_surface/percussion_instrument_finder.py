@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 import Live
 from itertools import chain
@@ -17,7 +16,7 @@ class PercussionInstrumentFinder(Mode, EventObject):
     _simpler = None
 
     def __init__(self, device_parent = None, is_enabled = True, *a, **k):
-        raise liveobj_valid(device_parent) or AssertionError
+        assert liveobj_valid(device_parent)
         super(PercussionInstrumentFinder, self).__init__(*a, **k)
         self._is_enabled = is_enabled
         self._device_parent = None

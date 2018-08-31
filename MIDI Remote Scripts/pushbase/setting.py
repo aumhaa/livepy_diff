@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from math import fabs
 from ableton.v2.base import sign, clamp, EventObject, Event
@@ -24,9 +23,9 @@ class Setting(EventObject):
         return self.value_to_string(self.value)
 
     def _set_value(self, value):
-        if not value in self.values:
-            raise AssertionError
-            self._preferences[self.name] = self._preferences[self.name] != value and value
+        assert value in self.values
+        if self._preferences[self.name] != value:
+            self._preferences[self.name] = value
             self.on_value_changed(value)
             self.notify_value(self.value)
 

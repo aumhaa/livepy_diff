@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial
 from ..base import Proxy, index_if, nop, first, NamedTuple
@@ -38,9 +37,9 @@ class CompoundResource(Resource):
         return self.owner == client
 
     def release(self, client):
-        if not client:
-            raise AssertionError
-            client == self.owner and self._second_resource.release(client)
+        assert client
+        if client == self.owner:
+            self._second_resource.release(client)
             self._first_resource.release(client)
             return True
         return False
@@ -76,16 +75,16 @@ class ExclusiveResource(Resource):
             self.on_lost = on_lost_callback
 
     def grab(self, client, *a, **k):
-        if not client is not None:
-            raise AssertionError(u'Someone has to adquire resource')
-            self._owner == None and self.on_received(client, *a, **k)
+        assert client is not None, u'Someone has to adquire resource'
+        if self._owner == None:
+            self.on_received(client, *a, **k)
             self._owner = client
         return self._owner == client
 
     def release(self, client):
-        if not client:
-            raise AssertionError
-            self._owner = client == self._owner and None
+        assert client
+        if client == self._owner:
+            self._owner = None
             self.on_lost(client)
             return True
         return False
@@ -114,15 +113,15 @@ class SharedResource(Resource):
         self._clients = set()
 
     def grab(self, client, *a, **k):
-        raise client is not None or AssertionError(u'Someone has to adquire resource')
+        assert client is not None, u'Someone has to adquire resource'
         self.on_received(client, *a, **k)
         self._clients.add(client)
         return True
 
     def release(self, client):
-        if not client is not None:
-            raise AssertionError
-            client in self._clients and self.on_lost(client)
+        assert client is not None
+        if client in self._clients:
+            self.on_lost(client)
             self._clients.remove(client)
             for client in self._clients:
                 self.on_received(client)
@@ -131,7 +130,7 @@ class SharedResource(Resource):
         return False
 
     def get_owner(self):
-        raise False or AssertionError(u'Shared resource has no owner')
+        assert False, u'Shared resource has no owner'
 
     def on_received(self, client, *a, **k):
         raise NotImplementedError(u'Override or pass callback')
@@ -171,15 +170,15 @@ class StackingResource(Resource):
             self.on_lost = on_lost_callback
 
     def grab(self, client, priority = None):
-        if not client is not None:
-            raise AssertionError
-            if priority is None:
-                priority = DEFAULT_PRIORITY
-            old_owners = self._owners
-            self._remove_client(client)
-            self._add_client(client, priority)
-            new_owners = self._actual_owners()
-            self._owners = new_owners != old_owners and new_owners
+        assert client is not None
+        if priority is None:
+            priority = DEFAULT_PRIORITY
+        old_owners = self._owners
+        self._remove_client(client)
+        self._add_client(client, priority)
+        new_owners = self._actual_owners()
+        if new_owners != old_owners:
+            self._owners = new_owners
             self._on_lost_set(set(old_owners) - set(new_owners))
             self._on_received_set(new_owners)
         return True
@@ -193,12 +192,12 @@ class StackingResource(Resource):
             self.on_received(client)
 
     def release(self, client):
-        if not client is not None:
-            raise AssertionError
-            old_owners = self._owners
-            result = self._remove_client(client)
-            new_owners = self._actual_owners()
-            self._owners = new_owners != old_owners and new_owners
+        assert client is not None
+        old_owners = self._owners
+        result = self._remove_client(client)
+        new_owners = self._actual_owners()
+        if new_owners != old_owners:
+            self._owners = new_owners
             self._on_lost_set(set(old_owners) - set(new_owners))
             self._on_received_set(new_owners)
         return result
@@ -236,7 +235,7 @@ class StackingResource(Resource):
         return len(self._clients)
 
     def get_owner(self):
-        raise not self._owners or len(self._owners) == 1 or AssertionError
+        assert not self._owners or len(self._owners) == 1
         for owner in self._owners:
             return owner
 
@@ -286,7 +285,7 @@ class ProxyResource(Proxy):
     """
 
     def __init__(self, proxied_resource = None, client_wrapper = ClientWrapper(), *a, **k):
-        raise proxied_resource or AssertionError
+        assert proxied_resource
         super(ProxyResource, self).__init__(proxied_object=proxied_resource, *a, **k)
         self._client_wrapper = client_wrapper
 

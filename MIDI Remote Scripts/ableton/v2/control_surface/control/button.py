@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from functools import partial
 from ...base import lazy_attribute, task
@@ -302,7 +301,7 @@ class PlayableControl(ButtonControl):
             Set the Control's playability in Live. See :class:`PlayableControl.Mode`
             for possible modes.
             """
-            raise isinstance(value, PlayableControl.Mode) or AssertionError
+            assert isinstance(value, PlayableControl.Mode)
             self._mode = value
             self._update_script_forwarding()
 
