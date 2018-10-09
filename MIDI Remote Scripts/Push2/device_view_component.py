@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from ableton.v2.base import const, listens, liveobj_valid
 from ableton.v2.control_surface import Component
@@ -7,9 +6,9 @@ from ableton.v2.control_surface.mode import ModesComponent
 class DeviceViewConnector(Component):
 
     def __init__(self, device_component = None, parameter_provider = None, device_type_provider = const('default'), view = None, *a, **k):
-        raise device_component is not None or AssertionError
-        raise parameter_provider is not None or AssertionError
-        raise view is not None or AssertionError
+        assert device_component is not None
+        assert parameter_provider is not None
+        assert view is not None
         super(DeviceViewConnector, self).__init__(*a, **k)
         self._device_component = device_component
         self._parameter_provider = parameter_provider
@@ -55,7 +54,7 @@ class SimplerDeviceViewConnector(DeviceViewConnector):
     def update(self):
         super(SimplerDeviceViewConnector, self).update()
         device = self._value_for_state(self._device_component.device(), None)
-        raise device == None or device.class_name == 'OriginalSimpler' or AssertionError
+        assert device == None or device.class_name == 'OriginalSimpler'
         self._view.properties = device
         self._view.wants_waveform_shown = self._parameter_provider.wants_waveform_shown
 
@@ -63,8 +62,8 @@ class SimplerDeviceViewConnector(DeviceViewConnector):
 class DeviceViewComponent(ModesComponent):
 
     def __init__(self, device_component = None, view_model = None, *a, **k):
-        raise device_component is not None or AssertionError
-        raise view_model is not None or AssertionError
+        assert device_component is not None
+        assert view_model is not None
         super(DeviceViewComponent, self).__init__(*a, **k)
         self._get_device = device_component.device
         for view in (view_model.deviceParameterView, view_model.simplerDeviceView):

@@ -1,4 +1,3 @@
-
 from functools import partial
 from ableton.v2.base import const, inject
 from ableton.v2.control_surface import ControlSurface, Layer, MIDI_NOTE_TYPE

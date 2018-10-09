@@ -1,4 +1,3 @@
-
 from _Framework.ButtonElement import Color
 from .consts import BLINK_LED_CHANNEL, PULSE_LED_CHANNEL
 

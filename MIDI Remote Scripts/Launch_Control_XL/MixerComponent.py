@@ -1,4 +1,3 @@
-
 from itertools import izip_longest
 from _Framework.Control import control_list, ButtonControl
 from _Framework.ChannelStripComponent import ChannelStripComponent as ChannelStripComponentBase

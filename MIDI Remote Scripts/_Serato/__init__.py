@@ -1,4 +1,3 @@
-
 from Serato import Serato
 HIDE_SCRIPT = True
 

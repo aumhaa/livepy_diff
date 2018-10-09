@@ -1,4 +1,3 @@
-
 from _Framework.SliderElement import SliderElement as SliderElementBase
 from _Framework.Skin import Skin, SkinColorMissingError
 import consts
@@ -18,7 +17,7 @@ class SliderElement(SliderElementBase):
         self._header = consts.SYSEX_STANDARD_PREFIX + consts.SYSEX_PARAM_BYTE_FADER_SETUP + (index,)
 
     def set_light_and_type(self, light_value, type_value):
-        raise type_value in FADER_TYPES or AssertionError
+        assert type_value in FADER_TYPES
         self.set_light(light_value)
         self._type = type_value
 

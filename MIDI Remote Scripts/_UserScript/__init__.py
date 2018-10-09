@@ -1,4 +1,3 @@
-
 from ConfigParser import ConfigParser
 from _Generic.GenericScript import GenericScript
 import Live

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from itertools import chain, starmap
 from ableton.v2.base import forward_property, listens, liveobj_valid
@@ -20,10 +19,10 @@ class StepSeqComponent(CompoundComponent):
 
     def __init__(self, clip_creator = None, skin = None, grid_resolution = None, note_editor_component = None, instrument_component = None, *a, **k):
         super(StepSeqComponent, self).__init__(*a, **k)
-        raise clip_creator is not None or AssertionError
-        raise skin is not None or AssertionError
-        raise instrument_component is not None or AssertionError
-        raise note_editor_component is not None or AssertionError
+        assert clip_creator is not None
+        assert skin is not None
+        assert instrument_component is not None
+        assert note_editor_component is not None
         self._grid_resolution = grid_resolution
         self._note_editor, self._loop_selector = self.register_components(note_editor_component, LoopSelectorComponent(clip_creator=clip_creator, default_size=16))
         self._instrument = instrument_component

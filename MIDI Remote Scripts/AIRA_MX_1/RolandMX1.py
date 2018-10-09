@@ -1,4 +1,3 @@
-
 from __future__ import with_statement
 from functools import partial
 from _Framework.Util import recursive_map

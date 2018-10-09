@@ -1,4 +1,3 @@
-
 from _Framework.Util import in_range
 from _Framework.SubjectSlot import subject_slot_group
 from _Framework.SessionComponent import SessionComponent as SessionComponentBase

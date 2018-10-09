@@ -1,4 +1,3 @@
-
 from ableton.v2.control_surface import Skin
 from ableton.v2.control_surface.elements import Color
 from .sysex_rgb_color import SysexRGBColor
@@ -26,6 +25,14 @@ class Colors:
         StopClip = Color(0)
         StopClipTriggered = Color(0)
         StoppedClip = Color(0)
+
+    class Automation:
+        On = Color(127)
+        Off = Color(0)
+
+    class View:
+        Session = Color(0)
+        Arranger = Color(127)
 
 
 default_skin = Skin(Colors)

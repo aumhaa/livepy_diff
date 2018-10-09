@@ -1,6 +1,5 @@
 
 
-
 class TupleWrapper(object):
     """ Wrapper class for the access to volatile lists and tuples in the Python API """
     _tuple_wrapper_registry = {}
@@ -18,7 +17,7 @@ class TupleWrapper(object):
     get_tuple_wrapper = staticmethod(get_tuple_wrapper)
 
     def __init__(self, parent, attribute):
-        raise isinstance(attribute, (str, unicode)) or AssertionError
+        assert isinstance(attribute, (str, unicode))
         self._parent = parent
         self._attribute = attribute
 
@@ -47,22 +46,22 @@ class StringHandler(object):
     """ Class that can parse incoming strings and format outgoing strings """
 
     def prepare_incoming(string):
-        raise isinstance(string, (str, unicode)) or AssertionError
+        assert isinstance(string, (str, unicode))
         return string.replace(QUOTE_ENTITY, QUOTE_SIMPLE)
 
     prepare_incoming = staticmethod(prepare_incoming)
 
     def prepare_outgoing(string):
-        if not isinstance(string, (str, unicode)):
-            raise AssertionError
-            result = string.replace(QUOTE_SIMPLE, QUOTE_ENTITY)
-            result = result.find(' ') >= 0 and QUOTE_SIMPLE + result + QUOTE_SIMPLE
+        assert isinstance(string, (str, unicode))
+        result = string.replace(QUOTE_SIMPLE, QUOTE_ENTITY)
+        if result.find(' ') >= 0:
+            result = QUOTE_SIMPLE + result + QUOTE_SIMPLE
         return result
 
     prepare_outgoing = staticmethod(prepare_outgoing)
 
     def parse(string, id_callback):
-        raise isinstance(string, (str, unicode)) or AssertionError
+        assert isinstance(string, (str, unicode))
         return StringHandler(id_callback).parse_string(string)
 
     parse = staticmethod(parse)
@@ -85,7 +84,7 @@ class StringHandler(object):
                 getattr(self, handle_selector)(char, index)
             else:
                 debug_print('Unknown state ' + str(self._state))
-                raise False or AssertionError
+                assert False
 
         finalize_selector = '_finalize_' + str(self._state)
         if len(self._sub_string) > 0 and hasattr(self, finalize_selector):

@@ -1,4 +1,3 @@
-
 import Live
 from _Framework.ButtonElement import *
 
@@ -15,8 +14,8 @@ class ConfigurableButtonElement(ButtonElement):
         self._pending_listeners = []
 
     def set_on_off_values(self, on_value, off_value):
-        raise on_value in range(128) or AssertionError
-        raise off_value in range(128) or AssertionError
+        assert on_value in range(128)
+        assert off_value in range(128)
         self.clear_send_cache()
         self._on_value = on_value
         self._off_value = off_value

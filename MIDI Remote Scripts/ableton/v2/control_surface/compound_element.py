@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from collections import OrderedDict
 from itertools import ifilter
@@ -83,19 +82,19 @@ class CompoundElement(NotifyingControlElement, ControlElementClient):
         """
         Override to change priority for control element.
         """
-        raise self._has_resource or AssertionError
+        assert self._has_resource
         return priority
 
     def register_control_elements(self, *elements):
         return map(self.register_control_element, elements)
 
     def register_control_element(self, element):
-        if not element not in self._nested_control_elements:
-            raise AssertionError
-            self._nested_control_elements[element] = False
-            if self._listen_nested_requests > 0:
-                self.__on_nested_control_element_value.add_subject(element)
-            priority = self._is_resource_based and self.resource.owner and self.get_control_element_priority(element, self.resource.max_priority)
+        assert element not in self._nested_control_elements
+        self._nested_control_elements[element] = False
+        if self._listen_nested_requests > 0:
+            self.__on_nested_control_element_value.add_subject(element)
+        if self._is_resource_based and self.resource.owner:
+            priority = self.get_control_element_priority(element, self.resource.max_priority)
             nested_client = self._get_nested_client(self.resource.owner)
             element.resource.grab(nested_client, priority=priority)
         elif not self._is_resource_based:
@@ -107,17 +106,17 @@ class CompoundElement(NotifyingControlElement, ControlElementClient):
         return map(self.unregister_control_element, elements)
 
     def unregister_control_element(self, element):
-        if not element in self._nested_control_elements:
-            raise AssertionError
-            if self._is_resource_based:
-                for client in self.resource.clients:
-                    nested_client = self._get_nested_client(client)
-                    element.resource.release(nested_client)
+        assert element in self._nested_control_elements
+        if self._is_resource_based:
+            for client in self.resource.clients:
+                nested_client = self._get_nested_client(client)
+                element.resource.release(nested_client)
 
-            else:
-                with self._disable_notify_owner_on_button_ownership_change():
-                    element.notify_ownership_change(self, False)
-            self._listen_nested_requests > 0 and self.__on_nested_control_element_value.remove_subject(element)
+        else:
+            with self._disable_notify_owner_on_button_ownership_change():
+                element.notify_ownership_change(self, False)
+        if self._listen_nested_requests > 0:
+            self.__on_nested_control_element_value.remove_subject(element)
         del self._nested_control_elements[element]
         return element
 
@@ -220,7 +219,7 @@ class CompoundElement(NotifyingControlElement, ControlElementClient):
                 element.resource.grab(nested_client, priority=nested_priority)
 
     def _release_nested_control_elements(self, client):
-        raise self._is_resource_based or AssertionError
+        assert self._is_resource_based
         nested_client = self._get_nested_client(client)
         with self._disable_notify_owner_on_button_ownership_change():
             for element in self._nested_control_elements.keys():

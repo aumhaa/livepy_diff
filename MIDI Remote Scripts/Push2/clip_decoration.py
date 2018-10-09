@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from ableton.v2.base import liveobj_valid, listenable_property, listens, EventObject
 from pushbase.decoration import DecoratorFactory, LiveObjectDecorator
@@ -18,8 +17,8 @@ class ClipPositions(EventObject):
     use_beat_time = listenable_property.managed(False)
 
     def __init__(self, clip = None, *a, **k):
-        raise clip is not None or AssertionError
-        raise clip.is_audio_clip or AssertionError
+        assert clip is not None
+        assert clip.is_audio_clip
         super(ClipPositions, self).__init__(*a, **k)
         self._clip = clip
         self._looping = self._clip.looping

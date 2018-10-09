@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from functools import partial
 import Live
@@ -43,7 +42,7 @@ class FixedLengthSettingComponent(Component):
     option_display_line = TextDisplayControl(LENGTH_OPTION_NAMES)
 
     def __init__(self, fixed_length_setting = None, *a, **k):
-        raise fixed_length_setting is not None or AssertionError
+        assert fixed_length_setting is not None
         super(FixedLengthSettingComponent, self).__init__(*a, **k)
         self._fixed_length_setting = fixed_length_setting
         self.length_option_buttons.connect_property(fixed_length_setting, 'selected_index')
@@ -66,8 +65,8 @@ class FixedLengthComponent(CompoundComponent, Messenger):
     fixed_length_toggle_button = ButtonControl()
 
     def __init__(self, settings_component = None, fixed_length_setting = None, *a, **k):
-        raise settings_component is not None or AssertionError
-        raise fixed_length_setting is not None or AssertionError
+        assert settings_component is not None
+        assert fixed_length_setting is not None
         super(FixedLengthComponent, self).__init__(*a, **k)
         self._fixed_length_setting = fixed_length_setting
         self._settings_component = self.register_component(settings_component)

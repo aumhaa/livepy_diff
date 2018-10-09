@@ -1,4 +1,3 @@
-
 from ableton.v2.control_surface import Component
 from ableton.v2.control_surface.control import ButtonControl, EncoderControl
 

@@ -1,4 +1,3 @@
-
 from consts import *
 TRANSPORT_CONTROLS = {'STOP': GENERIC_STOP,
  'PLAY': GENERIC_PLAY,

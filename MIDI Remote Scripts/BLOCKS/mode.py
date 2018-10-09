@@ -1,4 +1,3 @@
-
 from ableton.v2.control_surface.control import ButtonControl
 from ableton.v2.control_surface.mode import ModesComponent as ModesComponentBase
 

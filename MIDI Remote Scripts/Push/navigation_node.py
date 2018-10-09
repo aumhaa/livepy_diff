@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from itertools import imap
 from functools import partial
@@ -35,7 +34,7 @@ def make_navigation_node(model_object, is_entering = True, session_ring = None, 
             else:
                 node = RackNode(model_object)
         else:
-            raise device_bank_registry or AssertionError('Navigating a device needs a bank registry')
+            assert device_bank_registry, 'Navigating a device needs a bank registry'
             node = SimpleDeviceNode(device_bank_registry, banking_info, model_object)
     if node and node.parent and not node.children:
         node.disconnect()
@@ -136,9 +135,9 @@ class ModelNode(NavigationNode):
         return self._selected_child
 
     def set_selected_child(self, child):
-        if not (in_range(child, 0, len(self._children)) or child == None):
-            raise AssertionError
-            _, obj = child >= 0 and child < len(self._children) and self._children[child]
+        assert in_range(child, 0, len(self._children)) or child == None
+        if child >= 0 and child < len(self._children):
+            _, obj = self._children[child]
             self._set_selected_child_in_model(obj)
             self._selected_child = child
         else:
@@ -185,7 +184,7 @@ class ModelNode(NavigationNode):
             self.notify_state(index, value)
 
     def _update_children(self):
-        raise not self._in_update_children or AssertionError
+        assert not self._in_update_children
         self._in_update_children = True
         self._children = self._get_children_from_model()
         self._state = map(compose(self._get_state_from_model, second), self._children)
@@ -341,7 +340,7 @@ class SongNode(ModelNode):
 
     def __init__(self, session_ring = None, *a, **k):
         super(SongNode, self).__init__(*a, **k)
-        raise session_ring is not None or AssertionError
+        assert session_ring is not None
         self._session_ring = session_ring
         self.register_slot(self._object, self._update_children, 'visible_tracks')
         self.register_slot(self._object, self._update_children, 'return_tracks')
@@ -365,7 +364,7 @@ class SimpleDeviceNode(ModelNode):
 
     def __init__(self, device_bank_registry = None, banking_info = None, *a, **k):
         super(SimpleDeviceNode, self).__init__(*a, **k)
-        raise device_bank_registry or AssertionError('Need a device bank registry.')
+        assert device_bank_registry, 'Need a device bank registry.'
         self._mute_next_update = False
         self._device_bank_registry = device_bank_registry
         self._banking_info = banking_info

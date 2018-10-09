@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from os import path
 VERSION_PREFIX = '10F4000041444139204E69636F6C6C73'

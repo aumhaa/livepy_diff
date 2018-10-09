@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from ableton.v2.base import liveobj_valid, listenable_property, listens, const, EventObject, Slot
 
@@ -6,7 +5,7 @@ class DeviceTriggerOption(EventObject):
     __events__ = ('default_label',)
 
     def __init__(self, name = None, default_label = None, callback = None, is_active = None, *a, **k):
-        raise callback or AssertionError
+        assert callback
         super(DeviceTriggerOption, self).__init__(*a, **k)
         self.trigger = callback
         self._name = name or 'Option'

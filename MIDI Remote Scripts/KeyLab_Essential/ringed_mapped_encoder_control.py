@@ -1,4 +1,3 @@
-
 from ableton.v2.base import listens
 from ableton.v2.control_surface.control import MappedControl
 

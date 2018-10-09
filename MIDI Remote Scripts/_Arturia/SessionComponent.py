@@ -1,4 +1,3 @@
-
 from _Framework.SessionComponent import SessionComponent as SessionComponentBase
 from _Framework.Control import EncoderControl
 

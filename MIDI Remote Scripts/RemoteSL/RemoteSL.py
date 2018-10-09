@@ -1,4 +1,3 @@
-
 import Live
 import MidiRemoteScript
 from EffectController import EffectController

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import
 from _Framework.MidiMap import MidiMap
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
@@ -37,11 +36,11 @@ def make_slider(name, channel, number, midi_message_type, skin = None):
 class SpecialMidiMap(MidiMap):
 
     def add_button(self, name, channel, number, midi_message_type, default_states = None, element_factory = make_button, **k):
-        raise name not in self.keys() or AssertionError
+        assert name not in self.keys()
         self[name] = element_factory(name, channel, number, midi_message_type, default_states=default_states, **k)
 
     def add_matrix(self, name, element_factory, channel, numbers, midi_message_type):
-        raise name not in self.keys() or AssertionError
+        assert name not in self.keys()
 
         def one_dimensional_name(base_name, x, _y):
             return '%s_%d' % (base_name, x)
@@ -65,5 +64,5 @@ class SpecialMidiMap(MidiMap):
         self[name] = ButtonMatrixElement(rows=elements, name=name)
 
     def add_modifier_button(self, name, channel, number, midi_message_type, default_states = None, element_factory = make_button):
-        raise name not in self.keys() or AssertionError
+        assert name not in self.keys()
         self.add_button(name, channel, number, midi_message_type, default_states=default_states, element_factory=element_factory, resource_type=PrioritizedResource)

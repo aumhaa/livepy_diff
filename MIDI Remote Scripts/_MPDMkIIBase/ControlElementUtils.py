@@ -1,4 +1,3 @@
-
 import Live
 from _Framework.InputControlElement import MIDI_CC_TYPE
 from _Framework.EncoderElement import EncoderElement

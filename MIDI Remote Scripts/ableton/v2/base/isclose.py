@@ -1,4 +1,3 @@
-
 """
 Test implementation for an isclose() function, for possible inclusion in
 the Python standard library -- PEP0485

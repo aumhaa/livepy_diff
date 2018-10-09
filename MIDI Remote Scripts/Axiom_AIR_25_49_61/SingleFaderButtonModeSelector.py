@@ -1,4 +1,3 @@
-
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from consts import *
 

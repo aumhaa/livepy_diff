@@ -1,4 +1,3 @@
-
 import Live
 from FaderfoxComponent import FaderfoxComponent
 from FaderfoxHelper import FaderfoxHelper

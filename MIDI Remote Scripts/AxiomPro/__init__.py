@@ -1,4 +1,3 @@
-
 from AxiomPro import AxiomPro
 
 def create_instance(c_instance):

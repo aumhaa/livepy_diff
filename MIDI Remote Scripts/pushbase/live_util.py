@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 
 def get_position_for_new_track(song, selected_track_index):

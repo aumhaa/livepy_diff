@@ -1,4 +1,3 @@
-
 from _Framework.TransportComponent import TransportComponent as TransportComponentBase
 
 class TransportComponent(TransportComponentBase):

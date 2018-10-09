@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from itertools import izip, izip_longest
 from ...base import clamp, listens, liveobj_valid
@@ -38,35 +37,35 @@ class MixerComponent(CompoundComponent):
     """ Class encompassing several channel strips to form a mixer """
 
     def __init__(self, tracks_provider = None, track_assigner = right_align_return_tracks_track_assigner, auto_name = False, invert_mute_feedback = False, *a, **k):
-        if not tracks_provider is not None:
-            raise AssertionError
-            raise callable(track_assigner) or AssertionError
-            super(MixerComponent, self).__init__(*a, **k)
-            self._track_assigner = track_assigner
-            self._provider = tracks_provider
-            self.__on_offset_changed.subject = tracks_provider
-            self._send_index = 0
-            self._prehear_volume_control = None
-            self._crossfader_control = None
-            self._send_controls = None
-            self._channel_strips = []
-            self._offset_can_start_after_tracks = False
-            for index in range(self._provider.num_tracks):
-                strip = self._create_strip()
-                self._channel_strips.append(strip)
-                self.register_components(self._channel_strips[index])
-                if invert_mute_feedback:
-                    strip.set_invert_mute_feedback(True)
+        assert tracks_provider is not None
+        assert callable(track_assigner)
+        super(MixerComponent, self).__init__(*a, **k)
+        self._track_assigner = track_assigner
+        self._provider = tracks_provider
+        self.__on_offset_changed.subject = tracks_provider
+        self._send_index = 0
+        self._prehear_volume_control = None
+        self._crossfader_control = None
+        self._send_controls = None
+        self._channel_strips = []
+        self._offset_can_start_after_tracks = False
+        for index in range(self._provider.num_tracks):
+            strip = self._create_strip()
+            self._channel_strips.append(strip)
+            self.register_components(self._channel_strips[index])
+            if invert_mute_feedback:
+                strip.set_invert_mute_feedback(True)
 
-            self._master_strip = self._create_master_strip()
-            self.register_components(self._master_strip)
-            self._master_strip.set_track(self.song.master_track)
-            self._selected_strip = self._create_strip()
-            self.register_components(self._selected_strip)
-            self.__on_selected_track_changed.subject = self.song.view
-            self.__on_selected_track_changed()
-            self._reassign_tracks()
-            auto_name and self._auto_name()
+        self._master_strip = self._create_master_strip()
+        self.register_components(self._master_strip)
+        self._master_strip.set_track(self.song.master_track)
+        self._selected_strip = self._create_strip()
+        self.register_components(self._selected_strip)
+        self.__on_selected_track_changed.subject = self.song.view
+        self.__on_selected_track_changed()
+        self._reassign_tracks()
+        if auto_name:
+            self._auto_name()
         self.__on_track_list_changed.subject = self.song
         self.__on_return_tracks_changed.subject = self.song
         self.__on_return_tracks_changed()
@@ -100,7 +99,7 @@ class MixerComponent(CompoundComponent):
         return len(self.song.return_tracks)
 
     def channel_strip(self, index):
-        raise index in range(len(self._channel_strips)) or AssertionError
+        assert index in range(len(self._channel_strips))
         return self._channel_strips[index]
 
     def master_strip(self):

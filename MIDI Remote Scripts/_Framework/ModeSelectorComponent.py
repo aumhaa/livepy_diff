@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from .ButtonElement import ButtonElement
 from .ControlSurfaceComponent import ControlSurfaceComponent
@@ -20,7 +19,7 @@ class ModeSelectorComponent(ControlSurfaceComponent):
         return self.__mode_index
 
     def _set_protected_mode_index(self, mode):
-        raise isinstance(mode, int) or AssertionError
+        assert isinstance(mode, int)
         self.__mode_index = mode
         for listener in self._mode_listeners:
             listener()
@@ -31,7 +30,7 @@ class ModeSelectorComponent(ControlSurfaceComponent):
         return self.__mode_index
 
     def _set_public_mode_index(self, mode):
-        raise False or AssertionError
+        assert False
 
     mode_index = property(_get_public_mode_index, _set_public_mode_index)
 
@@ -48,20 +47,20 @@ class ModeSelectorComponent(ControlSurfaceComponent):
         self.update()
 
     def set_mode_toggle(self, button):
-        if not (button == None or isinstance(button, ButtonElement)):
-            raise AssertionError
-            if self._mode_toggle != None:
-                self._mode_toggle.remove_value_listener(self._toggle_value)
-            self._mode_toggle = button
-            self._mode_toggle != None and self._mode_toggle.add_value_listener(self._toggle_value)
+        assert button == None or isinstance(button, ButtonElement)
+        if self._mode_toggle != None:
+            self._mode_toggle.remove_value_listener(self._toggle_value)
+        self._mode_toggle = button
+        if self._mode_toggle != None:
+            self._mode_toggle.add_value_listener(self._toggle_value)
         self.set_mode(0)
 
     def set_mode_buttons(self, buttons):
-        raise buttons != None or AssertionError
-        raise isinstance(buttons, tuple) or AssertionError
-        raise len(buttons) - 1 in range(16) or AssertionError
+        assert buttons != None
+        assert isinstance(buttons, tuple)
+        assert len(buttons) - 1 in range(16)
         for button in buttons:
-            raise isinstance(button, ButtonElement) or AssertionError
+            assert isinstance(button, ButtonElement)
             identify_sender = True
             button.add_value_listener(self._mode_value, identify_sender)
             self._modes_buttons.append(button)
@@ -76,9 +75,9 @@ class ModeSelectorComponent(ControlSurfaceComponent):
 
     def _update_mode(self):
         mode = self._modes_heap[-1][0]
-        if not mode in range(self.number_of_modes()):
-            raise AssertionError
-            self._mode_index = self._mode_index != mode and mode
+        assert mode in range(self.number_of_modes())
+        if self._mode_index != mode:
+            self._mode_index = mode
             self.update()
 
     def _clean_heap(self):
@@ -95,17 +94,17 @@ class ModeSelectorComponent(ControlSurfaceComponent):
         return listener in self._mode_listeners
 
     def add_mode_index_listener(self, listener):
-        raise listener not in self._mode_listeners or AssertionError
+        assert listener not in self._mode_listeners
         self._mode_listeners.append(listener)
 
     def remove_mode_index_listener(self, listener):
-        raise listener in self._mode_listeners or AssertionError
+        assert listener in self._mode_listeners
         self._mode_listeners.remove(listener)
 
     def _mode_value(self, value, sender):
-        raise len(self._modes_buttons) > 0 or AssertionError
-        raise isinstance(value, int) or AssertionError
-        raise sender in self._modes_buttons or AssertionError
+        assert len(self._modes_buttons) > 0
+        assert isinstance(value, int)
+        assert sender in self._modes_buttons
         new_mode = self._modes_buttons.index(sender)
         if sender.is_momentary():
             if value > 0:
@@ -126,10 +125,10 @@ class ModeSelectorComponent(ControlSurfaceComponent):
             self.set_mode(new_mode)
 
     def _toggle_value(self, value):
-        if not self._mode_toggle != None:
-            raise AssertionError
-            raise isinstance(value, int) or AssertionError
-            (value is not 0 or not self._mode_toggle.is_momentary()) and self.set_mode((self._mode_index + 1) % self.number_of_modes())
+        assert self._mode_toggle != None
+        assert isinstance(value, int)
+        if value is not 0 or not self._mode_toggle.is_momentary():
+            self.set_mode((self._mode_index + 1) % self.number_of_modes())
 
     def _controls_for_mode(self, mode):
         return None

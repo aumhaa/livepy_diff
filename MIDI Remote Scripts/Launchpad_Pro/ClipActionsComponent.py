@@ -1,4 +1,3 @@
-
 import Live
 from _Framework.SubjectSlot import Subject, subject_slot
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from functools import partial
 from ableton.v2.base import find_if, nop, listens, liveobj_valid, listenable_property, NamedTuple

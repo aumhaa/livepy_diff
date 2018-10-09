@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 import Live
 from ..base import listenable_property, listens, liveobj_changed, liveobj_valid, EventObject

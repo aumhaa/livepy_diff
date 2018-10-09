@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 import Live
 from ableton.v2.control_surface.components import PlayableComponent
@@ -34,7 +33,7 @@ class SlicedSimplerComponent(PlayableComponent, SlideableTouchStripComponent, Sl
         return self._position
 
     def _set_position(self, index):
-        raise 0 <= index <= 12 or AssertionError
+        assert 0 <= index <= 12
         self._position = index
         self.notify_position()
         self._update_led_feedback()

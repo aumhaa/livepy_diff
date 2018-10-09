@@ -1,4 +1,3 @@
-
 from _Framework.DeviceComponent import DeviceComponent
 from .consts import FADER_TYPE_STANDARD, DEVICE_MAP_CHANNEL
 

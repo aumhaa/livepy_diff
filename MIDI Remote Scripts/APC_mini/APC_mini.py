@@ -1,4 +1,3 @@
-
 from __future__ import with_statement
 from _Framework.Layer import Layer, SimpleLayerOwner
 from _APC.ControlElementUtils import make_slider

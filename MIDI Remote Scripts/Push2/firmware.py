@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 import fnmatch
 import logging
@@ -89,8 +88,8 @@ class FirmwareUpdateComponent(Component):
         self._firmware = None
 
     def start(self, firmware):
-        raise firmware is not None or AssertionError
-        raise self.state == 'welcome' or AssertionError
+        assert firmware is not None
+        assert self.state == 'welcome'
         logger.info('Start firmware update using %r', firmware.filename)
         self._firmware = firmware
         self.notify_firmware_file()
@@ -102,10 +101,10 @@ class FirmwareUpdateComponent(Component):
         self._tasks.add(task.sequence(task.wait(WELCOME_STATE_TIME), task.run(set_state)))
 
     def process_firmware_response(self, data):
-        if not self.state == 'start':
-            raise AssertionError("'%s' != 'start'" % self.state)
-            entry = find_if(lambda entry: entry['type'] == 'firmware', data)
-            self.state = entry and ('success' if entry['success'] else 'failure')
+        assert self.state == 'start', "'%s' != 'start'" % self.state
+        entry = find_if(lambda entry: entry['type'] == 'firmware', data)
+        if entry:
+            self.state = 'success' if entry['success'] else 'failure'
 
     @listenable_property
     def firmware_file(self):
@@ -124,9 +123,9 @@ class FirmwareSwitcher(object):
     """
 
     def __init__(self, firmware_collector = None, firmware_update = None, installed_firmware_version = None, *a, **k):
-        raise firmware_collector is not None or AssertionError
-        raise firmware_update is not None or AssertionError
-        raise installed_firmware_version is not None or AssertionError
+        assert firmware_collector is not None
+        assert firmware_update is not None
+        assert installed_firmware_version is not None
         super(FirmwareSwitcher, self).__init__(*a, **k)
         self._installed_version = installed_firmware_version
         self._update = firmware_update

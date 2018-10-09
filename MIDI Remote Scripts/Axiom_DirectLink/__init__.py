@@ -1,4 +1,3 @@
-
 from Axiom_DirectLink import Axiom_DirectLink
 
 def create_instance(c_instance):

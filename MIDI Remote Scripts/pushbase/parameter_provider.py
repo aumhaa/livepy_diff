@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from ableton.v2.base import liveobj_valid, NamedTuple, EventObject
 DISCRETE_PARAMETERS_DICT = {'GlueCompressor': ('Ratio', 'Attack', 'Release', 'Peak Clip In')}

@@ -1,4 +1,3 @@
-
 from .Alesis_VI import Alesis_VI
 from _Framework.Capabilities import controller_id, inport, outport, CONTROLLER_ID_KEY, PORTS_KEY, NOTES_CC, SCRIPT, REMOTE
 

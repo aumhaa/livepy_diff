@@ -1,4 +1,3 @@
-
 from itertools import izip_longest
 from _Framework.MixerComponent import MixerComponent
 from _Framework.ModesComponent import ModesComponent, LayerMode, LatchingBehaviour

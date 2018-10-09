@@ -1,4 +1,3 @@
-
 from _Framework.ButtonElement import ButtonElement
 from _Framework.SessionZoomingComponent import DeprecatedSessionZoomingComponent
 
@@ -10,7 +9,7 @@ class ShiftableZoomingComponent(DeprecatedSessionZoomingComponent):
         self._stop_buttons = stop_buttons
         self._ignore_buttons = False
         for button in self._stop_buttons:
-            raise isinstance(button, ButtonElement) or AssertionError
+            assert isinstance(button, ButtonElement)
             button.add_value_listener(self._stop_value, identify_sender=True)
 
     def disconnect(self):
@@ -19,11 +18,11 @@ class ShiftableZoomingComponent(DeprecatedSessionZoomingComponent):
             button.remove_value_listener(self._stop_value)
 
     def set_ignore_buttons(self, ignore):
-        if not isinstance(ignore, type(False)):
-            raise AssertionError
-            if self._ignore_buttons != ignore:
-                self._ignore_buttons = ignore
-                self._is_zoomed_out or self._session.set_enabled(not ignore)
+        assert isinstance(ignore, type(False))
+        if self._ignore_buttons != ignore:
+            self._ignore_buttons = ignore
+            if not self._is_zoomed_out:
+                self._session.set_enabled(not ignore)
             self.update()
 
     def update(self):
@@ -35,28 +34,28 @@ class ShiftableZoomingComponent(DeprecatedSessionZoomingComponent):
                     button.turn_off()
 
     def _stop_value(self, value, sender):
-        if not value in range(128):
-            raise AssertionError
-            if not sender != None:
-                raise AssertionError
-                self.is_enabled() and not self._ignore_buttons and self._is_zoomed_out and (value != 0 or not sender.is_momentary()) and self.song().stop_all_clips()
+        assert value in range(128)
+        assert sender != None
+        if self.is_enabled() and not self._ignore_buttons and self._is_zoomed_out:
+            if value != 0 or not sender.is_momentary():
+                self.song().stop_all_clips()
 
     def _zoom_value(self, value):
-        if not self._zoom_button != None:
-            raise AssertionError
-            if not value in range(128):
-                raise AssertionError
-                if self.is_enabled():
-                    if self._zoom_button.is_momentary():
-                        self._is_zoomed_out = value > 0
-                    else:
-                        self._is_zoomed_out = not self._is_zoomed_out
-                    if not self._ignore_buttons:
-                        self._scene_bank_index = self._is_zoomed_out and int(self._session.scene_offset() / self._session.height() / self._buttons.height())
-                    else:
-                        self._scene_bank_index = 0
-                    self._session.set_enabled(not self._is_zoomed_out)
-                    self._is_zoomed_out and self.update()
+        assert self._zoom_button != None
+        assert value in range(128)
+        if self.is_enabled():
+            if self._zoom_button.is_momentary():
+                self._is_zoomed_out = value > 0
+            else:
+                self._is_zoomed_out = not self._is_zoomed_out
+            if not self._ignore_buttons:
+                if self._is_zoomed_out:
+                    self._scene_bank_index = int(self._session.scene_offset() / self._session.height() / self._buttons.height())
+                else:
+                    self._scene_bank_index = 0
+                self._session.set_enabled(not self._is_zoomed_out)
+                if self._is_zoomed_out:
+                    self.update()
 
     def _matrix_value(self, value, x, y, is_momentary):
         if not self._ignore_buttons:

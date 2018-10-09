@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 import Live
 from ...base import depends, in_range, liveobj_valid
@@ -142,7 +141,7 @@ class ViewControlComponent(CompoundComponent):
         self._scroll_scene_list.set_scroll_up_button(button)
 
     def show_view(self, view):
-        raise view in VIEWS or AssertionError
+        assert view in VIEWS
         app_view = self.application.view
         try:
             if view == 'Detail/DeviceChain' or 'Detail/Clip':
@@ -154,10 +153,10 @@ class ViewControlComponent(CompoundComponent):
             pass
 
     def focus_view(self, view):
-        if not view in VIEWS:
-            raise AssertionError
-            app_view = self.application.view
-            if view == 'Detail/DeviceChain' or 'Detail/Clip':
-                if not app_view.is_view_visible('Detail'):
-                    app_view.show_view('Detail')
-            app_view.is_view_visible(view) or app_view.focus_view(view)
+        assert view in VIEWS
+        app_view = self.application.view
+        if view == 'Detail/DeviceChain' or 'Detail/Clip':
+            if not app_view.is_view_visible('Detail'):
+                app_view.show_view('Detail')
+        if not app_view.is_view_visible(view):
+            app_view.focus_view(view)

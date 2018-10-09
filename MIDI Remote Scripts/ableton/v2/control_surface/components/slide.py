@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from ...base import clamp, listens, EventObject
 from ..compound_component import CompoundComponent

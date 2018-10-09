@@ -1,4 +1,3 @@
-
 from _Framework.Skin import Skin
 from Colors import Rgb
 

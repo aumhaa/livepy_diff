@@ -1,4 +1,3 @@
-
 import sys
 import types
 from itertools import ifilter
@@ -235,8 +234,8 @@ class LomPathResolver(object):
         attribute = path_components[-1]
         if len(path_components) > 1:
             parent = self._calculate_object_from_path(path_components[:-1])
-        if not (attribute in ('cs', 'control_surfaces') and parent == None):
-            raise AssertionError
+        if attribute in ('cs', 'control_surfaces'):
+            assert parent == None
             lom_object = TupleWrapper.get_tuple_wrapper(parent, 'control_surfaces')
         elif parent != None and hasattr(parent, attribute):
             selector = self._list_manager.get_list_wrapper if is_cplusplus_lom_object(parent) else TupleWrapper.get_tuple_wrapper
@@ -248,9 +247,9 @@ class LomPathResolver(object):
         lom_object = get_root_prop(self._external_device, path_components[0])
         for component in path_components[1:]:
             try:
-                raise component.isdigit() and (is_object_iterable(lom_object) or AssertionError)
-                if not prev_component in TUPLE_TYPES.keys():
-                    raise AssertionError
+                if component.isdigit():
+                    assert is_object_iterable(lom_object)
+                    assert prev_component in TUPLE_TYPES.keys()
                     lom_object = lom_object[int(component)]
                 else:
                     lom_object = getattr(lom_object, component)
@@ -267,8 +266,8 @@ class LomPathResolver(object):
 
     def _calculate_object_from_path(self, path_components):
         lom_object = None
-        if not (len(path_components) > 0 and path_components[0] in ROOT_KEYS):
-            raise AssertionError
+        if len(path_components) > 0:
+            assert path_components[0] in ROOT_KEYS
             selector = self._tuple_element_from_path if path_components[-1] in TUPLE_TYPES.keys() else self._property_object_from_path
             lom_object = selector(path_components)
         return lom_object

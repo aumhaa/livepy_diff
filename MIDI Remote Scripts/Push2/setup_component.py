@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from ableton.v2.base import CompoundDisconnectable, SerializableListenableProperties, EventObject, clamp, listenable_property
 from ableton.v2.control_surface import Component
@@ -41,7 +40,7 @@ class ProfilingSettings(SerializableListenableProperties):
 class Settings(CompoundDisconnectable):
 
     def __init__(self, preferences = None, *a, **k):
-        raise preferences is not None or AssertionError
+        assert preferences is not None
         super(Settings, self).__init__(*a, **k)
         self._general = self.register_disconnectable(GeneralSettings())
         self._pad_settings = self.register_disconnectable(preferences.setdefault('settings_pad_velocity_curve', PadVelocityCurveSettings()))
@@ -76,8 +75,8 @@ class GeneralSettingsComponent(Component):
     display_brightness_encoder = StepEncoderControl(num_steps=120)
 
     def __init__(self, settings = None, hardware_settings = None, *a, **k):
-        raise settings is not None or AssertionError
-        raise hardware_settings is not None or AssertionError
+        assert settings is not None
+        assert hardware_settings is not None
         super(GeneralSettingsComponent, self).__init__(*a, **k)
         self._settings = settings
         self._hardware_settings = hardware_settings
@@ -98,7 +97,7 @@ class PadSettingsComponent(Component):
     dynamics_encoder = StepEncoderControl(num_steps=PAD_SETTING_STEP_SIZE)
 
     def __init__(self, pad_settings = None, hardware_settings = None, *a, **k):
-        raise pad_settings is not None or AssertionError
+        assert pad_settings is not None
         super(PadSettingsComponent, self).__init__(*a, **k)
         self._pad_settings = pad_settings
 
@@ -124,7 +123,7 @@ class DisplayDebugSettingsComponent(Component):
     show_lit_button_button = ToggleButtonControl()
 
     def __init__(self, settings = None, *a, **k):
-        raise settings is not None or AssertionError
+        assert settings is not None
         super(DisplayDebugSettingsComponent, self).__init__(*a, **k)
         self.show_row_spaces_button.connect_property(settings, 'show_row_spaces')
         self.show_row_margins_button.connect_property(settings, 'show_row_margins')
@@ -140,7 +139,7 @@ class ProfilingSettingsComponent(Component):
     show_realtime_ipc_stats_button = ToggleButtonControl()
 
     def __init__(self, settings = None, *a, **k):
-        raise settings is not None or AssertionError
+        assert settings is not None
         super(ProfilingSettingsComponent, self).__init__(*a, **k)
         self.show_qml_stats_button.connect_property(settings, 'show_qml_stats')
         self.show_usb_stats_button.connect_property(settings, 'show_usb_stats')
@@ -151,7 +150,7 @@ class InfoComponent(Component):
     install_firmware_button = ButtonControl()
 
     def __init__(self, firmware_switcher = None, *a, **k):
-        raise firmware_switcher is not None or AssertionError
+        assert firmware_switcher is not None
         super(InfoComponent, self).__init__(*a, **k)
         self._firmware_switcher = firmware_switcher
         self.install_firmware_button.enabled = self._firmware_switcher.can_switch_firmware
@@ -167,21 +166,21 @@ class SetupComponent(ModesComponent):
     make_it_go_boom = listenable_property.managed(False)
 
     def __init__(self, settings = None, pad_curve_sender = None, firmware_switcher = None, *a, **k):
-        if not settings is not None:
-            raise AssertionError
-            super(SetupComponent, self).__init__(*a, **k)
-            self._settings = settings
-            self._pad_curve_sender = pad_curve_sender
-            has_option = self.application.has_option
-            self.make_it_go_boom_button.enabled = not has_option('_Push2DeveloperMode') and has_option('_MakePush2GoBoom')
-            self._general = self.register_component(GeneralSettingsComponent(settings=settings.general, hardware_settings=settings.hardware, is_enabled=False))
-            self._info = self.register_component(InfoComponent(firmware_switcher=firmware_switcher, is_enabled=False))
-            self._pad_settings = self.register_component(PadSettingsComponent(pad_settings=settings.pad_settings, is_enabled=False))
-            self._display_debug = self.register_component(DisplayDebugSettingsComponent(settings=settings.display_debug, is_enabled=False))
-            self._profiling = self.register_component(ProfilingSettingsComponent(settings=settings.profiling, is_enabled=False))
-            self.add_mode('Settings', [self._general, self._pad_settings])
-            self.add_mode('Info', [self._info])
-            self.application.has_option('_Push2DeveloperMode') and self.add_mode('Display Debug', [self._display_debug])
+        assert settings is not None
+        super(SetupComponent, self).__init__(*a, **k)
+        self._settings = settings
+        self._pad_curve_sender = pad_curve_sender
+        has_option = self.application.has_option
+        self.make_it_go_boom_button.enabled = not has_option('_Push2DeveloperMode') and has_option('_MakePush2GoBoom')
+        self._general = self.register_component(GeneralSettingsComponent(settings=settings.general, hardware_settings=settings.hardware, is_enabled=False))
+        self._info = self.register_component(InfoComponent(firmware_switcher=firmware_switcher, is_enabled=False))
+        self._pad_settings = self.register_component(PadSettingsComponent(pad_settings=settings.pad_settings, is_enabled=False))
+        self._display_debug = self.register_component(DisplayDebugSettingsComponent(settings=settings.display_debug, is_enabled=False))
+        self._profiling = self.register_component(ProfilingSettingsComponent(settings=settings.profiling, is_enabled=False))
+        self.add_mode('Settings', [self._general, self._pad_settings])
+        self.add_mode('Info', [self._info])
+        if self.application.has_option('_Push2DeveloperMode'):
+            self.add_mode('Display Debug', [self._display_debug])
             self.add_mode('Profiling', [self._profiling])
         self.selected_mode = 'Settings'
         self.category_radio_buttons.control_count = len(self.modes)

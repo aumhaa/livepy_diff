@@ -1,4 +1,3 @@
-
 from MackieControl.consts import *
 from MackieControl.MainDisplay import MainDisplay
 from MackieControl.MainDisplayController import MainDisplayController

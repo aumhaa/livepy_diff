@@ -1,4 +1,3 @@
-
 import Live
 XY_DEVICE_DICT = {'AutoFilter': [['Frequency', 'Resonance']],
  'BeatRepeat': [['Filter Freq', 'Filter Width']],

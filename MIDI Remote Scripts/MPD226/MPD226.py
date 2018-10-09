@@ -1,4 +1,3 @@
-
 from __future__ import with_statement
 from itertools import cycle, izip
 from _Framework.ButtonMatrixElement import ButtonMatrixElement

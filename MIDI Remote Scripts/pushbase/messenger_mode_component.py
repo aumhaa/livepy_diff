@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from ableton.v2.base import BooleanContext
 from ableton.v2.control_surface.mode import ModesComponent

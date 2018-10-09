@@ -1,4 +1,3 @@
-
 from .ConfigurableButtonElement import ConfigurableButtonElement
 
 class MultiButtonElement(ConfigurableButtonElement):

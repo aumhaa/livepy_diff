@@ -1,4 +1,3 @@
-
 from MackieControlComponent import *
 
 class Transport(MackieControlComponent):

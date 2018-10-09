@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from functools import partial
 from itertools import izip
@@ -100,7 +99,7 @@ class TrackListComponent(ModesComponent, Messenger):
     track_action_buttons = control_list(ButtonControl, control_count=8)
 
     def __init__(self, tracks_provider = None, trigger_recording_on_release_callback = nop, color_chooser = None, *a, **k):
-        raise tracks_provider is not None or AssertionError
+        assert tracks_provider is not None
         super(TrackListComponent, self).__init__(*a, **k)
         self.locked_mode = None
         self._button_handler = self._select_mixable

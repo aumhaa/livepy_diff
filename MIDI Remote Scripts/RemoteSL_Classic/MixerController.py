@@ -1,4 +1,3 @@
-
 import Live
 from RemoteSLComponent import RemoteSLComponent
 from consts import *
@@ -70,7 +69,7 @@ class MixerController(RemoteSLComponent):
         elif cc_no in ts_ccs:
             self.__handle_transport_ccs(cc_no, cc_value)
         else:
-            raise False or AssertionError('unknown FX midi message')
+            assert False, 'unknown FX midi message'
 
     def build_midi_map(self, script_handle, midi_map_handle):
         needs_takeover = True
@@ -155,7 +154,7 @@ class MixerController(RemoteSLComponent):
                     self.__validate_strip_offset()
                     self.__reassign_strips()
         else:
-            raise False or AssertionError('unknown Display midi message')
+            assert False, 'unknown Display midi message'
 
     def __handle_select_button_ccs(self, cc_no, cc_value):
         if cc_no == MX_SELECT_SLIDER_ROW:
@@ -168,7 +167,7 @@ class MixerController(RemoteSLComponent):
             if cc_value == CC_VAL_BUTTON_PRESSED:
                 self.__set_slider_mode(SLIDER_MODE_SEND)
         else:
-            raise False or AssertionError('unknown select row midi message')
+            assert False, 'unknown select row midi message'
 
     def __handle_transport_ccs(self, cc_no, cc_value):
         if cc_no == TS_REWIND_CC:
@@ -199,7 +198,7 @@ class MixerController(RemoteSLComponent):
             self.__transport_locked = cc_value != CC_VAL_BUTTON_RELEASED
             self.__on_transport_lock_changed()
         else:
-            raise False or AssertionError('unknown Transport CC ' + str(cc_no))
+            assert False, 'unknown Transport CC ' + str(cc_no)
 
     def __on_transport_lock_changed(self):
         for strip in self.__strips:
@@ -343,7 +342,7 @@ class MixerChannelStrip():
             return None
 
     def slider_moved(self, cc_value):
-        raise self.__assigned_track == None or self.slider_parameter() == None or AssertionError('should only be reached when the slider was not realtime mapped ')
+        assert self.__assigned_track == None or self.slider_parameter() == None, 'should only be reached when the slider was not realtime mapped '
 
     def take_control_of_second_button(self, take_control):
         if self.__mixer_controller.support_mkII():

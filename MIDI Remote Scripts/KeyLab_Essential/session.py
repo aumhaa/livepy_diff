@@ -1,4 +1,3 @@
-
 from ableton.v2.base import listens, product
 from ableton.v2.control_surface.components import SceneComponent as SceneComponentBase, SessionComponent as SessionComponentBase
 from .clip_slot import ClipSlotComponent
@@ -16,7 +15,7 @@ class SessionComponent(SessionComponentBase):
         self._on_selected_scene_changed()
 
     def set_clip_slot_leds(self, leds):
-        raise not leds or leds.width() == self._session_ring.num_tracks and leds.height() == self._session_ring.num_scenes or AssertionError
+        assert not leds or leds.width() == self._session_ring.num_tracks and leds.height() == self._session_ring.num_scenes
         if leds:
             for led, (x, y) in leds.iterbuttons():
                 scene = self.scene(y)

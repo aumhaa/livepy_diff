@@ -1,4 +1,3 @@
-
 import Live
 from _Framework.Control import RadioButtonControl, control_list
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent

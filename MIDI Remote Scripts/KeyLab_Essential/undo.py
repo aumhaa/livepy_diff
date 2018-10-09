@@ -1,4 +1,3 @@
-
 from functools import partial
 from ableton.v2.base import task
 from ableton.v2.control_surface import Component

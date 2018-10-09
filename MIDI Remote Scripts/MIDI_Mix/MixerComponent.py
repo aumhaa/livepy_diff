@@ -1,4 +1,3 @@
-
 from _Framework.Control import ButtonControl
 from _APC.MixerComponent import MixerComponent as MixerComponentBase
 

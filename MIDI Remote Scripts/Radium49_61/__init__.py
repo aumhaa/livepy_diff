@@ -1,4 +1,3 @@
-
 from _Generic.GenericScript import GenericScript
 import Live
 from config import *

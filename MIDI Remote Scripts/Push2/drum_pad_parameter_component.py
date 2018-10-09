@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from ableton.v2.base import clamp, listenable_property, listens, liveobj_valid
 from ableton.v2.control_surface import CompoundComponent
@@ -99,8 +98,8 @@ class DrumPadParameterComponent(CompoundComponent, ParameterProvider):
     transpose_encoder = StepEncoderControl(num_steps=10)
 
     def __init__(self, device_component = None, view_model = None, *a, **k):
-        raise device_component is not None or AssertionError
-        raise view_model is not None or AssertionError
+        assert device_component is not None
+        assert view_model is not None
         super(DrumPadParameterComponent, self).__init__(*a, **k)
         self._drum_pad = None
         self._parameters = []

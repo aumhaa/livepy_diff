@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from functools import partial
 import Live
@@ -193,7 +192,7 @@ class TrackScroller(TrackScrollerBase, EventObject):
 
     @depends(tracks_provider=None)
     def __init__(self, tracks_provider = None, *a, **k):
-        raise tracks_provider is not None or AssertionError
+        assert tracks_provider is not None
         super(TrackScroller, self).__init__(*a, **k)
         self._track_provider = tracks_provider
 

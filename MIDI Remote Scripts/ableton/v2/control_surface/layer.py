@@ -1,4 +1,3 @@
-
 """
 Module implementing a way to resource-based access to controls in an
 unified interface dynamic.
@@ -38,19 +37,19 @@ class LayerClient(ControlElementClient):
 
     def __init__(self, layer = None, layer_client = None, *a, **k):
         super(LayerClient, self).__init__(*a, **k)
-        raise layer_client or AssertionError
-        raise layer or AssertionError
+        assert layer_client
+        assert layer
         self.layer_client = layer_client
         self.layer = layer
 
     def set_control_element(self, control_element, grabbed):
         layer = self.layer
         owner = self.layer_client
-        if not owner:
-            raise AssertionError
-            raise control_element in layer._element_to_names or AssertionError('Control not in layer: %s' % (control_element,))
-            names = layer._element_to_names[control_element]
-            control_element = grabbed or None
+        assert owner
+        assert control_element in layer._element_to_names, 'Control not in layer: %s' % (control_element,)
+        names = layer._element_to_names[control_element]
+        if not grabbed:
+            control_element = None
         for name in names:
             try:
                 handler = getattr(owner, 'set_' + name)
@@ -77,7 +76,7 @@ class CompoundLayer(CompoundResource):
 
     @property
     def priority(self):
-        raise self.first.priority == self.second.priority or AssertionError
+        assert self.first.priority == self.second.priority
         return self.first.priority
 
     @priority.setter

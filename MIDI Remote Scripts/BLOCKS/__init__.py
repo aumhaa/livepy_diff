@@ -1,4 +1,3 @@
-
 from ableton.v2.control_surface import capabilities as caps
 from .blocks import Blocks
 

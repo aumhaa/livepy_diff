@@ -1,4 +1,3 @@
-
 import Live
 from FaderfoxScript import FaderfoxScript
 from LV2MixerController import LV2MixerController

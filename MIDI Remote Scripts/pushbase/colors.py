@@ -1,4 +1,3 @@
-
 """
 Module for the color interfaces defining all posible ways of turning
 on buttons on Push.
@@ -14,7 +13,7 @@ class PushColor(Color):
         return not self.needs_rgb_interface or interface.is_rgb
 
     def draw(self, interface):
-        raise self.can_draw_on_interface(interface) or AssertionError
+        assert self.can_draw_on_interface(interface)
         super(PushColor, self).draw(interface)
 
 
@@ -34,7 +33,7 @@ class RgbColor(PushColor):
         """
         Generate a new shaded RGB from this color.
         """
-        raise shade_level > 0 and shade_level <= 2 or AssertionError
+        assert shade_level > 0 and shade_level <= 2
         shade_factor = 1.0 / 2.0 * (2 - shade_level)
         return RgbColor(self.midi_value + shade_level, [ a * b for a, b in izip(self._rgb_value, repeat(shade_factor)) ])
 
@@ -89,7 +88,7 @@ class AnimatedColor(PushColor):
         return self.color1.can_draw_on_interface(interface) and self.color2.can_draw_on_interface(interface)
 
     def draw(self, interface):
-        raise interface.num_delayed_messages >= 2 or AssertionError
+        assert interface.num_delayed_messages >= 2
         interface.send_value(self.color1.midi_value)
         interface.send_value(self.color2.midi_value, channel=self.channel2)
 

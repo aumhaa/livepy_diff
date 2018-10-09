@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from functools import partial
 import Live
@@ -126,21 +125,21 @@ class TransportComponent(CompoundComponent):
         self._overdub_toggle.set_toggle_button(button)
 
     def set_tempo_control(self, control, fine_control = None):
-        if not (not control or control.message_map_mode() is Live.MidiMap.MapMode.absolute):
-            raise AssertionError
-            if not (not fine_control or fine_control.message_map_mode() is Live.MidiMap.MapMode.absolute):
-                raise AssertionError
-                self._tempo_control = self._tempo_control != control and control
-                self.__tempo_value.subject = control
-            self._tempo_fine_control = self._tempo_fine_control != fine_control and fine_control
+        assert not control or control.message_map_mode() is Live.MidiMap.MapMode.absolute
+        assert not fine_control or fine_control.message_map_mode() is Live.MidiMap.MapMode.absolute
+        if self._tempo_control != control:
+            self._tempo_control = control
+            self.__tempo_value.subject = control
+        if self._tempo_fine_control != fine_control:
+            self._tempo_fine_control = fine_control
             self.__tempo_fine_value.subject = fine_control
             self._fine_tempo_needs_pickup = True
             self._prior_fine_tempo_value = -1
 
     def set_tempo_fine_control(self, fine_control):
-        if not (not fine_control or fine_control.message_map_mode() is Live.MidiMap.MapMode.absolute):
-            raise AssertionError
-            self._tempo_fine_control = self._tempo_fine_control != fine_control and fine_control
+        assert not fine_control or fine_control.message_map_mode() is Live.MidiMap.MapMode.absolute
+        if self._tempo_fine_control != fine_control:
+            self._tempo_fine_control = fine_control
             self.__tempo_fine_value.subject = fine_control
             self._fine_tempo_needs_pickup = True
             self._prior_fine_tempo_value = -1
@@ -215,7 +214,7 @@ class TransportComponent(CompoundComponent):
                     if in_range(64, range_min, range_max + 1):
                         self._fine_tempo_needs_pickup = False
             else:
-                raise in_range(self._prior_fine_tempo_value, 0, 128) or AssertionError
+                assert in_range(self._prior_fine_tempo_value, 0, 128)
                 difference = value - self._prior_fine_tempo_value
                 ratio = 127.0 / TEMPO_FINE_RANGE
                 new_tempo = clamp(self.song.tempo + difference / ratio, TEMPO_BOTTOM, TEMPO_TOP)

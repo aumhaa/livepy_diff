@@ -1,4 +1,3 @@
-
 from __future__ import with_statement
 from _Framework.ControlSurface import ControlSurface
 from _Framework.MidiMap import make_encoder, MidiMap as MidiMapBase
@@ -24,7 +23,7 @@ class MidiMap(MidiMapBase):
           47]], MIDI_CC_TYPE)
 
     def add_momentary_button(self, name, channel, number, midi_message_type):
-        raise name not in self.keys() or AssertionError
+        assert name not in self.keys()
         self[name] = ButtonElement(True, midi_message_type, channel, number, name=name)
 
 

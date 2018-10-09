@@ -1,4 +1,3 @@
-
 from MasterControl import MasterControl
 
 def create_instance(c_instance):

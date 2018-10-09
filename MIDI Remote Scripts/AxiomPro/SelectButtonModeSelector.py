@@ -1,4 +1,3 @@
-
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from _Framework.ButtonElement import ButtonElement
 from _Framework.PhysicalDisplayElement import PhysicalDisplayElement
@@ -8,9 +7,9 @@ class SelectButtonModeSelector(ModeSelectorComponent):
     """ Class that reassigns buttons on the AxiomPro to different mixer functions """
 
     def __init__(self, mixer, buttons):
-        raise isinstance(mixer, MixerComponent) or AssertionError
-        raise isinstance(buttons, tuple) or AssertionError
-        raise len(buttons) == 8 or AssertionError
+        assert isinstance(mixer, MixerComponent)
+        assert isinstance(buttons, tuple)
+        assert len(buttons) == 8
         ModeSelectorComponent.__init__(self)
         self._mixer = mixer
         self._buttons = buttons
@@ -24,7 +23,7 @@ class SelectButtonModeSelector(ModeSelectorComponent):
         self._mode_display = None
 
     def set_mode_display(self, display):
-        raise isinstance(display, PhysicalDisplayElement) or AssertionError
+        assert isinstance(display, PhysicalDisplayElement)
         self._mode_display = display
 
     def number_of_modes(self):
@@ -56,15 +55,15 @@ class SelectButtonModeSelector(ModeSelectorComponent):
                     self._mixer.channel_strip(index).set_solo_button(self._buttons[index])
                 else:
                     print 'Invalid mode index'
-                    raise False or AssertionError
+                    assert False
 
     def _toggle_value(self, value):
-        if not self._mode_toggle.is_momentary():
-            raise AssertionError
-            ModeSelectorComponent._toggle_value(self, value)
-            if value != 0 and self._mode_display is not None:
-                mode_name = ''
-                mode_name = self._mode_index == 0 and 'Select'
+        assert self._mode_toggle.is_momentary()
+        ModeSelectorComponent._toggle_value(self, value)
+        if value != 0 and self._mode_display is not None:
+            mode_name = ''
+            if self._mode_index == 0:
+                mode_name = 'Select'
             elif self._mode_index == 1:
                 mode_name = 'Arm'
             elif self._mode_index == 2:

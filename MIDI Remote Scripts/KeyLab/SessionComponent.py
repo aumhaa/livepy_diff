@@ -1,4 +1,3 @@
-
 from _Arturia.SessionComponent import SessionComponent as SessionComponentBase
 
 class SessionComponent(SessionComponentBase):

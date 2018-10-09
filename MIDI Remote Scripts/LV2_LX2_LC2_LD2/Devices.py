@@ -1,4 +1,3 @@
-
 import Live
 RCK_BANK1 = ('Macro 1', 'Macro 2', 'Macro 3', 'Macro 4', 'Macro 5', 'Macro 6', 'Macro 7', 'Macro 8')
 RCK_BANKS = RCK_BANK1

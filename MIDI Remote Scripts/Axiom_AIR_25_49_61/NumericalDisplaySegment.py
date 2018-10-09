@@ -1,4 +1,3 @@
-
 from _Framework.LogicalDisplaySegment import LogicalDisplaySegment
 
 class NumericalDisplaySegment(LogicalDisplaySegment):

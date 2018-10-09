@@ -1,4 +1,3 @@
-
 from _Framework.ButtonSliderElement import ButtonSliderElement
 from _Framework.InputControlElement import *
 SLIDER_MODE_SINGLE = 0
@@ -16,24 +15,24 @@ class PreciseButtonSliderElement(ButtonSliderElement):
         self._value_map = tuple([ float(index / num_buttons) for index in range(num_buttons) ])
 
     def set_disabled(self, disabled):
-        raise isinstance(disabled, type(False)) or AssertionError
+        assert isinstance(disabled, type(False))
         self._disabled = disabled
 
     def set_mode(self, mode):
-        if not mode in (SLIDER_MODE_SINGLE, SLIDER_MODE_VOLUME, SLIDER_MODE_PAN):
-            raise AssertionError
-            self._mode = mode != self._mode and mode
+        assert mode in (SLIDER_MODE_SINGLE, SLIDER_MODE_VOLUME, SLIDER_MODE_PAN)
+        if mode != self._mode:
+            self._mode = mode
 
     def set_value_map(self, map):
-        raise isinstance(map, (tuple, type(None))) or AssertionError
-        raise len(map) == len(self._buttons) or AssertionError
+        assert isinstance(map, (tuple, type(None)))
+        assert len(map) == len(self._buttons)
         self._value_map = map
 
     def send_value(self, value):
-        raise self._disabled or value != None or AssertionError
-        raise isinstance(value, int) or AssertionError
-        if not value in range(128):
-            raise AssertionError
+        if not self._disabled:
+            assert value != None
+            assert isinstance(value, int)
+            assert value in range(128)
             if value != self._last_sent_value:
                 if self._mode == SLIDER_MODE_SINGLE:
                     ButtonSliderElement.send_value(self, value)
@@ -42,7 +41,7 @@ class PreciseButtonSliderElement(ButtonSliderElement):
                 elif self._mode == SLIDER_MODE_PAN:
                     self._send_value_pan(value)
                 else:
-                    raise False or AssertionError
+                    assert False
                 self._last_sent_value = value
 
     def connect_to(self, parameter):
@@ -101,8 +100,8 @@ class PreciseButtonSliderElement(ButtonSliderElement):
         self._send_mask(tuple(button_bits))
 
     def _send_mask(self, mask):
-        raise isinstance(mask, tuple) or AssertionError
-        raise len(mask) == len(self._buttons) or AssertionError
+        assert isinstance(mask, tuple)
+        assert len(mask) == len(self._buttons)
         for index in range(len(self._buttons)):
             if mask[index]:
                 self._buttons[index].turn_on()
@@ -110,17 +109,17 @@ class PreciseButtonSliderElement(ButtonSliderElement):
                 self._buttons[index].turn_off()
 
     def _button_value(self, value, sender):
-        if not isinstance(value, int):
-            raise AssertionError
-            if not sender in self._buttons:
-                raise AssertionError
-                self._last_sent_value = -1
-                index_of_sender = (value != 0 or not sender.is_momentary()) and list(self._buttons).index(sender)
-                self._parameter_to_map_to.value = self._parameter_to_map_to != None and self._parameter_to_map_to.is_enabled and self._value_map[index_of_sender]
+        assert isinstance(value, int)
+        assert sender in self._buttons
+        self._last_sent_value = -1
+        if value != 0 or not sender.is_momentary():
+            index_of_sender = list(self._buttons).index(sender)
+            if self._parameter_to_map_to != None and self._parameter_to_map_to.is_enabled:
+                self._parameter_to_map_to.value = self._value_map[index_of_sender]
             self.notify_value(value)
 
     def _on_parameter_changed(self):
-        raise self._parameter_to_map_to != None or AssertionError
+        assert self._parameter_to_map_to != None
         param_range = abs(self._parameter_to_map_to.max - self._parameter_to_map_to.min)
         param_value = self._parameter_to_map_to.value
         param_min = self._parameter_to_map_to.min

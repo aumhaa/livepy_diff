@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from itertools import izip_longest
 from ableton.v2.base import forward_property, find_if, listens
@@ -68,7 +67,7 @@ class MelodicComponent(MessengerModesComponent):
         self._step_duplicator.button.set_control_element(button)
 
     def set_note_editor_matrices(self, matrices):
-        raise not matrices or len(matrices) <= NUM_NOTE_EDITORS or AssertionError
+        assert not matrices or len(matrices) <= NUM_NOTE_EDITORS
         self._matrices = matrices
         for editor, matrix in izip_longest(self._note_editors, matrices or []):
             if editor:

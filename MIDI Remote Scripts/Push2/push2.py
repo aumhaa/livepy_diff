@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from contextlib import contextmanager
 from functools import partial
@@ -125,13 +124,13 @@ class Push2(IdentifiableControlSurface, PushBase):
     DEFUNCT_EXTERNAL_PROCESS_RELAUNCH_TIMEOUT = 2.0
 
     def __init__(self, c_instance = None, model = None, bank_definitions = None, *a, **k):
-        if not model is not None:
-            raise AssertionError
-            self._model = model
-            self._real_time_mapper = c_instance.real_time_mapper
-            self._clip_decorator_factory = ClipDecoratorFactory()
-            self._real_time_data_list = []
-            self.bank_definitions = bank_definitions is not None and bank_definitions
+        assert model is not None
+        self._model = model
+        self._real_time_mapper = c_instance.real_time_mapper
+        self._clip_decorator_factory = ClipDecoratorFactory()
+        self._real_time_data_list = []
+        if bank_definitions is not None:
+            self.bank_definitions = bank_definitions
         super(Push2, self).__init__(c_instance=c_instance, product_id_bytes=sysex.IDENTITY_RESPONSE_PRODUCT_ID_BYTES, *a, **k)
         self._board_revision = 0
         self._firmware_collector = FirmwareCollector()
@@ -690,7 +689,7 @@ class Push2(IdentifiableControlSurface, PushBase):
             cycle_button = ButtonControl()
 
             def __init__(self, switch_note_mode_layout = None, *a, **k):
-                raise switch_note_mode_layout is not None or AssertionError
+                assert switch_note_mode_layout is not None
                 super(NoteLayoutSwitcher, self).__init__(*a, **k)
                 self._switch_note_mode_layout = switch_note_mode_layout
 

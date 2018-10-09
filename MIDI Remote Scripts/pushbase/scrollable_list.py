@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from functools import partial
 from ableton.v2.base import BooleanContext, EventObject, clamp, forward_property, in_range, index_if, listens, task
@@ -90,7 +89,7 @@ class ScrollableList(EventObject, Scrollable):
         return self._num_visible_items
 
     def _set_num_visible_items(self, num_items):
-        raise num_items >= 0 or AssertionError
+        assert num_items >= 0
         self._num_visible_items = num_items
         self._normalize_offset(self._selected_item_index)
 
@@ -106,8 +105,8 @@ class ScrollableList(EventObject, Scrollable):
         if possible, 'offset' number of elements visible before the
         selected one.  Does nothing if the item was already selected.
         """
-        if not (index != self.selected_item_index and index >= 0 and index < len(self._items) and self.selected_item_index != -1):
-            raise AssertionError
+        if index != self.selected_item_index and index >= 0 and index < len(self._items):
+            assert self.selected_item_index != -1
             self._offset = clamp(index - offset, 0, len(self._items))
             self._normalize_offset(index)
             self._do_set_selected_item_index(index)
@@ -147,8 +146,8 @@ class ScrollableList(EventObject, Scrollable):
             self.select_item_index_with_offset(index, 0)
 
     def _set_selected_item_index(self, index):
-        if not (index >= 0 and index < len(self._items) and self.selected_item_index != -1):
-            raise AssertionError
+        if index >= 0 and index < len(self._items):
+            assert self.selected_item_index != -1
             self._normalize_offset(index)
             self._do_set_selected_item_index(index)
 

@@ -1,4 +1,3 @@
-
 from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface
@@ -53,7 +52,7 @@ class GenericScript(ControlSurface):
                 if 'NUMSENDS' in mixer_options.keys() and mixer_options['NUMSENDS'] > 0:
                     for send in range(mixer_options['NUMSENDS']):
                         key = 'SEND' + str(send + 1)
-                        raise key in mixer_options.keys() or AssertionError
+                        assert key in mixer_options.keys()
                         send_info.append(mixer_options[key])
 
                 momentary_buttons = 'NOTOGGLE' in mixer_options.keys()

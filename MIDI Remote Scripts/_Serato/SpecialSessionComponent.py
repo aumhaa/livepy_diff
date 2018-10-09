@@ -1,4 +1,3 @@
-
 import Live
 from _Framework.SessionComponent import SessionComponent
 from _Framework.InputControlElement import *
@@ -23,7 +22,7 @@ class SpecialSessionComponent(SessionComponent):
         self._serato_interface = None
 
     def set_serato_interface(self, serato_interface):
-        raise serato_interface != None or AssertionError
+        assert serato_interface != None
         self._serato_interface = serato_interface
         self.on_selected_scene_changed()
 
@@ -33,12 +32,12 @@ class SpecialSessionComponent(SessionComponent):
             self._serato_interface.PySCA_SetSelectedScene(self._selected_scene_index())
 
     def set_size(self, width, height):
-        if not width in range(self._num_tracks + 1):
-            raise AssertionError
-            raise height in range(len(self._scenes) + 1) or AssertionError
-            self._visible_width = width
-            self._visible_height = height
-            self._show_highlight = self._show_highlight and False
+        assert width in range(self._num_tracks + 1)
+        assert height in range(len(self._scenes) + 1)
+        self._visible_width = width
+        self._visible_height = height
+        if self._show_highlight:
+            self._show_highlight = False
             self.set_show_highlight(True)
 
     def move_by(self, track_increment, scene_increment):
@@ -53,14 +52,14 @@ class SpecialSessionComponent(SessionComponent):
         return self._visible_height
 
     def sync_to(self, other_session):
-        if not isinstance(other_session, (type(None), SessionComponent)):
-            raise AssertionError
-            if other_session != self._synced_session:
-                if self._synced_session != None:
-                    self._synced_session.remove_offset_listener(self._on_control_surface_offset_changed)
-                    self._mixer.set_tracks_to_use_callback(None)
-                self._synced_session = other_session
-                self._synced_session != None and self._synced_session.add_offset_listener(self._on_control_surface_offset_changed)
+        assert isinstance(other_session, (type(None), SessionComponent))
+        if other_session != self._synced_session:
+            if self._synced_session != None:
+                self._synced_session.remove_offset_listener(self._on_control_surface_offset_changed)
+                self._mixer.set_tracks_to_use_callback(None)
+            self._synced_session = other_session
+            if self._synced_session != None:
+                self._synced_session.add_offset_listener(self._on_control_surface_offset_changed)
                 self._mixer.set_tracks_to_use_callback(self._synced_session.tracks_to_use)
             self._do_show_highlight()
 

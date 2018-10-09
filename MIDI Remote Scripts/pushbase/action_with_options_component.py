@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from itertools import izip_longest
 from ableton.v2.base import in_range, clamp, task
@@ -90,7 +89,7 @@ class OptionsComponent(Component):
         return self._selected_option
 
     def _set_selected_option(self, selected_option):
-        raise in_range(selected_option, 0, len(self.option_names)) or selected_option is None or AssertionError
+        assert in_range(selected_option, 0, len(self.option_names)) or selected_option is None
         self._selected_option = selected_option
         self._update_select_buttons()
         self._update_data_sources()

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from _Framework.SubjectSlot import SlotManager, subject_slot
 from _Framework.Util import nop

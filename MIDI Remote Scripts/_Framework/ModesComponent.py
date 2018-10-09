@@ -1,4 +1,3 @@
-
 """
 Mode handling components.
 """
@@ -90,7 +89,7 @@ class ComponentMode(Mode):
 
     def __init__(self, component = None, *a, **k):
         super(ComponentMode, self).__init__(*a, **k)
-        raise component is not None or AssertionError
+        assert component is not None
         self._component = component
 
     def enter_mode(self):
@@ -128,7 +127,7 @@ class DisableMode(Mode):
 
     def __init__(self, component = None, *a, **k):
         super(DisableMode, self).__init__(*a, **k)
-        raise component is not None or AssertionError
+        assert component is not None
         self._component = component
 
     def enter_mode(self):
@@ -142,7 +141,7 @@ class LayerModeBase(Mode):
 
     def __init__(self, component = None, layer = None, *a, **k):
         super(LayerModeBase, self).__init__(*a, **k)
-        raise component is not None or AssertionError
+        assert component is not None
         self._component = component
         self._layer = layer
 
@@ -217,9 +216,9 @@ class MultiEntryMode(Mode):
         self._entry_count += 1
 
     def leave_mode(self):
-        if not self._entry_count > 0:
-            raise AssertionError
-            self._entry_count == 1 and self._mode.leave_mode()
+        assert self._entry_count > 0
+        if self._entry_count == 1:
+            self._mode.leave_mode()
         self._entry_count -= 1
 
     @property
@@ -263,8 +262,8 @@ class DelayMode(Mode):
     @depends(parent_task_group=None)
     def __init__(self, mode = None, delay = None, parent_task_group = None, *a, **k):
         super(DelayMode, self).__init__(*a, **k)
-        raise mode is not None or AssertionError
-        raise parent_task_group is not None or AssertionError
+        assert mode is not None
+        assert parent_task_group is not None
         delay = delay if delay is not None else Defaults.MOMENTARY_DELAY
         self._mode = tomode(mode)
         self._mode_entered = False
@@ -420,21 +419,21 @@ class AlternativeBehaviour(CancellableBehaviour):
         return mode_groups and mode_groups & alt_group
 
     def release_delayed(self, component, mode):
-        raise self._check_mode_groups(component, mode) or AssertionError
+        assert self._check_mode_groups(component, mode)
         component.pop_groups(component.get_mode_groups(mode))
         self.restore_previous_mode(component)
 
     def press_delayed(self, component, mode):
-        raise self._check_mode_groups(component, mode) or AssertionError
+        assert self._check_mode_groups(component, mode)
         self.remember_previous_mode(component)
         component.push_mode(self._alternative_mode)
 
     def release_immediate(self, component, mode):
-        raise self._check_mode_groups(component, mode) or AssertionError
+        assert self._check_mode_groups(component, mode)
         super(AlternativeBehaviour, self).press_immediate(component, mode)
 
     def press_immediate(self, component, mode):
-        raise self._check_mode_groups(component, mode) or AssertionError
+        assert self._check_mode_groups(component, mode)
 
 
 class DynamicBehaviourMixin(ModeButtonBehaviour):
@@ -559,7 +558,7 @@ class ModesComponent(CompoundComponent):
         super(ModesComponent, self).disconnect()
 
     def set_shift_button(self, button):
-        raise not button or button.is_momentary() or AssertionError
+        assert not button or button.is_momentary()
         self._shift_button = button
 
     def _do_enter_mode(self, name):
@@ -582,10 +581,10 @@ class ModesComponent(CompoundComponent):
         return self._mode_stack.owner or self._last_selected_mode
 
     def _set_selected_mode(self, mode):
-        if not (mode in self._mode_map or mode is None):
-            raise AssertionError
-            if self.is_enabled():
-                mode != None and self.push_mode(mode)
+        assert mode in self._mode_map or mode is None
+        if self.is_enabled():
+            if mode != None:
+                self.push_mode(mode)
                 self.pop_unselected_modes()
             else:
                 self._mode_stack.release_all()
@@ -665,18 +664,18 @@ class ModesComponent(CompoundComponent):
           * Any of the group buttons will cancel the current mode when
             the current mode belongs to the group.
         """
-        if not name not in self._mode_map.keys():
-            raise AssertionError
-            if not isinstance(groups, set):
-                groups = set(groups)
-            mode = tomode(mode_or_component)
-            task = self._tasks.add(Task.sequence(Task.wait(Defaults.MOMENTARY_DELAY), Task.run(lambda : self._get_mode_behaviour(name).press_delayed(self, name))))
-            task.kill()
-            slot = self.register_slot(listener=partial(self._on_mode_button_value, name), event='value', extra_kws=dict(identify_sender=True))
-            self._mode_list.append(name)
-            self._mode_map[name] = _ModeEntry(mode=mode, toggle_value=toggle_value, behaviour=behaviour, subject_slot=slot, momentary_task=task, groups=groups)
-            button_setter = 'set_' + name + '_button'
-            hasattr(self, button_setter) or setattr(self, button_setter, partial(self.set_mode_button, name))
+        assert name not in self._mode_map.keys()
+        if not isinstance(groups, set):
+            groups = set(groups)
+        mode = tomode(mode_or_component)
+        task = self._tasks.add(Task.sequence(Task.wait(Defaults.MOMENTARY_DELAY), Task.run(lambda : self._get_mode_behaviour(name).press_delayed(self, name))))
+        task.kill()
+        slot = self.register_slot(listener=partial(self._on_mode_button_value, name), event='value', extra_kws=dict(identify_sender=True))
+        self._mode_list.append(name)
+        self._mode_map[name] = _ModeEntry(mode=mode, toggle_value=toggle_value, behaviour=behaviour, subject_slot=slot, momentary_task=task, groups=groups)
+        button_setter = 'set_' + name + '_button'
+        if not hasattr(self, button_setter):
+            setattr(self, button_setter, partial(self.set_mode_button, name))
 
     def _get_mode_behaviour(self, name):
         entry = self._mode_map.get(name, None)

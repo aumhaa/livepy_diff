@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from .button import ButtonElement, ButtonElementMixin, ButtonValue, DummyUndoStepHandler, ON_VALUE, OFF_VALUE
 from .button_matrix import ButtonMatrixElement

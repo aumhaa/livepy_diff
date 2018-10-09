@@ -1,4 +1,3 @@
-
 import Live
 from _Framework.ButtonElement import ButtonElement
 from _Framework.TransportComponent import TransportComponent
@@ -18,33 +17,33 @@ class ShiftableTransportComponent(TransportComponent):
         TransportComponent.disconnect(self)
 
     def set_shift_button(self, button):
-        if not (button == None or isinstance(button, ButtonElement) and button.is_momentary()):
-            raise AssertionError
-            if self._shift_button != button:
-                if self._shift_button != None:
-                    self._shift_button.remove_value_listener(self._shift_value)
-                    self._shift_pressed = False
-                self._shift_button = button
-                self._shift_button != None and self._shift_button.add_value_listener(self._shift_value)
+        assert button == None or isinstance(button, ButtonElement) and button.is_momentary()
+        if self._shift_button != button:
+            if self._shift_button != None:
+                self._shift_button.remove_value_listener(self._shift_value)
+                self._shift_pressed = False
+            self._shift_button = button
+            if self._shift_button != None:
+                self._shift_button.add_value_listener(self._shift_value)
 
     def _shift_value(self, value):
-        if not self._shift_button != None:
-            raise AssertionError
-            raise value in range(128) or AssertionError
-            self._shift_pressed = self.is_enabled() and value > 0
+        assert self._shift_button != None
+        assert value in range(128)
+        if self.is_enabled():
+            self._shift_pressed = value > 0
 
     def _ffwd_value(self, value):
-        if not self._ffwd_button != None:
-            raise AssertionError
-            raise value in range(128) or AssertionError
-            self.song().current_song_time = self._shift_pressed and self.song().last_event_time
+        assert self._ffwd_button != None
+        assert value in range(128)
+        if self._shift_pressed:
+            self.song().current_song_time = self.song().last_event_time
         else:
             TransportComponent._ffwd_value(self, value)
 
     def _rwd_value(self, value):
-        if not self._rwd_button != None:
-            raise AssertionError
-            raise value in range(128) or AssertionError
-            self.song().current_song_time = self._shift_pressed and 0.0
+        assert self._rwd_button != None
+        assert value in range(128)
+        if self._shift_pressed:
+            self.song().current_song_time = 0.0
         else:
             TransportComponent._rwd_value(self, value)

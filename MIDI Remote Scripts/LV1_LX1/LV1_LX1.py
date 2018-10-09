@@ -1,4 +1,3 @@
-
 from LV2_LX2_LC2_LD2.FaderfoxComponent import FaderfoxComponent
 from LV2_LX2_LC2_LD2.FaderfoxScript import FaderfoxScript
 from LV2_LX2_LC2_LD2.FaderfoxMixerController import FaderfoxMixerController

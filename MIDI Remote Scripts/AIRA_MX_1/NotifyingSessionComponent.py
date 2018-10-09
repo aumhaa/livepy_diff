@@ -1,4 +1,3 @@
-
 from itertools import count, izip_longest
 from _Framework.SubjectSlot import subject_slot, subject_slot_group
 from _Framework.SessionComponent import SessionComponent, SceneComponent

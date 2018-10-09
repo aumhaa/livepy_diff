@@ -1,4 +1,3 @@
-
 from ableton.v2.control_surface.elements import Color
 from ableton.v2.control_surface import Skin
 

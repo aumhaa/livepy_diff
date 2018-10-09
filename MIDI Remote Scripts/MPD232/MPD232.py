@@ -1,4 +1,3 @@
-
 from __future__ import with_statement
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
 from _MPDMkIIBase.MPDMkIIBase import MPDMkIIBase

@@ -1,4 +1,3 @@
-
 from ableton.v2.base import in_range
 from ableton.v2.control_surface.elements import ButtonElement as ButtonElementBase
 

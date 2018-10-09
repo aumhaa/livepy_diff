@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 
 def is_return_track(song, track):

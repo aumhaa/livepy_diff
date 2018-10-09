@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from .ClipSlotComponent import ClipSlotComponent, find_nearest_color
 from .CompoundComponent import CompoundComponent
@@ -12,8 +11,8 @@ class SceneComponent(CompoundComponent):
     clip_slot_component_type = ClipSlotComponent
 
     def __init__(self, num_slots = 0, tracks_to_use_callback = nop, *a, **k):
-        raise num_slots >= 0 or AssertionError
-        raise callable(tracks_to_use_callback) or AssertionError
+        assert num_slots >= 0
+        assert callable(tracks_to_use_callback)
         super(SceneComponent, self).__init__(*a, **k)
         self._scene = None
         self._clip_slots = []
@@ -56,9 +55,9 @@ class SceneComponent(CompoundComponent):
         self._delete_button = button
 
     def set_track_offset(self, offset):
-        if not offset >= 0:
-            raise AssertionError
-            self._track_offset = offset != self._track_offset and offset
+        assert offset >= 0
+        if offset != self._track_offset:
+            self._track_offset = offset
             self.update()
 
     def set_triggered_value(self, value):
@@ -153,12 +152,12 @@ class SceneComponent(CompoundComponent):
 
     @subject_slot('is_triggered')
     def _on_is_triggered_changed(self):
-        raise self._scene != None or AssertionError
+        assert self._scene != None
         self._update_launch_button()
 
     @subject_slot('color')
     def _on_scene_color_changed(self):
-        raise self._scene != None or AssertionError
+        assert self._scene != None
         self._update_launch_button()
 
     def _color_value(self, color):

@@ -1,4 +1,3 @@
-
 from _Framework.EncoderElement import EncoderElement
 from _Framework.InputControlElement import *
 

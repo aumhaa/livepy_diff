@@ -1,4 +1,3 @@
-
 import Live
 import libInterprocessCommsAPIPython
 from _Framework.ClipSlotComponent import ClipSlotComponent
@@ -25,10 +24,10 @@ class SpecialClipSlotComponent(ClipSlotComponent):
         self._serato_interface = None
 
     def set_serato_interface(self, serato_interface):
-        if not serato_interface != None:
-            raise AssertionError
-            self._serato_interface = serato_interface
-            self._clip_slot != None and self.update()
+        assert serato_interface != None
+        self._serato_interface = serato_interface
+        if self._clip_slot != None:
+            self.update()
         self._on_load_state_changed()
         self._on_name_changed()
         self._on_color_changed()
@@ -48,8 +47,8 @@ class SpecialClipSlotComponent(ClipSlotComponent):
         self.update()
 
     def set_indexes(self, scene_index, track_index):
-        raise scene_index >= 0 or AssertionError
-        raise track_index >= 0 or AssertionError
+        assert scene_index >= 0
+        assert track_index >= 0
         self._scene_index = scene_index
         self._track_index = track_index
         self._on_load_state_changed()
@@ -81,16 +80,16 @@ class SpecialClipSlotComponent(ClipSlotComponent):
 
     @subject_slot('has_clip')
     def _on_clip_state_changed(self):
-        if not self._clip_slot != None:
-            raise AssertionError
-            if self.has_clip():
-                if not self._clip_slot.clip.name_has_listener(self._on_name_changed):
-                    self._clip_slot.clip.add_name_listener(self._on_name_changed)
-                if not self._clip_slot.clip.color_has_listener(self._on_color_changed):
-                    self._clip_slot.clip.add_color_listener(self._on_color_changed)
-                if not self._clip_slot.clip.playing_status_has_listener(self._on_playing_state_changed):
-                    self._clip_slot.clip.add_playing_status_listener(self._on_playing_state_changed)
-                self._clip_slot.clip.is_recording_has_listener(self._on_recording_state_changed) or self._clip_slot.clip.add_is_recording_listener(self._on_recording_state_changed)
+        assert self._clip_slot != None
+        if self.has_clip():
+            if not self._clip_slot.clip.name_has_listener(self._on_name_changed):
+                self._clip_slot.clip.add_name_listener(self._on_name_changed)
+            if not self._clip_slot.clip.color_has_listener(self._on_color_changed):
+                self._clip_slot.clip.add_color_listener(self._on_color_changed)
+            if not self._clip_slot.clip.playing_status_has_listener(self._on_playing_state_changed):
+                self._clip_slot.clip.add_playing_status_listener(self._on_playing_state_changed)
+            if not self._clip_slot.clip.is_recording_has_listener(self._on_recording_state_changed):
+                self._clip_slot.clip.add_is_recording_listener(self._on_recording_state_changed)
         self._on_load_state_changed()
         self._on_color_changed()
         self._on_name_changed()

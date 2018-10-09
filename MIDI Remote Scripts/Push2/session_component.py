@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 import Live
 from itertools import imap
@@ -16,7 +15,7 @@ TRIGGERED_CLIP_BLINK_SPEED = 24
 class DecoratingCopyHandler(ClipSlotCopyHandler):
 
     def __init__(self, decorator_factory = None, *a, **k):
-        raise decorator_factory is not None or AssertionError
+        assert decorator_factory is not None
         super(DecoratingCopyHandler, self).__init__(*a, **k)
         self._decorator_factory = decorator_factory
 

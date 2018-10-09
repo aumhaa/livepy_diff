@@ -1,4 +1,3 @@
-
 from MackieControlXT import MackieControlXT
 
 def create_instance(c_instance):

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from ..elements import DisplayDataSource
 from .control import Control
@@ -8,7 +7,7 @@ class TextDisplayControl(Control):
     class State(Control.State):
 
         def __init__(self, segments = None, *a, **k):
-            raise segments is not None or AssertionError
+            assert segments is not None
             super(TextDisplayControl.State, self).__init__(*a, **k)
             self._data_sources = [ DisplayDataSource(segment) for segment in segments ]
 

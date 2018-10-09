@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 import Live
 from ableton.v2.control_surface import find_instrument_meeting_requirement

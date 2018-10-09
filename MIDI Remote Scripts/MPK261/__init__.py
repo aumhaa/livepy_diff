@@ -1,4 +1,3 @@
-
 from .MPK261 import MPK261
 from _Framework.Capabilities import controller_id, inport, outport, CONTROLLER_ID_KEY, PORTS_KEY, NOTES_CC, SCRIPT, REMOTE
 

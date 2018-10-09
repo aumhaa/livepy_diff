@@ -1,4 +1,3 @@
-
 import Live
 NavDirection = Live.Application.Application.View.NavDirection
 from _Framework.Control import ButtonControl, ToggleButtonControl

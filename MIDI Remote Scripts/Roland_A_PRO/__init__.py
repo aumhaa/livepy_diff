@@ -1,4 +1,3 @@
-
 from .Roland_A_PRO import Roland_A_PRO
 from _Framework.Capabilities import controller_id, inport, outport, CONTROLLER_ID_KEY, PORTS_KEY, NOTES_CC, SCRIPT, REMOTE
 

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 import re
 from functools import partial
@@ -76,7 +75,7 @@ def convert_color_index(color_index):
 class ModelAdapter(EventObject):
 
     def __init__(self, adaptee = None, *a, **k):
-        raise liveobj_valid(adaptee) or AssertionError
+        assert liveobj_valid(adaptee)
         super(ModelAdapter, self).__init__(*a, **k)
         self._adaptee = adaptee
 

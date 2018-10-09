@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from itertools import count
 from ableton.v2.base import listens, listens_group, liveobj_valid
@@ -68,7 +67,7 @@ class ChainSelectionComponent(ItemListerComponent):
             return IndexedColor.from_live_index(chain_color, DISPLAY_BUTTON_SHADE_LEVEL)
 
     def set_parent(self, parent):
-        raise parent is None or parent.can_have_chains or AssertionError
+        assert parent is None or parent.can_have_chains
         self._chain_parent.set_rack(parent)
 
     @listens('items')

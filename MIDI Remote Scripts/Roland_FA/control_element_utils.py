@@ -1,4 +1,3 @@
-
 import Live
 from ableton.v2.base import depends
 from ableton.v2.control_surface import MIDI_CC_TYPE

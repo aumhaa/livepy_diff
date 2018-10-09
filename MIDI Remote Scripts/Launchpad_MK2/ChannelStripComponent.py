@@ -1,4 +1,3 @@
-
 from itertools import chain
 from _Framework.SubjectSlot import subject_slot
 from _Framework.Control import ButtonControl

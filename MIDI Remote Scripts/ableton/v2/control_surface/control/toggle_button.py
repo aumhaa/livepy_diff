@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from .control import Connectable, control_event, control_color
 from .button import ButtonControlBase

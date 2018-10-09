@@ -1,4 +1,3 @@
-
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from _Framework.ButtonElement import ButtonElement
 from _Framework.DisplayDataSource import DisplayDataSource
@@ -12,10 +11,10 @@ class MixerOrDeviceModeSelector(ModeSelectorComponent):
     """ Class that toggles between mixer and device modes """
 
     def __init__(self, mixer_modes, device, encoders, page_buttons):
-        raise isinstance(mixer_modes, EncoderMixerModeSelector) or AssertionError
-        raise isinstance(device, PageableDeviceComponent) or AssertionError
-        raise isinstance(encoders, tuple) or AssertionError
-        raise isinstance(page_buttons, tuple) or AssertionError
+        assert isinstance(mixer_modes, EncoderMixerModeSelector)
+        assert isinstance(device, PageableDeviceComponent)
+        assert isinstance(encoders, tuple)
+        assert isinstance(page_buttons, tuple)
         ModeSelectorComponent.__init__(self)
         self._mixer_modes = mixer_modes
         self._device = device
@@ -53,26 +52,26 @@ class MixerOrDeviceModeSelector(ModeSelectorComponent):
         ModeSelectorComponent.disconnect(self)
 
     def set_displays(self, encoders_display, value_display, device_display, page_displays):
-        if not isinstance(encoders_display, PhysicalDisplayElement):
-            raise AssertionError
-            raise isinstance(value_display, PhysicalDisplayElement) or AssertionError
-            raise isinstance(device_display, PhysicalDisplayElement) or AssertionError
-            raise isinstance(page_displays, tuple) or AssertionError
-            self._encoders_display = encoders_display
-            self._value_display = value_display
-            self._device_display = device_display
-            self._page_displays = page_displays
-            self._value_display != None and self._value_display.segment(0).set_data_source(self._parameter_source)
+        assert isinstance(encoders_display, PhysicalDisplayElement)
+        assert isinstance(value_display, PhysicalDisplayElement)
+        assert isinstance(device_display, PhysicalDisplayElement)
+        assert isinstance(page_displays, tuple)
+        self._encoders_display = encoders_display
+        self._value_display = value_display
+        self._device_display = device_display
+        self._page_displays = page_displays
+        if self._value_display != None:
+            self._value_display.segment(0).set_data_source(self._parameter_source)
         self.update()
 
     def set_peek_button(self, button):
-        if not (button == None or isinstance(button, ButtonElement)):
-            raise AssertionError
-            if self._peek_button != button:
-                if self._peek_button != None:
-                    self._peek_button.remove_value_listener(self._peek_value)
-                self._peek_button = button
-                self._peek_button != None and self._peek_button.add_value_listener(self._peek_value)
+        assert button == None or isinstance(button, ButtonElement)
+        if self._peek_button != button:
+            if self._peek_button != None:
+                self._peek_button.remove_value_listener(self._peek_value)
+            self._peek_button = button
+            if self._peek_button != None:
+                self._peek_button.add_value_listener(self._peek_value)
             self.update()
 
     def number_of_modes(self):
@@ -119,14 +118,14 @@ class MixerOrDeviceModeSelector(ModeSelectorComponent):
 
             else:
                 print 'Invalid mode index'
-                raise False or AssertionError
+                assert False
 
     def _parameter_value(self, value, control):
-        if not control in self._encoders:
-            raise AssertionError
-            if self.is_enabled():
-                parameter = control.mapped_parameter()
-                parameter != None and self._parameter_source.set_display_string(parameter.name + ': ' + parameter.__str__())
+        assert control in self._encoders
+        if self.is_enabled():
+            parameter = control.mapped_parameter()
+            if parameter != None:
+                self._parameter_source.set_display_string(parameter.name + ': ' + parameter.__str__())
             else:
                 self._parameter_source.set_display_string('<unmapped>')
             self._clean_value_display_in = 20
@@ -142,14 +141,14 @@ class MixerOrDeviceModeSelector(ModeSelectorComponent):
             self._must_update_encoder_display = False
 
     def _peek_value(self, value):
-        if not self._peek_button != None:
-            raise AssertionError
-            raise value in range(128) or AssertionError
-            new_peek_mode = value != 0
-            peek_changed = False
-            for encoder in self._encoders:
-                if new_peek_mode != encoder.get_peek_mode():
-                    encoder.set_peek_mode(new_peek_mode)
-                    peek_changed = True
+        assert self._peek_button != None
+        assert value in range(128)
+        new_peek_mode = value != 0
+        peek_changed = False
+        for encoder in self._encoders:
+            if new_peek_mode != encoder.get_peek_mode():
+                encoder.set_peek_mode(new_peek_mode)
+                peek_changed = True
 
-            self._must_update_encoder_display = peek_changed and self._encoders_display != None and True
+        if peek_changed and self._encoders_display != None:
+            self._must_update_encoder_display = True

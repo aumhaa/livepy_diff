@@ -1,4 +1,3 @@
-
 import Live
 from _Framework.SceneComponent import SceneComponent
 from _Framework.InputControlElement import *
@@ -21,10 +20,10 @@ class SpecialSceneComponent(SceneComponent):
         self._serato_interface = None
 
     def set_serato_interface(self, serato_interface):
-        if not serato_interface != None:
-            raise AssertionError
-            self._serato_interface = serato_interface
-            self._scene != None and self._on_is_triggered_changed()
+        assert serato_interface != None
+        self._serato_interface = serato_interface
+        if self._scene != None:
+            self._on_is_triggered_changed()
         self._on_name_changed()
         self._on_color_changed()
 
@@ -41,13 +40,13 @@ class SpecialSceneComponent(SceneComponent):
             self._on_color_changed()
 
     def set_index(self, index):
-        if not index >= 0:
-            raise AssertionError
-            self._index = index
-            for clip_index in range(len(self._clip_slots)):
-                self._clip_slots[clip_index].set_indexes(self._index, clip_index)
+        assert index >= 0
+        self._index = index
+        for clip_index in range(len(self._clip_slots)):
+            self._clip_slots[clip_index].set_indexes(self._index, clip_index)
 
-            self._scene != None and self._on_is_triggered_changed()
+        if self._scene != None:
+            self._on_is_triggered_changed()
         self._on_name_changed()
         self._on_color_changed()
 

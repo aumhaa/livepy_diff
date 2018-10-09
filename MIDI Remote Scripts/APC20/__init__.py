@@ -1,4 +1,3 @@
-
 from _Framework.Capabilities import CONTROLLER_ID_KEY, PORTS_KEY, NOTES_CC, SCRIPT, REMOTE, controller_id, inport, outport
 from APC20 import APC20
 

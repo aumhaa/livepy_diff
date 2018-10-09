@@ -1,4 +1,3 @@
-
 from ableton.v2.base import const, inject
 from ableton.v2.control_surface import ControlSurface, Layer
 from ableton.v2.control_surface.components import MixerComponent, SessionRingComponent, TransportComponent

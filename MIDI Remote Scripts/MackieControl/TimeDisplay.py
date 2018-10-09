@@ -1,4 +1,3 @@
-
 from MackieControlComponent import *
 
 class TimeDisplay(MackieControlComponent):
@@ -55,7 +54,7 @@ class TimeDisplay(MackieControlComponent):
             self.__send_time_string(time_string, show_points=True)
 
     def __send_time_string(self, time_string, show_points):
-        raise len(time_string) >= 10 or AssertionError
+        assert len(time_string) >= 10
         for c in range(0, 10):
             char = time_string[9 - c].upper()
             char_code = g7_seg_led_conv_table[char]

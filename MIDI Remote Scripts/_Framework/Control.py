@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from functools import partial
 from itertools import izip_longest
@@ -30,7 +29,7 @@ def control_event(event_name):
     def event_decorator(self):
 
         def event_listener_decorator(event_listener):
-            raise event_listener not in self._event_listeners or AssertionError
+            assert event_listener not in self._event_listeners
             self._event_listeners[event_name] = event_listener
             return self
 
@@ -47,8 +46,8 @@ class Control(object):
 
         def __init__(self, control = None, manager = None, channel = None, identifier = None, *a, **k):
             super(Control.State, self).__init__(*a, **k)
-            raise control is not None or AssertionError
-            raise manager is not None or AssertionError
+            assert control is not None
+            assert manager is not None
             self._manager = manager
             self._value_listener = control._event_listeners.get('value', None)
             self._event_listeners = control._event_listeners
@@ -142,8 +141,8 @@ class MappedControl(Control):
     class State(Control.State):
 
         def __init__(self, control = None, manager = None, *a, **k):
-            raise control is not None or AssertionError
-            raise manager is not None or AssertionError
+            assert control is not None
+            assert manager is not None
             super(MappedControl.State, self).__init__(control, manager, *a, **k)
             self._direct_mapping = None
 
@@ -185,8 +184,8 @@ class ButtonControl(Control):
     class State(Control.State):
 
         def __init__(self, control = None, manager = None, color = None, pressed_color = None, disabled_color = None, repeat = False, enabled = True, *a, **k):
-            raise control is not None or AssertionError
-            raise manager is not None or AssertionError
+            assert control is not None
+            assert manager is not None
             super(ButtonControl.State, self).__init__(control, manager, *a, **k)
             self._pressed_listener = control._event_listeners.get('pressed', None)
             self._released_listener = control._event_listeners.get('released', None)
@@ -476,16 +475,16 @@ class EncoderControl(Control):
     class State(Control.State):
 
         def __init__(self, control = None, manager = None, *a, **k):
-            if not control is not None:
-                raise AssertionError
-                raise manager is not None or AssertionError
-                super(EncoderControl.State, self).__init__(control, manager, *a, **k)
-                self._is_touched = False
-                self._touched_listener = control._event_listeners.get('touched', None)
-                self._released_listener = control._event_listeners.get('released', None)
-                self._touch_value_slot = None
-                self._timer_based = False
-                self._touch_value_slot = (self._touched_listener or self._released_listener) and self.register_slot(None, self._on_touch_value, 'touch_value')
+            assert control is not None
+            assert manager is not None
+            super(EncoderControl.State, self).__init__(control, manager, *a, **k)
+            self._is_touched = False
+            self._touched_listener = control._event_listeners.get('touched', None)
+            self._released_listener = control._event_listeners.get('released', None)
+            self._touch_value_slot = None
+            self._timer_based = False
+            if self._touched_listener or self._released_listener:
+                self._touch_value_slot = self.register_slot(None, self._on_touch_value, 'touch_value')
 
         @lazy_attribute
         def _release_task(self):
@@ -589,17 +588,17 @@ class ControlList(Control):
         _extra_args = []
 
         def __init__(self, control = None, manager = None, extra_args = None, extra_kws = None, unavailable_color = None, *a, **k):
-            if not control is not None:
-                raise AssertionError
-                super(ControlList.State, self).__init__(manager=manager, control=control, *a, **k)
-                self._control_elements = None
-                self._control_type = control.control_type
-                self._controls = []
-                self._dynamic_create = False
-                self._unavailable_color = unavailable_color if unavailable_color is not None else 'DefaultButton.Disabled'
-                if extra_args is not None:
-                    self._extra_args = extra_args
-                self._extra_kws = extra_kws is not None and extra_kws
+            assert control is not None
+            super(ControlList.State, self).__init__(manager=manager, control=control, *a, **k)
+            self._control_elements = None
+            self._control_type = control.control_type
+            self._controls = []
+            self._dynamic_create = False
+            self._unavailable_color = unavailable_color if unavailable_color is not None else 'DefaultButton.Disabled'
+            if extra_args is not None:
+                self._extra_args = extra_args
+            if extra_kws is not None:
+                self._extra_kws = extra_kws
             self.control_count = control.control_count
 
         def _get_control_count(self):
@@ -717,8 +716,8 @@ class MatrixControl(ControlList):
     class State(ControlList.State):
 
         def __init__(self, control = None, manager = None, *a, **k):
-            raise control is not None or AssertionError
-            raise manager is not None or AssertionError
+            assert control is not None
+            assert manager is not None
             self._dimensions = (None, None)
             super(MatrixControl.State, self).__init__(control, manager, *a, **k)
 
@@ -726,11 +725,11 @@ class MatrixControl(ControlList):
             return self._dimensions
 
         def _set_dimensions(self, dimensions):
-            if not first(dimensions):
-                raise AssertionError
-                raise second(dimensions) or AssertionError
-                self._dynamic_create = dimensions == MatrixControl.DYNAMIC_DIMENSIONS
-                count = self._dynamic_create and (len(self._control_elements) if self._control_elements else 0)
+            assert first(dimensions)
+            assert second(dimensions)
+            self._dynamic_create = dimensions == MatrixControl.DYNAMIC_DIMENSIONS
+            if self._dynamic_create:
+                count = len(self._control_elements) if self._control_elements else 0
             self._dimensions = dimensions
             count = first(dimensions) * second(dimensions)
             self._create_controls(count)

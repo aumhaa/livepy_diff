@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from itertools import imap
 NOTE_ON_STATUS = 144

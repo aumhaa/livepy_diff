@@ -1,4 +1,3 @@
-
 from ableton.v2.base import liveobj_valid
 from ableton.v2.control_surface.components import ClipSlotComponent as ClipSlotComponentBase
 

@@ -1,4 +1,3 @@
-
 from KeyLab.KeyLab import KeyLab
 
 class KeyLab88(KeyLab):

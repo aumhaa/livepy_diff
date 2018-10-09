@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from .ControlElement import ControlElementClient
 from .ControlSurfaceComponent import ControlSurfaceComponent
@@ -35,14 +34,14 @@ class M4LInterfaceComponent(ControlSurfaceComponent, ControlElementClient):
             return self._controls[control_name]
 
     def grab_control(self, control):
-        raise control in self._controls.values() or AssertionError
+        assert control in self._controls.values()
         with self._component_guard():
             if control not in self._grabbed_controls:
                 control.resource.grab(self, priority=self._priority)
                 self._grabbed_controls.append(control)
 
     def release_control(self, control):
-        raise control in self._controls.values() or AssertionError
+        assert control in self._controls.values()
         with self._component_guard():
             if control in self._grabbed_controls:
                 self._grabbed_controls.remove(control)

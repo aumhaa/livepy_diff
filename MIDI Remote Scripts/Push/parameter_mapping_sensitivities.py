@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from pushbase.parameter_provider import is_parameter_quantized
 CONTINUOUS_MAPPING_SENSITIVITY = 2.0

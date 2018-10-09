@@ -1,4 +1,3 @@
-
 from _Framework.SubjectSlot import SubjectSlotError
 from _Framework.BackgroundComponent import BackgroundComponent as BackgroundComponentBase
 

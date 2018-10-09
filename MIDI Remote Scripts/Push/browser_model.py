@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 import os
 from functools import partial
@@ -226,7 +225,7 @@ class FullBrowserModel(BrowserModel):
             self._num_contents += 1
             content = self._contents[self._num_contents - 1]
         else:
-            raise self._num_contents == len(self._contents) or AssertionError
+            assert self._num_contents == len(self._contents)
             content = self.make_content_list()
             level = len(self._contents)
             slot = self.register_slot(content, partial(self._on_item_activated, level), 'item_activated')
@@ -235,7 +234,7 @@ class FullBrowserModel(BrowserModel):
         return content
 
     def _pop_content_list(self):
-        raise self._num_contents > 1 or AssertionError
+        assert self._num_contents > 1
         self._num_contents -= 1
 
     def _fit_content_lists(self, requested_lists):
@@ -243,7 +242,7 @@ class FullBrowserModel(BrowserModel):
         Ensures that there are exactly 'request_lists' number of
         content lists. Returns whether a change was needed or not.
         """
-        raise requested_lists > 0 or AssertionError
+        assert requested_lists > 0
         if requested_lists != self._num_contents:
             while requested_lists < self._num_contents:
                 self._pop_content_list()
@@ -261,7 +260,7 @@ class FullBrowserModel(BrowserModel):
             _, slot = self._contents.pop()
             self.disconnect_disconnectable(slot)
 
-        raise self._num_contents == len(self._contents) or AssertionError
+        assert self._num_contents == len(self._contents)
 
     def _on_item_activated(self, level):
         old_num_contents = self._num_contents

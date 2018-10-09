@@ -1,4 +1,3 @@
-
 from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface
@@ -244,48 +243,48 @@ class Novation_Impulse(ControlSurface):
         self._name_display.segment(0).set_data_source(self._name_display_data_source)
 
     def _encoder_value(self, value, sender):
-        if not sender in self._encoders:
-            raise AssertionError
-            if not value in range(128):
-                raise AssertionError
-                display_string = self._device_component.is_enabled() and ' - '
-                display_string = sender.mapped_parameter() != None and sender.mapped_parameter().name
+        assert sender in self._encoders
+        assert value in range(128)
+        if self._device_component.is_enabled():
+            display_string = ' - '
+            if sender.mapped_parameter() != None:
+                display_string = sender.mapped_parameter().name
             self._set_string_to_display(display_string)
 
     def _slider_value(self, value, sender):
-        if not sender in tuple(self._sliders) + (self._master_slider,):
-            raise AssertionError
-            if not value in range(128):
-                raise AssertionError
-                if self._mixer.is_enabled():
-                    display_string = ' - '
-                    if sender.mapped_parameter() != None:
-                        master = self.song().master_track
-                        tracks = self.song().tracks
-                        returns = self.song().return_tracks
-                        track = None
-                        if sender == self._master_slider:
-                            track = self._has_sliders and master
-                        else:
-                            track = self.song().view.selected_track
+        assert sender in tuple(self._sliders) + (self._master_slider,)
+        assert value in range(128)
+        if self._mixer.is_enabled():
+            display_string = ' - '
+            if sender.mapped_parameter() != None:
+                master = self.song().master_track
+                tracks = self.song().tracks
+                returns = self.song().return_tracks
+                track = None
+                if sender == self._master_slider:
+                    if self._has_sliders:
+                        track = master
                     else:
-                        track = self._mixer.channel_strip(self._sliders.index(sender))._track
-                    display_string = track == master and 'Master'
+                        track = self.song().view.selected_track
+                else:
+                    track = self._mixer.channel_strip(self._sliders.index(sender))._track
+                if track == master:
+                    display_string = 'Master'
                 elif track in tracks:
                     display_string = str(list(tracks).index(track) + 1)
                 elif track in returns:
                     display_string = str(chr(ord('A') + list(returns).index(track)))
                 else:
-                    raise False or AssertionError
+                    assert False
                 display_string += ' Volume'
             self._set_string_to_display(display_string)
 
     def _mixer_button_value(self, value, sender):
-        if not value in range(128):
-            raise AssertionError
-            if self._mixer.is_enabled() and value > 0:
-                strip = self._mixer.channel_strip(self._strip_buttons.index(sender))
-                self._string_to_display = strip != None and None
+        assert value in range(128)
+        if self._mixer.is_enabled() and value > 0:
+            strip = self._mixer.channel_strip(self._strip_buttons.index(sender))
+            if strip != None:
+                self._string_to_display = None
                 self._name_display.segment(0).set_data_source(strip.track_name_data_source())
                 self._name_display.update()
                 self._display_reset_delay = STANDARD_DISPLAY_DELAY
@@ -293,7 +292,7 @@ class Novation_Impulse(ControlSurface):
                 self._set_string_to_display(' - ')
 
     def _preview_value(self, value):
-        raise value in range(128) or AssertionError
+        assert value in range(128)
         for encoder in self._encoders:
             encoder.set_peek_mode(value > 0)
 
@@ -308,7 +307,7 @@ class Novation_Impulse(ControlSurface):
         self._display_reset_delay = INITIAL_DISPLAY_DELAY
 
     def _set_string_to_display(self, string_to_display):
-        raise isinstance(string_to_display, (str, unicode)) or AssertionError
+        assert isinstance(string_to_display, (str, unicode))
         self._name_display.segment(0).set_data_source(self._name_display_data_source)
         self._string_to_display = string_to_display
         self._display_reset_delay = STANDARD_DISPLAY_DELAY
@@ -316,12 +315,12 @@ class Novation_Impulse(ControlSurface):
     def _on_selected_track_changed(self):
         ControlSurface._on_selected_track_changed(self)
         self._show_current_track_name()
-        all_tracks = self._has_sliders or self._session.tracks_to_use()
-        selected_track = self.song().view.selected_track
-        num_strips = self._session.width()
-        if selected_track in all_tracks:
-            track_index = list(all_tracks).index(selected_track)
-            new_offset = track_index - track_index % num_strips
-            if not new_offset / num_strips == int(new_offset / num_strips):
-                raise AssertionError
+        if not self._has_sliders:
+            all_tracks = self._session.tracks_to_use()
+            selected_track = self.song().view.selected_track
+            num_strips = self._session.width()
+            if selected_track in all_tracks:
+                track_index = list(all_tracks).index(selected_track)
+                new_offset = track_index - track_index % num_strips
+                assert new_offset / num_strips == int(new_offset / num_strips)
                 self._session.set_offsets(new_offset, self._session.scene_offset())

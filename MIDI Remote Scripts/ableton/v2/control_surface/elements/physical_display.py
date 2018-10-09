@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from itertools import ifilter, izip, starmap, chain, imap
 from functools import partial
@@ -52,8 +51,8 @@ class DisplayElement(ControlElement):
 
     def __init__(self, width_in_chars = None, num_segments = 1, *a, **k):
         super(DisplayElement, self).__init__(*a, **k)
-        raise width_in_chars is not None or AssertionError
-        raise num_segments is not None or AssertionError
+        assert width_in_chars is not None
+        assert num_segments is not None
         self._width = width_in_chars
         self._logical_segments = []
         self.set_num_segments(num_segments)
@@ -276,7 +275,7 @@ class PhysicalDisplayElement(DisplayElement, NotifyingControlElement):
         self._message_clear_all = message
 
     def set_translation_table(self, translation_table):
-        raise '?' in translation_table['?'] or AssertionError
+        assert '?' in translation_table['?']
         self._translation_table = translation_table
 
     def set_block_messages(self, block):
@@ -291,9 +290,9 @@ class PhysicalDisplayElement(DisplayElement, NotifyingControlElement):
             self._request_send_message()
 
     def update(self):
-        if not self._message_header is not None:
-            raise AssertionError
-            self._message_to_send = len(self._logical_segments) > 0 and not self._block_messages and None
+        assert self._message_header is not None
+        if len(self._logical_segments) > 0 and not self._block_messages:
+            self._message_to_send = None
             self._request_send_message()
 
     def clear_send_cache(self):
@@ -301,11 +300,11 @@ class PhysicalDisplayElement(DisplayElement, NotifyingControlElement):
         self._request_send_message()
 
     def reset(self):
-        if not (self._message_clear_all is not None or self._message_header is not None):
-            raise AssertionError
-            super(PhysicalDisplayElement, self).reset()
-            if not self._block_messages:
-                self._message_to_send = self._message_clear_all != None and self._message_clear_all
+        assert self._message_clear_all is not None or self._message_header is not None
+        super(PhysicalDisplayElement, self).reset()
+        if not self._block_messages:
+            if self._message_clear_all != None:
+                self._message_to_send = self._message_clear_all
             else:
                 self._message_to_send = tuple(chain(self._message_header, self._translate_string(' ' * self._width), self._message_tail))
             self._request_send_message()

@@ -1,4 +1,3 @@
-
 from MackieControlComponent import *
 from itertools import chain
 
@@ -213,8 +212,8 @@ class ChannelStrip(MackieControlComponent):
                 return index
             index += 1
 
-        if not (self.__assigned_track and 0):
-            raise AssertionError
+        if self.__assigned_track:
+            assert 0
 
     def __add_listeners(self):
         if self.__assigned_track.can_be_armed:

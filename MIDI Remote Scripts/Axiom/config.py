@@ -1,4 +1,3 @@
-
 from consts import *
 from _Axiom.consts import PAD_TRANSLATION
 TRANSPORT_CONTROLS = {'STOP': GENERIC_STOP,

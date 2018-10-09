@@ -1,4 +1,3 @@
-
 LED_OFF = 4
 LED_ON = 15
 RED_FULL = 7

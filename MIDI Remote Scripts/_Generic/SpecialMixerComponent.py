@@ -1,4 +1,3 @@
-
 import Live
 from _Framework.MixerComponent import MixerComponent
 from SelectChanStripComponent import SelectChanStripComponent

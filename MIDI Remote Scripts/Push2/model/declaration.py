@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from itertools import count
 
@@ -74,7 +73,7 @@ class view_property(property_declaration):
         self.property_type = property_type
         self.default_value = default_value
         self.order = self.GLOBAL_ORDER.next()
-        raise default_value is not self.sentinel or is_view_model_property_decl(self) or is_list_property_decl(self) or is_binding_property_decl(self) or is_reference_property_decl(self) or AssertionError
+        assert default_value is not self.sentinel or is_view_model_property_decl(self) or is_list_property_decl(self) or is_binding_property_decl(self) or is_reference_property_decl(self)
         depends = depends
 
     def __repr__(self):
@@ -89,7 +88,7 @@ class view_property(property_declaration):
 class custom_property(view_property):
 
     def __init__(self, property_type, wrapper_class = None, *a, **k):
-        raise wrapper_class is not None or AssertionError
+        assert wrapper_class is not None
         super(custom_property, self).__init__(property_type=property_type, *a, **k)
         self.wrapper_class = wrapper_class
 

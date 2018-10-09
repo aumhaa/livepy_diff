@@ -1,4 +1,3 @@
-
 import Live
 import libInterprocessCommsAPIPython
 from PySCAClipControl import *
@@ -24,16 +23,16 @@ class SpecialDeviceComponent(DeviceComponent):
         DeviceComponent.set_device(self, device)
 
     def set_serato_interface(self, serato_interface):
-        raise serato_interface != 0 or AssertionError
+        assert serato_interface != 0
         self._serato_interface = serato_interface
         self._on_device_name_changed()
 
     def set_parameter_value(self, parameter_index, value):
-        if not parameter_index in range(len(self._parameter_controls)):
-            raise AssertionError
-            raise 0.0 <= value and value <= 1.0 or AssertionError
-            parameter = self._parameter_controls[parameter_index].mapped_parameter()
-            adapted_value = parameter != None and parameter.is_enabled and value * abs(parameter.max - parameter.min)
+        assert parameter_index in range(len(self._parameter_controls))
+        assert 0.0 <= value and value <= 1.0
+        parameter = self._parameter_controls[parameter_index].mapped_parameter()
+        if parameter != None and parameter.is_enabled:
+            adapted_value = value * abs(parameter.max - parameter.min)
             parameter.value = adapted_value + parameter.min
 
     def update(self):
@@ -50,13 +49,13 @@ class SpecialDeviceComponent(DeviceComponent):
         self._on_on_off_changed()
 
     def _on_parameter_name_changed(self, index):
-        if not self._parameter_controls != None:
-            raise AssertionError
-            if not index in range(len(self._parameter_controls)):
-                raise AssertionError
-                parameter = self._serato_interface != None and self._parameter_controls[index].mapped_parameter()
-                name = ''
-                name = parameter != None and parameter.name
+        assert self._parameter_controls != None
+        assert index in range(len(self._parameter_controls))
+        if self._serato_interface != None:
+            parameter = self._parameter_controls[index].mapped_parameter()
+            name = ''
+            if parameter != None:
+                name = parameter.name
             self._serato_interface.PySCA_SetDeviceParamLabel(index + 1, name)
 
     def _on_device_name_changed(self):
@@ -67,13 +66,13 @@ class SpecialDeviceComponent(DeviceComponent):
             self._serato_interface.PySCA_SetDeviceLabel(name)
 
     def _on_parameter_changed(self, index):
-        if not self._parameter_controls != None:
-            raise AssertionError
-            if not index in range(len(self._parameter_controls)):
-                raise AssertionError
-                parameter = self._serato_interface != None and self._parameter_controls[index].mapped_parameter()
-                value_to_send = 0
-                value_to_send = parameter != None and (parameter.value - parameter.min) / (parameter.max - parameter.min)
+        assert self._parameter_controls != None
+        assert index in range(len(self._parameter_controls))
+        if self._serato_interface != None:
+            parameter = self._parameter_controls[index].mapped_parameter()
+            value_to_send = 0
+            if parameter != None:
+                value_to_send = (parameter.value - parameter.min) / (parameter.max - parameter.min)
             self._serato_interface.PySCA_SetDeviceParamValue(index + 1, value_to_send)
 
     def _on_on_off_changed(self):

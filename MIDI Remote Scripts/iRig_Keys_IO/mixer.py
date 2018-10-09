@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from ableton.v2.base import forward_property, liveobj_valid
 from ableton.v2.control_surface.components import MixerComponent as MixerComponentBase
@@ -38,13 +37,13 @@ class MixerComponent(MixerComponentBase):
     def _select_prev_track(self):
         selected_track = self.song.view.selected_track
         tracks = self._provider.tracks_to_use()
-        raise selected_track in tracks or AssertionError
+        assert selected_track in tracks
         index = list(tracks).index(selected_track)
         self.song.view.selected_track = tracks[index - 1]
 
     def _select_next_track(self):
         selected_track = self.song.view.selected_track
         tracks = self._provider.tracks_to_use()
-        raise selected_track in tracks or AssertionError
+        assert selected_track in tracks
         index = list(tracks).index(selected_track)
         self.song.view.selected_track = tracks[index + 1]

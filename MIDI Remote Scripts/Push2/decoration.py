@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 import Live
 from ableton.v2.base import find_if, liveobj_changed, liveobj_valid

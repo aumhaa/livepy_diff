@@ -1,4 +1,3 @@
-
 from _Framework.MixerComponent import MixerComponent
 from _Framework.ButtonElement import ButtonElement
 
@@ -28,27 +27,27 @@ class SpecialMixerComponent(MixerComponent):
         self._strip_mute_solo_buttons = None
 
     def set_shift_button(self, shift_button):
-        if not (shift_button == None or shift_button.is_momentary()):
-            raise AssertionError
-            if self._shift_button != None:
-                self._shift_button.remove_value_listener(self._shift_value)
-            self._shift_button = shift_button
-            self._shift_button != None and self._shift_button.add_value_listener(self._shift_value)
+        assert shift_button == None or shift_button.is_momentary()
+        if self._shift_button != None:
+            self._shift_button.remove_value_listener(self._shift_value)
+        self._shift_button = shift_button
+        if self._shift_button != None:
+            self._shift_button.add_value_listener(self._shift_value)
 
     def set_selected_mute_solo_button(self, button):
-        raise isinstance(button, (type(None), ButtonElement)) or AssertionError
+        assert isinstance(button, (type(None), ButtonElement))
         self._selected_mute_solo_button = button
         self.selected_strip().set_mute_button(self._selected_mute_solo_button)
         self.selected_strip().set_solo_button(None)
 
     def set_strip_mute_solo_buttons(self, buttons, flip_button):
-        if not (buttons is None or isinstance(buttons, tuple) and len(buttons) == len(self._channel_strips)):
-            raise AssertionError
-            if not isinstance(flip_button, (type(None), ButtonElement)):
-                raise AssertionError
-                self._mute_solo_flip_button != None and self._mute_solo_flip_button.remove_value_listener(self._mute_solo_flip_value)
-            self._mute_solo_flip_button = flip_button
-            self._mute_solo_flip_button != None and self._mute_solo_flip_button.add_value_listener(self._mute_solo_flip_value)
+        assert buttons is None or isinstance(buttons, tuple) and len(buttons) == len(self._channel_strips)
+        assert isinstance(flip_button, (type(None), ButtonElement))
+        if self._mute_solo_flip_button != None:
+            self._mute_solo_flip_button.remove_value_listener(self._mute_solo_flip_value)
+        self._mute_solo_flip_button = flip_button
+        if self._mute_solo_flip_button != None:
+            self._mute_solo_flip_button.add_value_listener(self._mute_solo_flip_value)
         self._strip_mute_solo_buttons = buttons
         for index in range(len(self._channel_strips)):
             strip = self.channel_strip(index)
@@ -62,18 +61,18 @@ class SpecialMixerComponent(MixerComponent):
         return tuple(self.song().visible_tracks) + tuple(self.song().return_tracks)
 
     def _shift_value(self, value):
-        if not self._shift_button != None:
-            raise AssertionError
-            raise value in range(128) or AssertionError
-            value > 0 and self.selected_strip().set_mute_button(None)
+        assert self._shift_button != None
+        assert value in range(128)
+        if value > 0:
+            self.selected_strip().set_mute_button(None)
             self.selected_strip().set_solo_button(self._selected_mute_solo_button)
         else:
             self.selected_strip().set_solo_button(None)
             self.selected_strip().set_mute_button(self._selected_mute_solo_button)
 
     def _mute_solo_flip_value(self, value):
-        raise self._mute_solo_flip_button != None or AssertionError
-        raise value in range(128) or AssertionError
+        assert self._mute_solo_flip_button != None
+        assert value in range(128)
         if self._strip_mute_solo_buttons != None:
             for index in range(len(self._strip_mute_solo_buttons)):
                 strip = self.channel_strip(index)

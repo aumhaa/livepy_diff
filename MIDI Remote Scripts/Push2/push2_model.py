@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from pprint import pformat
 import logging
@@ -11,10 +10,10 @@ class Sender(object):
 
     def __init__(self, message_sink = None, process_connected = None, *a, **k):
         super(Sender, self).__init__(*a, **k)
-        if not message_sink is not None:
-            raise AssertionError
-            self._message_sink = message_sink
-            process_connected = process_connected is None and (lambda : True)
+        assert message_sink is not None
+        self._message_sink = message_sink
+        if process_connected is None:
+            process_connected = lambda : True
         self._process_connected = process_connected
         self._attribute_paths = []
         self._structural_change = False

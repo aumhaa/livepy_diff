@@ -1,4 +1,3 @@
-
 from functools import partial
 from itertools import izip_longest
 from _Framework.Util import clamp

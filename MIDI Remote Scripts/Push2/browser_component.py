@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from contextlib import contextmanager
 from itertools import imap
@@ -66,7 +65,7 @@ class WrappedLoadableBrowserItem(BrowserItem):
 class FolderBrowserItem(BrowserItem):
 
     def __init__(self, wrapped_loadable = None, *a, **k):
-        raise wrapped_loadable is not None or AssertionError
+        assert wrapped_loadable is not None
         super(FolderBrowserItem, self).__init__(*a, **k)
         self._wrapped_loadable = wrapped_loadable
 
@@ -84,9 +83,9 @@ class FolderBrowserItem(BrowserItem):
 class PluginPresetBrowserItem(BrowserItem):
 
     def __init__(self, preset_name = None, preset_index = None, vst_device = None, *a, **k):
-        raise preset_name is not None or AssertionError
-        raise preset_index is not None or AssertionError
-        raise vst_device is not None or AssertionError
+        assert preset_name is not None
+        assert preset_index is not None
+        assert vst_device is not None
         super(PluginPresetBrowserItem, self).__init__(name=(preset_name if preset_name else '<Empty Slot %i>' % (preset_index + 1)), is_loadable=True, *a, **k)
         self.preset_index = preset_index
         self._vst_device = vst_device
@@ -104,7 +103,7 @@ class PluginBrowserItem(BrowserItem):
 
     def __init__(self, vst_device = None, *a, **k):
         super(PluginBrowserItem, self).__init__(is_loadable=False, is_selected=True, *a, **k)
-        raise vst_device is not None or AssertionError
+        assert vst_device is not None
         self._vst_device = vst_device
 
     @property
@@ -148,7 +147,7 @@ class BrowserComponent(CompoundComponent, Messenger):
 
     @depends(commit_model_changes=None, selection=None)
     def __init__(self, preferences = dict(), commit_model_changes = None, selection = None, main_modes_ref = None, *a, **k):
-        raise commit_model_changes is not None or AssertionError
+        assert commit_model_changes is not None
         super(BrowserComponent, self).__init__(*a, **k)
         self._lists = []
         self._browser = Live.Application.get_application().browser
@@ -445,9 +444,9 @@ class BrowserComponent(CompoundComponent, Messenger):
         """
         if self._focused_list_index != index:
             if self._finish_preview_list_task():
-                raise index >= len(self._lists) and CannotFocusListError()
-        if not 0 <= index < len(self._lists):
-            raise AssertionError
+                if index >= len(self._lists):
+                    raise CannotFocusListError()
+            assert 0 <= index < len(self._lists)
             self._on_focused_selection_changed.subject = None
             if self._focused_list_index > index and crop:
                 for l in self._lists[self._focused_list_index:]:

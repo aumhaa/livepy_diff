@@ -1,4 +1,3 @@
-
 from _Framework.ScrollComponent import ScrollComponent as ScrollComponentBase
 from _Framework.Control import EncoderControl
 

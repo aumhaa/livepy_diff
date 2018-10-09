@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from .ControlSurfaceComponent import ControlSurfaceComponent
 
@@ -15,8 +14,8 @@ class CompoundComponent(ControlSurfaceComponent):
             component.update_all()
 
     def register_component(self, component):
-        raise component != None or AssertionError
-        raise component not in self._sub_components or AssertionError
+        assert component != None
+        assert component not in self._sub_components
         component._set_enabled_recursive(self.is_enabled())
         self._sub_components.append(component)
         return component

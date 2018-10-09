@@ -1,4 +1,3 @@
-
 from _Framework.ChannelStripComponent import ChannelStripComponent
 
 class SpecialChanStripComponent(ChannelStripComponent):
@@ -44,7 +43,7 @@ class SpecialChanStripComponent(ChannelStripComponent):
         self._update_track_index()
 
     def set_index(self, index):
-        raise index > -1 or AssertionError
+        assert index > -1
         self._index = index
         self.update()
         self._on_send_a_changed()
@@ -54,7 +53,7 @@ class SpecialChanStripComponent(ChannelStripComponent):
         self._update_track_index()
 
     def set_serato_interface(self, serato_interface):
-        raise serato_interface != None or AssertionError
+        assert serato_interface != None
         self._serato_interface = serato_interface
         self.update()
         self._on_send_a_changed()
@@ -63,15 +62,15 @@ class SpecialChanStripComponent(ChannelStripComponent):
         self._update_track_index()
 
     def set_track_volume(self, volume):
-        if not (0.0 <= volume and volume <= 1.0):
-            raise AssertionError
-            self._track.mixer_device.volume.value = self._track != None and self._track.mixer_device.volume.is_enabled and volume
+        assert 0.0 <= volume and volume <= 1.0
+        if self._track != None and self._track.mixer_device.volume.is_enabled:
+            self._track.mixer_device.volume.value = volume
 
     def set_send(self, index, amount):
-        if not (0.0 <= amount and amount <= 1.0):
-            raise AssertionError
-            if self._track != None and len(self._track.mixer_device.sends) > index:
-                self._track.mixer_device.sends[index].value = self._track.mixer_device.sends[index].is_enabled and amount
+        assert 0.0 <= amount and amount <= 1.0
+        if self._track != None and len(self._track.mixer_device.sends) > index:
+            if self._track.mixer_device.sends[index].is_enabled:
+                self._track.mixer_device.sends[index].value = amount
 
     def is_track_selected(self):
         return self._track == self.song().view.selected_track
@@ -210,10 +209,10 @@ class SpecialChanStripComponent(ChannelStripComponent):
             self._serato_interface.PySCA_SetTrackNumber(self._index + 1, self._identifier())
 
     def _encode_track_identifier(self, identifier):
-        raise len(identifier) <= 4 or AssertionError
+        assert len(identifier) <= 4
         result = 0
         for index in range(min(4, len(identifier))):
-            raise identifier[index].isdigit() or identifier[index].isupper() or AssertionError
+            assert identifier[index].isdigit() or identifier[index].isupper()
             byte = ord(identifier[index])
             result += byte << (3 - index) * 8
 

@@ -1,4 +1,3 @@
-
 from _Framework.Skin import SkinColorMissingError
 from _Framework.ButtonElement import ButtonElement, ON_VALUE, OFF_VALUE
 

@@ -1,4 +1,3 @@
-
 from ableton.v2.control_surface.components import ChannelStripComponent as ChannelStripComponentBase
 from .ringed_mapped_encoder_control import RingedMappedEncoderControl
 

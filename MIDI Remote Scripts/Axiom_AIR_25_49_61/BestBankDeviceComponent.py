@@ -1,4 +1,3 @@
-
 from _Framework.DeviceComponent import DeviceComponent
 from _Generic.Devices import parameter_bank_names, parameter_banks, DEVICE_DICT, BANK_NAME_DICT, DEVICE_BOB_DICT
 BOP_BANK_NAME = 'Best of Parameters'

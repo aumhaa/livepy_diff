@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from .ControlSurfaceComponent import ControlSurfaceComponent
 from .SubjectSlot import subject_slot
@@ -12,19 +11,19 @@ class ToggleComponent(ControlSurfaceComponent):
     read_only = False
 
     def __init__(self, property_name = None, subject = None, is_momentary = False, model_transform = None, view_transform = None, read_only = False, *a, **k):
-        if not property_name:
-            raise AssertionError
-            super(ToggleComponent, self).__init__(*a, **k)
-            self._property_name = property_name
-            self._property_slot = self.register_slot(subject, self._on_property_changed_in_model, property_name)
-            self._property_button = None
-            if is_momentary:
-                self.is_momentary = is_momentary
-            if model_transform:
-                self.model_transform = model_transform
-            if view_transform:
-                self.view_transform = view_transform
-            self.read_only = read_only and read_only
+        assert property_name
+        super(ToggleComponent, self).__init__(*a, **k)
+        self._property_name = property_name
+        self._property_slot = self.register_slot(subject, self._on_property_changed_in_model, property_name)
+        self._property_button = None
+        if is_momentary:
+            self.is_momentary = is_momentary
+        if model_transform:
+            self.model_transform = model_transform
+        if view_transform:
+            self.view_transform = view_transform
+        if read_only:
+            self.read_only = read_only
 
     def model_transform(self, value):
         return value
@@ -51,7 +50,7 @@ class ToggleComponent(ControlSurfaceComponent):
     value = property(_get_value, _set_value)
 
     def set_toggle_button(self, button):
-        raise button is None or not self.is_momentary or button.is_momentary() or AssertionError
+        assert button is None or not self.is_momentary or button.is_momentary()
         self._on_button_value.subject = button
         self._update_button()
 

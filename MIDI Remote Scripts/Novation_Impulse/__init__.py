@@ -1,4 +1,3 @@
-
 from Novation_Impulse import Novation_Impulse
 
 def create_instance(c_instance):

@@ -1,4 +1,3 @@
-
 from _Framework.EncoderElement import EncoderElement
 from _Framework.ButtonElement import ButtonElement
 RING_OFF_VALUE = 0
@@ -17,9 +16,9 @@ class RingedEncoderElement(EncoderElement):
         self.set_needs_takeover(False)
 
     def set_ring_mode_button(self, button):
-        if not (button == None or isinstance(button, ButtonElement)):
-            raise AssertionError
-            self._ring_mode_button != None and self._ring_mode_button.send_value(RING_OFF_VALUE, force=True)
+        assert button == None or isinstance(button, ButtonElement)
+        if self._ring_mode_button != None:
+            self._ring_mode_button.send_value(RING_OFF_VALUE, force=True)
         self._ring_mode_button = button
         self._update_ring_mode()
 

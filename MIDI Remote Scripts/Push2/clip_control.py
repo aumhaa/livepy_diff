@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from ableton.v2.base import listens, liveobj_valid, listenable_property
 from ableton.v2.control_surface import CompoundComponent
@@ -19,7 +18,7 @@ class LoopSetting(WrappingParameter):
 
     def __init__(self, use_length_conversion = False, *a, **k):
         super(LoopSetting, self).__init__(*a, **k)
-        raise self.canonical_parent is not None or AssertionError
+        assert self.canonical_parent is not None
         self._conversion = convert_beat_length_to_bars_beats_sixteenths if use_length_conversion else convert_beat_time_to_bars_beats_sixteenths
         self._recording = False
         self.set_property_host(self._parent)
@@ -323,9 +322,9 @@ class ClipControlComponent(CompoundComponent):
     __events__ = ('clip',)
 
     def __init__(self, loop_controller = None, audio_clip_controller = None, mode_selector = None, decorator_factory = None, *a, **k):
-        raise loop_controller is not None or AssertionError
-        raise audio_clip_controller is not None or AssertionError
-        raise mode_selector is not None or AssertionError
+        assert loop_controller is not None
+        assert audio_clip_controller is not None
+        assert mode_selector is not None
         super(ClipControlComponent, self).__init__(*a, **k)
         self._loop_controller = self.register_component(loop_controller)
         self._audio_clip_controller = self.register_component(audio_clip_controller)

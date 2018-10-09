@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from itertools import repeat
 from ableton.v2.base import find_if, second, nop, task
@@ -19,7 +18,7 @@ class PadUpdateComponent(Component):
     """
 
     def __init__(self, all_pads = tuple(), parameter_sender = nop, default_profile = None, update_delay = 0, *a, **k):
-        raise find_if(lambda pad: pad < 0 or pad > 63, all_pads or []) == None or AssertionError
+        assert find_if(lambda pad: pad < 0 or pad > 63, all_pads or []) == None
         super(PadUpdateComponent, self).__init__(*a, **k)
         self.parameter_sender = parameter_sender
         self._all_pads = set(all_pads)
@@ -40,11 +39,11 @@ class PadUpdateComponent(Component):
         return self._profiles[profile_id]
 
     def set_pad(self, pad, new_profile):
-        if not pad in self._all_pads:
-            raise AssertionError
-            raise new_profile in self._profile_count or AssertionError
-            old_profile = self._profile_for[pad]
-            old_profile != new_profile and self._add_modified_pads([pad])
+        assert pad in self._all_pads
+        assert new_profile in self._profile_count
+        old_profile = self._profile_for[pad]
+        if old_profile != new_profile:
+            self._add_modified_pads([pad])
             self._profile_for[pad] = new_profile
             self._profile_count[old_profile] -= 1
             self._profile_count[new_profile] += 1
@@ -55,8 +54,8 @@ class PadUpdateComponent(Component):
         self._update_modified()
 
     def _update_modified(self):
-        if not (self.is_enabled() and self._modified_pads and sum(self._profile_count.itervalues()) == len(self._all_pads)):
-            raise AssertionError
+        if self.is_enabled() and self._modified_pads:
+            assert sum(self._profile_count.itervalues()) == len(self._all_pads)
             largest_profile, largest_count = max(self._profile_count.iteritems(), key=second)
             if len(self._all_pads) - largest_count + 1 < len(self._modified_pads):
                 self.parameter_sender(self._profiles[largest_profile])

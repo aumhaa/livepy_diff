@@ -1,4 +1,3 @@
-
 from __future__ import with_statement
 from _Framework.ControlSurface import ControlSurface
 from _Framework.Layer import Layer

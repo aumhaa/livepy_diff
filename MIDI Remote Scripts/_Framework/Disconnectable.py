@@ -1,4 +1,3 @@
-
 """
 Interface for items that adquire resources.
 """

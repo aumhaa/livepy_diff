@@ -1,4 +1,3 @@
-
 from _Framework.ButtonElement import Color
 BLINK_LED_CHANNEL = 14
 

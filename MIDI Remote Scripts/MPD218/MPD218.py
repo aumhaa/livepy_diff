@@ -1,4 +1,3 @@
-
 from _MPDMkIIBase.MPDMkIIBase import MPDMkIIBase
 PAD_CHANNEL = 9
 PAD_IDS = [[48,

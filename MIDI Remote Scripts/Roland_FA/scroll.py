@@ -1,4 +1,3 @@
-
 from ableton.v2.control_surface.components import ScrollComponent as ScrollComponentBase
 from ableton.v2.control_surface.control import ButtonControl
 

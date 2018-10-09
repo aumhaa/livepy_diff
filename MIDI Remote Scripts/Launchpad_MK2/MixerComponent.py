@@ -1,4 +1,3 @@
-
 from _Framework.Control import ButtonControl
 from _Framework.MixerComponent import MixerComponent as MixerComponentBase
 from .ChannelStripComponent import ChannelStripComponent

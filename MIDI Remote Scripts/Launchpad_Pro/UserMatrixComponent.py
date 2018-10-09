@@ -1,4 +1,3 @@
-
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 
 def _disable_control(control):

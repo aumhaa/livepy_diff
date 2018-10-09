@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 import Live
 from ...base import EventObject, find_if, listens, liveobj_valid

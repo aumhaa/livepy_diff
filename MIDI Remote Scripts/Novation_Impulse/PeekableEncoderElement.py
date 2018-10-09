@@ -1,4 +1,3 @@
-
 import Live
 from _Framework.EncoderElement import EncoderElement
 from _Framework.InputControlElement import *
@@ -11,9 +10,9 @@ class PeekableEncoderElement(EncoderElement):
         self._peek_mode = False
 
     def set_peek_mode(self, peek_mode):
-        if not isinstance(peek_mode, type(False)):
-            raise AssertionError
-            self._peek_mode = self._peek_mode != peek_mode and peek_mode
+        assert isinstance(peek_mode, type(False))
+        if self._peek_mode != peek_mode:
+            self._peek_mode = peek_mode
             self._request_rebuild()
 
     def get_peek_mode(self):

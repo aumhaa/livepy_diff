@@ -1,4 +1,3 @@
-
 from consts import *
 from MainDisplay import MainDisplay
 from MainDisplayController import MainDisplayController
@@ -75,7 +74,7 @@ class MackieControl:
                 else:
                     left_extensions.append(s)
 
-        raise found_self or AssertionError
+        assert found_self
         self.__main_display_controller.set_controller_extensions(left_extensions, right_extensions)
         self.__channel_strip_controller.set_controller_extensions(left_extensions, right_extensions)
 

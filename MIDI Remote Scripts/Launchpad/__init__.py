@@ -1,4 +1,3 @@
-
 from Launchpad import Launchpad
 
 def create_instance(c_instance):

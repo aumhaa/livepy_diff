@@ -1,4 +1,3 @@
-
 from ableton.v2.base import listens, listens_group
 from ableton.v2.control_surface import Component
 

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from contextlib import contextmanager
 from itertools import ifilter, imap, chain
@@ -143,7 +142,7 @@ class DeviceChainStateWatcher(EventObject):
     __events__ = ('state',)
 
     def __init__(self, device_navigation = None, *a, **k):
-        raise device_navigation is not None or AssertionError
+        assert device_navigation is not None
         super(DeviceChainStateWatcher, self).__init__(*a, **k)
         self._device_navigation = device_navigation
         self.__on_items_changed.subject = device_navigation
@@ -254,12 +253,12 @@ class DeviceNavigationComponent(ItemListerComponent):
     __events__ = ('drum_pad_selection', 'mute_solo_stop_cancel_action_performed')
 
     def __init__(self, device_bank_registry = None, banking_info = None, device_component = None, delete_handler = None, chain_selection = None, bank_selection = None, move_device = None, track_list_component = None, *a, **k):
-        raise device_bank_registry is not None or AssertionError
-        raise device_component is not None or AssertionError
-        raise chain_selection is not None or AssertionError
-        raise bank_selection is not None or AssertionError
-        raise move_device is not None or AssertionError
-        raise track_list_component is not None or AssertionError
+        assert device_bank_registry is not None
+        assert device_component is not None
+        assert chain_selection is not None
+        assert bank_selection is not None
+        assert move_device is not None
+        assert track_list_component is not None
         self._flattened_chain = FlattenedDeviceChain()
         super(DeviceNavigationComponent, self).__init__(item_provider=self._flattened_chain, *a, **k)
         self._track_decorator = DecoratorFactory()
@@ -414,7 +413,7 @@ class DeviceNavigationComponent(ItemListerComponent):
     @property
     def is_drum_pad_unfolded(self):
         selection = self._flattened_chain.selected_item
-        raise is_drum_pad(selection) or AssertionError
+        assert is_drum_pad(selection)
         return drum_rack_for_pad(selection).view.is_showing_chain_devices
 
     def _current_track(self):

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from functools import partial
 from itertools import izip_longest
@@ -13,7 +12,7 @@ class ControlList(Control):
     class State(Control.State):
 
         def __init__(self, control = None, manager = None, unavailable_color = None, extra_args = None, extra_kws = None, *a, **k):
-            raise control is not None or AssertionError
+            assert control is not None
             super(ControlList.State, self).__init__(manager=manager, control=control)
             self._control_elements = None
             self._control_type = control.control_type
@@ -121,9 +120,9 @@ class RadioButtonGroup(ControlList, RadioButtonControl):
 
         @checked_index.setter
         def checked_index(self, index):
-            if not -1 <= index < self.control_count:
-                raise AssertionError
-                self[index].is_checked = index != -1 and True
+            assert -1 <= index < self.control_count
+            if index != -1:
+                self[index].is_checked = True
             else:
                 checked_control = find_if(lambda c: c.is_checked, self)
                 if checked_control is not None:
@@ -167,12 +166,12 @@ class MatrixControl(ControlList):
     class State(ControlList.State):
 
         def __init__(self, control = None, manager = None, dimensions = None, *a, **k):
-            if not control is not None:
-                raise AssertionError
-                raise manager is not None or AssertionError
-                super(MatrixControl.State, self).__init__(control, manager, *a, **k)
-                self._dimensions = (None, None)
-                self.dimensions = dimensions is not None and dimensions
+            assert control is not None
+            assert manager is not None
+            super(MatrixControl.State, self).__init__(control, manager, *a, **k)
+            self._dimensions = (None, None)
+            if dimensions is not None:
+                self.dimensions = dimensions
 
         @property
         def dimensions(self):
@@ -180,11 +179,11 @@ class MatrixControl(ControlList):
 
         @dimensions.setter
         def dimensions(self, dimensions):
-            if not first(dimensions):
-                raise AssertionError
-                raise second(dimensions) or AssertionError
-                self._dynamic_create = dimensions == MatrixControl.DYNAMIC_DIMENSIONS
-                count = self._dynamic_create and (len(self._control_elements) if self._control_elements else 0)
+            assert first(dimensions)
+            assert second(dimensions)
+            self._dynamic_create = dimensions == MatrixControl.DYNAMIC_DIMENSIONS
+            if self._dynamic_create:
+                count = len(self._control_elements) if self._control_elements else 0
             self._dimensions = dimensions
             count = first(dimensions) * second(dimensions)
             self._create_controls(count)

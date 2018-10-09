@@ -1,10 +1,9 @@
-
 from MxDCore import MxDCore as _MxDCore
 import sys, warnings
 
 def set_manager(manager):
-    raise manager != None or AssertionError
-    raise _MxDCore.instance == None or AssertionError
+    assert manager != None
+    assert _MxDCore.instance == None
     _MxDCore.instance = _MxDCore()
     _MxDCore.instance.set_manager(manager)
 
@@ -15,8 +14,8 @@ def disconnect():
 
 
 def execute_command(device_id, object_id, command, arguments):
-    raise _MxDCore.instance != None or AssertionError
-    raise isinstance(arguments, (str, unicode)) or AssertionError
+    assert _MxDCore.instance != None
+    assert isinstance(arguments, (str, unicode))
     if hasattr(_MxDCore.instance, command):
         try:
             with warnings.catch_warnings(record=True) as caught_warnings:

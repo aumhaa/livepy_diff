@@ -1,4 +1,3 @@
-
 """
 Mode handling components.
 """
@@ -87,7 +86,7 @@ class EnablingMode(Mode):
 
     def __init__(self, enableable = None, *a, **k):
         super(EnablingMode, self).__init__(*a, **k)
-        raise enableable is not None or AssertionError
+        assert enableable is not None
         self._enableable = enableable
 
     def enter_mode(self):
@@ -122,7 +121,7 @@ class LayerModeBase(Mode):
 
     def __init__(self, component = None, layer = None, *a, **k):
         super(LayerModeBase, self).__init__(*a, **k)
-        raise component is not None or AssertionError
+        assert component is not None
         self._component = component
         self._layer = layer
 
@@ -213,8 +212,8 @@ class DelayMode(Mode):
     @depends(parent_task_group=None)
     def __init__(self, mode = None, delay = None, parent_task_group = None, *a, **k):
         super(DelayMode, self).__init__(*a, **k)
-        raise mode is not None or AssertionError
-        raise parent_task_group is not None or AssertionError
+        assert mode is not None
+        assert parent_task_group is not None
         delay = delay if delay is not None else defaults.MOMENTARY_DELAY
         self._mode = tomode(mode)
         self._mode_entered = False
@@ -246,17 +245,17 @@ class ModeButtonControl(ButtonControlBase):
         mode_group_active_color = control_color('DefaultButton.On')
 
         def __init__(self, modes_component = None, mode_name = None, mode_selected_color = None, mode_unselected_color = None, mode_group_active_color = None, *a, **k):
-            if not modes_component is not None:
-                raise AssertionError
-                if not mode_name is not None:
-                    raise AssertionError
-                    self._modes_component = modes_component
-                    self._mode_name = mode_name
-                    super(ModeButtonControl.State, self).__init__(*a, **k)
-                    if mode_selected_color is not None:
-                        self.mode_selected_color = mode_selected_color
-                    self.mode_unselected_color = mode_unselected_color is not None and mode_unselected_color
-                self.mode_group_active_color = mode_group_active_color is not None and mode_group_active_color
+            assert modes_component is not None
+            assert mode_name is not None
+            self._modes_component = modes_component
+            self._mode_name = mode_name
+            super(ModeButtonControl.State, self).__init__(*a, **k)
+            if mode_selected_color is not None:
+                self.mode_selected_color = mode_selected_color
+            if mode_unselected_color is not None:
+                self.mode_unselected_color = mode_unselected_color
+            if mode_group_active_color is not None:
+                self.mode_group_active_color = mode_group_active_color
             self.__on_selected_mode_changed.subject = self._modes_component
 
         @property
@@ -433,11 +432,11 @@ class ModesComponent(CompoundComponent):
 
     @selected_mode.setter
     def selected_mode(self, mode):
-        if not (mode in self._mode_map or mode is None):
-            raise AssertionError
-            if self.is_enabled():
-                if self.selected_mode != mode:
-                    mode is not None and self.push_mode(mode)
+        assert mode in self._mode_map or mode is None
+        if self.is_enabled():
+            if self.selected_mode != mode:
+                if mode is not None:
+                    self.push_mode(mode)
                     self.pop_unselected_modes()
                 else:
                     self._mode_stack.release_all()
@@ -497,9 +496,9 @@ class ModesComponent(CompoundComponent):
           * Any of the group buttons will cancel the current mode when
             the current mode belongs to the group.
         """
-        if not name not in self._mode_map.keys():
-            raise AssertionError
-            groups = isinstance(groups, set) or set(groups)
+        assert name not in self._mode_map.keys()
+        if not isinstance(groups, set):
+            groups = set(groups)
         mode = tomode(mode_or_component)
         behaviour = behaviour if behaviour is not None else self.default_behaviour
         self._mode_list.append(name)

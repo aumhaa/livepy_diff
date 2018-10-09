@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 import Live
 from ableton.v2.base import clamp, listens, liveobj_valid, nop, EventObject, forward_property, listenable_property

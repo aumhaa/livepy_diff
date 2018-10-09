@@ -1,4 +1,3 @@
-
 from consts import *
 
 class FaderfoxComponent:

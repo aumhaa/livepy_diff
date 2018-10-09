@@ -1,4 +1,3 @@
-
 from _Framework.ModesComponent import ReenterBehaviour, ModesComponent
 
 class SpecialModesComponent(ModesComponent):

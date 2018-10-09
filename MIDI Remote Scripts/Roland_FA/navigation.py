@@ -1,4 +1,3 @@
-
 from ableton.v2.control_surface.components import SessionNavigationComponent as SessionNavigationComponentBase
 from .scroll import ScrollComponent
 

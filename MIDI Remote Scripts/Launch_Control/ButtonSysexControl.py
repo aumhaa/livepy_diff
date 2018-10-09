@@ -1,4 +1,3 @@
-
 from _Framework.SysexValueControl import SysexValueControl
 
 class ButtonSysexControl(SysexValueControl):

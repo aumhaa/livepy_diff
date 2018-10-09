@@ -1,4 +1,3 @@
-
 from _Framework.BackgroundComponent import BackgroundComponent as BackgroundComponentBase
 
 class BackgroundComponent(BackgroundComponentBase):

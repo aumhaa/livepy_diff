@@ -1,4 +1,3 @@
-
 from itertools import izip_longest
 from _Framework.SessionComponent import SessionComponent
 

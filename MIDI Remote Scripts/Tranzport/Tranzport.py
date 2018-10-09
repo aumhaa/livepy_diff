@@ -1,4 +1,3 @@
-
 import Live
 from consts import *
 from itertools import chain

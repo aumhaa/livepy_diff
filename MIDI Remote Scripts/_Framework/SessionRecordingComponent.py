@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from .CompoundComponent import CompoundComponent
 from .SubjectSlot import subject_slot
@@ -35,8 +34,8 @@ class SessionRecordingComponent(CompoundComponent):
 
     def __init__(self, clip_creator = None, view_controller = None, *a, **k):
         super(SessionRecordingComponent, self).__init__(*a, **k)
-        raise clip_creator or AssertionError
-        raise view_controller or AssertionError
+        assert clip_creator
+        assert view_controller
         self._target_slots = []
         self._clip_creator = clip_creator
         self._view_controller = view_controller

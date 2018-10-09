@@ -1,4 +1,3 @@
-
 from _Framework.ComboElement import ToggleElement
 from _Framework.Control import ToggleButtonControl
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent

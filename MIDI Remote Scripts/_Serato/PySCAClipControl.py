@@ -1,4 +1,3 @@
-
 import libInterprocessCommsAPIPython
 
 class PySCAClipControl:

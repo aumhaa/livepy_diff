@@ -1,4 +1,3 @@
-
 from _Framework.ComboElement import ComboElement
 
 class DeviceBankButtonElement(ComboElement):

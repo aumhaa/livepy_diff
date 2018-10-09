@@ -1,4 +1,3 @@
-
 import Live
 MapMode = Live.MidiMap.MapMode
 from _Framework.EncoderElement import EncoderElement

@@ -1,4 +1,3 @@
-
 from RemoteSL import RemoteSL
 
 def create_instance(c_instance):

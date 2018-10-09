@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from functools import partial
 from ableton.v2.base import recursive_map
@@ -34,7 +33,7 @@ class Elements(ElementsBase):
         base_message_generator = make_send_message_generator(sysex.SET_AFTERTOUCH_MODE)
 
         def make_aftertouch_mode_message(mode_id):
-            raise mode_id in ('polyphonic', 'mono') or AssertionError
+            assert mode_id in ('polyphonic', 'mono')
             mode_message = sysex.POLY_AFTERTOUCH if mode_id == 'polyphonic' else sysex.MONO_AFTERTOUCH
             return base_message_generator(mode_message)
 

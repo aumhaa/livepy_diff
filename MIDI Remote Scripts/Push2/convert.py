@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from functools import partial
 from itertools import izip
@@ -67,13 +66,13 @@ class ConvertCategory(EventObject):
 class NullConvertCategory(ConvertCategory):
 
     def convert(self, song, action_index):
-        raise False or AssertionError('Cannot call convert on NullConvertCategory')
+        assert False, 'Cannot call convert on NullConvertCategory'
 
 
 class TrackBasedConvertCategory(ConvertCategory):
 
     def __init__(self, track = None, *a, **k):
-        raise liveobj_valid(track) or AssertionError
+        assert liveobj_valid(track)
         super(TrackBasedConvertCategory, self).__init__(color_source=track, name_source=track, *a, **k)
         self._track = track
 
@@ -143,8 +142,8 @@ class AudioTrackWithSessionClip(ConvertCategory):
     internal_name = 'audio_clip_to_simpler'
 
     def __init__(self, clip_slot = None, track = None, *a, **k):
-        raise liveobj_valid(clip_slot) or AssertionError
-        raise liveobj_valid(track) or AssertionError
+        assert liveobj_valid(clip_slot)
+        assert liveobj_valid(track)
         super(AudioTrackWithSessionClip, self).__init__(name_source=clip_slot.clip, color_source=clip_slot.clip, *a, **k)
         self._clip_slot = clip_slot
         self._track = track
@@ -163,8 +162,8 @@ class AudioTrackWithArrangementClip(ConvertCategory):
     internal_name = 'audio_arrangement_clip_to_simpler'
 
     def __init__(self, song_view = None, track = None, *a, **k):
-        raise liveobj_valid(song_view) or AssertionError
-        raise liveobj_valid(track) or AssertionError
+        assert liveobj_valid(song_view)
+        assert liveobj_valid(track)
         super(AudioTrackWithArrangementClip, self).__init__(name_source=song_view.detail_clip, color_source=song_view.detail_clip, *a, **k)
         self._clip = song_view.detail_clip
         self._track = track
@@ -192,7 +191,7 @@ class MidiTrackWithSimpler(TrackBasedConvertCategory):
     internal_name = 'sliced_simpler_to_drum_rack'
 
     def __init__(self, device = None, *a, **k):
-        raise isinstance(device, Live.SimplerDevice.SimplerDevice) or AssertionError
+        assert isinstance(device, Live.SimplerDevice.SimplerDevice)
         super(MidiTrackWithSimpler, self).__init__(*a, **k)
         self._device = device
         self.__on_playback_mode_changed.subject = self._device
@@ -222,7 +221,7 @@ class MidiTrackWithDrumRack(ConvertCategory):
     internal_name = 'drum_pad_to_midi_track'
 
     def __init__(self, drum_pad = None, track = None, *a, **k):
-        raise liveobj_valid(drum_pad) or AssertionError
+        assert liveobj_valid(drum_pad)
         super(MidiTrackWithDrumRack, self).__init__(name_source=drum_pad, color_source=track, *a, **k)
         self.__on_devices_changed.subject = drum_pad.chains[0]
         self.__on_chains_changed.subject = drum_pad
@@ -248,8 +247,8 @@ class ConvertComponent(Component):
     source_name = listenable_property.managed(unicode(''))
 
     def __init__(self, tracks_provider = None, conversions_provider = possible_conversions, decorator_factory = None, *a, **k):
-        raise tracks_provider is not None or AssertionError
-        raise callable(conversions_provider) or AssertionError
+        assert tracks_provider is not None
+        assert callable(conversions_provider)
         super(ConvertComponent, self).__init__(*a, **k)
         self._tracks_provider = tracks_provider
         self._conversions_provider = conversions_provider
@@ -323,8 +322,8 @@ class ConvertEnabler(Component):
     convert_toggle_button = ButtonControl(color='DefaultButton.On')
 
     def __init__(self, enter_dialog_mode = None, exit_dialog_mode = None, *a, **k):
-        raise enter_dialog_mode is not None or AssertionError
-        raise exit_dialog_mode is not None or AssertionError
+        assert enter_dialog_mode is not None
+        assert exit_dialog_mode is not None
         super(ConvertEnabler, self).__init__(*a, **k)
         self._enter_dialog_mode = partial(enter_dialog_mode, 'convert')
         self._exit_dialog_mode = partial(exit_dialog_mode, 'convert')

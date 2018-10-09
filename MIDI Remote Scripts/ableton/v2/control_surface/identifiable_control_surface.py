@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 import logging
 from ..base import task
@@ -18,8 +17,8 @@ class IdentifiableControlSurface(ControlSurface):
 
     def __init__(self, product_id_bytes = None, *a, **k):
         super(IdentifiableControlSurface, self).__init__(*a, **k)
-        raise product_id_bytes is not None or AssertionError
-        raise len(product_id_bytes) < 12 or AssertionError
+        assert product_id_bytes is not None
+        assert len(product_id_bytes) < 12
         self._product_id_bytes = product_id_bytes
         self._request_task = self._tasks.add(task.sequence(task.wait(self.identity_request_delay), task.run(self._send_identity_request)))
         self._request_task.kill()

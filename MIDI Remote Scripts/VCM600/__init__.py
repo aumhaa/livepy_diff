@@ -1,4 +1,3 @@
-
 from VCM600 import VCM600
 
 def create_instance(c_instance):

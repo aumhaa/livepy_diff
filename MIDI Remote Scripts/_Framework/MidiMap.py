@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 import Live
 from .ButtonMatrixElement import ButtonMatrixElement
@@ -22,11 +21,11 @@ def make_encoder(name, channel, number, midi_message_type):
 class MidiMap(dict):
 
     def add_button(self, name, channel, number, midi_message_type):
-        raise name not in self.keys() or AssertionError
+        assert name not in self.keys()
         self[name] = make_button(name, channel, number, midi_message_type)
 
     def add_matrix(self, name, element_factory, channel, numbers, midi_message_type):
-        raise name not in self.keys() or AssertionError
+        assert name not in self.keys()
 
         def one_dimensional_name(base_name, x, _y):
             return '%s[%d]' % (base_name, x)

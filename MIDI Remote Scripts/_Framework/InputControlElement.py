@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 import contextlib
 from . import Task
@@ -136,12 +135,12 @@ class InputControlElement(NotifyingControlElement):
 
     @depends(request_rebuild_midi_map=const(nop))
     def __init__(self, msg_type = None, channel = None, identifier = None, sysex_identifier = None, request_rebuild_midi_map = None, *a, **k):
-        raise msg_type in MIDI_MSG_TYPES or AssertionError
-        raise in_range(channel, 0, 16) or channel is None or AssertionError
-        raise in_range(identifier, 0, 128) or identifier is None or AssertionError
-        raise msg_type != MIDI_SYSEX_TYPE or channel == None or AssertionError
-        raise msg_type != MIDI_SYSEX_TYPE or identifier == None or AssertionError
-        raise msg_type == MIDI_SYSEX_TYPE or sysex_identifier == None or AssertionError
+        assert msg_type in MIDI_MSG_TYPES
+        assert in_range(channel, 0, 16) or channel is None
+        assert in_range(identifier, 0, 128) or identifier is None
+        assert msg_type != MIDI_SYSEX_TYPE or channel == None
+        assert msg_type != MIDI_SYSEX_TYPE or identifier == None
+        assert msg_type == MIDI_SYSEX_TYPE or sysex_identifier == None
         super(InputControlElement, self).__init__(*a, **k)
         self._request_rebuild = request_rebuild_midi_map
         self._msg_type = msg_type
@@ -214,29 +213,29 @@ class InputControlElement(NotifyingControlElement):
         self._force_next_send = True
 
     def set_channel(self, channel):
-        if not self._msg_type != MIDI_SYSEX_TYPE:
-            raise AssertionError
-            raise in_range(channel, 0, 16) or channel == None or AssertionError
-            self._msg_channel = self._msg_channel != channel and channel
+        assert self._msg_type != MIDI_SYSEX_TYPE
+        assert in_range(channel, 0, 16) or channel == None
+        if self._msg_channel != channel:
+            self._msg_channel = channel
             self._request_rebuild()
 
     def set_identifier(self, identifier):
-        if not self._msg_type != MIDI_SYSEX_TYPE:
-            raise AssertionError
-            raise in_range(identifier, 0, 128) or identifier == None or AssertionError
-            self._msg_identifier = self._msg_identifier != identifier and identifier
+        assert self._msg_type != MIDI_SYSEX_TYPE
+        assert in_range(identifier, 0, 128) or identifier == None
+        if self._msg_identifier != identifier:
+            self._msg_identifier = identifier
             self._request_rebuild()
 
     def set_needs_takeover(self, needs_takeover):
-        raise self.message_type() != MIDI_NOTE_TYPE or AssertionError
+        assert self.message_type() != MIDI_NOTE_TYPE
         self._needs_takeover = needs_takeover
 
     def set_feedback_delay(self, delay):
-        raise delay >= -1 or AssertionError
+        assert delay >= -1
         self._mapping_feedback_delay = delay
 
     def needs_takeover(self):
-        raise self.message_type() != MIDI_NOTE_TYPE or AssertionError
+        assert self.message_type() != MIDI_NOTE_TYPE
         return self._needs_takeover
 
     def use_default_message(self):
@@ -406,9 +405,9 @@ class InputControlElement(NotifyingControlElement):
         self._report_output = report_output
 
     def _verify_value(self, value):
-        upper_bound = self._msg_type < MIDI_SYSEX_TYPE and (16384 if self._msg_type == MIDI_PB_TYPE else 128)
-        if not in_range(value, 0, upper_bound):
-            raise AssertionError
+        if self._msg_type < MIDI_SYSEX_TYPE:
+            upper_bound = 16384 if self._msg_type == MIDI_PB_TYPE else 128
+            assert in_range(value, 0, upper_bound)
 
     def _report_value(self, value, is_input):
         self._verify_value(value)

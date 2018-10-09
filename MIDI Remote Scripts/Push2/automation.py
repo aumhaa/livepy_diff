@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from itertools import ifilter
 from ableton.v2.base import liveobj_valid, listenable_property, listens
@@ -9,7 +8,7 @@ from pushbase.parameter_provider import ParameterInfo
 class StepAutomationParameter(InternalParameterBase):
 
     def __init__(self, parameter = None, *a, **k):
-        raise liveobj_valid(parameter) or AssertionError
+        assert liveobj_valid(parameter)
         super(StepAutomationParameter, self).__init__(name=parameter.name, *a, **k)
         self._parameter = parameter
         self._value = self._parameter.value

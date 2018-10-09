@@ -1,4 +1,3 @@
-
 AUTO_FILTER_PARAMS = {'LFO Sync Rate': 'LFO Synced Rate'}
 AUTO_PAN_PARAMS = {'Sync Rate': 'Synced Rate'}
 BEAT_REPEAT_PARAMS = {'Decay': 'Damp Volume',

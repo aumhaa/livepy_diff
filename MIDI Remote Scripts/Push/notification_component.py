@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 import re
 from functools import partial
@@ -164,10 +163,10 @@ class NotificationComponent(CompoundComponent):
         Returns a control, that will change the notification to a single line view,
         if it is grabbed.
         """
-        if not (line_index >= 0 and line_index < len(self._display_lines)):
-            raise AssertionError
-            display = self._display_lines[line_index]
-            display = line_slice is not None and display.subdisplay[line_slice]
+        assert line_index >= 0 and line_index < len(self._display_lines)
+        display = self._display_lines[line_index]
+        if line_slice is not None:
+            display = display.subdisplay[line_slice]
         layer = Layer(priority=MESSAGE_BOX_PRIORITY, display_line1=display)
         return _CallbackControl(self._token_control, partial(self._set_message_box_layout, layer, maybe(partial(align, display.width))))
 

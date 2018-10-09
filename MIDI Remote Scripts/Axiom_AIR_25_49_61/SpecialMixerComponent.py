@@ -1,4 +1,3 @@
-
 from _Framework.MixerComponent import MixerComponent
 from DisplayingChanStripComponent import DisplayingChanStripComponent
 

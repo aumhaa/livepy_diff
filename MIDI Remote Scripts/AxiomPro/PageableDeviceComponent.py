@@ -1,4 +1,3 @@
-
 import Live
 from _Generic.Devices import *
 from _Framework.DeviceComponent import DeviceComponent
@@ -99,11 +98,11 @@ class PageableDeviceComponent(DeviceComponent):
                 source.set_display_string(' - ')
 
     def set_bank_buttons(self, buttons):
-        raise buttons == None or isinstance(buttons, tuple) and len(buttons) == 4 or AssertionError
+        assert buttons == None or isinstance(buttons, tuple) and len(buttons) == 4
         DeviceComponent.set_bank_buttons(self, buttons)
 
     def set_parameter_controls(self, controls):
-        raise controls == None or isinstance(controls, tuple) and len(controls) == 8 or AssertionError
+        assert controls == None or isinstance(controls, tuple) and len(controls) == 8
         if self._parameter_controls != None:
             for control in self._parameter_controls:
                 if self._device != None:
@@ -112,8 +111,8 @@ class PageableDeviceComponent(DeviceComponent):
         self._parameter_controls = controls
         if self._parameter_controls != None:
             for control in self._parameter_controls:
-                raise control != None or AssertionError
-                raise isinstance(control, EncoderElement) or AssertionError
+                assert control != None
+                assert isinstance(control, EncoderElement)
 
         self.update()
 
@@ -121,36 +120,36 @@ class PageableDeviceComponent(DeviceComponent):
         return self._parameter_value_data_source
 
     def parameter_name_data_source(self, index):
-        raise index in range(8) or AssertionError
+        assert index in range(8)
         return self._parameter_name_data_sources[index]
 
     def page_name_data_source(self, index):
-        raise index in range(8) or AssertionError
+        assert index in range(8)
         return self._page_name_data_sources[index]
 
     def _bank_value(self, value, button):
-        if not self._bank_buttons != None:
-            raise AssertionError
-            raise value != None or AssertionError
-            raise button != None or AssertionError
-            raise isinstance(value, int) or AssertionError
-            raise isinstance(button, ButtonElement) or AssertionError
-            if not list(self._bank_buttons).count(button) == 1:
-                raise AssertionError
-                if self.is_enabled():
-                    if not button.is_momentary() or value is not 0:
-                        bank = list(self._bank_buttons).index(button)
-                        self._bank_index = self._device != None and bank != self._bank_index and bank
+        assert self._bank_buttons != None
+        assert value != None
+        assert button != None
+        assert isinstance(value, int)
+        assert isinstance(button, ButtonElement)
+        assert list(self._bank_buttons).count(button) == 1
+        if self.is_enabled():
+            if not button.is_momentary() or value is not 0:
+                bank = list(self._bank_buttons).index(button)
+                if self._device != None:
+                    if bank != self._bank_index:
+                        self._bank_index = bank
                     else:
                         self._page_index[bank] += 1
                     self.update()
 
     def _assign_parameters(self):
-        if not self.is_enabled():
-            raise AssertionError
-            raise self._device != None or AssertionError
-            raise self._parameter_controls != None or AssertionError
-            self._device.class_name in SPECIAL_DEVICE_DICT.keys() and self.__assign_parameters_special()
+        assert self.is_enabled()
+        assert self._device != None
+        assert self._parameter_controls != None
+        if self._device.class_name in SPECIAL_DEVICE_DICT.keys():
+            self.__assign_parameters_special()
         elif self._device.class_name in DEVICE_DICT.keys():
             self.__assign_parameters_normal()
         else:
@@ -170,7 +169,7 @@ class PageableDeviceComponent(DeviceComponent):
         self._page_index[self._bank_index] %= len(pages)
         self._bank_name = bank_names[self._bank_index][self._page_index[self._bank_index]]
         page = pages[self._page_index[self._bank_index]]
-        raise len(page) >= len(self._parameter_controls) or AssertionError
+        assert len(page) >= len(self._parameter_controls)
         for index in range(len(self._parameter_controls)):
             parameter = get_parameter_by_name(self._device, page[index])
             if parameter != None:
@@ -190,19 +189,19 @@ class PageableDeviceComponent(DeviceComponent):
 
     def __assign_parameters_normal(self):
         """ Assign the controls to the parameters of a device with 4 pages or less """
-        if not self._device.class_name in DEVICE_BOB_DICT.keys():
-            raise AssertionError
-            self._page_index[self._bank_index] = 0
-            banks = DEVICE_DICT[self._device.class_name]
-            bank_names = []
-            if len(banks) > self._bank_index:
-                if self._device.class_name in BANK_NAME_DICT.keys() and len(BANK_NAME_DICT[self._device.class_name]) > 1:
-                    bank_names = BANK_NAME_DICT[self._device.class_name]
-                bank = banks[self._bank_index]
-                self._bank_name = self._bank_index in range(len(bank_names)) and bank_names[self._bank_index]
+        assert self._device.class_name in DEVICE_BOB_DICT.keys()
+        self._page_index[self._bank_index] = 0
+        banks = DEVICE_DICT[self._device.class_name]
+        bank_names = []
+        if len(banks) > self._bank_index:
+            if self._device.class_name in BANK_NAME_DICT.keys() and len(BANK_NAME_DICT[self._device.class_name]) > 1:
+                bank_names = BANK_NAME_DICT[self._device.class_name]
+            bank = banks[self._bank_index]
+            if self._bank_index in range(len(bank_names)):
+                self._bank_name = bank_names[self._bank_index]
             else:
                 self._bank_name = 'Bank ' + str(self._bank_index + 1)
-            raise len(bank) >= len(self._parameter_controls) or AssertionError
+            assert len(bank) >= len(self._parameter_controls)
             for index in range(len(self._parameter_controls)):
                 parameter = get_parameter_by_name(self._device, bank[index])
                 if parameter != None:

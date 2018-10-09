@@ -1,4 +1,3 @@
-
 from _Framework.Dependency import depends
 from _Framework.ModesComponent import ModesComponent, ModeButtonBehaviour
 import consts

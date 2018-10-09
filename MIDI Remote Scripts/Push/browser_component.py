@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from functools import partial
 from itertools import izip, izip_longest
@@ -77,7 +76,7 @@ class BrowserComponent(CompoundComponent):
 
     def __init__(self, browser = None, make_browser_model = None, preferences = dict(), *a, **k):
         super(BrowserComponent, self).__init__(*a, **k)
-        raise make_browser_model is not None or AssertionError
+        assert make_browser_model is not None
         self._browser = browser or self.application.browser
         self._browser_model = EmptyBrowserModel(browser=self._browser)
         self._make_browser_model = make_browser_model

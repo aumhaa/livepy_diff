@@ -1,4 +1,3 @@
-
 from ableton.v2.control_surface.components import BasicSceneScroller, ScrollComponent, ViewControlComponent as ViewControlComponentBase
 from ableton.v2.control_surface.control import StepEncoderControl
 

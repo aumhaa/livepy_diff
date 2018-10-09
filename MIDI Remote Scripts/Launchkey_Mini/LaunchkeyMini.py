@@ -1,4 +1,3 @@
-
 from Launchkey.Launchkey import Launchkey, LaunchkeyControlFactory, make_button
 
 class LaunchkeyMiniControlFactory(LaunchkeyControlFactory):

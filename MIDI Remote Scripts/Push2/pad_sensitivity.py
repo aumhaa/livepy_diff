@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 playing_profile = 0
 default_profile = 1

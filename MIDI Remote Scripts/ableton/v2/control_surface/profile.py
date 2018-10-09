@@ -1,4 +1,3 @@
-
 """
 Provides facilities to ease the profiling of Control Surfaces.
 """
@@ -40,7 +39,7 @@ def dump(name = 'default'):
     3. [name].profile.cumulative.txt contains the data sorted by cumulative time - i.e.
        how much time is spent in a function and its sub-calls.
     """
-    raise ENABLE_PROFILING or AssertionError
+    assert ENABLE_PROFILING
     import pstats
     fname = name + '.profile'
     PROFILER.dump_stats(fname)

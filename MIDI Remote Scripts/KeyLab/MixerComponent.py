@@ -1,4 +1,3 @@
-
 from _Framework.MixerComponent import MixerComponent as MixerComponentBase
 from _Arturia.ScrollComponent import ScrollComponent
 
@@ -30,13 +29,13 @@ class MixerComponent(MixerComponentBase):
     def _select_prev_track(self):
         selected_track = self.song().view.selected_track
         all_tracks = self.all_tracks()
-        raise selected_track in all_tracks or AssertionError
+        assert selected_track in all_tracks
         index = list(all_tracks).index(selected_track)
         self.song().view.selected_track = all_tracks[index - 1]
 
     def _select_next_track(self):
         selected_track = self.song().view.selected_track
         all_tracks = self.all_tracks()
-        raise selected_track in all_tracks or AssertionError
+        assert selected_track in all_tracks
         index = list(all_tracks).index(selected_track)
         self.song().view.selected_track = all_tracks[index + 1]

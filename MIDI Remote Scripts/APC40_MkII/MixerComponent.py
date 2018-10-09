@@ -1,4 +1,3 @@
-
 from itertools import ifilter, izip_longest
 from _Framework.Control import RadioButtonControl, control_list
 from _Framework.Dependency import depends

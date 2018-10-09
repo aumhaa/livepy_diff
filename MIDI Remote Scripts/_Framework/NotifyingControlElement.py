@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from .SubjectSlot import Subject, SubjectEvent
 from .ControlElement import ControlElement

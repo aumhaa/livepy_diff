@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 import traceback
 from . import Task
@@ -108,7 +107,7 @@ class ControlElement(Disconnectable):
         super(ControlElement, self).disconnect()
 
     def send_midi(self, message):
-        raise message != None or AssertionError
+        assert message != None
         return self._send_midi(message, optimized=self.optimized_send_midi)
 
     def clear_send_cache(self):

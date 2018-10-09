@@ -1,4 +1,3 @@
-
 """
 Component that automatically arms the selected track.
 """
@@ -80,7 +79,7 @@ class AutoArmComponent(Component, Messenger):
         if not self._auto_arm_restore_behaviour:
             self._auto_arm_restore_behaviour = mixin(AutoArmRestoreBehaviour, *extra_classes)(auto_arm=self, **extra_params)
         else:
-            raise not extra_params and not extra_classes or AssertionError
+            assert not extra_params and not extra_classes
         return self._auto_arm_restore_behaviour
 
     def track_can_be_armed(self, track):

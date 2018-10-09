@@ -1,4 +1,3 @@
-
 from _Framework.ButtonElement import ON_VALUE, OFF_VALUE, ButtonElement as ButtonElementBase
 
 class ButtonElement(ButtonElementBase):

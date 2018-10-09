@@ -1,4 +1,3 @@
-
 import Live
 from _Framework.Dependency import depends
 from _Framework.InputControlElement import MIDI_CC_TYPE, MIDI_NOTE_TYPE

@@ -1,4 +1,3 @@
-
 """
 Different mode objects that turn live into different browsing modes.
 """

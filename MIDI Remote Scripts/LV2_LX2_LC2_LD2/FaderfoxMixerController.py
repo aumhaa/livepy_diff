@@ -1,4 +1,3 @@
-
 import Live
 from ParamMap import ParamMap
 from FaderfoxComponent import FaderfoxComponent

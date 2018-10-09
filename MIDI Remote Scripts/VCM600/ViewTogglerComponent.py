@@ -1,4 +1,3 @@
-
 import Live
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.ButtonElement import ButtonElement
@@ -7,7 +6,7 @@ class ViewTogglerComponent(ControlSurfaceComponent):
     """ Component that can toggle the device chain- and clip view of a number of tracks """
 
     def __init__(self, num_tracks):
-        raise num_tracks > 0 or AssertionError
+        assert num_tracks > 0
         ControlSurfaceComponent.__init__(self)
         self._num_tracks = num_tracks
         self._chain_buttons = None
@@ -31,8 +30,8 @@ class ViewTogglerComponent(ControlSurfaceComponent):
             self._clip_buttons = None
 
     def set_buttons(self, chain_buttons, clip_buttons):
-        raise chain_buttons == None or isinstance(chain_buttons, tuple) and len(chain_buttons) == self._num_tracks or AssertionError
-        raise clip_buttons == None or isinstance(clip_buttons, tuple) and len(clip_buttons) == self._num_tracks or AssertionError
+        assert chain_buttons == None or isinstance(chain_buttons, tuple) and len(chain_buttons) == self._num_tracks
+        assert clip_buttons == None or isinstance(clip_buttons, tuple) and len(clip_buttons) == self._num_tracks
         if self._chain_buttons != None:
             for button in self._chain_buttons:
                 button.remove_value_listener(self._chain_value)
@@ -40,7 +39,7 @@ class ViewTogglerComponent(ControlSurfaceComponent):
         self._chain_buttons = chain_buttons
         if self._chain_buttons != None:
             for button in self._chain_buttons:
-                raise isinstance(button, ButtonElement) or AssertionError
+                assert isinstance(button, ButtonElement)
                 button.add_value_listener(self._chain_value, identify_sender=True)
 
         if self._clip_buttons != None:
@@ -50,7 +49,7 @@ class ViewTogglerComponent(ControlSurfaceComponent):
         self._clip_buttons = clip_buttons
         if self._clip_buttons != None:
             for button in self._clip_buttons:
-                raise isinstance(button, ButtonElement) or AssertionError
+                assert isinstance(button, ButtonElement)
                 button.add_value_listener(self._clip_value, identify_sender=True)
 
         self.on_selected_track_changed()
@@ -99,7 +98,7 @@ class ViewTogglerComponent(ControlSurfaceComponent):
                     self._clip_buttons[index].turn_off()
 
     def _chain_value(self, value, sender):
-        raise sender in self._chain_buttons or AssertionError
+        assert sender in self._chain_buttons
         tracks = self.song().visible_tracks
         if not sender.is_momentary() or value != 0:
             index = list(self._chain_buttons).index(sender)
@@ -118,7 +117,7 @@ class ViewTogglerComponent(ControlSurfaceComponent):
             self._ignore_track_selection = False
 
     def _clip_value(self, value, sender):
-        raise sender in self._clip_buttons or AssertionError
+        assert sender in self._clip_buttons
         tracks = self.song().visible_tracks
         if not sender.is_momentary() or value != 0:
             index = list(self._clip_buttons).index(sender)

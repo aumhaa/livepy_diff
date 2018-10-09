@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from itertools import imap
 from ...base import depends, find_if, first, clamp, listens_group, listens, liveobj_valid
@@ -47,9 +46,9 @@ class DrumGroupComponent(PlayableComponent, SlideComponent, Slideable):
 
     @position.setter
     def position(self, index):
-        if not 0 <= index <= 28:
-            raise AssertionError
-            self._drum_group_device.view.drum_pads_scroll_position = liveobj_valid(self._drum_group_device) and index
+        assert 0 <= index <= 28
+        if liveobj_valid(self._drum_group_device):
+            self._drum_group_device.view.drum_pads_scroll_position = index
 
     @property
     def assigned_drum_pads(self):

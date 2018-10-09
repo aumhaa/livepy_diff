@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from itertools import product
 from _Framework.ClipSlotComponent import ClipSlotComponent as ClipSlotComponentBase
@@ -55,7 +54,7 @@ class SessionComponent(SessionComponentBase):
     scene_component_type = SceneComponent
 
     def set_clip_slot_leds(self, leds):
-        raise not leds or leds.width() == self._num_tracks and leds.height() == self._num_scenes or AssertionError
+        assert not leds or leds.width() == self._num_tracks and leds.height() == self._num_scenes
         if leds:
             for led, (x, y) in leds.iterbuttons():
                 scene = self.scene(y)

@@ -1,4 +1,3 @@
-
 from itertools import ifilter
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.DeviceComponent import DeviceComponent as DeviceComponentBase

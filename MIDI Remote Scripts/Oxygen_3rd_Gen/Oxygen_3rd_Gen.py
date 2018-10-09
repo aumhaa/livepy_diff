@@ -1,4 +1,3 @@
-
 from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface
@@ -74,7 +73,7 @@ class Oxygen_3rd_Gen(ControlSurface):
                 self._mixer.selected_strip().set_volume_control(self._master_slider)
 
     def _shift_value(self, value):
-        raise value in range(128) or AssertionError
+        assert value in range(128)
         for index in range(NUM_TRACKS):
             if value == 0:
                 self._mixer.channel_strip(index).set_solo_button(None)

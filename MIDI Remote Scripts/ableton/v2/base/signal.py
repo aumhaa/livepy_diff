@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from functools import partial
 from .util import find_if, nop
@@ -60,11 +59,11 @@ class Signal(object):
         If 'sender' is not None, it will be passed as last ordinal
         parameter to the slot when the signal is dispatched.
         """
-        if not callable(slot):
-            raise AssertionError
-            if slot not in self._slots:
-                slot = IdentifyingSlot(sender, slot) if sender is not None else Slot(slot)
-                in_front and self._slots.insert(0, slot)
+        assert callable(slot)
+        if slot not in self._slots:
+            slot = IdentifyingSlot(sender, slot) if sender is not None else Slot(slot)
+            if in_front:
+                self._slots.insert(0, slot)
             else:
                 self._slots.append(slot)
         else:

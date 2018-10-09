@@ -1,4 +1,3 @@
-
 from _Framework.ButtonElement import ButtonElement
 from _Framework.InputControlElement import MIDI_NOTE_TYPE, MIDI_CC_TYPE, MIDI_CC_STATUS
 from consts import *

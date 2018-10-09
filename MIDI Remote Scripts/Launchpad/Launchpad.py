@@ -1,4 +1,3 @@
-
 from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface
@@ -129,9 +128,9 @@ class Launchpad(ControlSurface):
             self._send_midi((176, 17 + index, challenge_byte))
 
     def _user_byte_value(self, value):
-        if not value in range(128):
-            raise AssertionError
-            enabled = self._wrote_user_byte or value == 1
+        assert value in range(128)
+        if not self._wrote_user_byte:
+            enabled = value == 1
             self._control_is_with_automap = not enabled
             self._suppress_send_midi = self._control_is_with_automap
             if not self._control_is_with_automap:
@@ -146,10 +145,10 @@ class Launchpad(ControlSurface):
             self._wrote_user_byte = False
 
     def _button_value(self, value):
-        raise value in range(128) or AssertionError
+        assert value in range(128)
 
     def _config_value(self, value):
-        raise value in range(128) or AssertionError
+        assert value in range(128)
 
     def _set_session_highlight(self, track_offset, scene_offset, width, height, include_return_tracks):
         if not self._suppress_session_highlight:

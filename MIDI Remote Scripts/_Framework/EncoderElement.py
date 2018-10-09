@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 import Live
 from .ComboElement import WrapperElement
@@ -38,11 +37,11 @@ class EncoderElement(InputControlElement):
         self.__value_normalizer = ENCODER_VALUE_NORMALIZER.get(map_mode, _not_implemented)
 
     def message_map_mode(self):
-        raise self.message_type() is MIDI_CC_TYPE or AssertionError
+        assert self.message_type() is MIDI_CC_TYPE
         return self.__map_mode
 
     def relative_value_to_delta(self, value):
-        raise value >= 0 and value < 128 or AssertionError
+        assert value >= 0 and value < 128
         return self.__value_normalizer(value)
 
     def normalize_value(self, value):
@@ -82,7 +81,7 @@ class TouchEncoderElement(CompoundElement, TouchEncoderElementBase):
 
     def __init__(self, channel = 0, identifier = 0, map_mode = _map_modes.absolute, touch_element = None, *a, **k):
         super(TouchEncoderElement, self).__init__(MIDI_CC_TYPE, channel, identifier, map_mode, *a, **k)
-        raise touch_element is not None or AssertionError
+        assert touch_element is not None
         self._touch_element = self.register_control_element(touch_element)
 
     def add_touch_value_listener(self, *a, **k):
@@ -112,8 +111,8 @@ class FineGrainWithModifierEncoderElement(WrapperElement):
 
     def __init__(self, encoder = None, modifier = None, modified_sensitivity = 0.1, default_sensitivity = None, *a, **k):
         super(FineGrainWithModifierEncoderElement, self).__init__(wrapped_control=encoder, *a, **k)
-        raise encoder is not None or AssertionError
-        raise modifier is not None or AssertionError
+        assert encoder is not None
+        assert modifier is not None
         self._modified_sensitivity = modified_sensitivity
         self._default_sensitivity = default_sensitivity or self.wrapped_control.mapping_sensitivity
         self._normalized_value_listeners = []

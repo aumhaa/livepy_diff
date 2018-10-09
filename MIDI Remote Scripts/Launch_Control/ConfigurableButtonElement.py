@@ -1,4 +1,3 @@
-
 from Launchpad.ConfigurableButtonElement import ConfigurableButtonElement as LaunchpadButtonElement
 import Colors
 

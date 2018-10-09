@@ -1,4 +1,3 @@
-
 from _Framework.Capabilities import CONTROLLER_ID_KEY, PORTS_KEY, SCRIPT, controller_id, inport, outport
 from RolandMX1 import RolandMX1
 

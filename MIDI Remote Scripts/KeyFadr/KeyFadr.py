@@ -1,4 +1,3 @@
-
 from KeyPad import KeyPad
 
 class KeyFadr(KeyPad):

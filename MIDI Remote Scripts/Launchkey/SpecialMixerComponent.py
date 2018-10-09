@@ -1,4 +1,3 @@
-
 from _Framework.MixerComponent import MixerComponent
 
 class SpecialMixerComponent(MixerComponent):

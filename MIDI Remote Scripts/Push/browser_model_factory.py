@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 import Live
 from .browser_model import filter_type_for_browser, EmptyBrowserModel, QueryingBrowserModel

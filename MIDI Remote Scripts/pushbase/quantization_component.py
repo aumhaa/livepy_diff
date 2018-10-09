@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 import Live
 from ableton.v2.base import clamp, listenable_property, listens
@@ -110,7 +109,7 @@ class QuantizationComponent(CompoundComponent, Messenger):
     action_button = ButtonControl(**SIDE_BUTTON_COLORS)
 
     def __init__(self, settings = None, *a, **k):
-        raise settings is not None or AssertionError
+        assert settings is not None
         super(QuantizationComponent, self).__init__(*a, **k)
         self._settings = self.register_component(settings)
         self._settings.set_enabled(False)

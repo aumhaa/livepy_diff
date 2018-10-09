@@ -1,0 +1,13 @@
+from ableton.v2.control_surface.capabilities import CONTROLLER_ID_KEY, NOTES_CC, PORTS_KEY, REMOTE, SCRIPT, controller_id, inport, outport
+from .keylab_mkii import KeyLabMkII
+
+def get_capabilities():
+    return {CONTROLLER_ID_KEY: controller_id(vendor_id=7285, product_ids=[587, 651, 715], model_name=['KeyLab mkII 49', 'KeyLab mkII 61', 'KeyLab mkII 88']),
+     PORTS_KEY: [inport(props=[NOTES_CC, REMOTE]),
+                 inport(props=[NOTES_CC, SCRIPT, REMOTE]),
+                 outport(props=[]),
+                 outport(props=[SCRIPT])]}
+
+
+def create_instance(c_instance):
+    return KeyLabMkII(c_instance=c_instance)

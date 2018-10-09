@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from .background import BackgroundComponent, ModifierBackgroundComponent
 from .channel_strip import ChannelStripComponent

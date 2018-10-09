@@ -1,4 +1,3 @@
-
 from functools import partial
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 
@@ -9,7 +8,7 @@ class TranslationComponent(ControlSurfaceComponent):
     """
 
     def __init__(self, translated_channel, should_enable = True, should_reset = True, *a, **k):
-        raise translated_channel in range(16) or AssertionError
+        assert translated_channel in range(16)
         self._translated_channel = translated_channel
         self._should_enable = bool(should_enable)
         self._should_reset = should_reset

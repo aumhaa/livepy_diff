@@ -1,4 +1,3 @@
-
 """
 Family of classes for maintaining connections with optional subjects.
 """
@@ -28,7 +27,7 @@ def subject_add_event(cls, event_name_or_event):
         event = SubjectEvent(name=event_name_or_event)
     else:
         event = event_name_or_event
-    raise callable(event.signal) or AssertionError
+    assert callable(event.signal)
     signal_attr = '_' + event.name + '_signal'
 
     def get_signal(self):
@@ -84,7 +83,7 @@ class SubjectMeta(type):
         if events and 'disconnect' not in dct:
             dct['disconnect'] = lambda self: super(cls, self).disconnect()
         cls = super(SubjectMeta, cls).__new__(cls, name, bases, dct)
-        raise not events or hasattr(cls, 'disconnect') or AssertionError
+        assert not events or hasattr(cls, 'disconnect')
         setup_subject(cls, events)
         return cls
 
@@ -139,12 +138,12 @@ class SubjectSlot(Disconnectable):
 
     def __init__(self, subject = None, listener = None, event = None, extra_kws = None, extra_args = None, *a, **k):
         super(SubjectSlot, self).__init__(*a, **k)
-        if not event:
-            raise AssertionError
-            self._event = event
-            if extra_kws is not None:
-                self._extra_kws = extra_kws
-            self._extra_args = extra_args is not None and extra_args
+        assert event
+        self._event = event
+        if extra_kws is not None:
+            self._extra_kws = extra_kws
+        if extra_args is not None:
+            self._extra_args = extra_args
         self._subject = None
         self._listener = None
         self.subject = subject
@@ -304,7 +303,7 @@ class MultiSubjectSlot(SlotManager, SubjectSlot):
             super(MultiSubjectSlot, self)._set_subject(subject)
         except SubjectSlotError:
             if self._nested_slot == None:
-                raise 
+                raise
         finally:
             self._slot_subject = subject
             self._update_nested_subject()
@@ -324,7 +323,7 @@ def subject_slot(events, *a, **k):
 
     @instance_decorator
     def decorator(self, method):
-        raise isinstance(self, SlotManager) or AssertionError
+        assert isinstance(self, SlotManager)
         function = partial(method, self)
         event_list = events.split('.')
         num_events = len(event_list)
@@ -345,7 +344,7 @@ def subject_slot_group(event, *a, **k):
 
     @instance_decorator
     def decorator(self, method):
-        raise isinstance(self, SlotManager) or AssertionError
+        assert isinstance(self, SlotManager)
         function = partial(method, self)
         slot = wraps(method)(CallableSubjectSlotGroup(event=event, extra_kws=k, extra_args=a, listener=function, function=function))
         self.register_slot_manager(slot)

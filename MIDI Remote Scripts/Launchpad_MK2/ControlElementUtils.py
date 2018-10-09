@@ -1,4 +1,3 @@
-
 from _Framework.Dependency import depends
 from _Framework.Resource import PrioritizedResource
 from _Framework.InputControlElement import MIDI_NOTE_TYPE

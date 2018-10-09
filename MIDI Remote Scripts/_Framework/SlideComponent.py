@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from .SubjectSlot import subject_slot, Subject
 from .CompoundComponent import CompoundComponent

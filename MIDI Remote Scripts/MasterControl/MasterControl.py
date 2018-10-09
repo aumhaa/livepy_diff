@@ -1,4 +1,3 @@
-
 from MackieControl.MackieControl import MackieControl
 
 class MasterControl(MackieControl):

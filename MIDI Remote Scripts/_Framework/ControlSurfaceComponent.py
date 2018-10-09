@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 import Live
 from . import Task
@@ -20,19 +19,19 @@ class ControlSurfaceComponent(ControlManager, Subject):
 
     @depends(register_component=None, song=None)
     def __init__(self, name = '', register_component = None, song = None, layer = None, is_enabled = True, is_root = False, *a, **k):
-        if not callable(register_component):
-            raise AssertionError
-            super(ControlSurfaceComponent, self).__init__(*a, **k)
-            self.name = name
-            raise layer is None or not is_enabled or AssertionError
-            self._explicit_is_enabled = is_enabled
-            self._recursive_is_enabled = True
-            self._is_enabled = self._explicit_is_enabled
-            self._is_root = is_root
-            self._allow_updates = True
-            self._update_requests = 0
-            self._song = song
-            self._layer = layer is not None and layer
+        assert callable(register_component)
+        super(ControlSurfaceComponent, self).__init__(*a, **k)
+        self.name = name
+        assert layer is None or not is_enabled
+        self._explicit_is_enabled = is_enabled
+        self._recursive_is_enabled = True
+        self._is_enabled = self._explicit_is_enabled
+        self._is_root = is_root
+        self._allow_updates = True
+        self._update_requests = 0
+        self._song = song
+        if layer is not None:
+            self._layer = layer
         register_component(self)
 
     def disconnect(self):
@@ -49,12 +48,12 @@ class ControlSurfaceComponent(ControlManager, Subject):
         if self._layer:
             if self.is_enabled():
                 grabbed = self._layer.grab(self)
-                if not grabbed:
-                    raise AssertionError('Only one component can use a layer at atime')
-                else:
-                    self._layer.release(self)
-            if self._has_task_group:
-                self.is_enabled() and self._tasks.resume()
+                assert grabbed, 'Only one component can use a layer at atime'
+            else:
+                self._layer.release(self)
+        if self._has_task_group:
+            if self.is_enabled():
+                self._tasks.resume()
             else:
                 self._tasks.pause()
 
@@ -115,7 +114,7 @@ class ControlSurfaceComponent(ControlManager, Subject):
             self._layer = new_layer
             if new_layer and self.is_enabled():
                 grabbed = new_layer.grab(self)
-                raise grabbed or AssertionError('Only one component can use a layer at atime')
+                assert grabbed, 'Only one component can use a layer at atime'
 
     layer = property(_get_layer, _set_layer)
 
@@ -161,8 +160,8 @@ class ControlSurfaceComponent(ControlManager, Subject):
         """
         DEPRECATED. Use tasks instead
         """
-        raise callable(callback) or AssertionError
-        raise parent_task_group.find(callback) is None or AssertionError
+        assert callable(callback)
+        assert parent_task_group.find(callback) is None
 
         def wrapper(delta):
             callback()
@@ -175,7 +174,7 @@ class ControlSurfaceComponent(ControlManager, Subject):
         """
         DEPRECATED. Use tasks instead
         """
-        raise callable(callback) or AssertionError
+        assert callable(callback)
         task = parent_task_group.find(callback)
-        raise task is not None or AssertionError
+        assert task is not None
         parent_task_group.remove(task)

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from ableton.v2.base import EventObject, index_if, listenable_property, listens, liveobj_valid, find_if
 from ableton.v2.control_surface import CompoundComponent
@@ -14,7 +13,7 @@ DEFAULT_SCALE = SCALES[0]
 class NoteLayout(EventObject):
 
     def __init__(self, song = None, preferences = dict(), *a, **k):
-        raise liveobj_valid(song) or AssertionError
+        assert liveobj_valid(song)
         super(NoteLayout, self).__init__(*a, **k)
         self._song = song
         self._scale = self._get_scale_from_name(self._song.scale_name)
@@ -102,7 +101,7 @@ class InstrumentComponent(PlayableComponent, CompoundComponent, Slideable, Messe
     matrix = control_matrix(PadControl, pressed_color='Instrument.NoteAction')
 
     def __init__(self, note_layout = None, *a, **k):
-        raise note_layout is not None or AssertionError
+        assert note_layout is not None
         super(InstrumentComponent, self).__init__(*a, **k)
         self._note_layout = note_layout
         self._delete_button = None

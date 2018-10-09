@@ -1,4 +1,3 @@
-
 import Live
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.Control import ButtonControl

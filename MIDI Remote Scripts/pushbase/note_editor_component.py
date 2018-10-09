@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, print_function
 from bisect import bisect
 from contextlib import contextmanager
@@ -143,7 +142,7 @@ class NoteEditorComponent(CompoundComponent):
     mute_button = ButtonControl(color='DefaultButton.Transparent')
 
     def __init__(self, clip_creator = None, grid_resolution = None, skin_base_key = 'NoteEditor', velocity_range_thresholds = None, velocity_provider = None, *a, **k):
-        raise skin_base_key is not None or AssertionError
+        assert skin_base_key is not None
         super(NoteEditorComponent, self).__init__(*a, **k)
         self._skin_base_key = skin_base_key
         self.full_velocity = False
@@ -188,11 +187,11 @@ class NoteEditorComponent(CompoundComponent):
         return not self._pressed_steps and not self._modified_steps
 
     def set_selected_page_point(self, point):
-        if not self.can_change_page:
-            raise AssertionError
-            self._selected_page_point = point
-            index = int(point / self.page_length) if self.page_length != 0 else 0
-            self._page_index = index != self._page_index and index
+        assert self.can_change_page
+        self._selected_page_point = point
+        index = int(point / self.page_length) if self.page_length != 0 else 0
+        if index != self._page_index:
+            self._page_index = index
             self._on_clip_notes_changed()
 
     def _get_modify_all_notes_enabled(self):
@@ -342,8 +341,8 @@ class NoteEditorComponent(CompoundComponent):
 
     def _get_step_start_time(self, step):
         x, y = step
-        raise in_range(x, 0, self._get_width()) or AssertionError
-        raise in_range(y, 0, self._get_height()) or AssertionError
+        assert in_range(x, 0, self._get_width())
+        assert in_range(y, 0, self._get_height())
         page_time = self._page_index * self._get_step_count() * self._triplet_factor
         step_time = x + y * self._get_width() * self._triplet_factor
         return (page_time + step_time) * self._get_step_length()
